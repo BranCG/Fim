@@ -91,11 +91,11 @@ export async function uploadFile(file: File): Promise<string> {
 
 // ─── Pricing ──────────────────────────────────────────────────────────────
 export const FIM_PRICING = {
-  baseFare: 900,
-  perKm: 410,
-  perMinute: 80,
+  baseFare: 1100,
+  perKm: 480,
+  perMinute: 100,
   bookingFee: 0,
-  minimumFare: 2500,
+  minimumFare: 2800,
 };
 
 export function roundCLP(amount: number): number {
