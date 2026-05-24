@@ -1,0 +1,26 @@
+{
+  "name": "fim-app",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "concurrently \"npm run dev --prefix apps/api\" \"npm run dev --prefix apps/web\" \"npm run dev --prefix apps/admin\"",
+    "dev:web": "npm run dev --prefix apps/web",
+    "dev:admin": "npm run dev --prefix apps/admin",
+    "dev:api": "npm run dev --prefix apps/api",
+    "build": "npm run build --workspaces",
+    "db:generate": "npm run generate --prefix packages/database",
+    "db:migrate": "npm run migrate --prefix packages/database",
+    "db:seed": "npm run seed --prefix packages/database",
+    "db:studio": "npm run studio --prefix packages/database",
+    "mobile:sync": "npm run build --prefix apps/web && npm run cap --prefix apps/web sync",
+    "mobile:open-android": "npm run cap --prefix apps/web open android",
+    "mobile:open-ios": "npm run cap --prefix apps/web open ios"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}

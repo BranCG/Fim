@@ -1,0 +1,169 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  phone         String    @unique
+  name          String
+  passwordHash  String
+  rut           String?   @unique
+  birthDate     DateTime?
+  address       String?
+  idFrontUrl    String?
+  idBackUrl     String?
+  isVerified    Boolean   @default(false)
+  paymentMethod String?
+  mpCardToken   String?
+  role          String    @default("passenger")
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  selfieUrl     String?
+  ratings       Rating[]  @relation("PassengerRatings")
+  trips         Trip[]    @relation("PassengerTrips")
+
+  @@map("users")
+}
+
+model Driver {
+  id                  String    @id @default(cuid())
+  email               String    @unique
+  phone               String    @unique
+  name                String
+  passwordHash        String
+  rut                 String    @unique
+  birthDate           DateTime
+  address             String
+  idFrontUrl          String
+  idBackUrl           String
+  selfieUrl           String?
+  licenseNumber       String
+  licenseUrl          String
+  vehicleBrand        String
+  vehicleModel        String
+  vehicleYear         Int
+  vehiclePlate        String    @unique
+  vehiclePhotoUrl     String
+  tagNumber           String
+  status              String    @default("pending")
+  membershipPaid      Boolean   @default(false)
+  membershipPlan      String    @default("BLACK")
+  membershipProgress  Int       @default(0)
+  membershipGoal      Int       @default(150000)
+  dailyCashTripsCount Int       @default(0)
+  comfortDebt         Int       @default(0)
+  comfortLastPaidAt   DateTime?
+  membershipWeekStart DateTime?
+  membershipDate      DateTime?
+  mpSubscriptionId    String?
+  membershipExpiresAt DateTime?
+  comfortReceiptUrl   String?
+  walletBalance       Int       @default(0)
+  adminNotes          String?
+  mercadoPagoLink     String?   // Link de pago directo (mpago.li/...)
+  isOnline            Boolean   @default(false)
+  lastLat             Float?
+  lastLng             Float?
+  lastSeen            DateTime?
+  totalRating         Float     @default(0)
+  totalTrips          Int       @default(0)
+  bankName            String?
+  bankAccountType     String?
+  bankAccountNumber   String?
+  bankAccountName     String?
+  bankAccountRut      String?
+  bankAccountEmail    String?
+  taxCompliant        Boolean   @default(true)
+  taxDocumentUrl      String?
+  taxPendingReview    Boolean   @default(false)
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+  payouts             Payout[]
+  ratings             Rating[]  @relation("DriverRatings")
+  trips               Trip[]    @relation("DriverTrips")
+
+  @@map("drivers")
+}
+
+model Trip {
+  id              String    @id @default(cuid())
+  passengerId     String
+  driverId        String?
+  originLat       Float
+  originLng       Float
+  originAddress   String
+  destLat         Float
+  destLng         Float
+  destAddress     String
+  distanceKm      Float
+  durationMin     Int
+  estimatedPrice  Int
+  finalPrice      Int?
+  isDiscounted    Boolean   @default(false)
+  paymentMethod   String
+  isPaid          Boolean   @default(false)
+  paymentStatus   String    @default("pending")
+  otpCode         String?
+  mpPaymentId     String?
+  status          String    @default("searching")
+  cancelledBy     String?
+  cancelReason    String?
+  requestedAt     DateTime  @default(now())
+  acceptedAt      DateTime?
+  driverArrivedAt DateTime?
+  startedAt       DateTime?
+  completedAt     DateTime?
+  cancelledAt     DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  rating          Rating?
+  driver          Driver?   @relation("DriverTrips", fields: [driverId], references: [id])
+  passenger       User      @relation("PassengerTrips", fields: [passengerId], references: [id])
+
+  @@map("trips")
+}
+
+model Rating {
+  id            String   @id @default(cuid())
+  tripId        String   @unique
+  passengerId   String
+  driverId      String
+  driverScore   Int
+  driverComment String?
+  createdAt     DateTime @default(now())
+  driver        Driver   @relation("DriverRatings", fields: [driverId], references: [id])
+  passenger     User     @relation("PassengerRatings", fields: [passengerId], references: [id])
+  trip          Trip     @relation(fields: [tripId], references: [id])
+
+  @@map("ratings")
+}
+
+model RefreshToken {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  userId    String?
+  driverId  String?
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@map("refresh_tokens")
+}
+
+model Payout {
+  id         String   @id @default(cuid())
+  driverId   String
+  amount     Int
+  status     String   @default("pending")
+  receiptUrl String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  driver     Driver   @relation(fields: [driverId], references: [id])
+
+  @@map("payouts")
+}

@@ -1,0 +1,263 @@
+import { Router, Request, Response } from 'express';
+import prisma from '../utils/prisma';
+import { requireAuth, requireRole } from '../middleware/auth';
+
+const router = Router();
+
+// ─── ESTADO DEL CONDUCTOR (para el dashboard) ─────────────────────────────
+router.get('/me', requireAuth, requireRole('driver'), async (req: Request, res: Response) => {
+  try {
+    const driver = await prisma.driver.findUnique({
+      where: { id: req.user!.id },
+      select: {
+        id: true, name: true, email: true, phone: true,
+        status: true, membershipPaid: true, membershipDate: true,
+        membershipPlan: true, membershipGoal: true, membershipProgress: true,
+        membershipExpiresAt: true,
+        dailyCashTripsCount: true,
+        comfortDebt: true, comfortLastPaidAt: true, comfortReceiptUrl: true,
+        membershipWeekStart: true,
+        isOnline: true, lastLat: true, lastLng: true,
+        vehicleBrand: true, vehicleModel: true, vehicleYear: true,
+        vehiclePlate: true, vehiclePhotoUrl: true, tagNumber: true,
+        totalRating: true, totalTrips: true,
+        adminNotes: true, mercadoPagoLink: true, walletBalance: true,
+        taxCompliant: true, taxDocumentUrl: true, taxPendingReview: true,
+      },
+    });
+
+    if (!driver) return res.status(404).json({ error: 'Conductor no encontrado' });
+    return res.json({ driver });
+  } catch (err) {
+    return res.status(500).json({ error: 'Error interno' });
+  }
+});
+
+// ─── ACTUALIZAR POSICIÓN GPS ──────────────────────────────────────────────
+router.post('/location', requireAuth, requireRole('driver'), async (req: Request, res: Response) => {
+  try {
+    const { lat, lng } = req.body;
+
+    await prisma.driver.update({
+      where: { id: req.user!.id },
+      data: { lastLat: lat, lastLng: lng, lastSeen: new Date() },
+    });
+
+    return res.json({ ok: true });
+  } catch (err) {
+    return res.status(500).json({ error: 'Error al actualizar posición' });
+  }
+});
+
+// ─── CAMBIAR ESTADO EN LÍNEA ──────────────────────────────────────────────
+router.post('/toggle-online', requireAuth, requireRole('driver'), async (req: Request, res: Response) => {
+  try {
+    const { isOnline } = req.body;
+
+    const driver = await prisma.driver.findUnique({ where: { id: req.user!.id } });
+    if (!driver) return res.status(404).json({ error: 'No encontrado' });
+
+    if (driver.status !== 'active') {
+      return res.status(403).json({ error: 'Debes estar aprobado por un administrador' });
+    }
+
+    // ── Validaciones por plan ─────────────────────────────────────────────
+    if (isOnline) {
+      const now = new Date();
+      const plan = driver.membershipPlan;
+
+      if (plan === 'BLACK') {
+        // Requiere membresía pagada y vigente
+        if (!driver.membershipPaid) {
+          return res.status(403).json({ error: 'Debes pagar tu membresía BLACK ($150.000) para activarte.' });
+        }
+        if (driver.membershipExpiresAt && driver.membershipExpiresAt < now) {
+          await prisma.driver.update({ where: { id: driver.id }, data: { membershipPaid: false } });
+          return res.status(403).json({ error: 'Tu membresía BLACK venció. Renuévala para continuar.' });
+        }
+      }
+
+      if (plan === 'FLEX') {
+        // Solo puede operar Viernes(5), Sábado(6), Domingo(0)
+        const dayOfWeek = now.getDay(); // 0=Dom, 5=Vie, 6=Sáb
+        if (dayOfWeek !== 0 && dayOfWeek !== 5 && dayOfWeek !== 6) {
+          return res.status(403).json({ 
+            error: 'La membresía FLEX solo está activa Viernes, Sábado y Domingo. Hoy no puedes operar.'
+          });
+        }
+        if (!driver.membershipPaid) {
+          return res.status(403).json({ error: 'Debes pagar tu membresía FLEX ($60.000) para activarte este fin de semana.' });
+        }
+        // Verificar si la membresía FLEX sigue vigente (fin de semana actual)
+        if (driver.membershipExpiresAt && driver.membershipExpiresAt < now) {
+          await prisma.driver.update({ where: { id: driver.id }, data: { membershipPaid: false } });
+          return res.status(403).json({ error: 'Tu membresía FLEX venció. Debes pagar el nuevo fin de semana ($60.000).' });
+        }
+      }
+
+      if (plan === 'COMFORT') {
+        // Debe haber pagado la cuota diaria de $20.000
+        // Se verifica si el último pago fue hoy
+        if (driver.comfortLastPaidAt) {
+          const lastPaid = new Date(driver.comfortLastPaidAt);
+          const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+          if (lastPaid < todayStart) {
+            return res.status(403).json({ 
+              error: `Debes pagar tu cuota diaria COMFORT de $20.000 para trabajar hoy. Deuda acumulada: $${driver.comfortDebt.toLocaleString('es-CL')}`
+            });
+          }
+        } else {
+          return res.status(403).json({ 
+            error: 'Debes subir el comprobante de tu primer pago diario COMFORT de $20.000 para activarte.'
+          });
+        }
+      }
+    }
+
+    if (!driver.taxCompliant) {
+      return res.status(403).json({ error: 'Debes subir tu boleta de honorarios para cumplir con tus obligaciones del SII antes de poder activarte' });
+    }
+
+    const updated = await prisma.driver.update({
+      where: { id: req.user!.id },
+      data: { isOnline },
+    });
+
+    return res.json({ isOnline: updated.isOnline });
+  } catch (err) {
+    return res.status(500).json({ error: 'Error interno' });
+  }
+});
+
+// ─── VIAJE ACTIVO DEL CONDUCTOR ───────────────────────────────────────────
+router.get('/active-trip', requireAuth, requireRole('driver'), async (req: Request, res: Response) => {
+  try {
+    const trip = await prisma.trip.findFirst({
+      where: {
+        driverId: req.user!.id,
+        status: { in: ['driver_assigned', 'driver_arrived', 'in_progress'] },
+      },
+      orderBy: { createdAt: 'desc' },
+      include: {
+        passenger: { select: { id: true, name: true, phone: true } },
+      },
+    });
+
+    return res.json({ trip });
+  } catch (err) {
+    return res.status(500).json({ error: 'Error interno' });
+  }
+});
+
+// ─── ACTUALIZAR LINK DE PAGO ─────────────────────────────────────────────
+router.post('/payment-link', requireAuth, requireRole('driver'), async (req: Request, res: Response) => {
+  try {
+    const { mercadoPagoLink } = req.body;
+    await prisma.driver.update({
+      where: { id: req.user!.id },
+      data: { mercadoPagoLink },
+    });
+    return res.json({ ok: true });
+  } catch (err) {
+    return res.status(500).json({ error: 'Error al actualizar link de pago' });
+  }
+});
+
+// ─── CARGAR DOCUMENTO TRIBUTARIO (SII) ──────────────────────────────────
+router.post('/submit-tax-document', requireAuth, requireRole('driver'), async (req: Request, res: Response) => {
+  try {
+    const { taxDocumentUrl } = req.body;
+    if (!taxDocumentUrl) return res.status(400).json({ error: 'La URL del documento es obligatoria' });
+
+    await prisma.driver.update({
+      where: { id: req.user!.id },
+      data: {
+        taxDocumentUrl,
+        taxCompliant: true, // Reactivamos de inmediato para no perjudicar al conductor
+        taxPendingReview: true, // Queda en revisión del admin para validar
+      },
+    });
+
+    return res.json({ ok: true, message: 'Documento tributario cargado y cuenta reactivada con éxito.' });
+  } catch (err) {
+    return res.status(500).json({ error: 'Error al subir documento tributario' });
+  }
+});
+
+
+// ─── PAGO DIARIO COMFORT ─────────────────────────────────────────────────
+router.post('/pay-comfort-daily', requireAuth, requireRole('driver'), async (req: Request, res: Response) => {
+  try {
+    const { receiptUrl } = req.body;
+    if (!receiptUrl) return res.status(400).json({ error: 'El comprobante de pago es obligatorio' });
+
+    const driver = await prisma.driver.findUnique({ where: { id: req.user!.id } });
+    if (!driver) return res.status(404).json({ error: 'Conductor no encontrado' });
+    if (driver.membershipPlan !== 'COMFORT') return res.status(400).json({ error: 'Solo aplica para el plan COMFORT' });
+
+    const now = new Date();
+    const dailyAmount = 20000;
+
+    // Calcular nuevo saldo de deuda
+    // Si es el primer pago, la deuda es 0 (comenzamos a contar desde 0)
+    const newDebt = Math.max(0, driver.comfortDebt - dailyAmount);
+
+    await prisma.driver.update({
+      where: { id: req.user!.id },
+      data: {
+        comfortLastPaidAt: now,
+        comfortReceiptUrl: receiptUrl,
+        comfortDebt: newDebt,
+        // Si la cuenta estaba bloqueada, la reactivamos
+        isOnline: false, // Se tendrá que volver a activar manualmente
+      },
+    });
+
+    console.log(`✅ COMFORT: Conductor ${driver.id} pagó cuota diaria $20.000. Deuda restante: $${newDebt.toLocaleString('es-CL')}`);
+    return res.json({ ok: true, message: 'Pago diario registrado. Ahora puedes activarte.', comfortDebt: newDebt });
+  } catch (err) {
+    return res.status(500).json({ error: 'Error al registrar pago diario' });
+  }
+});
+
+// ─── ACUMULAR DEUDA COMFORT (interno) ────────────────────────────────────
+// Este endpoint puede llamarse desde un cron job para acumular la deuda a las 7am
+router.post('/comfort-accrue-debt', async (req: Request, res: Response) => {
+  try {
+    const secretKey = req.headers['x-cron-secret'];
+    if (secretKey !== process.env.CRON_SECRET && secretKey !== 'fim-internal-cron') {
+      return res.status(403).json({ error: 'No autorizado' });
+    }
+
+    // Encontrar todos los conductores COMFORT activos
+    const comfortDrivers = await prisma.driver.findMany({
+      where: { membershipPlan: 'COMFORT', status: 'active' }
+    });
+
+    const now = new Date();
+    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+    let updated = 0;
+    for (const driver of comfortDrivers) {
+      // Si no pagó hoy, acumular deuda
+      const lastPaid = driver.comfortLastPaidAt ? new Date(driver.comfortLastPaidAt) : null;
+      const paidToday = lastPaid && lastPaid >= todayStart;
+      if (!paidToday) {
+        await prisma.driver.update({
+          where: { id: driver.id },
+          data: { 
+            comfortDebt: { increment: 20000 },
+            isOnline: false // Forzar desconexión
+          }
+        });
+        updated++;
+      }
+    }
+
+    return res.json({ ok: true, message: `Deuda acumulada para ${updated} conductores COMFORT.` });
+  } catch (err) {
+    return res.status(500).json({ error: 'Error al acumular deuda' });
+  }
+});
+
+export default router;
