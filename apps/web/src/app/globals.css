@@ -631,17 +631,17 @@ a:hover { opacity: 0.85; }
   }
 
   .app-header .btn-ghost {
-    padding: 6px 10px !important;
-    font-size: 0.78rem !important;
+    padding: 6px 12px !important;
+    font-size: 0.74rem !important;
     display: inline-flex !important;
     align-items: center !important;
     justify-content: center !important;
+    gap: 4px !important;
   }
 
   .app-header .btn-ghost .btn-text {
-    display: none !important;
+    display: inline !important;
   }
-
 
   .app-header .logo {
     font-size: 1.45rem !important;
@@ -656,9 +656,18 @@ a:hover { opacity: 0.85; }
   }
 
   .header-status-badge {
-    padding: 4px 8px !important;
-    font-size: 0.68rem !important;
-    gap: 4px !important;
+    width: 28px !important;
+    height: 28px !important;
+    padding: 0 !important;
+    border-radius: 50% !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 0 !important;
+  }
+
+  .header-status-badge .status-text {
+    display: none !important;
   }
 }
 

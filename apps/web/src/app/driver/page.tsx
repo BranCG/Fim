@@ -690,7 +690,7 @@ export default function DriverPage() {
             display: 'flex', alignItems: 'center', gap: '6px'
           }}>
             <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: isOnline ? 'var(--accent)' : 'var(--text-muted)' }} />
-            {isOnline ? 'EN LÍNEA' : 'DESCONECTADO'}
+            <span className="status-text">{isOnline ? 'EN LÍNEA' : 'DESCONECTADO'}</span>
           </div>
           <button className="btn btn-ghost" onClick={() => router.push('/driver/history')} style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
             <IconClock />
