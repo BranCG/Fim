@@ -7,11 +7,17 @@ const getApiUrl = () => {
     const isMobileApp = (window.location.hostname === 'localhost' || window.location.hostname === '') && window.location.port === '';
     const isCapacitor = (window as any).Capacitor || window.location.origin.includes('capacitor://') || isMobileApp;
     if (isCapacitor) {
-      return 'http://192.168.100.138:3001';
+      return 'https://fim-otwh.onrender.com';
     }
-    return `http://${window.location.hostname}:3001`;
+    
+    // If we are on localhost in a web browser, use local API
+    if (window.location.hostname === 'localhost') {
+      return 'http://localhost:3001';
+    }
+    
+    return 'https://fim-otwh.onrender.com';
   }
-  return 'http://localhost:3001';
+  return 'https://fim-otwh.onrender.com';
 };
 
 export const API_URL = getApiUrl();

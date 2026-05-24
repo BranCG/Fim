@@ -2,8 +2,13 @@ import axios from 'axios';
 
 const getApiUrl = () => {
   if (process.env.NEXT_PUBLIC_API_URL) return process.env.NEXT_PUBLIC_API_URL;
-  const host = typeof window !== 'undefined' ? window.location.hostname : 'localhost';
-  return `http://${host}:3001`;
+  if (typeof window !== 'undefined') {
+    if (window.location.hostname === 'localhost') {
+      return 'http://localhost:3001';
+    }
+    return 'https://fim-otwh.onrender.com';
+  }
+  return 'https://fim-otwh.onrender.com';
 };
 
 const API_URL = getApiUrl();
