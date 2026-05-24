@@ -139,6 +139,9 @@ export default function PassengerPage() {
 
   // Búsqueda de direcciones
   const [searchQuery, setSearchQuery] = useState('');
+  const [originQuery, setOriginQuery] = useState('');
+  const [destQuery, setDestQuery] = useState('');
+  const [activeField, setActiveField] = useState<'origin' | 'dest' | null>(null);
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [currentCommune, setCurrentCommune] = useState<string>('');
@@ -370,6 +373,13 @@ export default function PassengerPage() {
     }
   }, [origin?.lat, origin?.lng]);
 
+  // Sync origin changes to originQuery when not typing
+  useEffect(() => {
+    if (origin && activeField !== 'origin') {
+      setOriginQuery(origin.address);
+    }
+  }, [origin, activeField]);
+
   // Calcular precio cuando hay origen y destino convocando la API
   useEffect(() => {
     if (origin && dest && status === 'selecting_dest') {
@@ -494,10 +504,26 @@ export default function PassengerPage() {
       lng: parseFloat(item.lon),
       address: formatted.title + (formatted.subtitle ? `, ${formatted.subtitle}` : ''),
     };
-    setDest(loc);
-    setSearchQuery(formatted.title);
-    setSearchResults([]);
-    setStatus('selecting_dest'); // Cambiar a selecting_dest para gatillar el cálculo
+    
+    if (activeField === 'origin') {
+      setOrigin(loc);
+      setOriginQuery(formatted.title);
+      setSearchResults([]);
+      setActiveField(null);
+      setSearchQuery('');
+      if (dest) {
+        setStatus('selecting_dest');
+      }
+    } else {
+      setDest(loc);
+      setDestQuery(formatted.title);
+      setSearchResults([]);
+      setActiveField(null);
+      setSearchQuery('');
+      if (origin) {
+        setStatus('selecting_dest');
+      }
+    }
   }
 
   // Socket.io listeners
@@ -635,6 +661,8 @@ export default function PassengerPage() {
     setDriver(null);
     setDest(null);
     setSearchQuery('');
+    setDestQuery('');
+    setActiveField(null);
     setRating(0);
     setRatingComment('');
     setRatingDone(false);
@@ -836,25 +864,63 @@ export default function PassengerPage() {
           <BottomSheetHandle />
           <h3 style={{ marginBottom: '16px', fontWeight: 900 }}>¿A dónde vamos?</h3>
           
-          <div style={{ position: 'relative' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', position: 'relative' }}>
+            
+            {/* Input Origen */}
             <div className="form-group" style={{ position: 'relative' }}>
-              <div style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)', zIndex: 10, display: 'flex', alignItems: 'center' }}><IconSearch /></div>
+              <div style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: 'var(--accent)', zIndex: 10, display: 'flex', alignItems: 'center' }}>
+                <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: 'var(--accent)', boxShadow: '0 0 8px var(--accent)' }}></div>
+              </div>
               <input 
                 className="form-input" 
-                placeholder="Ingresa tu destino..." 
+                placeholder="Ingresa ubicación de origen..." 
                 style={{ paddingLeft: '44px' }}
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                value={originQuery}
+                onFocus={() => {
+                  setActiveField('origin');
+                  setSearchQuery(originQuery);
+                }}
+                onChange={(e) => {
+                  setOriginQuery(e.target.value);
+                  setSearchQuery(e.target.value);
+                }}
               />
-              {isSearching && (
+              {isSearching && activeField === 'origin' && (
                 <div style={{ position: 'absolute', right: '16px', top: '50%', transform: 'translateY(-50%)' }}>
                   <div className="spinner" style={{ width: '16px', height: '16px', borderWidth: '2px' }} />
                 </div>
               )}
             </div>
 
-            {searchResults.length > 0 && (
-              <div className="search-results">
+            {/* Input Destino */}
+            <div className="form-group" style={{ position: 'relative' }}>
+              <div style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: 'var(--danger)', zIndex: 10, display: 'flex', alignItems: 'center' }}>
+                <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: 'var(--danger)', boxShadow: '0 0 8px var(--danger)' }}></div>
+              </div>
+              <input 
+                className="form-input" 
+                placeholder="¿A dónde vamos? (Destino)" 
+                style={{ paddingLeft: '44px' }}
+                value={destQuery}
+                onFocus={() => {
+                  setActiveField('dest');
+                  setSearchQuery(destQuery);
+                }}
+                onChange={(e) => {
+                  setDestQuery(e.target.value);
+                  setSearchQuery(e.target.value);
+                }}
+              />
+              {isSearching && activeField === 'dest' && (
+                <div style={{ position: 'absolute', right: '16px', top: '50%', transform: 'translateY(-50%)' }}>
+                  <div className="spinner" style={{ width: '16px', height: '16px', borderWidth: '2px' }} />
+                </div>
+              )}
+            </div>
+
+            {/* Search Results */}
+            {searchResults.length > 0 && activeField && (
+              <div className="search-results" style={{ marginTop: '4px' }}>
                 {searchResults.map((item, idx) => {
                   const formatted = formatNominatimAddress(item, searchQuery);
                   return (
@@ -879,7 +945,21 @@ export default function PassengerPage() {
                 return <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>;
               };
               return (
-                <button key={fav} className="btn btn-secondary btn-sm" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }} onClick={() => setSearchQuery(fav)}>
+                <button 
+                  key={fav} 
+                  className="btn btn-secondary btn-sm" 
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }} 
+                  onClick={() => {
+                    const field = activeField || 'dest';
+                    if (field === 'origin') {
+                      setOriginQuery(fav);
+                    } else {
+                      setDestQuery(fav);
+                    }
+                    setActiveField(field);
+                    setSearchQuery(fav);
+                  }}
+                >
                   {getIcon()} {fav}
                 </button>
               );

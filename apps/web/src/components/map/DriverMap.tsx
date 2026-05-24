@@ -79,6 +79,15 @@ export default function DriverMap({ driverPos, passengerPos, destPos }: Props) {
       // ── Interpolación para movimiento fluido ──────────────────
       const animateMarker = (marker: any, start: { lat: number; lng: number }, end: { lat: number; lng: number }, duration = 1200) => {
         const startTime = performance.now();
+        
+        const dLng = end.lng - start.lng;
+        const dLat = end.lat - start.lat;
+        let angle = 0;
+        const hasMovement = Math.abs(dLng) > 1e-6 || Math.abs(dLat) > 1e-6;
+        if (hasMovement) {
+          angle = Math.atan2(dLng, dLat) * (180 / Math.PI);
+        }
+
         const step = (now: number) => {
           const elapsed = now - startTime;
           const progress = Math.min(elapsed / duration, 1);
@@ -89,6 +98,18 @@ export default function DriverMap({ driverPos, passengerPos, destPos }: Props) {
           const currentLng = start.lng + (end.lng - start.lng) * easeProgress;
           
           marker.setLatLng([currentLat, currentLng]);
+
+          if (hasMovement) {
+            const element = marker.getElement();
+            if (element) {
+              const svg = element.querySelector('svg');
+              if (svg) {
+                svg.style.transform = `rotate(${angle}deg)`;
+                svg.style.transition = 'transform 0.3s ease';
+              }
+            }
+          }
+
           if (progress < 1) {
             requestAnimationFrame(step);
           }
