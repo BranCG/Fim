@@ -6,6 +6,38 @@ import { calculateDistance } from '../utils/pricing';
 // driverId -> { socketId, lat, lng }
 const onlineDrivers = new Map<string, { socketId: string; lat: number; lng: number }>();
 
+import { setDriverLocationInRedis, removeDriverLocationFromRedis, updateDriverLocationDbThrottled } from '../utils/redis';
+
+export async function updateDriverLocation(driverId: string, lat: number, lng: number) {
+  // 1. Actualizar el mapa local en memoria si está online
+  const driverSock = onlineDrivers.get(driverId);
+  if (driverSock) {
+    driverSock.lat = lat;
+    driverSock.lng = lng;
+  }
+
+  // 2. Guardar en caché Redis
+  await setDriverLocationInRedis(driverId, lat, lng);
+
+  // 3. Persistencia amortiguada en PostgreSQL (máx. cada 5 min)
+  await updateDriverLocationDbThrottled(driverId, lat, lng);
+
+  // 4. Si tiene un viaje activo, notificar al pasajero en tiempo real
+  if (ioInstance) {
+    const activeTrip = await prisma.trip.findFirst({
+      where: {
+        driverId,
+        status: { in: ['driver_assigned', 'driver_arrived', 'in_progress'] },
+      },
+      orderBy: { createdAt: 'desc' },
+    }).catch(() => null);
+
+    if (activeTrip) {
+      ioInstance.to(`trip:${activeTrip.id}`).emit('driver:moved', { lat, lng });
+    }
+  }
+}
+
 let ioInstance: Server | null = null;
 
 // ─── Mapa de viajes activos con búsqueda ─────────────────────────────────
@@ -51,43 +83,40 @@ export function setupSocketHandlers(io: Server) {
         data: { isOnline: true, lastLat: lat, lastLng: lng, lastSeen: new Date() },
       }).catch(console.error);
 
+      // Guardar en caché Redis
+      await setDriverLocationInRedis(driverId, lat, lng);
+
       console.log(`[Socket] Conductor ${driverId} en línea en (${lat}, ${lng})`);
     });
 
     // ─── CONDUCTOR: se desconecta manualmente ──────────────────────────────
     socket.on('driver:offline', async ({ driverId }: { driverId: string }) => {
+      const driverData = onlineDrivers.get(driverId);
+      let finalLat = driverData?.lat;
+      let finalLng = driverData?.lng;
+
       onlineDrivers.delete(driverId);
       socket.leave(`driver:${driverId}`);
 
       await prisma.driver.update({
         where: { id: driverId },
-        data: { isOnline: false },
+        data: { 
+          isOnline: false,
+          ...(finalLat !== undefined ? { lastLat: finalLat } : {}),
+          ...(finalLng !== undefined ? { lastLng: finalLng } : {}),
+          lastSeen: new Date()
+        },
       }).catch(console.error);
+
+      // Eliminar caché de Redis
+      await removeDriverLocationFromRedis(driverId);
 
       console.log(`[Socket] Conductor ${driverId} fuera de línea`);
     });
 
     // ─── CONDUCTOR: actualiza posición ────────────────────────────────────
     socket.on('driver:location', async ({ driverId, lat, lng }: { driverId: string; lat: number; lng: number }) => {
-      onlineDrivers.set(driverId, { socketId: socket.id, lat, lng });
-
-      await prisma.driver.update({
-        where: { id: driverId },
-        data: { lastLat: lat, lastLng: lng, lastSeen: new Date() },
-      }).catch(console.error);
-
-      // Si tiene un viaje activo, notificar al pasajero con posición
-      const activeTrip = await prisma.trip.findFirst({
-        where: {
-          driverId,
-          status: { in: ['driver_assigned', 'driver_arrived', 'in_progress'] },
-        },
-        orderBy: { createdAt: 'desc' },
-      }).catch(() => null);
-
-      if (activeTrip) {
-        io.to(`trip:${activeTrip.id}`).emit('driver:moved', { lat, lng });
-      }
+      await updateDriverLocation(driverId, lat, lng);
     });
 
     // ─── PASAJERO: se une a su sala de viaje ──────────────────────────────
@@ -309,11 +338,25 @@ export function setupSocketHandlers(io: Server) {
     socket.on('disconnect', async () => {
       const driverId = socket.data.driverId;
       if (driverId) {
+        const driverData = onlineDrivers.get(driverId);
+        let finalLat = driverData?.lat;
+        let finalLng = driverData?.lng;
+
         onlineDrivers.delete(driverId);
+        
         await prisma.driver.update({
           where: { id: driverId },
-          data: { isOnline: false },
+          data: { 
+            isOnline: false,
+            ...(finalLat !== undefined ? { lastLat: finalLat } : {}),
+            ...(finalLng !== undefined ? { lastLng: finalLng } : {}),
+            lastSeen: new Date()
+          },
         }).catch(console.error);
+
+        // Eliminar caché de Redis
+        await removeDriverLocationFromRedis(driverId);
+
         console.log(`[Socket] Conductor ${driverId} desconectado`);
       }
     });

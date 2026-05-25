@@ -1,6 +1,7 @@
 import { Router, Request, Response } from 'express';
 import prisma from '../utils/prisma';
 import { requireAuth, requireRole } from '../middleware/auth';
+import { updateDriverLocation } from '../socket/handlers';
 
 const router = Router();
 
@@ -38,10 +39,7 @@ router.post('/location', requireAuth, requireRole('driver'), async (req: Request
   try {
     const { lat, lng } = req.body;
 
-    await prisma.driver.update({
-      where: { id: req.user!.id },
-      data: { lastLat: lat, lastLng: lng, lastSeen: new Date() },
-    });
+    await updateDriverLocation(req.user!.id, lat, lng);
 
     return res.json({ ok: true });
   } catch (err) {

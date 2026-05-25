@@ -149,7 +149,7 @@ router.get('/driver-trips', requireAuth, requireRole('driver'), async (req: Requ
       },
     });
 
-    const totalEarnings = trips.reduce((sum, t) => sum + (t.finalPrice || t.estimatedPrice), 0);
+    const totalEarnings = trips.reduce((sum: number, t: any) => sum + (t.finalPrice || t.estimatedPrice), 0);
 
     return res.json({ trips, totalEarnings });
   } catch (err) {
@@ -234,7 +234,7 @@ router.post('/:id/rate', requireAuth, requireRole('passenger'), async (req: Requ
 
     // Actualizar rating promedio del conductor
     const allRatings = await prisma.rating.findMany({ where: { driverId: trip.driverId } });
-    const avgRating = allRatings.reduce((s, r) => s + r.driverScore, 0) / allRatings.length;
+    const avgRating = allRatings.reduce((s: number, r: any) => s + r.driverScore, 0) / allRatings.length;
     await prisma.driver.update({
       where: { id: trip.driverId },
       data: { totalRating: avgRating, totalTrips: { increment: 1 } },
