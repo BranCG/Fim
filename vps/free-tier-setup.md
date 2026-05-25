@@ -107,17 +107,17 @@ sudo systemctl enable --now docker
 # 4. Clonar el repositorio del proyecto Fim
 cd /var/www/
 # Reemplaza la URL con tu repositorio de GitHub
-sudo git clone https://github.com/tu-usuario/fim-app.git /var/www/fim-app
-sudo chown -R $USER:$USER /var/www/fim-app
+sudo git clone https://github.com/tu-usuario/fim-app.git /var/www/Fim
+sudo chown -R $USER:$USER /var/www/Fim
 
 # 5. Crear el archivo de entorno de producción (.env)
-nano /var/www/fim-app/apps/api/.env
+nano /var/www/Fim/apps/api/.env
 ```
 *En el editor que se abrirá, pega las credenciales reales de Supabase (PostgreSQL) y Upstash Redis, luego guarda presionando `Ctrl+O`, `Enter`, y sal con `Ctrl+X`.*
 
 ```bash
 # 6. Levantar la aplicación con Docker en segundo plano
-cd /var/www/fim-app
+cd /var/www/Fim
 sudo docker-compose up --build -d
 
 # 7. Instalar Nginx y configurar el proxy inverso
@@ -127,13 +127,13 @@ sudo apt install -y nginx
 ### Configurar Nginx para tu dominio DuckDNS:
 Edita el archivo de configuración en tu repositorio local o en el servidor para usar tu dominio de DuckDNS. Abre el archivo de configuración:
 ```bash
-nano /var/www/fim-app/vps/fim-api.conf
+nano /var/www/Fim/vps/fim-api.conf
 ```
 *Reemplaza todas las ocurrencias de `api.fim.cl` por tu dominio `fim-api.duckdns.org` y guarda.*
 
 ```bash
 # Enlazar la configuración de Nginx y activar el sitio
-sudo ln -sf /var/www/fim-app/vps/fim-api.conf /etc/nginx/sites-enabled/fim-api
+sudo ln -sf /var/www/Fim/vps/fim-api.conf /etc/nginx/sites-enabled/fim-api
 sudo rm -f /etc/nginx/sites-enabled/default
 sudo nginx -t
 sudo systemctl reload nginx

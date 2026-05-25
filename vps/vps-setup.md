@@ -44,16 +44,16 @@ Recomendamos colocar el proyecto en el directorio `/var/www/`.
 
 ```bash
 # Crear directorio principal
-sudo mkdir -p /var/www/fim-app
-sudo chown -R $USER:$USER /var/www/fim-app
+sudo mkdir -p /var/www/Fim
+sudo chown -R $USER:$USER /var/www/Fim
 
 # Clonar tu repositorio Git de Fim dentro de la carpeta
-git clone <URL_DE_TU_REPOSITORIO> /var/www/fim-app
+git clone <URL_DE_TU_REPOSITORIO> /var/www/Fim
 ```
 
-Una vez clonado, crea tu archivo de entorno de producción en `/var/www/fim-app/apps/api/.env` con tus credenciales seguras:
+Una vez clonado, crea tu archivo de entorno de producción en `/var/www/Fim/apps/api/.env` con tus credenciales seguras:
 ```bash
-nano /var/www/fim-app/apps/api/.env
+nano /var/www/Fim/apps/api/.env
 ```
 *(Ingresa tus credenciales reales de Supabase, JWT_SECRET, JWT_REFRESH_SECRET y la URL de Upstash Redis)*
 
@@ -72,7 +72,7 @@ sudo apt install -y docker.io docker-compose
 sudo systemctl enable --now docker
 
 # Levantar la API en segundo plano
-cd /var/www/fim-app
+cd /var/www/Fim
 sudo docker-compose up --build -d
 
 # Ver los logs del contenedor para confirmar que inició bien
@@ -91,7 +91,7 @@ sudo apt install -y nodejs
 sudo npm install -g pm2
 
 # Instalar dependencias del proyecto y compilar
-cd /var/www/fim-app
+cd /var/www/Fim
 npm install
 npm run build
 
@@ -115,7 +115,7 @@ Nginx actuará como el proxy inverso recibiendo el tráfico externo del puerto 8
 sudo apt install -y nginx
 
 # Crear un enlace simbólico de nuestra configuración a sites-enabled
-sudo ln -sf /var/www/fim-app/vps/fim-api.conf /etc/nginx/sites-enabled/fim-api
+sudo ln -sf /var/www/Fim/vps/fim-api.conf /etc/nginx/sites-enabled/fim-api
 
 # Desactivar la configuración por defecto de Nginx para evitar conflictos
 sudo rm -f /etc/nginx/sites-enabled/default
