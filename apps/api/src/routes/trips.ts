@@ -28,8 +28,8 @@ router.post('/request', requireAuth, requireRole('passenger'), async (req: Reque
       isDiscounted = true;
     }
 
-    // Cobro de TAG automático si el viaje es de más de 8 km reales
-    const isTagApplied = distanceKm > 8.0;
+    // Cobro de TAG automático si el viaje es de más de 5.0 km reales
+    const isTagApplied = distanceKm > 5.0;
     if (isTagApplied) {
       estimatedPrice += 1500;
     }
@@ -75,8 +75,8 @@ router.post('/estimate', requireAuth, async (req: Request, res: Response) => {
       isDiscounted = true;
     }
 
-    // Cobro de TAG automático si el viaje es de más de 8 km reales
-    const isTagApplied = distanceKm > 8.0;
+    // Cobro de TAG automático si el viaje es de más de 5.0 km reales
+    const isTagApplied = distanceKm > 5.0;
     if (isTagApplied) {
       estimatedPrice += 1500;
     }
