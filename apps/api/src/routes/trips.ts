@@ -13,6 +13,7 @@ router.post('/request', requireAuth, requireRole('passenger'), async (req: Reque
       originLat, originLng, originAddress,
       destLat, destLng, destAddress,
       paymentMethod,
+      includeTag,
     } = req.body;
 
     const distanceKm = calculateDistance(originLat, originLng, destLat, destLng) * 1.3;
@@ -28,11 +29,17 @@ router.post('/request', requireAuth, requireRole('passenger'), async (req: Reque
       isDiscounted = true;
     }
 
+    if (includeTag) {
+      estimatedPrice += 1500;
+    }
+
+    const finalDestAddress = includeTag ? `${destAddress} (Incluye TAG)` : destAddress;
+
     const trip = await prisma.trip.create({
       data: {
         passengerId: req.user!.id,
         originLat, originLng, originAddress,
-        destLat, destLng, destAddress,
+        destLat, destLng, destAddress: finalDestAddress,
         distanceKm,
         durationMin,
         estimatedPrice,
@@ -53,7 +60,7 @@ router.post('/request', requireAuth, requireRole('passenger'), async (req: Reque
 // ─── PRECIO ESTIMADO (SIN CREAR VIAJE) ───────────────────────────────────
 router.post('/estimate', requireAuth, async (req: Request, res: Response) => {
   try {
-    const { originLat, originLng, destLat, destLng } = req.body;
+    const { originLat, originLng, destLat, destLng, includeTag } = req.body;
     const distanceKm = calculateDistance(originLat, originLng, destLat, destLng) * 1.3;
     const durationMin = estimateDuration(distanceKm);
     let estimatedPrice = calculateTripPrice(distanceKm, durationMin);
@@ -65,6 +72,10 @@ router.post('/estimate', requireAuth, async (req: Request, res: Response) => {
       const discount = Math.min(roundCLP(estimatedPrice * 0.5), 8000);
       estimatedPrice = roundCLP(estimatedPrice - discount);
       isDiscounted = true;
+    }
+
+    if (includeTag) {
+      estimatedPrice += 1500;
     }
 
     return res.json({ distanceKm, durationMin, estimatedPrice, isDiscounted });
