@@ -62,7 +62,7 @@ async function resetAll() {
     create: {
       email: 'conductor1@fim.cl',
       phone: '+56933333333',
-      name: 'Pedro Negro (BLACK)',
+      name: 'Pedro',
       passwordHash: commonHash,
       rut: '33.333.333-3',
       birthDate: new Date('1990-01-01'),
