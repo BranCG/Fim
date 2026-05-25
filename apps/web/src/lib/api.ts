@@ -7,7 +7,7 @@ const getApiUrl = () => {
     const isMobileApp = (window.location.hostname === 'localhost' || window.location.hostname === '') && window.location.port === '';
     const isCapacitor = (window as any).Capacitor || window.location.origin.includes('capacitor://') || isMobileApp;
     if (isCapacitor) {
-      return 'https://fim-otwh.onrender.com';
+      return 'https://fim-api.duckdns.org';
     }
     
     // If we are on localhost in a web browser, use local API
@@ -15,9 +15,9 @@ const getApiUrl = () => {
       return 'http://localhost:3001';
     }
     
-    return 'https://fim-otwh.onrender.com';
+    return 'https://fim-api.duckdns.org';
   }
-  return 'https://fim-otwh.onrender.com';
+  return 'https://fim-api.duckdns.org';
 };
 
 export const API_URL = getApiUrl();

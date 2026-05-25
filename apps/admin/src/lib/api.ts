@@ -6,9 +6,9 @@ const getApiUrl = () => {
     if (window.location.hostname === 'localhost') {
       return 'http://localhost:3001';
     }
-    return 'https://fim-otwh.onrender.com';
+    return 'https://fim-api.duckdns.org';
   }
-  return 'https://fim-otwh.onrender.com';
+  return 'https://fim-api.duckdns.org';
 };
 
 const API_URL = getApiUrl();
