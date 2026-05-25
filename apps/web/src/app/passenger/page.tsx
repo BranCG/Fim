@@ -331,7 +331,11 @@ export default function PassengerPage() {
         setGpsError(null);
         try {
           const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${pos.lat}&lon=${pos.lng}&addressdetails=1`;
-          const res = await fetch(url);
+          const res = await fetch(url, {
+            headers: {
+              'User-Agent': 'Fim-App-Client/1.0 (contact@fim.cl)'
+            }
+          });
           const data = await res.json();
           if (data && data.address) {
             const formatted = formatNominatimAddress(data);
@@ -371,7 +375,11 @@ export default function PassengerPage() {
       const resolveAddress = async () => {
         try {
           const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${origin.lat}&lon=${origin.lng}&addressdetails=1`;
-          const res = await fetch(url);
+          const res = await fetch(url, {
+            headers: {
+              'User-Agent': 'Fim-App-Client/1.0 (contact@fim.cl)'
+            }
+          });
           const data = await res.json();
           if (data && data.address) {
             const formatted = formatNominatimAddress(data);
@@ -832,7 +840,11 @@ export default function PassengerPage() {
               setGpsError(null);
               try {
                 const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${pos.lat}&lon=${pos.lng}&addressdetails=1`;
-                const res = await fetch(url);
+                const res = await fetch(url, {
+                  headers: {
+                    'User-Agent': 'Fim-App-Client/1.0 (contact@fim.cl)'
+                  }
+                });
                 const data = await res.json();
                 if (data && data.address) {
                   const formatted = formatNominatimAddress(data);
