@@ -1,10 +1,10 @@
 // ─── Tarifas Fim (más baratas que Uber Chile ~15-20%) ────────────────────
 export const FIM_PRICING = {
-  baseFare: 1700,         // CLP - tarifa base (ajustada para ser ~15% más barata que Uber)
-  perKm: 510,             // CLP por kilómetro
-  perMinute: 110,         // CLP por minuto
+  baseFare: 1000,         // CLP - tarifa base (ajustada para ser ~15% más barata que Uber real)
+  perKm: 270,             // CLP por kilómetro
+  perMinute: 80,          // CLP por minuto
   bookingFee: 0,          // CLP - SIN cargo por reserva (diferenciador!)
-  minimumFare: 3000,      // CLP mínimo
+  minimumFare: 2000,      // CLP mínimo
   membershipFee: 100000,  // CLP membresía conductor (mensual, se renueva cada 30 días)
 };
 
