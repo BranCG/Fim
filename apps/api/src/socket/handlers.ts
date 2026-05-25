@@ -256,14 +256,41 @@ export function setupSocketHandlers(io: Server) {
     socket.on('trip:request-payment', async ({ tripId }: { tripId: string }) => {
       console.log(`[Socket] Conductor solicita pago para viaje ${tripId}`);
       try {
+        const completionOtp = Math.floor(1000 + Math.random() * 9000).toString(); // 4 dígitos
         await prisma.trip.update({
           where: { id: tripId },
-          data: { paymentStatus: 'requested' },
+          data: { 
+            paymentStatus: 'requested',
+            otpCode: completionOtp, // Reutilizar otpCode para código de término
+          },
         });
+        io.to(`trip:${tripId}`).emit('trip:payment-requested', { otpCode: completionOtp });
       } catch (err) {
         console.error('Error updating paymentStatus to requested:', err);
       }
-      io.to(`trip:${tripId}`).emit('trip:payment-requested');
+    });
+
+    // ─── CONDUCTOR: verifica código de término del viaje ───────────────────
+    socket.on('driver:verify-completion-otp', async ({ tripId, otpCode }: { tripId: string, otpCode: string }) => {
+      console.log(`[Socket] Conductor verifica código de término para viaje ${tripId}: ${otpCode}`);
+      try {
+        const trip = await prisma.trip.findUnique({ where: { id: tripId } });
+        if (!trip) return;
+
+        if (trip.otpCode !== otpCode) {
+          return socket.emit('trip:completion-otp-failed', { message: 'Código de término incorrecto. Solicítaselo al pasajero.' });
+        }
+
+        const updated = await prisma.trip.update({
+          where: { id: tripId },
+          data: { paymentStatus: 'otp_verified' },
+        });
+
+        io.to(`trip:${tripId}`).emit('trip:completion-otp-verified', { trip: updated });
+        console.log(`[Socket] Código de término verificado con éxito para viaje ${tripId}`);
+      } catch (err) {
+        console.error('[Socket] Error verificando código de término:', err);
+      }
     });
 
     // ─── CHAT EN VIVO: Mensajes de texto ──────────────────────────────────

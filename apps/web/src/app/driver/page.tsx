@@ -80,6 +80,8 @@ export default function DriverPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [otp, setOtp] = useState('');
+  const [completionOtp, setCompletionOtp] = useState('');
+  const [completionOtpVerified, setCompletionOtpVerified] = useState(false);
   const [showTaxGuide, setShowTaxGuide] = useState(false);
   const [gpsError, setGpsError] = useState<string | null>(null);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
@@ -272,8 +274,13 @@ export default function DriverPage() {
           }
           if (trip.paymentStatus === 'requested') {
             setPaymentRequested(true);
+            setCompletionOtpVerified(false);
+          } else if (trip.paymentStatus === 'otp_verified') {
+            setPaymentRequested(true);
+            setCompletionOtpVerified(true);
           } else if (trip.paymentStatus === 'passenger_confirmed') {
             setPaymentRequested(true);
+            setCompletionOtpVerified(true);
             setPassengerConfirmed(true);
           }
           if (trip.receiptUrl) {
@@ -443,6 +450,15 @@ export default function DriverPage() {
       }
     });
 
+    socket.on('trip:completion-otp-verified', (data?: { trip?: any }) => {
+      console.log('[Socket] Código de término verificado con éxito');
+      setCompletionOtpVerified(true);
+    });
+
+    socket.on('trip:completion-otp-failed', (data: { message: string }) => {
+      alert(data.message);
+    });
+
     socket.on('error', (data: { message: string }) => {
       alert(data.message);
     });
@@ -455,6 +471,8 @@ export default function DriverPage() {
       socket.off('trip:passenger-confirmed-payment');
       socket.off('trip:message');
       socket.off('trip:cancelled');
+      socket.off('trip:completion-otp-verified');
+      socket.off('trip:completion-otp-failed');
       socket.off('error');
     };
   }, [driver?.id, driver?.status, driver?.membershipPaid, driver?.membershipPlan, isOnline, session?.user?.id, activeTrip?.id]);
@@ -498,6 +516,17 @@ export default function DriverPage() {
     const socket = connectSocket();
     socket.emit('trip:request-payment', { tripId: activeTrip.id });
     setPaymentRequested(true);
+    setCompletionOtpVerified(false);
+  };
+
+  const verifyCompletionOtp = (code: string) => {
+    if (!activeTrip) return;
+    if (!code || code.length < 4) {
+      alert('Por favor ingresa el código de término.');
+      return;
+    }
+    const socket = connectSocket();
+    socket.emit('driver:verify-completion-otp', { tripId: activeTrip.id, otpCode: code });
   };
 
   const completeTrip = async () => {
@@ -533,6 +562,8 @@ export default function DriverPage() {
     setPassengerConfirmed(false);
     setReceiptUrl(null);
     setPaymentRequested(false);
+    setCompletionOtp('');
+    setCompletionOtpVerified(false);
     setChatMessages([]);
     setShowChat(false);
     setUnreadCount(0);
@@ -1351,7 +1382,21 @@ export default function DriverPage() {
                 </div>
               ) : (
                 <div style={{ animation: 'fadeIn 0.4s' }}>
-                  {!passengerConfirmed ? (
+                  {!completionOtpVerified ? (
+                    <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border)', padding: '16px', borderRadius: 'var(--radius)', marginBottom: '16px' }}>
+                      <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '12px', textAlign: 'center', fontWeight: 600 }}>
+                        Pide el código de término al pasajero para habilitar el pago:
+                      </p>
+                      <div style={{ display: 'flex', gap: '10px' }}>
+                        <input
+                          type="text" className="form-input" placeholder="CÓDIGO"
+                          value={completionOtp} onChange={(e) => setCompletionOtp(e.target.value)}
+                          style={{ textAlign: 'center', fontSize: '1.2rem', letterSpacing: '4px', fontWeight: 900 }}
+                        />
+                        <button className="btn btn-accent" onClick={() => verifyCompletionOtp(completionOtp)}>VERIFICAR</button>
+                      </div>
+                    </div>
+                  ) : !passengerConfirmed ? (
                     <div style={{ background: 'rgba(255,184,0,0.1)', border: '1px solid var(--warning)', padding: '16px', borderRadius: 'var(--radius)', marginBottom: '16px', textAlign: 'center' }}>
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', color: 'var(--warning)', fontWeight: 800, fontSize: '0.9rem', marginBottom: '8px' }}>
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg>

@@ -309,8 +309,13 @@ export default function PassengerPage() {
           }
           if (trip.paymentStatus === 'requested') {
             setPaymentRequested(true);
+            setCompletionOtpVerified(false);
+          } else if (trip.paymentStatus === 'otp_verified') {
+            setPaymentRequested(true);
+            setCompletionOtpVerified(true);
           } else if (trip.paymentStatus === 'passenger_confirmed') {
             setPaymentRequested(true);
+            setCompletionOtpVerified(true);
             setPaymentSent(true);
           }
         }
@@ -600,9 +605,21 @@ export default function PassengerPage() {
       setPassengerConfirmed(true);
     });
 
-    socket.on('trip:payment-requested', () => {
-      console.log('[Socket] El conductor solicita el pago');
+    socket.on('trip:payment-requested', (data?: { otpCode?: string }) => {
+      console.log('[Socket] El conductor solicita el pago', data);
       setPaymentRequested(true);
+      setCompletionOtpVerified(false);
+      if (data?.otpCode) {
+        setCurrentTrip(prev => {
+          if (!prev) return null;
+          return { ...prev, otpCode: data.otpCode };
+        });
+      }
+    });
+
+    socket.on('trip:completion-otp-verified', (data?: { trip?: any }) => {
+      console.log('[Socket] Código de término verificado con éxito');
+      setCompletionOtpVerified(true);
     });
 
     socket.on('trip:completed', () => {
@@ -627,6 +644,7 @@ export default function PassengerPage() {
       socket.off('trip:completed');
       socket.off('trip:no-drivers');
       socket.off('trip:payment-requested');
+      socket.off('trip:completion-otp-verified');
       socket.off('trip:passenger-confirmed-payment');
       socket.off('trip:message');
     };
@@ -685,6 +703,7 @@ export default function PassengerPage() {
   }, [status, executeCancel]);
 
   const [paymentRequested, setPaymentRequested] = useState(false);
+  const [completionOtpVerified, setCompletionOtpVerified] = useState(false);
   const [passengerConfirmed, setPassengerConfirmed] = useState(false);
   const [paymentSent, setPaymentSent] = useState(false);
   const [receiptUploading, setReceiptUploading] = useState(false);
@@ -703,6 +722,7 @@ export default function PassengerPage() {
     setRatingDone(false);
     setError('');
     setPaymentRequested(false);
+    setCompletionOtpVerified(false);
     setPassengerConfirmed(false);
     setPaymentSent(false);
     setReceiptUrl(null);
@@ -1349,82 +1369,107 @@ export default function PassengerPage() {
             </div>
           ) : (
             <div style={{ padding: '4px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                <h3 style={{ fontWeight: 900 }}>Monto a pagar</h3>
-                <div style={{ fontSize: '1.5rem', fontWeight: 900, color: 'var(--accent)' }}>
-                  {formatCLP(paymentMethod === 'card' ? (currentTrip?.estimatedPrice || estimatedPrice) * 1.0319 : (currentTrip?.estimatedPrice || estimatedPrice))}
+              {!completionOtpVerified ? (
+                <div style={{ textAlign: 'center', padding: '16px 0' }}>
+                  <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', marginBottom: '12px', fontWeight: 600 }}>
+                    El viaje ha finalizado. Entrega el código de término al conductor para habilitar tu pago:
+                  </p>
+                  <div style={{ 
+                    background: 'var(--bg-secondary)', 
+                    border: '2px dashed var(--accent)', 
+                    borderRadius: 'var(--radius)', 
+                    padding: '16px 24px', 
+                    marginBottom: '16px',
+                    display: 'inline-block'
+                  }}>
+                    <div style={{ fontSize: '2.5rem', fontWeight: 900, letterSpacing: '8px', color: 'var(--accent)', lineHeight: 1 }}>
+                      {currentTrip?.otpCode || '----'}
+                    </div>
+                  </div>
+                  <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', margin: 0 }}>
+                    Una vez que el conductor verifique el código, podrás elegir el medio de pago.
+                  </p>
                 </div>
-              </div>
-              {paymentMethod === 'card' && (
-                <div style={{ 
-                  background: 'rgba(0, 229, 160, 0.08)', 
-                  border: '1px solid rgba(0, 229, 160, 0.15)',
-                  borderRadius: 'var(--radius)', 
-                  padding: '10px 14px', 
-                  fontSize: '0.78rem', 
-                  color: 'var(--accent)', 
-                  marginBottom: '16px',
-                  lineHeight: '1.4'
-                }}>
-                  <strong>Nota Importante:</strong> El pago con tarjeta incluye un recargo de 3.19% por la comisión del procesador (Mercado Pago). Por favor, <strong>transfiere exactamente</strong> el monto indicado arriba.
-                </div>
-              )}
-
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '20px' }}>
-                <button 
-                  className={`btn ${paymentMethod === 'cash' ? 'btn-primary' : 'btn-secondary'}`}
-                  onClick={() => setPaymentMethod('cash')}
-                >
-                  <IconCash /> Efectivo
-                </button>
-                <button 
-                  className={`btn ${paymentMethod === 'card' ? 'btn-primary' : 'btn-secondary'}`}
-                  onClick={() => setPaymentMethod('card')}
-                >
-                  <IconCard /> Mercado Pago
-                </button>
-              </div>
-
-              {!paymentSent ? (
+              ) : (
                 <>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                    <h3 style={{ fontWeight: 900 }}>Monto a pagar</h3>
+                    <div style={{ fontSize: '1.5rem', fontWeight: 900, color: 'var(--accent)' }}>
+                      {formatCLP(paymentMethod === 'card' ? (currentTrip?.estimatedPrice || estimatedPrice) * 1.0319 : (currentTrip?.estimatedPrice || estimatedPrice))}
+                    </div>
+                  </div>
                   {paymentMethod === 'card' && (
-                    <div style={{ marginBottom: '16px' }}>
-                      <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '8px', textAlign: 'center' }}>Sube tu comprobante para mayor seguridad:</p>
-                      <label style={{ 
-                        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
-                        padding: '12px', border: '2px dashed var(--border)', borderRadius: 'var(--radius)',
-                        cursor: 'pointer', color: receiptUrl ? 'var(--accent)' : 'var(--text-muted)',
-                        background: receiptUrl ? 'rgba(0,229,160,0.05)' : 'transparent'
-                      }}>
-                        <input type="file" hidden accept="image/*" onChange={handleUploadReceipt} />
-                        {receiptUploading ? 'Subiendo...' : receiptUrl ? <><IconCheck /> Comprobante cargado</> : (
-                          <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
-                            Adjuntar pantallazo
-                          </span>
-                        )}
-                      </label>
+                    <div style={{ 
+                      background: 'rgba(0, 229, 160, 0.08)', 
+                      border: '1px solid rgba(0, 229, 160, 0.15)',
+                      borderRadius: 'var(--radius)', 
+                      padding: '10px 14px', 
+                      fontSize: '0.78rem', 
+                      color: 'var(--accent)', 
+                      marginBottom: '16px',
+                      lineHeight: '1.4'
+                    }}>
+                      <strong>Nota Importante:</strong> El pago con tarjeta incluye un recargo de 3.19% por la comisión del procesador (Mercado Pago). Por favor, <strong>transfiere exactamente</strong> el monto indicado arriba.
                     </div>
                   )}
-                  
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                    {paymentMethod === 'card' && !receiptUrl && (
-                      <button className="btn btn-outline btn-block" onClick={handlePayTrip}>Ir a Mercado Pago</button>
-                    )}
+
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '20px' }}>
                     <button 
-                      className="btn btn-accent btn-block btn-lg"
-                      onClick={handleConfirmPaymentSent}
-                      disabled={receiptUploading}
+                      className={`btn ${paymentMethod === 'cash' ? 'btn-primary' : 'btn-secondary'}`}
+                      onClick={() => setPaymentMethod('cash')}
                     >
-                      Confirmar envío de pago
+                      <IconCash /> Efectivo
+                    </button>
+                    <button 
+                      className={`btn ${paymentMethod === 'card' ? 'btn-primary' : 'btn-secondary'}`}
+                      onClick={() => setPaymentMethod('card')}
+                    >
+                      <IconCard /> Mercado Pago
                     </button>
                   </div>
+
+                  {!paymentSent ? (
+                    <>
+                      {paymentMethod === 'card' && (
+                        <div style={{ marginBottom: '16px' }}>
+                          <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '8px', textAlign: 'center' }}>Sube tu comprobante para mayor seguridad:</p>
+                          <label style={{ 
+                            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
+                            padding: '12px', border: '2px dashed var(--border)', borderRadius: 'var(--radius)',
+                            cursor: 'pointer', color: receiptUrl ? 'var(--accent)' : 'var(--text-muted)',
+                            background: receiptUrl ? 'rgba(0,229,160,0.05)' : 'transparent'
+                          }}>
+                            <input type="file" hidden accept="image/*" onChange={handleUploadReceipt} />
+                            {receiptUploading ? 'Subiendo...' : receiptUrl ? <><IconCheck /> Comprobante cargado</> : (
+                              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+                                Adjuntar pantallazo
+                              </span>
+                            )}
+                          </label>
+                        </div>
+                      )}
+                      
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                        {paymentMethod === 'card' && !receiptUrl && (
+                          <button className="btn btn-outline btn-block" onClick={handlePayTrip}>Ir a Mercado Pago</button>
+                        )}
+                        <button 
+                          className="btn btn-accent btn-block btn-lg"
+                          onClick={handleConfirmPaymentSent}
+                          disabled={receiptUploading}
+                        >
+                          Confirmar envío de pago
+                        </button>
+                      </div>
+                    </>
+                  ) : (
+                    <div style={{ padding: '20px', textAlign: 'center', color: 'var(--accent)', fontWeight: 700 }}>
+                      <div className="spinner-sm" style={{ margin: '0 auto 12px' }} />
+                      Pago enviado. Esperando confirmación...
+                    </div>
+                  )}
                 </>
-              ) : (
-                <div style={{ padding: '20px', textAlign: 'center', color: 'var(--accent)', fontWeight: 700 }}>
-                  <div className="spinner-sm" style={{ margin: '0 auto 12px' }} />
-                  Pago enviado. Esperando confirmación...
-                </div>
               )}
             </div>
           )}
