@@ -21,6 +21,7 @@ export default function LoginPage() {
     setLoading(true);
     setError('');
 
+    let success = false;
     try {
       const endpoint = role === 'driver' ? '/auth/driver/login'
           : '/auth/passenger/login';
@@ -29,14 +30,16 @@ export default function LoginPage() {
       const userData = res.data.user || res.data.driver;
 
       saveSession(res.data.accessToken, { ...userData, role });
-
-      if (role === 'driver') router.push('/driver');
-      else router.push('/passenger');
+      success = true;
     } catch (err: unknown) {
       const e = err as { response?: { data?: { error?: string } } };
       setError(e.response?.data?.error || 'Error al iniciar sesión');
-    } finally {
       setLoading(false);
+    }
+
+    if (success) {
+      if (role === 'driver') router.push('/driver');
+      else router.push('/passenger');
     }
   }
 

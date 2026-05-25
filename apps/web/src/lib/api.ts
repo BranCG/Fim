@@ -45,7 +45,15 @@ api.interceptors.response.use(
     if (error.response?.status === 401 && typeof window !== 'undefined') {
       localStorage.removeItem('fim_token');
       localStorage.removeItem('fim_user');
-      window.location.href = '/login';
+      
+      const isMobileApp = (window.location.hostname === 'localhost' || window.location.hostname === '') && window.location.port === '';
+      const isCapacitor = (window as any).Capacitor || window.location.origin.includes('capacitor://') || isMobileApp;
+      
+      if (isCapacitor) {
+        window.location.href = '/login.html';
+      } else {
+        window.location.href = '/login';
+      }
     }
     return Promise.reject(error);
   }

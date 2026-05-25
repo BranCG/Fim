@@ -199,20 +199,24 @@ function RegisterForm() {
       setLoading(false);
       return;
     }
+    let success = false;
     try {
       if (role === 'passenger') {
         const res = await api.post('/auth/passenger/register', { name, email, phone, password, rut, birthDate, address, idFrontUrl: idFront.url, idBackUrl: idBack.url, selfieUrl: selfie.url });
         saveSession(res.data.accessToken, { ...res.data.user, role: 'passenger' });
-        router.push('/passenger');
       } else {
         const res = await api.post('/auth/driver/register', { name, email, phone, password, rut, birthDate, address, idFrontUrl: idFront.url, idBackUrl: idBack.url, selfieUrl: selfie.url, licenseNumber, licenseUrl: licenseFile.url, vehicleBrand, vehicleModel, vehicleYear, vehiclePlate, tagNumber, vehiclePhotoUrl: vehiclePhoto.url, membershipPlan });
         saveSession(res.data.accessToken, { ...res.data.driver, role: 'driver' });
-        router.push('/driver');
       }
+      success = true;
     } catch (err: any) {
       setError(err.response?.data?.error || 'Error al registrarse.');
-    } finally {
       setLoading(false);
+    }
+
+    if (success) {
+      if (role === 'passenger') router.push('/passenger');
+      else router.push('/driver');
     }
   }
 
