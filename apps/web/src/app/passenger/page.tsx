@@ -874,7 +874,7 @@ export default function PassengerPage() {
               <input 
                 className="form-input" 
                 placeholder="Ingresa ubicación de origen..." 
-                style={{ paddingLeft: '44px' }}
+                style={{ paddingLeft: '44px', paddingRight: '40px' }}
                 value={originQuery}
                 onFocus={() => {
                   setActiveField('origin');
@@ -885,10 +885,43 @@ export default function PassengerPage() {
                   setSearchQuery(e.target.value);
                 }}
               />
-              {isSearching && activeField === 'origin' && (
+              {isSearching && activeField === 'origin' ? (
                 <div style={{ position: 'absolute', right: '16px', top: '50%', transform: 'translateY(-50%)' }}>
                   <div className="spinner" style={{ width: '16px', height: '16px', borderWidth: '2px' }} />
                 </div>
+              ) : (
+                originQuery && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setOriginQuery('');
+                      setSearchQuery('');
+                      setOrigin(null);
+                    }}
+                    style={{
+                      position: 'absolute',
+                      right: '12px',
+                      top: '50%',
+                      transform: 'translateY(-50%)',
+                      background: 'rgba(255, 255, 255, 0.08)',
+                      border: 'none',
+                      color: 'var(--text-secondary)',
+                      fontSize: '1rem',
+                      fontWeight: 'bold',
+                      borderRadius: '50%',
+                      width: '22px',
+                      height: '22px',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      zIndex: 15,
+                      transition: 'background 0.2s'
+                    }}
+                  >
+                    ×
+                  </button>
+                )
               )}
             </div>
 
@@ -900,7 +933,7 @@ export default function PassengerPage() {
               <input 
                 className="form-input" 
                 placeholder="¿A dónde vamos? (Destino)" 
-                style={{ paddingLeft: '44px' }}
+                style={{ paddingLeft: '44px', paddingRight: '40px' }}
                 value={destQuery}
                 onFocus={() => {
                   setActiveField('dest');
@@ -911,10 +944,43 @@ export default function PassengerPage() {
                   setSearchQuery(e.target.value);
                 }}
               />
-              {isSearching && activeField === 'dest' && (
+              {isSearching && activeField === 'dest' ? (
                 <div style={{ position: 'absolute', right: '16px', top: '50%', transform: 'translateY(-50%)' }}>
                   <div className="spinner" style={{ width: '16px', height: '16px', borderWidth: '2px' }} />
                 </div>
+              ) : (
+                destQuery && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setDestQuery('');
+                      setSearchQuery('');
+                      setDest(null);
+                    }}
+                    style={{
+                      position: 'absolute',
+                      right: '12px',
+                      top: '50%',
+                      transform: 'translateY(-50%)',
+                      background: 'rgba(255, 255, 255, 0.08)',
+                      border: 'none',
+                      color: 'var(--text-secondary)',
+                      fontSize: '1rem',
+                      fontWeight: 'bold',
+                      borderRadius: '50%',
+                      width: '22px',
+                      height: '22px',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      zIndex: 15,
+                      transition: 'background 0.2s'
+                    }}
+                  >
+                    ×
+                  </button>
+                )
               )}
             </div>
 
