@@ -594,8 +594,8 @@ export default function DriverPage() {
 
   return (
     <div className="app-container">
-      <header className="app-header">
-        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+      <header className="app-header" style={{ alignItems: 'flex-start' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '4px' }}>
           <div
             className="logo-hover-container"
             onMouseEnter={() => setIsLogoHovered(true)}
@@ -639,48 +639,55 @@ export default function DriverPage() {
             </div>
           </div>
 
-          {/* Sello de Membresía Premium (Conductor) */}
-          {driver?.membershipPlan && (
-            <div 
-              className={`seal-${driver.membershipPlan.toLowerCase()}`}
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '5px',
-                padding: '3px 8px',
-                borderRadius: '6px',
-                fontSize: '0.62rem',
-                fontWeight: 950,
-                textTransform: 'uppercase',
-                letterSpacing: '0.06em',
-                whiteSpace: 'nowrap',
-              }}
-            >
-              {driver.membershipPlan === 'BLACK' ? (
-                <>
-                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ display: 'inline-block' }}>
-                    <path d="M2 4l3 12h14l3-12-6 7-4-7-4 7-6-7z" />
-                    <path d="M3 20h18" />
-                  </svg>
-                  <span>Conductor BLACK</span>
-                </>
-              ) : driver.membershipPlan === 'COMFORT' ? (
-                <>
-                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ display: 'inline-block' }}>
-                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-                  </svg>
-                  <span>Conductor COMFORT</span>
-                </>
-              ) : (
-                <>
-                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ display: 'inline-block' }}>
-                    <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
-                  </svg>
-                  <span>Conductor FLEX</span>
-                </>
-              )}
-            </div>
-          )}
+          {/* Nombre y Membresía del Conductor (debajo del logo) */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', alignItems: 'flex-start' }}>
+            {driver?.name && (
+              <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: 700, whiteSpace: 'nowrap', lineHeight: 1 }}>
+                {driver.name}
+              </span>
+            )}
+            {driver?.membershipPlan && (
+              <div 
+                className={`seal-${driver.membershipPlan.toLowerCase()}`}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                  padding: '2px 6px',
+                  borderRadius: '4px',
+                  fontSize: '0.58rem',
+                  fontWeight: 950,
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.05em',
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                {driver.membershipPlan === 'BLACK' ? (
+                  <>
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ display: 'inline-block' }}>
+                      <path d="M2 4l3 12h14l3-12-6 7-4-7-4 7-6-7z" />
+                      <path d="M3 20h18" />
+                    </svg>
+                    <span>Conductor BLACK</span>
+                  </>
+                ) : driver.membershipPlan === 'COMFORT' ? (
+                  <>
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ display: 'inline-block' }}>
+                      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                    </svg>
+                    <span>Conductor COMFORT</span>
+                  </>
+                ) : (
+                  <>
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ display: 'inline-block' }}>
+                      <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
+                    </svg>
+                    <span>Conductor FLEX</span>
+                  </>
+                )}
+              </div>
+            )}
+          </div>
         </div>
         <div className="header-actions" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           <div className="header-status-badge" style={{
