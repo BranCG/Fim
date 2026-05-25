@@ -4,7 +4,7 @@ import { useState, useRef, useCallback, useEffect, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { createWorker } from 'tesseract.js';
-import api, { saveSession, uploadFile } from '@/lib/api';
+import api, { saveSession, getSession, uploadFile } from '@/lib/api';
 import Logo from '@/components/Logo';
 
 type Role = 'passenger' | 'driver';
@@ -60,6 +60,17 @@ function RegisterForm() {
   const [step, setStep] = useState<Step>(1);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+
+  useEffect(() => {
+    const s = getSession();
+    if (s && s.user && s.user.role) {
+      if (s.user.role === 'driver') {
+        router.push('/driver');
+      } else {
+        router.push('/passenger');
+      }
+    }
+  }, [router]);
   
   // Legal
   const [acceptedTerms, setAcceptedTerms] = useState(false);

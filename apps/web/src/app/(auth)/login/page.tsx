@@ -1,9 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import api, { saveSession, API_URL } from '@/lib/api';
+import api, { saveSession, getSession, API_URL } from '@/lib/api';
 import Logo from '@/components/Logo';
 
 type Role = 'passenger' | 'driver';
@@ -15,6 +15,17 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+
+  useEffect(() => {
+    const s = getSession();
+    if (s && s.user && s.user.role) {
+      if (s.user.role === 'driver') {
+        router.push('/driver');
+      } else {
+        router.push('/passenger');
+      }
+    }
+  }, [router]);
 
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault();

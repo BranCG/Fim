@@ -1,15 +1,29 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Logo from '@/components/Logo';
 import SplashScreen from '@/components/SplashScreen';
+import { getSession } from '@/lib/api';
 
 export default function Home() {
+  const router = useRouter();
   const [tripsPerWeek, setTripsPerWeek] = useState(60);
   const [avgPrice, setAvgPrice] = useState(6000);
   const [loss, setLoss] = useState(0);
   const [activeView, setActiveView] = useState<'passenger' | 'driver'>('passenger');
+
+  useEffect(() => {
+    const s = getSession();
+    if (s && s.user && s.user.role) {
+      if (s.user.role === 'driver') {
+        router.push('/driver');
+      } else {
+        router.push('/passenger');
+      }
+    }
+  }, [router]);
 
   useEffect(() => {
     // Calculamos pérdida mensual (4 semanas) asumiendo 25% de comisión
