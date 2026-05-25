@@ -17,8 +17,4 @@ services:
       - JWT_REFRESH_SECRET=${JWT_REFRESH_SECRET}
       - REDIS_URL=${REDIS_URL}
     volumes:
-      - api-uploads:/app/apps/api/uploads
-
-volumes:
-  api-uploads:
-    driver: local
+      - ./apps/api/uploads:/app/apps/api/uploads
