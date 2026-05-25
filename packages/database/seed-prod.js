@@ -13,7 +13,7 @@ async function main() {
     update: {},
     create: {
       email: 'admin@fim.cl',
-      phone: '+56900000000',
+      phone: '+56999990000',
       name: 'Administrador Fim',
       passwordHash: adminHash,
       role: 'admin',
@@ -29,7 +29,7 @@ async function main() {
     update: {},
     create: {
       email: 'pasajero@test.cl',
-      phone: '+56911111111',
+      phone: '+56999990001',
       name: 'Juan Pasajero',
       passwordHash: passengerHash,
       role: 'passenger',
@@ -48,7 +48,7 @@ async function main() {
     update: {},
     create: {
       email: 'conductor@test.cl',
-      phone: '+56922222222',
+      phone: '+56999990002',
       name: 'Pedro Conductor',
       passwordHash: driverHash,
       rut: '15.678.901-2',
@@ -80,7 +80,7 @@ async function main() {
     update: {},
     create: {
       email: 'pendiente@test.cl',
-      phone: '+56933333333',
+      phone: '+56999990003',
       name: 'Carlos Pendiente',
       passwordHash: pendingHash,
       rut: '18.901.234-5',
