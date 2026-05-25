@@ -136,7 +136,6 @@ export default function PassengerPage() {
   const [estimatedPrice, setEstimatedPrice] = useState(0);
   const [distanceKm, setDistanceKm] = useState(0);
   const [durationMin, setDurationMin] = useState(0);
-  const [includeTag, setIncludeTag] = useState(false);
 
   // Búsqueda de direcciones
   const [searchQuery, setSearchQuery] = useState('');
@@ -327,9 +326,34 @@ export default function PassengerPage() {
         setOrigin({
           lat: pos.lat,
           lng: pos.lng,
-          address: 'Mi ubicación actual',
+          address: 'Obteniendo dirección...',
         });
         setGpsError(null);
+        try {
+          const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${pos.lat}&lon=${pos.lng}&addressdetails=1`;
+          const res = await fetch(url);
+          const data = await res.json();
+          if (data && data.address) {
+            const formatted = formatNominatimAddress(data);
+            const fullAddress = formatted.title + (formatted.subtitle ? `, ${formatted.subtitle}` : '');
+            setOrigin({
+              lat: pos.lat,
+              lng: pos.lng,
+              address: fullAddress,
+            });
+            const commune = data.address.suburb || data.address.neighbourhood || data.address.city_district || data.address.town || data.address.city || '';
+            if (commune) {
+              setCurrentCommune(commune);
+            }
+          }
+        } catch (err) {
+          console.error('Error reverse geocoding origin inline:', err);
+          setOrigin({
+            lat: pos.lat,
+            lng: pos.lng,
+            address: 'Mi ubicación actual',
+          });
+        }
       } catch (err) {
         console.warn('Passenger GPS initial warning:', err);
         setOrigin({ ...SANTIAGO_CENTER, address: 'Centro de Santiago' });
@@ -389,8 +413,7 @@ export default function PassengerPage() {
         originLat: origin.lat,
         originLng: origin.lng,
         destLat: dest.lat,
-        destLng: dest.lng,
-        includeTag
+        destLng: dest.lng
       })
       .then(res => {
         const { distanceKm, durationMin, estimatedPrice } = res.data;
@@ -407,7 +430,7 @@ export default function PassengerPage() {
         setStatus('idle');
       });
     }
-  }, [origin, dest, status, includeTag]);
+  }, [origin, dest, status]);
 
   // Autocomplete con Nominatim
   useEffect(() => {
@@ -611,7 +634,6 @@ export default function PassengerPage() {
         originLat: origin.lat, originLng: origin.lng, originAddress: origin.address,
         destLat: dest.lat, destLng: dest.lng, destAddress: dest.address,
         paymentMethod,
-        includeTag,
       });
 
       const trip = res.data.trip;
@@ -644,7 +666,6 @@ export default function PassengerPage() {
     setShowCancelModal(false);
     setSelectedCancelOption('');
     setCustomCancelReason('');
-    setIncludeTag(false);
   }, [currentTrip]);
 
   const handleCancel = useCallback(async () => {
@@ -680,7 +701,6 @@ export default function PassengerPage() {
     setChatMessages([]);
     setShowChat(false);
     setUnreadCount(0);
-    setIncludeTag(false);
   }, []);
 
   const handleRate = useCallback(async () => {
@@ -807,9 +827,29 @@ export default function PassengerPage() {
               setOrigin({
                 lat: pos.lat,
                 lng: pos.lng,
-                address: 'Mi ubicación actual',
+                address: 'Obteniendo dirección...',
               });
               setGpsError(null);
+              try {
+                const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${pos.lat}&lon=${pos.lng}&addressdetails=1`;
+                const res = await fetch(url);
+                const data = await res.json();
+                if (data && data.address) {
+                  const formatted = formatNominatimAddress(data);
+                  const fullAddress = formatted.title + (formatted.subtitle ? `, ${formatted.subtitle}` : '');
+                  setOrigin({
+                    lat: pos.lat,
+                    lng: pos.lng,
+                    address: fullAddress,
+                  });
+                }
+              } catch (e) {
+                setOrigin({
+                  lat: pos.lat,
+                  lng: pos.lng,
+                  address: 'Mi ubicación actual',
+                });
+              }
             } catch (err) {
               console.error('Error al detectar ubicación:', err);
               setGpsError('Error al detectar ubicación. Verifica que tu GPS esté encendido.');
@@ -1087,80 +1127,6 @@ export default function PassengerPage() {
             </div>
             <div className="info-badge" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
               <span style={{ display: 'flex', alignItems: 'center', color: 'var(--accent)' }}><IconCar /></span> {distanceKm.toFixed(1)} km
-            </div>
-          </div>
-
-          {/* Toggle de Autopistas (TAG) */}
-          <div 
-            style={{
-              background: 'var(--bg-secondary)',
-              border: '1px solid var(--border)',
-              borderRadius: '12px',
-              padding: '12px 16px',
-              marginBottom: '20px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              cursor: 'pointer',
-              transition: 'all 0.2s ease',
-              userSelect: 'none'
-            }}
-            onClick={() => setIncludeTag(!includeTag)}
-            className="tag-toggle-container animate-fade-in"
-          >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-              <div style={{
-                width: '36px',
-                height: '36px',
-                borderRadius: '10px',
-                background: includeTag ? 'rgba(0, 229, 160, 0.15)' : 'rgba(255, 255, 255, 0.05)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: includeTag ? 'var(--accent)' : 'var(--text-muted)',
-                transition: 'all 0.25s ease'
-              }}>
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M3 3h18v18H3z" />
-                  <path d="M12 3v18" strokeDasharray="4 4" />
-                </svg>
-              </div>
-              <div>
-                <div style={{ fontSize: '0.88rem', fontWeight: 800, color: 'var(--text-primary)' }}>Incluir Autopistas (TAG)</div>
-                <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>Ruta más rápida con peajes urbanos</div>
-              </div>
-            </div>
-            
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-              <span style={{ 
-                fontSize: '0.85rem', 
-                fontWeight: 900, 
-                color: includeTag ? 'var(--accent)' : 'var(--text-muted)',
-                transition: 'color 0.2s'
-              }}>
-                +$1.500
-              </span>
-              {/* Toggle Switch */}
-              <div style={{
-                width: '44px',
-                height: '24px',
-                background: includeTag ? 'var(--accent)' : 'rgba(255, 255, 255, 0.1)',
-                borderRadius: '12px',
-                position: 'relative',
-                transition: 'background 0.25s'
-              }}>
-                <div style={{
-                  width: '18px',
-                  height: '18px',
-                  background: '#FFFFFF',
-                  borderRadius: '50%',
-                  position: 'absolute',
-                  top: '3px',
-                  left: includeTag ? '23px' : '3px',
-                  transition: 'left 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
-                  boxShadow: '0 2px 4px rgba(0,0,0,0.4)'
-                }} />
-              </div>
             </div>
           </div>
 

@@ -13,7 +13,6 @@ router.post('/request', requireAuth, requireRole('passenger'), async (req: Reque
       originLat, originLng, originAddress,
       destLat, destLng, destAddress,
       paymentMethod,
-      includeTag,
     } = req.body;
 
     const distanceKm = calculateDistance(originLat, originLng, destLat, destLng) * 1.3;
@@ -29,11 +28,13 @@ router.post('/request', requireAuth, requireRole('passenger'), async (req: Reque
       isDiscounted = true;
     }
 
-    if (includeTag) {
+    // Cobro de TAG automático si el viaje es de más de 8 km reales
+    const isTagApplied = distanceKm > 8.0;
+    if (isTagApplied) {
       estimatedPrice += 1500;
     }
 
-    const finalDestAddress = includeTag ? `${destAddress} (Incluye TAG)` : destAddress;
+    const finalDestAddress = isTagApplied ? `${destAddress} (Incluye TAG)` : destAddress;
 
     const trip = await prisma.trip.create({
       data: {
@@ -60,7 +61,7 @@ router.post('/request', requireAuth, requireRole('passenger'), async (req: Reque
 // ─── PRECIO ESTIMADO (SIN CREAR VIAJE) ───────────────────────────────────
 router.post('/estimate', requireAuth, async (req: Request, res: Response) => {
   try {
-    const { originLat, originLng, destLat, destLng, includeTag } = req.body;
+    const { originLat, originLng, destLat, destLng } = req.body;
     const distanceKm = calculateDistance(originLat, originLng, destLat, destLng) * 1.3;
     const durationMin = estimateDuration(distanceKm);
     let estimatedPrice = calculateTripPrice(distanceKm, durationMin);
@@ -74,7 +75,9 @@ router.post('/estimate', requireAuth, async (req: Request, res: Response) => {
       isDiscounted = true;
     }
 
-    if (includeTag) {
+    // Cobro de TAG automático si el viaje es de más de 8 km reales
+    const isTagApplied = distanceKm > 8.0;
+    if (isTagApplied) {
       estimatedPrice += 1500;
     }
 
