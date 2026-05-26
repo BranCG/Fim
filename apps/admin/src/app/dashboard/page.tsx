@@ -1026,7 +1026,10 @@ export default function DashboardPage() {
                             fontFamily: 'monospace', 
                             color: 'var(--success)' 
                           }}>
-                            <span>🛫 Subida:</span>
+                            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/></svg>
+                              Subida:
+                            </span>
                             <strong style={{ letterSpacing: '0.5px' }}>{trip.otpCode || '----'}</strong>
                           </div>
                         </td>
@@ -1047,12 +1050,25 @@ export default function DashboardPage() {
                             fontFamily: 'monospace', 
                             color: 'var(--info)' 
                           }}>
-                            <span>🛬 Bajada:</span>
+                            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                              Bajada:
+                            </span>
                             <strong style={{ letterSpacing: '0.5px' }}>{trip.dropoffOtpCode || '----'}</strong>
                           </div>
                         </td>
                         <td>
-                          {trip.paymentMethod === 'card' ? '💳 Tarjeta' : '💵 Efectivo'}
+                          {trip.paymentMethod === 'card' ? (
+                            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+                              Tarjeta
+                            </span>
+                          ) : (
+                            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2"/><path d="M6 12h.01M18 12h.01"/></svg>
+                              Efectivo
+                            </span>
+                          )}
                         </td>
                         <td style={{ fontWeight: 700 }}>
                           {formatCLP(trip.estimatedPrice)}

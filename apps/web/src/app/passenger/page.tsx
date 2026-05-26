@@ -136,6 +136,7 @@ export default function PassengerPage() {
   const [confirmNewPassword, setConfirmNewPassword] = useState('');
   const [passwordChangeMsg, setPasswordChangeMsg] = useState('');
   const [passwordChangeLoading, setPasswordChangeLoading] = useState(false);
+  const [passwordChangeStatus, setPasswordChangeStatus] = useState<'success' | 'error' | ''>('');
 
   const [status, setStatus] = useState<TripStatus>('idle');
   const [origin, setOrigin] = useState<Location | null>(null);
@@ -803,6 +804,7 @@ export default function PassengerPage() {
   const openProfileModal = async () => {
     setShowProfileModal(true);
     setPasswordChangeMsg('');
+    setPasswordChangeStatus('');
     try {
       const res = await api.get('/auth/me');
       const latestUser = res.data.user;
@@ -817,32 +819,38 @@ export default function PassengerPage() {
   const handlePasswordChange = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!currentPassword || !newPassword || !confirmNewPassword) {
-      setPasswordChangeMsg('❌ Todos los campos son obligatorios');
+      setPasswordChangeMsg('Todos los campos son obligatorios');
+      setPasswordChangeStatus('error');
       return;
     }
     if (newPassword !== confirmNewPassword) {
-      setPasswordChangeMsg('❌ Las contraseñas nuevas no coinciden');
+      setPasswordChangeMsg('Las contraseñas nuevas no coinciden');
+      setPasswordChangeStatus('error');
       return;
     }
     if (newPassword.length < 6) {
-      setPasswordChangeMsg('❌ La nueva contraseña debe tener al menos 6 caracteres');
+      setPasswordChangeMsg('La nueva contraseña debe tener al menos 6 caracteres');
+      setPasswordChangeStatus('error');
       return;
     }
 
     setPasswordChangeLoading(true);
     setPasswordChangeMsg('');
+    setPasswordChangeStatus('');
     try {
       await api.post('/auth/change-password', {
         currentPassword,
         newPassword
       });
-      setPasswordChangeMsg('✅ Contraseña cambiada con éxito');
+      setPasswordChangeMsg('Contraseña cambiada con éxito');
+      setPasswordChangeStatus('success');
       setCurrentPassword('');
       setNewPassword('');
       setConfirmNewPassword('');
     } catch (err: any) {
       const errMsg = err.response?.data?.error || 'Error al cambiar la contraseña';
-      setPasswordChangeMsg(`❌ ${errMsg}`);
+      setPasswordChangeMsg(errMsg);
+      setPasswordChangeStatus('error');
     } finally {
       setPasswordChangeLoading(false);
     }
@@ -959,17 +967,26 @@ export default function PassengerPage() {
         </div>
         <div className="header-actions" style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
           <div className="header-greeting" style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Hola, {session?.user?.name || 'Pasajero'}</div>
-          <button className="btn btn-ghost" onClick={openProfileModal} style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-            <IconUser />
-            <span className="btn-text">Perfil</span>
+          
+          <button className="header-nav-btn" onClick={openProfileModal}>
+            <div className="icon-circle">
+              <IconUser />
+            </div>
+            <span className="btn-label">Usuario</span>
           </button>
-          <button className="btn btn-ghost" onClick={() => router.push('/passenger/history')} style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-            <IconClock />
-            <span className="btn-text">Historial</span>
+
+          <button className="header-nav-btn" onClick={() => router.push('/passenger/history')}>
+            <div className="icon-circle">
+              <IconClock />
+            </div>
+            <span className="btn-label">Historial</span>
           </button>
-          <button className="btn btn-ghost" onClick={handleLogout} style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-            <IconLogout />
-            <span className="btn-text">Salir</span>
+
+          <button className="header-nav-btn" onClick={handleLogout}>
+            <div className="icon-circle">
+              <IconLogout />
+            </div>
+            <span className="btn-label">Salir</span>
           </button>
         </div>
       </header>
@@ -2045,7 +2062,10 @@ export default function PassengerPage() {
             </div>
 
             <form onSubmit={handlePasswordChange} style={{ display: 'flex', flexDirection: 'column', gap: '12px', borderTop: '1px solid var(--border)', paddingTop: '20px' }}>
-              <h4 style={{ margin: '0 0 4px 0', fontSize: '0.95rem', fontWeight: 700, color: 'var(--text-primary)' }}>🔐 Cambiar Contraseña</h4>
+              <h4 style={{ margin: '0 0 4px 0', fontSize: '0.95rem', fontWeight: 700, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ display: 'inline-block' }}><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                Cambiar Contraseña
+              </h4>
               
               <input 
                 type="password" 
@@ -2092,12 +2112,20 @@ export default function PassengerPage() {
 
               {passwordChangeMsg && (
                 <div style={{
-                  fontSize: '0.8rem',
+                  fontSize: '0.825rem',
                   fontWeight: 600,
-                  color: passwordChangeMsg.startsWith('✅') ? 'var(--success)' : 'var(--danger)',
-                  marginTop: '4px'
+                  color: passwordChangeStatus === 'success' ? 'var(--success)' : 'var(--danger)',
+                  marginTop: '6px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  background: passwordChangeStatus === 'success' ? 'rgba(0, 229, 160, 0.08)' : 'rgba(255, 69, 96, 0.08)',
+                  border: '1px solid ' + (passwordChangeStatus === 'success' ? 'rgba(0, 229, 160, 0.2)' : 'rgba(255, 69, 96, 0.2)'),
+                  padding: '8px 12px',
+                  borderRadius: '8px'
                 }}>
-                  {passwordChangeMsg}
+                  {passwordChangeStatus === 'success' ? <IconCheck /> : <IconAlert />}
+                  <span>{passwordChangeMsg}</span>
                 </div>
               )}
 
