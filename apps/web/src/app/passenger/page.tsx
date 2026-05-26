@@ -289,6 +289,8 @@ export default function PassengerPage() {
   useEffect(() => {
     const s = getSession();
     if (!s) { router.push('/login'); return; }
+    // Si el usuario es admin, redirigir al panel de control
+    if (s.user?.role === 'admin') { router.push('/admin'); return; }
     setSession(s);
 
     // Sincronizar el estado del usuario

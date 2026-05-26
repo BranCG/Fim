@@ -17,7 +17,9 @@ export default function Home() {
   useEffect(() => {
     const s = getSession();
     if (s && s.user && s.user.role) {
-      if (s.user.role === 'driver') {
+      if (s.user.role === 'admin') {
+        router.push('/admin');
+      } else if (s.user.role === 'driver') {
         router.push('/driver');
       } else {
         router.push('/passenger');
