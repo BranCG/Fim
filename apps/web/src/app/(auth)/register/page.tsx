@@ -145,7 +145,7 @@ function RegisterForm() {
         let keywords: string[] = [];
         let docName = '';
 
-        if (docType === 'id-front' || docType === 'id-back' || docType === 'selfie-file') {
+        if (docType === 'id-front' || docType === 'id-back') {
           keywords = ['CHILE', 'RUN', 'REPUBLICA', 'CEDULA', 'IDENTIDAD', 'NACIMIENTO', 'DOCUMENTO', 'ESTADO CIVIL', 'CHL', 'INCHL', 'PATERNO', 'MATERNO', '<<<<'];
           docName = 'Cédula de Identidad';
         } else if (docType === 'license-file') {
