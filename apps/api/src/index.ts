@@ -30,10 +30,15 @@ const corsOptions = {
     // Allow Vercel deployments (production/preview)
     const isVercel = /\.vercel\.app$/.test(origin);
     
-    if (isLocal || isVercel) {
+    // Check if it matches CLIENT_URL or ADMIN_URL from env
+    const clientUrl = process.env.CLIENT_URL;
+    const adminUrl = process.env.ADMIN_URL;
+    const matchesEnv = (clientUrl && origin === clientUrl) || (adminUrl && origin === adminUrl);
+    
+    if (isLocal || isVercel || matchesEnv) {
       callback(null, true);
     } else {
-      callback(new Error('Not allowed by CORS'));
+      callback(new Error(`Not allowed by CORS: ${origin}`));
     }
   },
   credentials: true,
