@@ -110,6 +110,7 @@ model Trip {
   isPaid          Boolean   @default(false)
   paymentStatus   String    @default("pending")
   otpCode         String?
+  dropoffOtpCode  String?   // Código que el pasajero da al conductor al bajarse
   mpPaymentId     String?
   status          String    @default("searching")
   cancelledBy     String?

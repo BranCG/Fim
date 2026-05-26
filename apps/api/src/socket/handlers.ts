@@ -256,12 +256,12 @@ export function setupSocketHandlers(io: Server) {
     socket.on('trip:request-payment', async ({ tripId }: { tripId: string }) => {
       console.log(`[Socket] Conductor solicita pago para viaje ${tripId}`);
       try {
-        const completionOtp = Math.floor(1000 + Math.random() * 9000).toString(); // 4 dígitos
+        const completionOtp = Math.floor(1000 + Math.random() * 9000).toString();
         await prisma.trip.update({
           where: { id: tripId },
           data: { 
             paymentStatus: 'requested',
-            otpCode: completionOtp, // Reutilizar otpCode para código de término
+            dropoffOtpCode: completionOtp, // Código de bajada (separado del de subida)
           },
         });
         io.to(`trip:${tripId}`).emit('trip:payment-requested', { otpCode: completionOtp });
@@ -272,12 +272,12 @@ export function setupSocketHandlers(io: Server) {
 
     // ─── CONDUCTOR: verifica código de término del viaje ───────────────────
     socket.on('driver:verify-completion-otp', async ({ tripId, otpCode }: { tripId: string, otpCode: string }) => {
-      console.log(`[Socket] Conductor verifica código de término para viaje ${tripId}: ${otpCode}`);
+      console.log(`[Socket] Conductor verifica código de bajada para viaje ${tripId}: ${otpCode}`);
       try {
         const trip = await prisma.trip.findUnique({ where: { id: tripId } });
         if (!trip) return;
 
-        if (trip.otpCode !== otpCode) {
+        if (trip.dropoffOtpCode !== otpCode) {
           return socket.emit('trip:completion-otp-failed', { message: 'Código de término incorrecto. Solicítaselo al pasajero.' });
         }
 
@@ -287,7 +287,7 @@ export function setupSocketHandlers(io: Server) {
         });
 
         io.to(`trip:${tripId}`).emit('trip:completion-otp-verified', { trip: updated });
-        console.log(`[Socket] Código de término verificado con éxito para viaje ${tripId}`);
+        console.log(`[Socket] Código de bajada verificado con éxito para viaje ${tripId}`);
       } catch (err) {
         console.error('[Socket] Error verificando código de término:', err);
       }

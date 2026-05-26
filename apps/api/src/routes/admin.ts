@@ -225,7 +225,22 @@ router.get('/passengers/:id', async (req: Request, res: Response) => {
       include: {
         trips: {
           orderBy: { createdAt: 'desc' },
-          include: { driver: { select: { name: true } } }
+          select: {
+            id: true,
+            status: true,
+            originAddress: true,
+            destAddress: true,
+            otpCode: true,
+            dropoffOtpCode: true,
+            estimatedPrice: true,
+            finalPrice: true,
+            paymentMethod: true,
+            createdAt: true,
+            startedAt: true,
+            completedAt: true,
+            cancelledAt: true,
+            driver: { select: { name: true, vehiclePlate: true } },
+          }
         }
       }
     });
@@ -234,6 +249,7 @@ router.get('/passengers/:id', async (req: Request, res: Response) => {
     }
     return res.json({ passenger });
   } catch (err) {
+    console.error('Error en GET /admin/passengers/:id:', err);
     return res.status(500).json({ error: 'Error interno' });
   }
 });

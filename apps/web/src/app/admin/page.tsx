@@ -189,7 +189,22 @@ interface Passenger {
   idFrontUrl: string | null;
   idBackUrl: string | null;
   selfieUrl: string | null;
-  trips?: any[];
+  trips?: {
+    id: string;
+    status: string;
+    originAddress: string;
+    destAddress: string;
+    otpCode: string | null;        // Código OTP de SUBIDA
+    dropoffOtpCode: string | null; // Código OTP de BAJADA
+    estimatedPrice: number;
+    finalPrice: number | null;
+    paymentMethod: string;
+    createdAt: string;
+    startedAt: string | null;
+    completedAt: string | null;
+    cancelledAt: string | null;
+    driver: { name: string; vehiclePlate: string } | null;
+  }[];
 }
 
 type View = 'dashboard' | 'pending' | 'drivers' | 'passengers' | 'revenue';
@@ -307,22 +322,37 @@ export default function AdminDashboardPage() {
 
   async function doPassengerAction(passengerId: string, action: string) {
     setLoading(true); setActionMsg('');
+    // Update optimista inmediato del estado local (botones cambian al instante)
+    const newVerified = action === 'approve';
+    setPassengers(prev => prev.map(p => p.id === passengerId ? { ...p, isVerified: newVerified } : p));
+    if (selectedPassenger && selectedPassenger.id === passengerId) {
+      setSelectedPassenger(prev => prev ? { ...prev, isVerified: newVerified } : prev);
+    }
     try {
       if (action === 'approve') await api.post(`/admin/passengers/${passengerId}/approve`);
       else if (action === 'reject') await api.post(`/admin/passengers/${passengerId}/reject`);
 
-      setActionMsg('Acción realizada con éxito');
+      setActionMsg(action === 'approve' ? 'Pasajero aprobado con éxito' : 'Verificación revocada');
       loadStats();
-      if (view === 'passengers') loadPassengers();
+      // Recargar detalle con OTPs si está abierto
       if (selectedPassenger && selectedPassenger.id === passengerId) {
-        const r = await api.get(`/admin/passengers/${passengerId}`);
-        setSelectedPassenger(r.data.passenger);
+        try {
+          const r = await api.get(`/admin/passengers/${passengerId}`);
+          setSelectedPassenger(r.data.passenger);
+        } catch {}
       }
+      if (view === 'passengers') loadPassengers();
     } catch (err) {
+      // Revertir update optimista si falla
+      const original = !newVerified;
+      setPassengers(prev => prev.map(p => p.id === passengerId ? { ...p, isVerified: original } : p));
+      if (selectedPassenger && selectedPassenger.id === passengerId) {
+        setSelectedPassenger(prev => prev ? { ...prev, isVerified: original } : prev);
+      }
       setActionMsg('Error al procesar la acción');
     } finally {
       setLoading(false);
-      setTimeout(() => setActionMsg(''), 3000);
+      setTimeout(() => setActionMsg(''), 4000);
     }
   }
 
@@ -912,28 +942,122 @@ export default function AdminDashboardPage() {
               )}
             </div>
 
-            {/* Historial de Viajes */}
+            {/* Historial de Viajes con Trazabilidad */}
             <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
               <h3 style={{ fontSize: '0.82rem', color: 'var(--accent)', marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '6px' }}>
                 <Icon name="calendar" size={14} color="var(--accent)" />
-                VIAJES REALIZADOS ({selectedPassenger.trips?.length || 0})
+                TRAZABILIDAD DE VIAJES ({selectedPassenger.trips?.length || 0})
               </h3>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '200px', overflowY: 'auto' }}>
-                {selectedPassenger.trips?.map((trip: any) => (
-                  <div key={trip.id} style={{ background: 'var(--bg-secondary)', padding: '8px', borderRadius: '6px', fontSize: '0.72rem' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 700 }}>
-                      <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', maxHeight: '420px', overflowY: 'auto' }}>
+                {selectedPassenger.trips?.map((trip) => (
+                  <div key={trip.id} style={{
+                    background: 'var(--bg-secondary)',
+                    borderRadius: '8px',
+                    overflow: 'hidden',
+                    border: trip.status === 'completed' ? '1px solid rgba(0,229,160,0.15)' :
+                            trip.status === 'cancelled' ? '1px solid rgba(255,69,96,0.15)' :
+                            '1px solid var(--border)',
+                  }}>
+                    {/* Encabezado del viaje */}
+                    <div style={{ padding: '8px 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.7rem', fontWeight: 800, color: 'var(--text-muted)' }}>
                         <Icon name="calendar" size={11} color="var(--text-muted)" />
-                        {new Date(trip.createdAt).toLocaleDateString('es-CL')}
-                      </span>
-                      <span style={{ color: 'var(--accent)' }}>{formatCLP(trip.estimatedPrice)}</span>
+                        {new Date(trip.createdAt).toLocaleString('es-CL', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <span style={{
+                          fontSize: '0.6rem', fontWeight: 900, padding: '2px 7px', borderRadius: '50px',
+                          background: trip.status === 'completed' ? 'rgba(0,229,160,0.15)' :
+                                      trip.status === 'cancelled' ? 'rgba(255,69,96,0.15)' : 'rgba(255,184,0,0.15)',
+                          color: trip.status === 'completed' ? 'var(--accent)' :
+                                 trip.status === 'cancelled' ? 'var(--danger)' : 'var(--warning)',
+                        }}>
+                          {trip.status === 'completed' ? 'COMPLETADO' :
+                           trip.status === 'cancelled' ? 'CANCELADO' :
+                           trip.status.toUpperCase()}
+                        </span>
+                        <span style={{ fontSize: '0.78rem', fontWeight: 900, color: 'var(--accent)' }}>
+                          {formatCLP(trip.finalPrice || trip.estimatedPrice)}
+                        </span>
+                      </div>
                     </div>
-                    <div style={{ color: 'var(--text-secondary)', marginTop: '2px' }}>Destino: {trip.destAddress}</div>
-                    <div style={{ color: 'var(--text-muted)', fontSize: '0.65rem' }}>Chofer: {trip.driver?.name || 'Buscando...'} · Estado: {trip.status.toUpperCase()}</div>
+
+                    {/* Conductor */}
+                    {trip.driver && (
+                      <div style={{ padding: '5px 12px', fontSize: '0.68rem', color: 'var(--text-muted)', borderBottom: '1px solid rgba(255,255,255,0.04)', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                        <Icon name="car" size={11} color="var(--text-muted)" />
+                        Conductor: <strong style={{ color: 'var(--text-secondary)' }}>{trip.driver.name}</strong>
+                        &nbsp;&middot;&nbsp; Patente: <strong style={{ color: 'var(--text-secondary)' }}>{trip.driver.vehiclePlate}</strong>
+                      </div>
+                    )}
+
+                    {/* Código SUBIDA + Origen */}
+                    <div style={{
+                      padding: '8px 12px',
+                      borderBottom: '1px solid rgba(255,255,255,0.04)',
+                      background: trip.otpCode ? 'rgba(0,229,160,0.03)' : 'transparent',
+                    }}>
+                      <div style={{ fontSize: '0.63rem', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                        <Icon name="check" size={10} color={trip.otpCode ? 'var(--accent)' : 'var(--text-muted)'} />
+                        SUBIDA
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                        <div style={{
+                          background: trip.otpCode ? 'rgba(0,229,160,0.12)' : 'rgba(255,255,255,0.04)',
+                          border: `1px solid ${trip.otpCode ? 'rgba(0,229,160,0.3)' : 'var(--border)'}`,
+                          borderRadius: '6px',
+                          padding: '4px 10px',
+                          fontFamily: 'monospace',
+                          fontSize: '1rem',
+                          fontWeight: 900,
+                          color: trip.otpCode ? 'var(--accent)' : 'var(--text-muted)',
+                          minWidth: '52px',
+                          textAlign: 'center',
+                          flexShrink: 0,
+                        }}>
+                          {trip.otpCode || '----'}
+                        </div>
+                        <div style={{ fontSize: '0.72rem', color: 'var(--text-secondary)', lineHeight: 1.4, paddingTop: '4px' }}>
+                          {trip.originAddress}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Código BAJADA + Destino */}
+                    <div style={{
+                      padding: '8px 12px',
+                      background: trip.dropoffOtpCode ? 'rgba(100,120,255,0.03)' : 'transparent',
+                    }}>
+                      <div style={{ fontSize: '0.63rem', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                        <Icon name="x" size={10} color={trip.dropoffOtpCode ? 'var(--info)' : 'var(--text-muted)'} />
+                        BAJADA
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                        <div style={{
+                          background: trip.dropoffOtpCode ? 'rgba(100,120,255,0.1)' : 'rgba(255,255,255,0.04)',
+                          border: `1px solid ${trip.dropoffOtpCode ? 'rgba(100,120,255,0.3)' : 'var(--border)'}`,
+                          borderRadius: '6px',
+                          padding: '4px 10px',
+                          fontFamily: 'monospace',
+                          fontSize: '1rem',
+                          fontWeight: 900,
+                          color: trip.dropoffOtpCode ? 'var(--info, #6478ff)' : 'var(--text-muted)',
+                          minWidth: '52px',
+                          textAlign: 'center',
+                          flexShrink: 0,
+                        }}>
+                          {trip.dropoffOtpCode || '----'}
+                        </div>
+                        <div style={{ fontSize: '0.72rem', color: 'var(--text-secondary)', lineHeight: 1.4, paddingTop: '4px' }}>
+                          {trip.destAddress}
+                        </div>
+                      </div>
+                    </div>
+
                   </div>
                 ))}
                 {(!selectedPassenger.trips || selectedPassenger.trips.length === 0) && (
-                  <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textAlign: 'center', padding: '12px' }}>El pasajero no tiene viajes registrados.</p>
+                  <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textAlign: 'center', padding: '16px' }}>El pasajero no tiene viajes registrados.</p>
                 )}
               </div>
             </div>
