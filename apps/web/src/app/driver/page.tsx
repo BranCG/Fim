@@ -256,7 +256,8 @@ export default function DriverPage() {
       setIsOnline(r.data.driver.isOnline);
     }).catch(err => {
       console.error('Error al obtener datos del conductor:', err);
-      if (err.response?.status === 401 || err.response?.status === 403) {
+      const status = err.response?.status;
+      if (status === 401 || status === 403 || status === 404) {
         clearSession();
         router.push('/login');
       } else {
