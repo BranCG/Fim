@@ -82,6 +82,7 @@ function RegisterForm() {
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [rut, setRut] = useState('');
   const [birthDate, setBirthDate] = useState('');
   const [address, setAddress] = useState('');
@@ -128,37 +129,46 @@ function RegisterForm() {
     setError('');
 
     try {
-      // 1. OCR Validation
-      const worker = await createWorker('spa'); // Idioma español
-      const { data: { text } } = await worker.recognize(file);
-      await worker.terminate();
+      let ocrText = '';
 
-      const normalizedText = text.toUpperCase();
-      const keywords = [
-        'CHILE', 'RUN', 'REPUBLICA', 'CEDULA', 'IDENTIDAD', 
-        'CONDUCTOR', 'LICENCIA', 'NACIMIENTO', 'PATERNO', 'MATERNO',
-        'REGISTRO CIVIL', 'NACIONALIDAD', 'SEXO', 'DOCUMENTO', 'ESTADO CIVIL',
-        'CHL', 'INCHL', 'PROFESION', 'NACIO', '<<<<'
-      ];
-      
-      // Contar cuántas palabras clave únicas se encontraron
-      const foundKeywords = keywords.filter(k => normalizedText.includes(k));
+      try {
+        // 1. OCR Validation (Safe catch to avoid blocking upload if library fails)
+        const worker = await createWorker('spa'); // Idioma español
+        const { data: { text } } = await worker.recognize(file);
+        await worker.terminate();
+        ocrText = (text || '').toUpperCase();
+      } catch (ocrErr) {
+        console.warn('OCR validation failed to initialize or execute, skipping OCR check:', ocrErr);
+      }
 
-      // Heurística de validación de prueba: siempre permitir pasar en desarrollo local
-      let isValid = true;
+      if (ocrText) {
+        let keywords: string[] = [];
+        let docName = '';
 
-      if (!isValid) {
-        setError(`No pudimos validar el documento. Asegúrate de tomar una foto nítida, con buena iluminación.`);
-        setter({ file: null, preview: null, url: null, loading: false });
-        return;
+        if (docType === 'id-front' || docType === 'id-back' || docType === 'selfie-file') {
+          keywords = ['CHILE', 'RUN', 'REPUBLICA', 'CEDULA', 'IDENTIDAD', 'NACIMIENTO', 'DOCUMENTO', 'ESTADO CIVIL', 'CHL', 'INCHL', 'PATERNO', 'MATERNO', '<<<<'];
+          docName = 'Cédula de Identidad';
+        } else if (docType === 'license-file') {
+          keywords = ['LICENCIA', 'CONDUCTOR', 'CONDUCIR', 'CHILE', 'CLASE', 'MUNICIPALIDAD', 'OTORGADA', 'FECHA'];
+          docName = 'Licencia de Conducir';
+        }
+
+        if (keywords.length > 0) {
+          const foundKeywords = keywords.filter(k => ocrText.includes(k));
+          if (foundKeywords.length === 0) {
+            setError(`No pudimos detectar una ${docName} chilena en la imagen. Por favor, asegúrate de tomar una foto nítida, bien enfocada y con buena iluminación.`);
+            setter({ file: null, preview: null, url: null, loading: false });
+            return;
+          }
+        }
       }
 
       const url = await uploadFile(file);
       setter({ file, preview, url, loading: false, isValidated: true });
     } catch (err) {
-      console.error('OCR Error:', err);
+      console.error('Upload Error:', err);
       setter({ file, preview, url: null, loading: false });
-      setError('Error al procesar la imagen.');
+      setError('Error al subir la imagen al servidor. Por favor, intenta nuevamente.');
     }
   }
 
@@ -234,13 +244,34 @@ function RegisterForm() {
   function nextStep() {
     setError('');
     if (step === 1) {
-      if (!name || !email || !phone || !password || !rut || !birthDate || !address) { setError('Completa todos los campos'); return; }
-      if (!validateEmail(email)) { setError('Email inválido'); return; }
-      if (!validatePhone(phone)) { setError('Teléfono inválido (+569...)'); return; }
-      if (!validateRut(rut)) { setError('RUT inválido'); return; }
+      if (!name) { setError('Por favor, ingresa tu nombre completo.'); return; }
+      if (!email) { setError('Por favor, ingresa tu correo electrónico.'); return; }
+      if (!validateEmail(email)) { setError('El formato del correo electrónico es inválido.'); return; }
+      if (!rut) { setError('Por favor, ingresa tu RUT.'); return; }
+      if (!validateRut(rut)) { setError('El RUT ingresado es inválido.'); return; }
+      if (!phone) { setError('Por favor, ingresa tu número de teléfono.'); return; }
+      if (!validatePhone(phone)) { setError('El teléfono es inválido. Debe tener el formato +569XXXXXXXX.'); return; }
+      if (!address) { setError('Por favor, ingresa tu dirección.'); return; }
+      if (!birthDate) { setError('Por favor, ingresa tu fecha de nacimiento.'); return; }
+      if (!password) { setError('Por favor, ingresa una contraseña.'); return; }
+      if (password.length < 6) { setError('La contraseña debe tener al menos 6 caracteres.'); return; }
+      if (!confirmPassword) { setError('Por favor, confirma tu contraseña.'); return; }
+      if (password !== confirmPassword) { setError('Las contraseñas ingresadas no coinciden.'); return; }
     }
-    if (step === 2 && (!idFront.url || !idBack.url || !selfie.url)) { setError('Sube las fotos obligatorias'); return; }
-    if (step === 3 && role === 'driver' && (!licenseNumber || !licenseFile.url || !vehiclePhoto.url || !vehiclePlate)) { setError('Completa datos del vehículo'); return; }
+    if (step === 2) {
+      if (!selfie.url) { setError('Por favor, sube la foto de tu Selfie con la Cédula.'); return; }
+      if (!idFront.url) { setError('Por favor, sube la foto frontal de tu Cédula.'); return; }
+      if (!idBack.url) { setError('Por favor, sube la foto posterior de tu Cédula.'); return; }
+    }
+    if (step === 3 && role === 'driver') {
+      if (!vehiclePlate) { setError('Por favor, ingresa la patente de tu vehículo.'); return; }
+      if (!vehicleBrand) { setError('Por favor, ingresa la marca de tu vehículo.'); return; }
+      if (!vehicleModel) { setError('Por favor, ingresa el modelo de tu vehículo.'); return; }
+      if (!vehicleYear) { setError('Por favor, ingresa el año de tu vehículo.'); return; }
+      if (!licenseNumber) { setError('Por favor, ingresa el número de tu licencia.'); return; }
+      if (!licenseFile.url) { setError('Por favor, sube la foto de tu licencia de conducir.'); return; }
+      if (!vehiclePhoto.url) { setError('Por favor, sube la foto de tu vehículo.'); return; }
+    }
     setStep(prev => (prev + 1) as Step);
   }
 
@@ -292,9 +323,55 @@ function RegisterForm() {
         </div>
 
         {error && (
-          <div className="alert alert-error" style={{ marginBottom: '24px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-            {error}
+          <div style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(0,0,0,0.65)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 9999,
+            padding: '20px',
+            backdropFilter: 'blur(4px)'
+          }}>
+            <div style={{
+              background: 'var(--bg-secondary)',
+              border: '1px solid var(--border)',
+              borderRadius: '16px',
+              padding: '24px',
+              maxWidth: '360px',
+              width: '100%',
+              boxShadow: '0 20px 25px -5px rgba(0,0,0,0.5)',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              textAlign: 'center',
+              gap: '16px'
+            }}>
+              <div style={{
+                width: '48px',
+                height: '48px',
+                borderRadius: '50%',
+                background: 'rgba(239, 68, 68, 0.1)',
+                color: '#ef4444',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+              </div>
+              <div>
+                <h3 style={{ color: 'var(--text-primary)', fontWeight: 800, fontSize: '1.1rem', marginBottom: '8px' }}>Atención</h3>
+                <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', lineHeight: 1.5 }}>{error}</p>
+              </div>
+              <button 
+                className="btn btn-primary" 
+                onClick={() => setError('')} 
+                style={{ width: '100%', marginTop: '8px' }}
+              >
+                Entendido
+              </button>
+            </div>
           </div>
         )}
 
@@ -328,6 +405,10 @@ function RegisterForm() {
               <div className="form-group">
                 <label className="form-label">Contraseña</label>
                 <input className="form-input" type="password" placeholder="Mínimo 6 caracteres" value={password} onChange={e => setPassword(e.target.value)} />
+              </div>
+              <div className="form-group">
+                <label className="form-label">Confirmar Contraseña</label>
+                <input className="form-input" type="password" placeholder="Repite tu contraseña" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} />
               </div>
             </div>
           )}
