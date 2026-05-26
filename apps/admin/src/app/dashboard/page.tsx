@@ -183,6 +183,15 @@ export default function DashboardPage() {
 
   async function doPassengerAction(passengerId: string, action: string) {
     setLoading(true); setActionMsg('');
+    const originalPassengers = [...passengers];
+    const originalSelectedPassenger = selectedPassenger ? { ...selectedPassenger } : null;
+
+    // Optimistic Update
+    setPassengers(prev => prev.map(p => p.id === passengerId ? { ...p, isVerified: action === 'approve' } : p));
+    if (selectedPassenger && selectedPassenger.id === passengerId) {
+      setSelectedPassenger(prev => prev ? { ...prev, isVerified: action === 'approve' } : null);
+    }
+
     try {
       if (action === 'approve') await api.post(`/admin/passengers/${passengerId}/approve`);
       else if (action === 'reject') await api.post(`/admin/passengers/${passengerId}/reject`);
@@ -195,6 +204,9 @@ export default function DashboardPage() {
         setSelectedPassenger(r.data.passenger);
       }
     } catch {
+      // Rollback on failure
+      setPassengers(originalPassengers);
+      setSelectedPassenger(originalSelectedPassenger);
       setActionMsg('❌ Error al realizar la acción');
     } finally { setLoading(false); setTimeout(() => setActionMsg(''), 3000); }
   }
@@ -930,11 +942,11 @@ export default function DashboardPage() {
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', maxWidth: '300px', margin: '0 auto', width: '100%' }}>
                   {!selectedPassenger.isVerified ? (
                     <button className="btn btn-success btn-lg" onClick={() => doPassengerAction(selectedPassenger.id, 'approve')} style={{ width: '100%', fontWeight: 700 }}>
-                      ✓ Aprobar Pasajero
+                      ✓ Aprobar
                     </button>
                   ) : (
                     <button className="btn btn-danger btn-lg" onClick={() => doPassengerAction(selectedPassenger.id, 'reject')} style={{ width: '100%', fontWeight: 700 }}>
-                      ✕ Revocar Verificación
+                      ✕ Deshacer
                     </button>
                   )}
                 </div>
@@ -997,11 +1009,47 @@ export default function DashboardPage() {
                         <td style={{ fontWeight: 600 }}>
                           {trip.driver?.name || 'Buscando...'}
                         </td>
-                        <td style={{ fontSize: '0.75rem', color: 'var(--text-muted)', maxWidth: '150px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                          {trip.originAddress}
+                        <td style={{ fontSize: '0.75rem', color: 'var(--text-muted)', maxWidth: '200px' }}>
+                          <div style={{ whiteSpace: 'normal', wordBreak: 'break-word', color: 'var(--text-secondary)' }}>
+                            {trip.originAddress}
+                          </div>
+                          <div style={{ 
+                            marginTop: '6px', 
+                            display: 'inline-flex', 
+                            alignItems: 'center', 
+                            gap: '4px', 
+                            background: 'rgba(0, 229, 160, 0.08)', 
+                            border: '1px solid rgba(0, 229, 160, 0.2)', 
+                            padding: '2px 8px', 
+                            borderRadius: '4px', 
+                            fontSize: '0.7rem', 
+                            fontFamily: 'monospace', 
+                            color: 'var(--success)' 
+                          }}>
+                            <span>🛫 Subida:</span>
+                            <strong style={{ letterSpacing: '0.5px' }}>{trip.otpCode || '----'}</strong>
+                          </div>
                         </td>
-                        <td style={{ fontSize: '0.75rem', color: 'var(--text-muted)', maxWidth: '150px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                          {trip.destAddress}
+                        <td style={{ fontSize: '0.75rem', color: 'var(--text-muted)', maxWidth: '200px' }}>
+                          <div style={{ whiteSpace: 'normal', wordBreak: 'break-word', color: 'var(--text-secondary)' }}>
+                            {trip.destAddress}
+                          </div>
+                          <div style={{ 
+                            marginTop: '6px', 
+                            display: 'inline-flex', 
+                            alignItems: 'center', 
+                            gap: '4px', 
+                            background: 'rgba(79, 195, 247, 0.08)', 
+                            border: '1px solid rgba(79, 195, 247, 0.2)', 
+                            padding: '2px 8px', 
+                            borderRadius: '4px', 
+                            fontSize: '0.7rem', 
+                            fontFamily: 'monospace', 
+                            color: 'var(--info)' 
+                          }}>
+                            <span>🛬 Bajada:</span>
+                            <strong style={{ letterSpacing: '0.5px' }}>{trip.dropoffOtpCode || '----'}</strong>
+                          </div>
                         </td>
                         <td>
                           {trip.paymentMethod === 'card' ? '💳 Tarjeta' : '💵 Efectivo'}
