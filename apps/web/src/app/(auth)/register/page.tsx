@@ -132,13 +132,30 @@ function RegisterForm() {
       let ocrText = '';
 
       try {
-        // 1. OCR Validation (Safe catch to avoid blocking upload if library fails)
-        const worker = await createWorker('spa'); // Idioma español
-        const { data: { text } } = await worker.recognize(file);
-        await worker.terminate();
-        ocrText = (text || '').toUpperCase();
+        const ocrPromise = (async () => {
+          const worker = await createWorker('spa'); // Idioma español
+          const { data: { text } } = await worker.recognize(file);
+          await worker.terminate();
+          return (text || '').toUpperCase();
+        })();
+
+        const timeoutPromise = new Promise<string>((_, reject) =>
+          setTimeout(() => reject(new Error('OCR Timeout')), 3500)
+        );
+
+        // Omitir OCR en dispositivos móviles (Capacitor) para prevenir bloqueos por Web Workers/CDN
+        const isMobile = typeof window !== 'undefined' && 
+          ((window as any).Capacitor || 
+           window.location.origin.includes('capacitor://') || 
+           ((window.location.hostname === 'localhost' || window.location.hostname === '') && window.location.port === ''));
+
+        if (!isMobile) {
+          ocrText = await Promise.race([ocrPromise, timeoutPromise]);
+        } else {
+          console.log('Fim: Omitiendo validación OCR en plataforma móvil');
+        }
       } catch (ocrErr) {
-        console.warn('OCR validation failed to initialize or execute, skipping OCR check:', ocrErr);
+        console.warn('La validación OCR falló, fue omitida o superó el tiempo límite:', ocrErr);
       }
 
       if (ocrText) {
