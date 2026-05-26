@@ -9,6 +9,15 @@ const router = Router();
 // ─── SOLICITAR VIAJE ──────────────────────────────────────────────────────
 router.post('/request', requireAuth, requireRole('passenger'), async (req: Request, res: Response) => {
   try {
+    // Verificar si el pasajero está aprobado/verificado
+    const user = await prisma.user.findUnique({
+      where: { id: req.user!.id },
+      select: { isVerified: true }
+    });
+    if (!user || !user.isVerified) {
+      return res.status(403).json({ error: 'Tu cuenta aún no ha sido verificada por el administrador. Debes esperar la validación de tus documentos para pedir viajes.' });
+    }
+
     const {
       originLat, originLng, originAddress,
       destLat, destLng, destAddress,

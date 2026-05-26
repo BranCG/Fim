@@ -12,13 +12,14 @@ router.get('/stats', async (_req: Request, res: Response) => {
   try {
     const [
       totalDrivers, pendingDrivers, activeDrivers,
-      totalPassengers, totalTrips, completedTrips,
+      totalPassengers, pendingPassengers, totalTrips, completedTrips,
       membershipsPaid,
     ] = await Promise.all([
       prisma.driver.count(),
       prisma.driver.count({ where: { status: 'pending' } }),
       prisma.driver.count({ where: { status: 'active', isOnline: true } }),
       prisma.user.count({ where: { role: 'passenger' } }),
+      prisma.user.count({ where: { role: 'passenger', isVerified: false } }),
       prisma.trip.count(),
       prisma.trip.count({ where: { status: 'completed' } }),
       prisma.driver.count({ where: { membershipPaid: true } }),
@@ -38,7 +39,7 @@ router.get('/stats', async (_req: Request, res: Response) => {
     return res.json({
       stats: {
         totalDrivers, pendingDrivers, activeDrivers,
-        totalPassengers, totalTrips, completedTrips,
+        totalPassengers, pendingPassengers, totalTrips, completedTrips,
         membershipsPaid, membershipRevenue,
       },
       recentTrips,
@@ -207,9 +208,57 @@ router.get('/passengers', async (_req: Request, res: Response) => {
       select: {
         id: true, name: true, email: true, phone: true,
         rut: true, isVerified: true, createdAt: true,
+        idFrontUrl: true, idBackUrl: true, selfieUrl: true,
       },
     });
     return res.json({ passengers });
+  } catch (err) {
+    return res.status(500).json({ error: 'Error interno' });
+  }
+});
+
+// ─── DETALLE DE PASAJERO ──────────────────────────────────────────────────
+router.get('/passengers/:id', async (req: Request, res: Response) => {
+  try {
+    const passenger = await prisma.user.findUnique({
+      where: { id: req.params.id },
+      include: {
+        trips: {
+          orderBy: { createdAt: 'desc' },
+          include: { driver: { select: { name: true } } }
+        }
+      }
+    });
+    if (!passenger || passenger.role !== 'passenger') {
+      return res.status(404).json({ error: 'Pasajero no encontrado' });
+    }
+    return res.json({ passenger });
+  } catch (err) {
+    return res.status(500).json({ error: 'Error interno' });
+  }
+});
+
+// ─── APROBAR PASAJERO ─────────────────────────────────────────────────────
+router.post('/passengers/:id/approve', async (req: Request, res: Response) => {
+  try {
+    const passenger = await prisma.user.update({
+      where: { id: req.params.id },
+      data: { isVerified: true },
+    });
+    return res.json({ message: 'Pasajero aprobado con éxito', passenger });
+  } catch (err) {
+    return res.status(500).json({ error: 'Error interno' });
+  }
+});
+
+// ─── RECHAZAR PASAJERO ────────────────────────────────────────────────────
+router.post('/passengers/:id/reject', async (req: Request, res: Response) => {
+  try {
+    const passenger = await prisma.user.update({
+      where: { id: req.params.id },
+      data: { isVerified: false },
+    });
+    return res.json({ message: 'Pasajero rechazado con éxito', passenger });
   } catch (err) {
     return res.status(500).json({ error: 'Error interno' });
   }

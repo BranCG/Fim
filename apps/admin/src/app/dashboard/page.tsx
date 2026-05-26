@@ -6,7 +6,7 @@ import api from '@/lib/api';
 
 interface Stats {
   totalDrivers: number; pendingDrivers: number; activeDrivers: number;
-  totalPassengers: number; totalTrips: number; completedTrips: number;
+  totalPassengers: number; pendingPassengers: number; totalTrips: number; completedTrips: number;
   membershipsPaid: number; membershipRevenue: number;
 }
 
@@ -29,7 +29,7 @@ interface Driver {
   trips?: any[];
 }
 
-type View = 'dashboard' | 'pending' | 'all_drivers' | 'driver_detail' | 'revenue_analysis';
+type View = 'dashboard' | 'pending' | 'all_drivers' | 'driver_detail' | 'revenue_analysis' | 'passengers' | 'passenger_detail';
 
 function formatCLP(n: number) {
   return new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP', minimumFractionDigits: 0 }).format(n);
@@ -63,11 +63,47 @@ export default function DashboardPage() {
   const [historyPayment, setHistoryPayment] = useState<string>('all');
   const [driverPlanTab, setDriverPlanTab] = useState<'BLACK' | 'COMFORT' | 'FLEX'>('BLACK');
 
+  // Pasajeros
+  interface Passenger {
+    id: string;
+    name: string;
+    email: string;
+    phone: string;
+    rut: string | null;
+    isVerified: boolean;
+    role: string;
+    createdAt: string;
+    idFrontUrl: string | null;
+    idBackUrl: string | null;
+    selfieUrl: string | null;
+    trips?: any[];
+  }
+
+  const [passengers, setPassengers] = useState<Passenger[]>([]);
+  const [selectedPassenger, setSelectedPassenger] = useState<Passenger | null>(null);
+
+  const loadPassengers = useCallback(async () => {
+    const r = await api.get('/admin/passengers');
+    setPassengers(r.data.passengers);
+  }, []);
+
   // Análisis de Ingresos
   const [revenueData, setRevenueData] = useState<any[]>([]);
   const [revenueFilter, setRevenueFilter] = useState({ date: new Date().toISOString().split('T')[0] });
 
   const checkAuth = useCallback(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const token = params.get('token');
+      const user = params.get('user');
+      if (token && user) {
+        localStorage.setItem('fim_admin_token', token);
+        localStorage.setItem('fim_admin_user', decodeURIComponent(user));
+        const newUrl = window.location.pathname;
+        window.history.replaceState({}, '', newUrl);
+        return;
+      }
+    }
     if (!localStorage.getItem('fim_admin_token')) router.push('/');
   }, [router]);
 
@@ -107,7 +143,8 @@ export default function DashboardPage() {
     if (view === 'pending') loadPending();
     if (view === 'all_drivers') loadAll();
     if (view === 'revenue_analysis') loadRevenue();
-  }, [view, loadPending, loadAll, loadRevenue]);
+    if (view === 'passengers') loadPassengers();
+  }, [view, loadPending, loadAll, loadRevenue, loadPassengers]);
 
   async function doAction(driverId: string, action: string, reason?: string) {
     setLoading(true); setActionMsg('');
@@ -144,12 +181,44 @@ export default function DashboardPage() {
     }
   };
 
+  async function doPassengerAction(passengerId: string, action: string) {
+    setLoading(true); setActionMsg('');
+    try {
+      if (action === 'approve') await api.post(`/admin/passengers/${passengerId}/approve`);
+      else if (action === 'reject') await api.post(`/admin/passengers/${passengerId}/reject`);
+
+      setActionMsg('✅ Acción realizada');
+      loadStats();
+      if (view === 'passengers') loadPassengers();
+      if (view === 'passenger_detail') {
+        const r = await api.get(`/admin/passengers/${passengerId}`);
+        setSelectedPassenger(r.data.passenger);
+      }
+    } catch {
+      setActionMsg('❌ Error al realizar la acción');
+    } finally { setLoading(false); setTimeout(() => setActionMsg(''), 3000); }
+  }
+
+  const openPassengerDetail = async (passengerId: string) => {
+    setLoading(true);
+    try {
+      const r = await api.get(`/admin/passengers/${passengerId}`);
+      setSelectedPassenger(r.data.passenger);
+      setView('passenger_detail');
+    } catch {
+      setActionMsg('❌ Error al cargar detalle del pasajero');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   function logout() { localStorage.removeItem('fim_admin_token'); router.push('/'); }
 
   const navItems = [
     { key: 'dashboard', icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>, label: 'Dashboard' },
-    { key: 'pending', icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>, label: 'Pendientes', badge: stats?.pendingDrivers },
+    { key: 'pending', icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>, label: 'Pendientes', badge: (stats?.pendingDrivers || 0) + (stats?.pendingPassengers || 0) },
     { key: 'all_drivers', icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2"/><circle cx="7" cy="17" r="2"/><path d="M9 17h6"/><circle cx="17" cy="17" r="2"/></svg>, label: 'Conductores' },
+    { key: 'passengers', icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>, label: 'Pasajeros' },
     { key: 'revenue_analysis', icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/></svg>, label: 'Estudios de Mercado' },
   ];
 
@@ -750,6 +819,210 @@ export default function DashboardPage() {
                     <button className="btn btn-danger btn-sm" disabled={loading || !rejectReason} onClick={() => doAction(selectedDriver.id, 'reject', rejectReason)}>Rechazar</button>
                   </div>
                 )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ── LISTADO PASAJEROS ─────────────────────────────── */}
+        {view === 'passengers' && (
+          <div className="animate-in">
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+              <h1 style={{ fontSize: '1.5rem', margin: 0 }}>👥 Pasajeros Registrados ({passengers.length})</h1>
+            </div>
+            
+            <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
+              <table>
+                <thead>
+                  <tr>
+                    <th>Nombre</th>
+                    <th>Contacto</th>
+                    <th>RUT</th>
+                    <th>Estado</th>
+                    <th>Fecha Registro</th>
+                    <th>Acciones</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {passengers.map(p => (
+                    <tr key={p.id}>
+                      <td>
+                        <div 
+                          style={{ fontWeight: 700, color: 'var(--accent)', cursor: 'pointer', textDecoration: 'underline' }}
+                          onClick={() => openPassengerDetail(p.id)}
+                        >
+                          {p.name}
+                        </div>
+                      </td>
+                      <td>
+                        <div>{p.email}</div>
+                        <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>{p.phone}</div>
+                      </td>
+                      <td style={{ fontWeight: 600 }}>{p.rut || '—'}</td>
+                      <td>
+                        {p.isVerified ? (
+                          <span className="badge badge-success">✅ Verificado</span>
+                        ) : (
+                          <span className="badge badge-warning">⏳ Pendiente</span>
+                        )}
+                      </td>
+                      <td style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                        {new Date(p.createdAt).toLocaleDateString('es-CL')}
+                      </td>
+                      <td>
+                        <div style={{ display: 'flex', gap: '6px' }}>
+                          <button className="btn btn-secondary btn-sm" onClick={() => openPassengerDetail(p.id)}>Ver</button>
+                          {!p.isVerified && (
+                            <button className="btn btn-success btn-sm" onClick={() => doPassengerAction(p.id, 'approve')}>✓ Aprobar</button>
+                          )}
+                          {p.isVerified && (
+                            <button className="btn btn-danger btn-sm" onClick={() => doPassengerAction(p.id, 'reject')}>✕ Deshacer</button>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                  {passengers.length === 0 && (
+                    <tr>
+                      <td colSpan={6} style={{ textAlign: 'center', padding: '40px', color: 'var(--text-muted)' }}>
+                        No hay pasajeros registrados aún.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {/* ── DETALLE PASAJERO ─────────────────────────────── */}
+        {view === 'passenger_detail' && selectedPassenger && (
+          <div className="animate-in">
+            <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '24px' }}>
+              <button className="btn btn-secondary btn-sm" onClick={() => setView('passengers')}>← Volver</button>
+              <h1 style={{ fontSize: '1.4rem', margin: 0 }}>{selectedPassenger.name}</h1>
+              {selectedPassenger.isVerified ? (
+                <span className="badge badge-success">✅ Verificado</span>
+              ) : (
+                <span className="badge badge-warning">⏳ Pendiente de Aprobación</span>
+              )}
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '20px' }}>
+              <div className="card">
+                <h3 style={{ fontSize: '1rem', marginBottom: '12px', color: 'var(--text-muted)' }}>DATOS PERSONALES</h3>
+                {[
+                  ['Email', selectedPassenger.email],
+                  ['Teléfono', selectedPassenger.phone],
+                  ['RUT', selectedPassenger.rut || '—'],
+                  ['Rol', selectedPassenger.role],
+                  ['Miembro desde', new Date(selectedPassenger.createdAt).toLocaleDateString('es-CL') + ' ' + new Date(selectedPassenger.createdAt).toLocaleTimeString('es-CL')],
+                ].map(([k, v]) => (
+                  <div key={k} style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid var(--border)', fontSize: '0.875rem' }}>
+                    <span style={{ color: 'var(--text-muted)' }}>{k}</span>
+                    <span style={{ fontWeight: 600 }}>{v}</span>
+                  </div>
+                ))}
+              </div>
+
+              <div className="card" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                <h3 style={{ fontSize: '1rem', marginBottom: '20px', color: 'var(--text-muted)', textAlign: 'center' }}>ACCIONES DE VALIDACIÓN</h3>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', maxWidth: '300px', margin: '0 auto', width: '100%' }}>
+                  {!selectedPassenger.isVerified ? (
+                    <button className="btn btn-success btn-lg" onClick={() => doPassengerAction(selectedPassenger.id, 'approve')} style={{ width: '100%', fontWeight: 700 }}>
+                      ✓ Aprobar Pasajero
+                    </button>
+                  ) : (
+                    <button className="btn btn-danger btn-lg" onClick={() => doPassengerAction(selectedPassenger.id, 'reject')} style={{ width: '100%', fontWeight: 700 }}>
+                      ✕ Revocar Verificación
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Documentos de Identidad */}
+            <div className="card" style={{ marginBottom: '20px' }}>
+              <h3 style={{ fontSize: '1rem', marginBottom: '14px', color: 'var(--text-muted)' }}>DOCUMENTOS DE IDENTIDAD</h3>
+              <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
+                {[
+                  { label: 'Cédula Frontal', url: selectedPassenger.idFrontUrl },
+                  { label: 'Cédula Posterior', url: selectedPassenger.idBackUrl },
+                  { label: 'Selfie de Seguridad', url: selectedPassenger.selfieUrl },
+                ].map(doc => (
+                  doc.url ? (
+                    <button 
+                      key={doc.label} 
+                      onClick={() => setImgModal(doc.url || null)} 
+                      style={{ border: '2px solid var(--border)', borderRadius: '10px', overflow: 'hidden', cursor: 'pointer', background: 'var(--bg-card)', transition: 'var(--transition)' }} 
+                      onMouseEnter={e => (e.currentTarget.style.borderColor = 'var(--accent)')} 
+                      onMouseLeave={e => (e.currentTarget.style.borderColor = 'var(--border)')}
+                    >
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={doc.url} alt={doc.label} style={{ width: '150px', height: '100px', objectFit: 'cover', display: 'block' }} />
+                      <div style={{ padding: '6px 8px', fontSize: '0.75rem', color: 'var(--text-muted)', textAlign: 'center', fontWeight: 600 }}>{doc.label}</div>
+                    </button>
+                  ) : (
+                    <div key={doc.label} style={{ width: '150px', height: '124px', background: 'rgba(255,255,255,0.02)', border: '2px dashed var(--border)', borderRadius: '10px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', fontSize: '0.75rem', color: 'var(--text-muted)', textAlign: 'center', padding: '10px' }}>
+                      <div>❌ Sin imagen</div>
+                      <div style={{ marginTop: '4px', fontSize: '0.65rem' }}>{doc.label}</div>
+                    </div>
+                  )
+                ))}
+              </div>
+            </div>
+
+            {/* Historial de Viajes del Pasajero */}
+            <div className="card">
+              <h3 style={{ fontSize: '1rem', marginBottom: '16px', color: 'var(--text-muted)' }}>HISTORIAL DE VIAJES ({selectedPassenger.trips?.length || 0})</h3>
+              <div style={{ overflowX: 'auto' }}>
+                <table style={{ fontSize: '0.85rem' }}>
+                  <thead>
+                    <tr>
+                      <th>Fecha</th>
+                      <th>Conductor</th>
+                      <th>Origen</th>
+                      <th>Destino</th>
+                      <th>Método</th>
+                      <th>Monto</th>
+                      <th>Estado</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {selectedPassenger.trips?.map((trip: any) => (
+                      <tr key={trip.id}>
+                        <td style={{ whiteSpace: 'nowrap' }}>
+                          {new Date(trip.createdAt).toLocaleString('es-CL', { dateStyle: 'short', timeStyle: 'short' })}
+                        </td>
+                        <td style={{ fontWeight: 600 }}>
+                          {trip.driver?.name || 'Buscando...'}
+                        </td>
+                        <td style={{ fontSize: '0.75rem', color: 'var(--text-muted)', maxWidth: '150px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          {trip.originAddress}
+                        </td>
+                        <td style={{ fontSize: '0.75rem', color: 'var(--text-muted)', maxWidth: '150px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          {trip.destAddress}
+                        </td>
+                        <td>
+                          {trip.paymentMethod === 'card' ? '💳 Tarjeta' : '💵 Efectivo'}
+                        </td>
+                        <td style={{ fontWeight: 700 }}>
+                          {formatCLP(trip.estimatedPrice)}
+                        </td>
+                        <td>
+                          {statusBadge(trip.status)}
+                        </td>
+                      </tr>
+                    ))}
+                    {(!selectedPassenger.trips || selectedPassenger.trips.length === 0) && (
+                      <tr>
+                        <td colSpan={7} style={{ textAlign: 'center', padding: '24px', color: 'var(--text-muted)' }}>
+                          El pasajero no ha realizado viajes aún.
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
               </div>
             </div>
           </div>

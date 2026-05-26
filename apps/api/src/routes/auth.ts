@@ -1,7 +1,7 @@
 import { Router, Request, Response } from 'express';
 import bcrypt from 'bcryptjs';
 import prisma from '../utils/prisma';
-import { generateTokens } from '../middleware/auth';
+import { generateTokens, requireAuth } from '../middleware/auth';
 
 const router = Router();
 
@@ -48,7 +48,7 @@ router.post('/passenger/register', async (req: Request, res: Response) => {
 
     return res.status(201).json({
       message: 'Registro exitoso',
-      user: { id: user.id, name: user.name, email: user.email, role: user.role },
+      user: { id: user.id, name: user.name, email: user.email, role: user.role, isVerified: user.isVerified },
       ...tokens,
     });
   } catch (err) {
@@ -80,7 +80,7 @@ router.post('/passenger/login', async (req: Request, res: Response) => {
 
     return res.json({
       message: 'Login exitoso',
-      user: { id: user.id, name: user.name, email: user.email, role: user.role },
+      user: { id: user.id, name: user.name, email: user.email, role: user.role, isVerified: user.isVerified },
       ...tokens,
     });
   } catch (err) {
@@ -226,6 +226,54 @@ router.post('/admin/login', async (req: Request, res: Response) => {
       user: { id: user.id, name: user.name, email: user.email, role: user.role },
       ...tokens,
     });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ error: 'Error interno del servidor' });
+  }
+});
+
+// ─── USUARIO ACTUAL (PERFIL) ──────────────────────────────────────────────
+router.get('/me', requireAuth, async (req: Request, res: Response) => {
+  try {
+    const userId = req.user!.id;
+    const role = req.user!.role;
+
+    if (role === 'driver') {
+      const driver = await prisma.driver.findUnique({
+        where: { id: userId },
+      });
+      if (!driver) return res.status(404).json({ error: 'Conductor no encontrado' });
+      return res.json({
+        user: {
+          id: driver.id,
+          name: driver.name,
+          email: driver.email,
+          phone: driver.phone,
+          role: 'driver',
+          status: driver.status,
+          membershipPaid: driver.membershipPaid,
+          walletBalance: driver.walletBalance,
+        }
+      });
+    } else {
+      const user = await prisma.user.findUnique({
+        where: { id: userId },
+      });
+      if (!user) return res.status(404).json({ error: 'Usuario no encontrado' });
+      return res.json({
+        user: {
+          id: user.id,
+          name: user.name,
+          email: user.email,
+          phone: user.phone,
+          role: user.role,
+          isVerified: user.isVerified,
+          idFrontUrl: user.idFrontUrl,
+          idBackUrl: user.idBackUrl,
+          selfieUrl: user.selfieUrl,
+        }
+      });
+    }
   } catch (err) {
     console.error(err);
     return res.status(500).json({ error: 'Error interno del servidor' });

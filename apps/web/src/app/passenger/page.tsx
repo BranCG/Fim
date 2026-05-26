@@ -291,6 +291,18 @@ export default function PassengerPage() {
     if (!s) { router.push('/login'); return; }
     setSession(s);
 
+    // Sincronizar el estado del usuario
+    api.get('/auth/me')
+      .then(res => {
+        const latestUser = res.data.user;
+        const updatedSession = { ...s, user: latestUser };
+        setSession(updatedSession);
+        localStorage.setItem('fim_user', JSON.stringify(latestUser));
+      })
+      .catch(err => {
+        console.error('Error al sincronizar perfil de pasajero:', err);
+      });
+
     api.get('/trips/my-trips')
       .then(r => setTotalTripsCount(r.data.trips.length))
       .catch(() => {});
@@ -783,6 +795,64 @@ export default function PassengerPage() {
     clearSession();
     router.push('/login');
   };
+
+  if (session && session.user && session.user.isVerified === false) {
+    return (
+      <div className="app-container" style={{ background: 'var(--bg-primary)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', padding: '24px' }}>
+        <div className="card animate-in" style={{ width: '100%', maxWidth: '480px', padding: '40px 32px', textAlign: 'center', border: '1px solid var(--border-accent)', background: 'linear-gradient(135deg, var(--bg-card) 0%, rgba(20,20,30,1) 100%)', boxShadow: '0 20px 50px rgba(0,0,0,0.5)' }}>
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+            <div style={{ width: '80px', height: '80px', background: 'rgba(212, 175, 55, 0.1)', borderRadius: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--accent)' }}>
+              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            </div>
+          </div>
+          
+          <h2 style={{ fontSize: '1.5rem', fontWeight: 900, marginBottom: '16px', color: '#fff' }}>Validación en Proceso</h2>
+          
+          <p style={{ color: 'var(--text-secondary)', fontSize: '0.95rem', lineHeight: '1.6', marginBottom: '24px' }}>
+            Hola, <strong style={{ color: 'var(--accent)' }}>{session.user.name}</strong>. Para garantizar la seguridad de toda la comunidad, nuestro equipo debe revisar y validar tus documentos de identidad (RUT y Selfie) antes de que puedas solicitar viajes.
+          </p>
+
+          <div style={{ background: 'rgba(255, 255, 255, 0.03)', borderRadius: '12px', padding: '16px', marginBottom: '32px', textAlign: 'left', border: '1px solid var(--border)' }}>
+            <div style={{ display: 'flex', gap: '10px', alignItems: 'center', marginBottom: '8px', color: 'var(--accent)', fontWeight: 700, fontSize: '0.85rem' }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+              ESTADO DE DOCUMENTACIÓN
+            </div>
+            <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+              Tus archivos han sido cargados con éxito y están en la cola de revisión de la administración. Este proceso suele tardar menos de 24 horas hábiles.
+            </p>
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            <button 
+              className="btn btn-secondary btn-block" 
+              onClick={() => {
+                api.get('/auth/me')
+                  .then(res => {
+                    const latestUser = res.data.user;
+                    if (latestUser.isVerified) {
+                      const updatedSession = { ...session, user: latestUser };
+                      setSession(updatedSession);
+                      localStorage.setItem('fim_user', JSON.stringify(latestUser));
+                    } else {
+                      alert('Tu documentación aún se encuentra en revisión. Te notificaremos apenas sea aprobada.');
+                    }
+                  })
+                  .catch(() => {
+                    alert('Error de conexión al verificar el estado.');
+                  });
+              }}
+              style={{ padding: '14px', fontWeight: 700 }}
+            >
+              🔄 Verificar estado actual
+            </button>
+            <button className="btn btn-ghost btn-block" onClick={handleLogout} style={{ padding: '14px', fontWeight: 600, color: 'var(--danger)' }}>
+              Cerrar sesión
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="app-container">

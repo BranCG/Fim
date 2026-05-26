@@ -19,7 +19,9 @@ export default function LoginPage() {
   useEffect(() => {
     const s = getSession();
     if (s && s.user && s.user.role) {
-      if (s.user.role === 'driver') {
+      if (s.user.role === 'admin') {
+        router.push('/admin');
+      } else if (s.user.role === 'driver') {
         router.push('/driver');
       } else {
         router.push('/passenger');
@@ -40,7 +42,11 @@ export default function LoginPage() {
       const res = await api.post(endpoint, { email, password });
       const userData = res.data.user || res.data.driver;
 
-      saveSession(res.data.accessToken, { ...userData, role });
+      if (userData && userData.role === 'admin') {
+        saveSession(res.data.accessToken, userData);
+      } else {
+        saveSession(res.data.accessToken, { ...userData, role });
+      }
       success = true;
     } catch (err: unknown) {
       const e = err as { response?: { data?: { error?: string } } };
@@ -49,8 +55,12 @@ export default function LoginPage() {
     }
 
     if (success) {
-      if (role === 'driver') router.push('/driver');
-      else router.push('/passenger');
+      const s = getSession();
+      if (s && s.user) {
+        if (s.user.role === 'admin') router.push('/admin');
+        else if (s.user.role === 'driver') router.push('/driver');
+        else router.push('/passenger');
+      }
     }
   }
 
