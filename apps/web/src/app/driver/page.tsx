@@ -207,6 +207,7 @@ export default function DriverPage() {
 
   const [isLogoHovered, setIsLogoHovered] = useState(false);
   const [totalEarnings, setTotalEarnings] = useState<number | null>(null);
+  const [fetchError, setFetchError] = useState<string | null>(null);
 
   const [taxUploading, setTaxUploading] = useState(false);
   const [taxDocumentUrl, setTaxDocumentUrl] = useState<string | null>(null);
@@ -249,10 +250,19 @@ export default function DriverPage() {
     if (!s) { router.push('/login'); return; }
     setSession(s);
 
+    setFetchError(null);
     api.get('/drivers/me').then(r => {
       setDriver(r.data.driver);
       setIsOnline(r.data.driver.isOnline);
-    }).catch(() => router.push('/login'));
+    }).catch(err => {
+      console.error('Error al obtener datos del conductor:', err);
+      if (err.response?.status === 401 || err.response?.status === 403) {
+        clearSession();
+        router.push('/login');
+      } else {
+        setFetchError('No pudimos conectar con el servidor. Por favor, verifica tu conexión a internet e intenta nuevamente.');
+      }
+    });
 
     api.get('/trips/driver-trips').then(r => {
       const completedTrips = r.data.trips.filter((t: any) => t.status === 'completed');
@@ -609,6 +619,20 @@ export default function DriverPage() {
     clearSession();
     router.push('/login');
   };
+
+  if (fetchError && !driver) return (
+    <div className="status-screen">
+      <div style={{ color: 'var(--danger)', marginBottom: '20px' }}>
+        <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      </div>
+      <h2>Error de conexión</h2>
+      <p style={{ maxWidth: '300px', margin: '0 auto 20px', fontSize: '0.9rem', color: 'var(--text-muted)' }}>{fetchError}</p>
+      <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
+        <button className="btn btn-primary" onClick={() => window.location.reload()}>Reintentar</button>
+        <button className="btn btn-secondary" onClick={handleLogout}>Salir</button>
+      </div>
+    </div>
+  );
 
   if (!driver) return <div className="loading-screen"><div className="spinner"></div></div>;
 
