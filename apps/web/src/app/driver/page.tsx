@@ -208,6 +208,7 @@ export default function DriverPage() {
   const [isLogoHovered, setIsLogoHovered] = useState(false);
   const [totalEarnings, setTotalEarnings] = useState<number | null>(null);
   const [fetchError, setFetchError] = useState<string | null>(null);
+  const [loadingTimeout, setLoadingTimeout] = useState(false);
 
   const [taxUploading, setTaxUploading] = useState(false);
   const [taxDocumentUrl, setTaxDocumentUrl] = useState<string | null>(null);
@@ -251,10 +252,17 @@ export default function DriverPage() {
     setSession(s);
 
     setFetchError(null);
+    setLoadingTimeout(false);
+    const timeoutId = setTimeout(() => {
+      setLoadingTimeout(true);
+    }, 7000);
+
     api.get('/drivers/me').then(r => {
+      clearTimeout(timeoutId);
       setDriver(r.data.driver);
       setIsOnline(r.data.driver.isOnline);
     }).catch(err => {
+      clearTimeout(timeoutId);
       console.error('Error al obtener datos del conductor:', err);
       const status = err.response?.status;
       if (status === 401 || status === 403 || status === 404) {
@@ -305,6 +313,7 @@ export default function DriverPage() {
         console.error('Error fetching active trip on mount:', err);
       });
     // eslint-disable-next-line react-hooks/exhaustive-deps
+    return () => clearTimeout(timeoutId);
   }, []);
 
   // GPS tracking
@@ -635,7 +644,34 @@ export default function DriverPage() {
     </div>
   );
 
-  if (!driver) return <div className="loading-screen"><div className="spinner"></div></div>;
+  if (loadingTimeout && !driver) return (
+    <div className="status-screen">
+      <div style={{ color: 'var(--warning)', marginBottom: '20px' }}>
+        <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      </div>
+      <h2>La carga está tardando mucho</h2>
+      <p style={{ maxWidth: '300px', margin: '0 auto 20px', fontSize: '0.9rem', color: 'var(--text-muted)' }}>Parece que la conexión con el servidor se ha demorado más de lo esperado o hay un problema al iniciar la app.</p>
+      <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
+        <button className="btn btn-primary" onClick={() => window.location.reload()}>Reintentar</button>
+        <button className="btn btn-secondary" onClick={handleLogout}>Cerrar sesión / Salir</button>
+      </div>
+    </div>
+  );
+
+  if (!driver) return (
+    <div style={{
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      justifyContent: 'center',
+      minHeight: '100vh',
+      background: '#09090f',
+      gap: '16px'
+    }}>
+      <div className="spinner"></div>
+      <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>Cargando perfil de conductor...</p>
+    </div>
+  );
 
   if (driver.status === 'pending') return (
     <div className="status-screen">
