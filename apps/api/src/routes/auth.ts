@@ -280,4 +280,48 @@ router.get('/me', requireAuth, async (req: Request, res: Response) => {
   }
 });
 
+// ─── CAMBIAR CONTRASEÑA ──────────────────────────────────────────────────
+router.post('/change-password', requireAuth, async (req: Request, res: Response) => {
+  try {
+    const userId = req.user!.id;
+    const role = req.user!.role;
+    const { currentPassword, newPassword } = req.body;
+
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({ error: 'Faltan campos obligatorios' });
+    }
+
+    if (role === 'driver') {
+      const driver = await prisma.driver.findUnique({ where: { id: userId } });
+      if (!driver) return res.status(404).json({ error: 'Conductor no encontrado' });
+
+      const valid = await bcrypt.compare(currentPassword, driver.passwordHash);
+      if (!valid) return res.status(400).json({ error: 'La contraseña actual es incorrecta' });
+
+      const passwordHash = await bcrypt.hash(newPassword, 12);
+      await prisma.driver.update({
+        where: { id: userId },
+        data: { passwordHash },
+      });
+    } else {
+      const user = await prisma.user.findUnique({ where: { id: userId } });
+      if (!user) return res.status(404).json({ error: 'Usuario no encontrado' });
+
+      const valid = await bcrypt.compare(currentPassword, user.passwordHash);
+      if (!valid) return res.status(400).json({ error: 'La contraseña actual es incorrecta' });
+
+      const passwordHash = await bcrypt.hash(newPassword, 12);
+      await prisma.user.update({
+        where: { id: userId },
+        data: { passwordHash },
+      });
+    }
+
+    return res.json({ message: 'Contraseña actualizada con éxito' });
+  } catch (err) {
+    console.error('Error al cambiar contraseña:', err);
+    return res.status(500).json({ error: 'Error interno del servidor' });
+  }
+});
+
 export default router;

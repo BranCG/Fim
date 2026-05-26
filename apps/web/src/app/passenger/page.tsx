@@ -53,6 +53,7 @@ const IconCash = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="non
 const IconCard = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>;
 const IconParty = () => <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 4.5l9 9 3.5-4.5-9-9-3.5 4.5z"/><path d="M13 13.5l2 2.5 5-5-2-2.5-5 5z"/><path d="M15 15.5l4.5 4.5.5-1.5 1.5.5-4.5-4.5-.5 1.5-1.5-.5z"/><path d="M21 21l-9-9"/><path d="M18 11l.5.5"/><path d="M19 10l.5.5"/></svg>;
 const IconLogout = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" /><polyline points="16 17 21 12 16 7" /><line x1="21" y1="12" x2="9" y2="12" /></svg>;
+const IconUser = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>;
 
 
 // Helper to format Nominatim response into a clean Chilean address format (e.g. "Calle 123, Comuna")
@@ -129,6 +130,12 @@ function formatNominatimAddress(item: any, currentQuery?: string) {
 export default function PassengerPage() {
   const router = useRouter();
   const [session, setSession] = useState<any>(null);
+  const [showProfileModal, setShowProfileModal] = useState(false);
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmNewPassword, setConfirmNewPassword] = useState('');
+  const [passwordChangeMsg, setPasswordChangeMsg] = useState('');
+  const [passwordChangeLoading, setPasswordChangeLoading] = useState(false);
 
   const [status, setStatus] = useState<TripStatus>('idle');
   const [origin, setOrigin] = useState<Location | null>(null);
@@ -793,6 +800,54 @@ export default function PassengerPage() {
     setPaymentSent(true);
   };
 
+  const openProfileModal = async () => {
+    setShowProfileModal(true);
+    setPasswordChangeMsg('');
+    try {
+      const res = await api.get('/auth/me');
+      const latestUser = res.data.user;
+      const updatedSession = { ...session, user: latestUser };
+      setSession(updatedSession);
+      localStorage.setItem('fim_user', JSON.stringify(latestUser));
+    } catch (err) {
+      console.error('Error fetching current user details:', err);
+    }
+  };
+
+  const handlePasswordChange = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!currentPassword || !newPassword || !confirmNewPassword) {
+      setPasswordChangeMsg('❌ Todos los campos son obligatorios');
+      return;
+    }
+    if (newPassword !== confirmNewPassword) {
+      setPasswordChangeMsg('❌ Las contraseñas nuevas no coinciden');
+      return;
+    }
+    if (newPassword.length < 6) {
+      setPasswordChangeMsg('❌ La nueva contraseña debe tener al menos 6 caracteres');
+      return;
+    }
+
+    setPasswordChangeLoading(true);
+    setPasswordChangeMsg('');
+    try {
+      await api.post('/auth/change-password', {
+        currentPassword,
+        newPassword
+      });
+      setPasswordChangeMsg('✅ Contraseña cambiada con éxito');
+      setCurrentPassword('');
+      setNewPassword('');
+      setConfirmNewPassword('');
+    } catch (err: any) {
+      const errMsg = err.response?.data?.error || 'Error al cambiar la contraseña';
+      setPasswordChangeMsg(`❌ ${errMsg}`);
+    } finally {
+      setPasswordChangeLoading(false);
+    }
+  };
+
   const handleLogout = () => {
     clearSession();
     router.push('/login');
@@ -904,6 +959,10 @@ export default function PassengerPage() {
         </div>
         <div className="header-actions" style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
           <div className="header-greeting" style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Hola, {session?.user?.name || 'Pasajero'}</div>
+          <button className="btn btn-ghost" onClick={openProfileModal} style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+            <IconUser />
+            <span className="btn-text">Perfil</span>
+          </button>
           <button className="btn btn-ghost" onClick={() => router.push('/passenger/history')} style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
             <IconClock />
             <span className="btn-text">Historial</span>
@@ -912,7 +971,6 @@ export default function PassengerPage() {
             <IconLogout />
             <span className="btn-text">Salir</span>
           </button>
-
         </div>
       </header>
 
@@ -1899,6 +1957,165 @@ export default function PassengerPage() {
                 Confirmar
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL DE PERFIL DE USUARIO */}
+      {showProfileModal && (
+        <div style={{
+          position: 'fixed',
+          inset: 0,
+          background: 'rgba(9, 9, 15, 0.85)',
+          backdropFilter: 'blur(8px)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 9999,
+          padding: '20px',
+          animation: 'fadeIn 0.2s ease'
+        }}>
+          <div style={{
+            background: 'var(--bg-secondary)',
+            border: '1px solid var(--border)',
+            borderRadius: 'var(--radius-lg)',
+            width: '100%',
+            maxWidth: '460px',
+            padding: '28px',
+            boxShadow: 'var(--shadow-lg)',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '20px',
+            position: 'relative'
+          }}>
+            <button 
+              onClick={() => setShowProfileModal(false)}
+              style={{
+                position: 'absolute',
+                top: '20px',
+                right: '20px',
+                background: 'rgba(255,255,255,0.03)',
+                border: '1px solid var(--border)',
+                borderRadius: '50%',
+                width: '32px',
+                height: '32px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                cursor: 'pointer',
+                color: 'var(--text-primary)',
+                transition: 'var(--transition)'
+              }}
+              onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.08)'}
+              onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.03)'}
+            >
+              <IconX />
+            </button>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <div style={{
+                background: 'var(--gold-light)',
+                color: 'var(--accent)',
+                borderRadius: '10px',
+                padding: '8px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}>
+                <IconUser />
+              </div>
+              <h3 style={{ margin: 0, fontWeight: 900, fontSize: '1.25rem' }}>Mi Perfil</h3>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', background: 'rgba(255,255,255,0.02)', padding: '16px', borderRadius: '12px', border: '1px solid var(--border)' }}>
+              <div>
+                <span style={{ fontSize: '0.7rem', textTransform: 'uppercase', color: 'var(--text-muted)', fontWeight: 700, letterSpacing: '0.05em' }}>Nombre Completo</span>
+                <div style={{ fontSize: '0.95rem', fontWeight: 600, marginTop: '2px' }}>{session?.user?.name || '—'}</div>
+              </div>
+              <div style={{ height: '1px', background: 'var(--border)' }} />
+              <div>
+                <span style={{ fontSize: '0.7rem', textTransform: 'uppercase', color: 'var(--text-muted)', fontWeight: 700, letterSpacing: '0.05em' }}>Correo Electrónico</span>
+                <div style={{ fontSize: '0.95rem', fontWeight: 600, marginTop: '2px' }}>{session?.user?.email || '—'}</div>
+              </div>
+              <div style={{ height: '1px', background: 'var(--border)' }} />
+              <div>
+                <span style={{ fontSize: '0.7rem', textTransform: 'uppercase', color: 'var(--text-muted)', fontWeight: 700, letterSpacing: '0.05em' }}>Número de Teléfono</span>
+                <div style={{ fontSize: '0.95rem', fontWeight: 600, marginTop: '2px' }}>{session?.user?.phone || '—'}</div>
+              </div>
+            </div>
+
+            <form onSubmit={handlePasswordChange} style={{ display: 'flex', flexDirection: 'column', gap: '12px', borderTop: '1px solid var(--border)', paddingTop: '20px' }}>
+              <h4 style={{ margin: '0 0 4px 0', fontSize: '0.95rem', fontWeight: 700, color: 'var(--text-primary)' }}>🔐 Cambiar Contraseña</h4>
+              
+              <input 
+                type="password" 
+                placeholder="Contraseña actual" 
+                value={currentPassword}
+                onChange={e => setCurrentPassword(e.target.value)}
+                style={{
+                  background: 'var(--bg-primary)',
+                  border: '1.5px solid var(--border)',
+                  color: 'white',
+                  padding: '10px 14px',
+                  borderRadius: '10px',
+                  fontSize: '0.85rem'
+                }}
+              />
+              <input 
+                type="password" 
+                placeholder="Nueva contraseña" 
+                value={newPassword}
+                onChange={e => setNewPassword(e.target.value)}
+                style={{
+                  background: 'var(--bg-primary)',
+                  border: '1.5px solid var(--border)',
+                  color: 'white',
+                  padding: '10px 14px',
+                  borderRadius: '10px',
+                  fontSize: '0.85rem'
+                }}
+              />
+              <input 
+                type="password" 
+                placeholder="Confirmar nueva contraseña" 
+                value={confirmNewPassword}
+                onChange={e => setConfirmNewPassword(e.target.value)}
+                style={{
+                  background: 'var(--bg-primary)',
+                  border: '1.5px solid var(--border)',
+                  color: 'white',
+                  padding: '10px 14px',
+                  borderRadius: '10px',
+                  fontSize: '0.85rem'
+                }}
+              />
+
+              {passwordChangeMsg && (
+                <div style={{
+                  fontSize: '0.8rem',
+                  fontWeight: 600,
+                  color: passwordChangeMsg.startsWith('✅') ? 'var(--success)' : 'var(--danger)',
+                  marginTop: '4px'
+                }}>
+                  {passwordChangeMsg}
+                </div>
+              )}
+
+              <button 
+                type="submit" 
+                className="btn btn-primary"
+                disabled={passwordChangeLoading || !currentPassword || !newPassword || !confirmNewPassword}
+                style={{
+                  width: '100%',
+                  marginTop: '6px',
+                  padding: '12px',
+                  fontWeight: 700,
+                  borderRadius: '10px'
+                }}
+              >
+                {passwordChangeLoading ? 'Actualizando...' : 'Actualizar Contraseña'}
+              </button>
+            </form>
           </div>
         </div>
       )}
