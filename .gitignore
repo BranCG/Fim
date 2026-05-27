@@ -10,6 +10,7 @@ out/
 # TypeScript build output
 dist/
 build/
+*.tsbuildinfo
 
 # Local env files (DO NOT COMMIT SENSITIVE KEYS)
 .env
