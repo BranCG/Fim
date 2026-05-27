@@ -619,7 +619,9 @@ export default function DriverPage() {
     try {
       await api.post('/drivers/payment-link', { mercadoPagoLink: mpLink });
       alert('Link de pago vinculado correctamente.');
-      window.location.reload();
+      if (driver) {
+        setDriver({ ...driver, mercadoPagoLink: mpLink });
+      }
     } catch (err) {
       alert('Error al guardar el link.');
     }
