@@ -324,4 +324,36 @@ router.post('/change-password', requireAuth, async (req: Request, res: Response)
   }
 });
 
+// ─── ACTUALIZAR TOKEN FCM ─────────────────────────────────────────────────
+router.post('/fcm-token', requireAuth, async (req: Request, res: Response) => {
+  try {
+    const userId = req.user!.id;
+    const role = req.user!.role;
+    const { fcmToken } = req.body;
+
+    if (fcmToken === undefined) {
+      return res.status(400).json({ error: 'fcmToken es requerido' });
+    }
+
+    if (role === 'driver') {
+      await prisma.driver.update({
+        where: { id: userId },
+        data: { fcmToken },
+      });
+      console.log(`[FCM] Token actualizado para conductor ${userId}: ${fcmToken ? fcmToken.substring(0, 10) : 'null'}...`);
+    } else {
+      await prisma.user.update({
+        where: { id: userId },
+        data: { fcmToken },
+      });
+      console.log(`[FCM] Token actualizado para pasajero ${userId}: ${fcmToken ? fcmToken.substring(0, 10) : 'null'}...`);
+    }
+
+    return res.json({ message: 'Token FCM actualizado con éxito' });
+  } catch (err) {
+    console.error('Error al actualizar token FCM:', err);
+    return res.status(500).json({ error: 'Error interno del servidor' });
+  }
+});
+
 export default router;

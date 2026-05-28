@@ -27,6 +27,7 @@ model User {
   selfieUrl     String?
   ratings       Rating[]  @relation("PassengerRatings")
   trips         Trip[]    @relation("PassengerTrips")
+  fcmToken      String?
 
   @@map("users")
 }
@@ -87,6 +88,7 @@ model Driver {
   payouts             Payout[]
   ratings             Rating[]  @relation("DriverRatings")
   trips               Trip[]    @relation("DriverTrips")
+  fcmToken            String?
 
   @@map("drivers")
 }

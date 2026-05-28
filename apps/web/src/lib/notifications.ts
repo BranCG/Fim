@@ -79,3 +79,61 @@ export async function sendLocalNotification(title: string, body: string) {
     }
   }
 }
+
+import api from './api';
+
+export async function initializePushNotifications() {
+  if (typeof window === 'undefined') return;
+
+  const isCapacitor = (window as any).Capacitor;
+  if (!isCapacitor) {
+    console.log('[Push] Capacitor no disponible, omitiendo inicialización de notificaciones push nativas.');
+    return;
+  }
+
+  try {
+    const { PushNotifications } = await import('@capacitor/push-notifications');
+
+    let permStatus = await PushNotifications.checkPermissions();
+
+    if (permStatus.receive === 'prompt') {
+      permStatus = await PushNotifications.requestPermissions();
+    }
+
+    if (permStatus.receive !== 'granted') {
+      console.warn('[Push] Permiso para notificaciones push denegado.');
+      return;
+    }
+
+    await PushNotifications.register();
+
+    PushNotifications.addListener('registration', async (token) => {
+      console.log('[Push] Registro exitoso, token FCM:', token.value);
+      try {
+        await api.post('/auth/fcm-token', { fcmToken: token.value });
+        console.log('[Push] Token FCM enviado con éxito al servidor.');
+      } catch (err) {
+        console.error('[Push] Error al enviar token FCM al servidor:', err);
+      }
+    });
+
+    PushNotifications.addListener('registrationError', (error) => {
+      console.error('[Push] Error en el registro de push:', error);
+    });
+
+    PushNotifications.addListener('pushNotificationReceived', (notification) => {
+      console.log('[Push] Notificación recibida en primer plano:', notification);
+      sendLocalNotification(
+        notification.title || 'Nueva Notificación',
+        notification.body || ''
+      );
+    });
+
+    PushNotifications.addListener('pushNotificationActionPerformed', (action) => {
+      console.log('[Push] Acción de notificación realizada:', action);
+    });
+
+  } catch (error) {
+    console.error('[Push] Error al inicializar las notificaciones push:', error);
+  }
+}

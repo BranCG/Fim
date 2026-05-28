@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import api, { formatCLP, calculatePrice, clearSession, getSession, roundCLP } from '@/lib/api';
 import { connectSocket, getSocket, forceReconnectSocket } from '@/lib/socket';
-import { sendLocalNotification } from '@/lib/notifications';
+import { sendLocalNotification, initializePushNotifications } from '@/lib/notifications';
 
 // Leaflet solo en cliente (SSR incompatible)
 const PassengerMap = dynamic(() => import('@/components/map/PassengerMap'), { ssr: false });
@@ -442,6 +442,9 @@ export default function PassengerPage() {
     // Si el usuario es admin, redirigir al panel de control
     if (s.user?.role === 'admin') { router.push('/admin'); return; }
     setSession(s);
+
+    // Inicializar Notificaciones Push para móviles
+    initializePushNotifications();
 
     // Sincronizar el estado del usuario
     api.get('/auth/me')

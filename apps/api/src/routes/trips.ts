@@ -217,6 +217,42 @@ router.post('/:id/cancel', requireAuth, async (req: Request, res: Response) => {
       });
     }
 
+    // Enviar push notification al cancelar
+    const userToNotifyId = role === 'passenger' ? trip.driverId : trip.passengerId;
+    if (userToNotifyId) {
+      if (role === 'passenger') {
+        prisma.driver.findUnique({
+          where: { id: userToNotifyId },
+          select: { fcmToken: true }
+        }).then(driver => {
+          if (driver && driver.fcmToken) {
+            const { sendPushNotification } = require('../utils/firebase');
+            sendPushNotification(
+              driver.fcmToken,
+              "Viaje Cancelado",
+              `El pasajero canceló el viaje: "${reason || 'Sin motivo especificado'}"`,
+              { tripId: id, type: 'trip_cancelled' }
+            );
+          }
+        }).catch(console.error);
+      } else {
+        prisma.user.findUnique({
+          where: { id: userToNotifyId },
+          select: { fcmToken: true }
+        }).then(user => {
+          if (user && user.fcmToken) {
+            const { sendPushNotification } = require('../utils/firebase');
+            sendPushNotification(
+              user.fcmToken,
+              "Viaje Cancelado",
+              `El conductor canceló el viaje: "${reason || 'Sin motivo especificado'}"`,
+              { tripId: id, type: 'trip_cancelled' }
+            );
+          }
+        }).catch(console.error);
+      }
+    }
+
     return res.json({ trip: updated });
   } catch (err) {
     return res.status(500).json({ error: 'Error al cancelar' });

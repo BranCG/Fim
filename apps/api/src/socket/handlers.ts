@@ -1,6 +1,7 @@
 import { Server, Socket } from 'socket.io';
 import prisma from '../utils/prisma';
 import { calculateDistance } from '../utils/pricing';
+import { sendPushNotification } from '../utils/firebase';
 
 // ─── Mapa de conductores online ───────────────────────────────────────────
 // driverId -> { socketId, lat, lng }
@@ -60,6 +61,21 @@ export function cancelActiveSearch(tripId: string, reason?: string) {
         tripId,
         reason: reason || 'El pasajero canceló la solicitud antes de ser aceptada.'
       });
+
+      // Enviar push notification al conductor si tiene fcmToken
+      prisma.driver.findUnique({
+        where: { id: search.currentDriverId },
+        select: { fcmToken: true }
+      }).then(driver => {
+        if (driver && driver.fcmToken) {
+          sendPushNotification(
+            driver.fcmToken,
+            "Viaje Cancelado",
+            reason || 'El pasajero canceló la solicitud.',
+            { tripId, type: 'trip_cancelled' }
+          );
+        }
+      }).catch(console.error);
     }
     activeSearches.delete(tripId);
     console.log(`[Socket] Búsqueda activa cancelada para viaje ${tripId}`);
@@ -212,6 +228,21 @@ export function setupSocketHandlers(io: Server) {
         // Notificar al conductor confirmación
         socket.emit('trip:confirmed', { trip });
 
+        // Enviar push al pasajero si tiene token
+        prisma.user.findUnique({
+          where: { id: trip.passengerId },
+          select: { fcmToken: true }
+        }).then(passenger => {
+          if (passenger && passenger.fcmToken) {
+            sendPushNotification(
+              passenger.fcmToken,
+              "¡Viaje Aceptado!",
+              `${trip.driver?.name || 'El conductor'} va en camino a recogerte.`,
+              { tripId, type: 'trip_accepted' }
+            );
+          }
+        }).catch(console.error);
+
         console.log(`[Socket] Viaje ${tripId} aceptado por conductor ${driverId}`);
       } catch (err) {
         console.error('[Socket] Error aceptando viaje:', err);
@@ -251,6 +282,22 @@ export function setupSocketHandlers(io: Server) {
         });
 
         io.to(`trip:${tripId}`).emit('trip:started', { trip: updated });
+
+        // Enviar push al pasajero
+        prisma.user.findUnique({
+          where: { id: updated.passengerId },
+          select: { fcmToken: true }
+        }).then(passenger => {
+          if (passenger && passenger.fcmToken) {
+            sendPushNotification(
+              passenger.fcmToken,
+              "¡Viaje Iniciado!",
+              "Tu viaje hacia el destino ha comenzado. ¡Buen viaje!",
+              { tripId, type: 'trip_started' }
+            );
+          }
+        }).catch(console.error);
+
         console.log(`[Socket] Viaje ${tripId} iniciado con éxito`);
       } catch (err) {
         console.error('[Socket] Error iniciando viaje:', err);
@@ -259,12 +306,28 @@ export function setupSocketHandlers(io: Server) {
 
     // ─── CONDUCTOR: llegó al punto de recogida ────────────────────────────
     socket.on('driver:arrived', async ({ tripId }: { tripId: string }) => {
-      await prisma.trip.update({
+      const trip = await prisma.trip.update({
         where: { id: tripId },
         data: { status: 'driver_arrived', driverArrivedAt: new Date() },
       }).catch(console.error);
 
       io.to(`trip:${tripId}`).emit('trip:driver-arrived', { tripId });
+
+      if (trip) {
+        prisma.user.findUnique({
+          where: { id: trip.passengerId },
+          select: { fcmToken: true }
+        }).then(passenger => {
+          if (passenger && passenger.fcmToken) {
+            sendPushNotification(
+              passenger.fcmToken,
+              "¡Tu conductor ha llegado!",
+              "El conductor te está esperando en el punto de recogida.",
+              { tripId, type: 'driver_arrived' }
+            );
+          }
+        }).catch(console.error);
+      }
     });
 
     // ─── CONDUCTOR: solicita pago al pasajero ───────────────────────────
@@ -272,14 +335,29 @@ export function setupSocketHandlers(io: Server) {
       console.log(`[Socket] Conductor solicita pago para viaje ${tripId}`);
       try {
         const completionOtp = Math.floor(1000 + Math.random() * 9000).toString();
-        await prisma.trip.update({
+        const updated = await prisma.trip.update({
           where: { id: tripId },
           data: { 
             paymentStatus: 'requested',
-            dropoffOtpCode: completionOtp, // Código de bajada (separado del de subida)
+            dropoffOtpCode: completionOtp,
           },
         });
         io.to(`trip:${tripId}`).emit('trip:payment-requested', { otpCode: completionOtp });
+
+        // Enviar push al pasajero
+        prisma.user.findUnique({
+          where: { id: updated.passengerId },
+          select: { fcmToken: true }
+        }).then(passenger => {
+          if (passenger && passenger.fcmToken) {
+            sendPushNotification(
+              passenger.fcmToken,
+              "Pago Solicitado",
+              "El conductor ha solicitado el pago del viaje.",
+              { tripId, type: 'payment_requested' }
+            );
+          }
+        }).catch(console.error);
       } catch (err) {
         console.error('Error updating paymentStatus to requested:', err);
       }
@@ -309,12 +387,55 @@ export function setupSocketHandlers(io: Server) {
     });
 
     // ─── CHAT EN VIVO: Mensajes de texto ──────────────────────────────────
-    socket.on('trip:message', (data: { tripId: string, senderId: string, senderName: string, text: string }) => {
+    socket.on('trip:message', async (data: { tripId: string, senderId: string, senderName: string, text: string }) => {
       console.log(`[Socket] Mensaje de chat recibido para viaje ${data.tripId} de ${data.senderName}: ${data.text}`);
       io.to(`trip:${data.tripId}`).emit('trip:message', {
         ...data,
         timestamp: new Date().toISOString()
       });
+
+      // Enviar push notification al destinatario
+      try {
+        const trip = await prisma.trip.findUnique({
+          where: { id: data.tripId },
+          select: { passengerId: true, driverId: true }
+        });
+        if (trip) {
+          const recipientId = data.senderId === trip.passengerId ? trip.driverId : trip.passengerId;
+          if (recipientId) {
+            const isDriver = recipientId === trip.driverId;
+            if (isDriver) {
+              const driver = await prisma.driver.findUnique({
+                where: { id: recipientId },
+                select: { fcmToken: true }
+              });
+              if (driver && driver.fcmToken) {
+                sendPushNotification(
+                  driver.fcmToken,
+                  `Mensaje de ${data.senderName}`,
+                  data.text,
+                  { tripId: data.tripId, type: 'chat_message' }
+                );
+              }
+            } else {
+              const passenger = await prisma.user.findUnique({
+                where: { id: recipientId },
+                select: { fcmToken: true }
+              });
+              if (passenger && passenger.fcmToken) {
+                sendPushNotification(
+                  passenger.fcmToken,
+                  `Mensaje de ${data.senderName}`,
+                  data.text,
+                  { tripId: data.tripId, type: 'chat_message' }
+                );
+              }
+            }
+          }
+        }
+      } catch (err) {
+        console.error('Error sending message push notification:', err);
+      }
     });
 
     // ─── PASAJERO: confirma que envió el pago ─────────────────────────────
@@ -369,6 +490,21 @@ export function setupSocketHandlers(io: Server) {
           finalPrice: trip.estimatedPrice,
           paymentMethod: trip.paymentMethod,
         });
+
+        // Enviar push al pasajero
+        prisma.user.findUnique({
+          where: { id: trip.passengerId },
+          select: { fcmToken: true }
+        }).then(passenger => {
+          if (passenger && passenger.fcmToken) {
+            sendPushNotification(
+              passenger.fcmToken,
+              "Viaje Finalizado",
+              "Has llegado a tu destino. ¡Esperamos que hayas tenido un excelente viaje!",
+              { tripId, type: 'trip_completed' }
+            );
+          }
+        }).catch(console.error);
 
         console.log(`[Socket] Viaje ${tripId} completado. Precio: $${trip.estimatedPrice}`);
       } catch (err) {
@@ -472,6 +608,21 @@ async function findAndNotifyDriver(
       driverDistance: nearest.distance,
     },
   });
+
+  // Enviar push notification al conductor
+  prisma.driver.findUnique({
+    where: { id: nearest.driverId },
+    select: { fcmToken: true }
+  }).then(driver => {
+    if (driver && driver.fcmToken) {
+      sendPushNotification(
+        driver.fcmToken,
+        "¡Nueva Solicitud de Viaje!",
+        `Tienes un viaje disponible por $${trip.estimatedPrice}.`,
+        { tripId, type: 'trip_request' }
+      );
+    }
+  }).catch(console.error);
 
   // Si el conductor no responde en 30 segundos, pasar al siguiente
   search.timer = setTimeout(() => {

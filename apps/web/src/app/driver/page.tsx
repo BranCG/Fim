@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import api, { formatCLP, clearSession, getSession, roundCLP } from '@/lib/api';
 import { connectSocket, forceReconnectSocket } from '@/lib/socket';
-import { sendLocalNotification } from '@/lib/notifications';
+import { sendLocalNotification, initializePushNotifications } from '@/lib/notifications';
 
 const DriverMap = dynamic(() => import('@/components/map/DriverMap'), { ssr: false });
 
@@ -372,6 +372,9 @@ export default function DriverPage() {
     const s = getSession();
     if (!s) { router.push('/login'); return; }
     setSession(s);
+
+    // Inicializar Notificaciones Push para móviles
+    initializePushNotifications();
 
     setFetchError(null);
     setLoadingTimeout(false);
