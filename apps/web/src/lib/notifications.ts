@@ -94,6 +94,18 @@ export async function initializePushNotifications() {
   try {
     const { PushNotifications } = await import('@capacitor/push-notifications');
 
+    // Crear el canal de notificaciones push de alta prioridad para Android (heads-up / banner)
+    await PushNotifications.createChannel({
+      id: 'fim-notifications',
+      name: 'Notificaciones Fim',
+      description: 'Canal para alertas de viajes y mensajes con alta prioridad',
+      importance: 5, // IMPORTANCE_HIGH (Android: 5 / Max, pop up on screen)
+      visibility: 1, // VISIBILITY_PUBLIC
+      sound: 'default',
+      vibration: true,
+    });
+    console.log('[Push] Canal de notificaciones push creado con éxito: fim-notifications');
+
     let permStatus = await PushNotifications.checkPermissions();
 
     if (permStatus.receive === 'prompt') {

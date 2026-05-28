@@ -66,6 +66,7 @@ export async function sendPushNotification(
         notification: {
           sound: 'default',
           clickAction: 'FCM_PLUGIN_ACTIVITY',
+          channelId: 'fim-notifications',
         },
       },
       apns: {
