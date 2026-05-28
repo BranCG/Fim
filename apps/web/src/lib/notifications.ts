@@ -95,16 +95,20 @@ export async function initializePushNotifications() {
     const { PushNotifications } = await import('@capacitor/push-notifications');
 
     // Crear el canal de notificaciones push de alta prioridad para Android (heads-up / banner)
-    await PushNotifications.createChannel({
-      id: 'fim-notifications-high-v1',
-      name: 'Alertas de Viaje Fim',
-      description: 'Canal de alta prioridad para llamadas de viajes, chat y alertas emergentes con sonido y vibración.',
-      importance: 5, // IMPORTANCE_HIGH (Android: 5 / Max, pop up on screen)
-      visibility: 1, // VISIBILITY_PUBLIC
-      sound: 'default',
-      vibration: true,
-    });
-    console.log('[Push] Canal de notificaciones push de alta prioridad creado con éxito: fim-notifications-high-v1');
+    try {
+      await PushNotifications.createChannel({
+        id: 'fim-notifications-high-v1',
+        name: 'Alertas de Viaje Fim',
+        description: 'Canal de alta prioridad para llamadas de viajes, chat y alertas emergentes con sonido y vibración.',
+        importance: 5, // IMPORTANCE_HIGH (Android: 5 / Max, pop up on screen)
+        visibility: 1, // VISIBILITY_PUBLIC
+        sound: 'default',
+        vibration: true,
+      });
+      console.log('[Push] Canal de notificaciones push de alta prioridad creado con éxito: fim-notifications-high-v1');
+    } catch (channelError) {
+      console.warn('[Push] Advertencia al crear el canal de notificaciones (omitido o no soportado):', channelError);
+    }
 
     let permStatus = await PushNotifications.checkPermissions();
 
