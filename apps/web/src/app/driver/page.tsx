@@ -56,6 +56,12 @@ const IconGear = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="non
 const IconCheck = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>;
 const IconPhone = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" /></svg>;
 const IconLogout = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" /><polyline points="16 17 21 12 16 7" /><line x1="21" y1="12" x2="9" y2="12" /></svg>;
+const IconCompass = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="12" cy="12" r="10" />
+    <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 8.88 9.88 16.24 7.76" />
+  </svg>
+);
 
 
 
@@ -108,6 +114,7 @@ export default function DriverPage() {
   const [cancellationNotice, setCancellationNotice] = useState<{ reason: string; wasAccepted?: boolean } | null>(null);
 
   const [isMinimized, setIsMinimized] = useState(false);
+  const [showNavModal, setShowNavModal] = useState(false);
 
   // Reset minimize state when trip status or phase changes
   useEffect(() => {
@@ -256,7 +263,25 @@ export default function DriverPage() {
     setChatMessages([]);
     setShowChat(false);
     setUnreadCount(0);
+    setShowNavModal(false);
   }, []);
+
+  const handleNavigate = (app: 'waze' | 'google') => {
+    if (!activeTrip) return;
+    const isPickup = tripPhase === 'going_to_passenger' || tripPhase === 'arrived';
+    const lat = isPickup ? activeTrip.originLat : activeTrip.destLat;
+    const lng = isPickup ? activeTrip.originLng : activeTrip.destLng;
+    
+    let url = '';
+    if (app === 'waze') {
+      url = `https://waze.com/ul?ll=${lat},${lng}&navigate=yes`;
+    } else {
+      url = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}&travelmode=driving`;
+    }
+    
+    window.open(url, '_blank');
+    setShowNavModal(false);
+  };
 
   const checkActiveTrip = useCallback(async () => {
     try {
@@ -1345,56 +1370,88 @@ export default function DriverPage() {
                 <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Pasajero</div>
               </div>
             </div>
-            <button
-              onClick={() => setShowChat(true)}
-              style={{
-                borderRadius: '50%',
-                width: '42px',
-                height: '42px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: '#00E5A0',
-                background: '#1A1A28',
-                border: '1px solid rgba(0, 229, 160, 0.3)',
-                cursor: 'pointer',
-                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.4)',
-                transition: 'all 0.2s ease',
-                position: 'relative'
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.transform = 'scale(1.05)';
-                e.currentTarget.style.background = '#222235';
-                e.currentTarget.style.borderColor = '#00E5A0';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.transform = 'scale(1)';
-                e.currentTarget.style.background = '#1A1A28';
-                e.currentTarget.style.borderColor = 'rgba(0, 229, 160, 0.3)';
-              }}
-            >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#00E5A0" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" /></svg>
-              {unreadCount > 0 && (
-                <div style={{
-                  position: 'absolute',
-                  top: '-4px',
-                  right: '-4px',
-                  background: 'var(--danger)',
-                  color: 'white',
-                  borderRadius: '50%',
-                  minWidth: '18px',
-                  height: '18px',
-                  fontSize: '0.65rem',
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <button
+                onClick={() => setShowNavModal(true)}
+                style={{
+                  borderRadius: '12px',
+                  padding: '8px 14px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  color: 'var(--accent)',
+                  background: '#1A1A28',
+                  border: '1px solid var(--border-accent)',
+                  cursor: 'pointer',
+                  fontSize: '0.8rem',
                   fontWeight: 800,
+                  boxShadow: '0 4px 12px rgba(0, 0, 0, 0.4)',
+                  transition: 'all 0.2s ease',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = 'scale(1.05)';
+                  e.currentTarget.style.background = '#222235';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'scale(1)';
+                  e.currentTarget.style.background = '#1A1A28';
+                }}
+              >
+                <IconCompass />
+                <span>Navegar</span>
+              </button>
+
+              <button
+                onClick={() => setShowChat(true)}
+                style={{
+                  borderRadius: '50%',
+                  width: '42px',
+                  height: '42px',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  boxShadow: '0 0 8px rgba(255, 69, 96, 0.6)'
-                }}>
-                  {unreadCount}
-                </div>
-              )}
-            </button>
+                  color: '#00E5A0',
+                  background: '#1A1A28',
+                  border: '1px solid rgba(0, 229, 160, 0.3)',
+                  cursor: 'pointer',
+                  boxShadow: '0 4px 12px rgba(0, 0, 0, 0.4)',
+                  transition: 'all 0.2s ease',
+                  position: 'relative'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = 'scale(1.05)';
+                  e.currentTarget.style.background = '#222235';
+                  e.currentTarget.style.borderColor = '#00E5A0';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'scale(1)';
+                  e.currentTarget.style.background = '#1A1A28';
+                  e.currentTarget.style.borderColor = 'rgba(0, 229, 160, 0.3)';
+                }}
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#00E5A0" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" /></svg>
+                {unreadCount > 0 && (
+                  <div style={{
+                    position: 'absolute',
+                    top: '-4px',
+                    right: '-4px',
+                    background: 'var(--danger)',
+                    color: 'white',
+                    borderRadius: '50%',
+                    minWidth: '18px',
+                    height: '18px',
+                    fontSize: '0.65rem',
+                    fontWeight: 800,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    boxShadow: '0 0 8px rgba(255, 69, 96, 0.6)'
+                  }}>
+                    {unreadCount}
+                  </div>
+                )}
+              </button>
+            </div>
           </div>
 
           <div style={{ background: 'var(--bg-secondary)', padding: '16px', borderRadius: 'var(--radius)', marginBottom: '20px' }}>
@@ -1888,6 +1945,118 @@ export default function DriverPage() {
 
             <button className="btn btn-accent btn-block btn-lg" onClick={() => setCancellationNotice(null)}>
               Entendido
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL DE SELECCIÓN DE NAVEGACIÓN EXTERNA */}
+      {showNavModal && activeTrip && (
+        <div style={{
+          position: 'fixed',
+          inset: 0,
+          background: 'rgba(9, 9, 15, 0.85)',
+          backdropFilter: 'blur(10px)',
+          zIndex: 10000,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '20px',
+          animation: 'fadeIn 0.25s ease'
+        }}>
+          <div style={{
+            width: '100%',
+            maxWidth: '360px',
+            background: 'var(--bg-secondary, #12121e)',
+            border: '1px solid var(--border-accent, rgba(0, 229, 160, 0.3))',
+            borderRadius: '20px',
+            padding: '24px',
+            boxShadow: 'var(--shadow-lg, 0 10px 40px rgba(0, 0, 0, 0.6))',
+            textAlign: 'center',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '16px'
+          }}>
+            <h3 style={{ margin: 0, fontSize: '1.2rem', fontWeight: 900, color: 'white' }}>Selecciona tu Navegador</h3>
+            <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--text-muted, #a0aec0)' }}>
+              ¿Con qué aplicación deseas seguir la ruta al {tripPhase === 'going_to_passenger' || tripPhase === 'arrived' ? 'punto de recogida' : 'destino'}?
+            </p>
+            
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '8px' }}>
+              <button
+                onClick={() => handleNavigate('google')}
+                className="btn btn-block btn-lg"
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '10px',
+                  background: 'rgba(255, 255, 255, 0.05)',
+                  border: '1px solid var(--border)',
+                  color: 'white',
+                  fontWeight: 700,
+                  fontSize: '0.95rem',
+                  cursor: 'pointer',
+                  borderRadius: '12px',
+                  padding: '14px 20px',
+                  transition: 'all 0.2s ease'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
+                  e.currentTarget.style.borderColor = 'var(--accent)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
+                  e.currentTarget.style.borderColor = 'var(--border)';
+                }}
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#4285F4" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+                  <circle cx="12" cy="10" r="3" />
+                </svg>
+                Google Maps
+              </button>
+
+              <button
+                onClick={() => handleNavigate('waze')}
+                className="btn btn-block btn-lg"
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '10px',
+                  background: 'rgba(255, 255, 255, 0.05)',
+                  border: '1px solid var(--border)',
+                  color: 'white',
+                  fontWeight: 700,
+                  fontSize: '0.95rem',
+                  cursor: 'pointer',
+                  borderRadius: '12px',
+                  padding: '14px 20px',
+                  transition: 'all 0.2s ease'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
+                  e.currentTarget.style.borderColor = 'var(--accent)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
+                  e.currentTarget.style.borderColor = 'var(--border)';
+                }}
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#33CCFF" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" />
+                </svg>
+                Waze
+              </button>
+            </div>
+            
+            <button
+              onClick={() => setShowNavModal(false)}
+              className="btn btn-secondary btn-block"
+              style={{ marginTop: '8px', cursor: 'pointer' }}
+            >
+              Cancelar
             </button>
           </div>
         </div>
