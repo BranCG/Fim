@@ -213,6 +213,13 @@ export default function DriverPage() {
     }
   }, [showChat]);
 
+  // Auto-close chat modal during trip in progress or idle
+  useEffect(() => {
+    if (tripPhase === 'in_progress' || tripPhase === 'idle' || paymentRequested) {
+      setShowChat(false);
+    }
+  }, [tripPhase, paymentRequested]);
+
   const [isLogoHovered, setIsLogoHovered] = useState(false);
   const [totalEarnings, setTotalEarnings] = useState<number | null>(null);
   const [fetchError, setFetchError] = useState<string | null>(null);
@@ -376,6 +383,9 @@ export default function DriverPage() {
       clearTimeout(timeoutId);
       setDriver(r.data.driver);
       setIsOnline(r.data.driver.isOnline);
+      if (r.data.driver.lastLat && r.data.driver.lastLng) {
+        setPos({ lat: r.data.driver.lastLat, lng: r.data.driver.lastLng });
+      }
     }).catch(err => {
       clearTimeout(timeoutId);
       console.error('Error al obtener datos del conductor:', err);
@@ -1426,56 +1436,58 @@ export default function DriverPage() {
                 <span>Navegar</span>
               </button>
 
-              <button
-                onClick={() => setShowChat(true)}
-                style={{
-                  borderRadius: '50%',
-                  width: '42px',
-                  height: '42px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  color: '#00E5A0',
-                  background: '#1A1A28',
-                  border: '1px solid rgba(0, 229, 160, 0.3)',
-                  cursor: 'pointer',
-                  boxShadow: '0 4px 12px rgba(0, 0, 0, 0.4)',
-                  transition: 'all 0.2s ease',
-                  position: 'relative'
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.transform = 'scale(1.05)';
-                  e.currentTarget.style.background = '#222235';
-                  e.currentTarget.style.borderColor = '#00E5A0';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.transform = 'scale(1)';
-                  e.currentTarget.style.background = '#1A1A28';
-                  e.currentTarget.style.borderColor = 'rgba(0, 229, 160, 0.3)';
-                }}
-              >
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#00E5A0" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" /></svg>
-                {unreadCount > 0 && (
-                  <div style={{
-                    position: 'absolute',
-                    top: '-4px',
-                    right: '-4px',
-                    background: 'var(--danger)',
-                    color: 'white',
+              {tripPhase !== 'in_progress' && (
+                <button
+                  onClick={() => setShowChat(true)}
+                  style={{
                     borderRadius: '50%',
-                    minWidth: '18px',
-                    height: '18px',
-                    fontSize: '0.65rem',
-                    fontWeight: 800,
+                    width: '42px',
+                    height: '42px',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    boxShadow: '0 0 8px rgba(255, 69, 96, 0.6)'
-                  }}>
-                    {unreadCount}
-                  </div>
-                )}
-              </button>
+                    color: '#00E5A0',
+                    background: '#1A1A28',
+                    border: '1px solid rgba(0, 229, 160, 0.3)',
+                    cursor: 'pointer',
+                    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.4)',
+                    transition: 'all 0.2s ease',
+                    position: 'relative'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.transform = 'scale(1.05)';
+                    e.currentTarget.style.background = '#222235';
+                    e.currentTarget.style.borderColor = '#00E5A0';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.transform = 'scale(1)';
+                    e.currentTarget.style.background = '#1A1A28';
+                    e.currentTarget.style.borderColor = 'rgba(0, 229, 160, 0.3)';
+                  }}
+                >
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#00E5A0" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" /></svg>
+                  {unreadCount > 0 && (
+                    <div style={{
+                      position: 'absolute',
+                      top: '-4px',
+                      right: '-4px',
+                      background: 'var(--danger)',
+                      color: 'white',
+                      borderRadius: '50%',
+                      minWidth: '18px',
+                      height: '18px',
+                      fontSize: '0.65rem',
+                      fontWeight: 800,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      boxShadow: '0 0 8px rgba(255, 69, 96, 0.6)'
+                    }}>
+                      {unreadCount}
+                    </div>
+                  )}
+                </button>
+              )}
             </div>
           </div>
 

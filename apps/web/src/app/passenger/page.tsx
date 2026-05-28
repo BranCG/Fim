@@ -128,6 +128,25 @@ function formatNominatimAddress(item: any, currentQuery?: string) {
 }
 
 
+// Haversine distance in km
+function calculateDistance(lat1: number, lng1: number, lat2: number, lng2: number): number {
+  const R = 6371; // Radio de la tierra en km
+  const dLat = ((lat2 - lat1) * Math.PI) / 180;
+  const dLng = ((lng2 - lng1) * Math.PI) / 180;
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos((lat1 * Math.PI) / 180) *
+    Math.cos((lat2 * Math.PI) / 180) *
+    Math.sin(dLng / 2) ** 2;
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+}
+
+function estimateDuration(distanceKm: number): number {
+  const avgSpeedKmh = 25;
+  return Math.ceil((distanceKm / avgSpeedKmh) * 60);
+}
+
 export default function PassengerPage() {
   const router = useRouter();
   const [session, setSession] = useState<any>(null);
@@ -291,6 +310,13 @@ export default function PassengerPage() {
     }
   }, [showChat]);
 
+  // Auto-close chat modal during trip in progress or completed
+  useEffect(() => {
+    if (status === 'in_progress' || status === 'completed' || paymentRequested) {
+      setShowChat(false);
+    }
+  }, [status, paymentRequested]);
+
   const [isLogoHovered, setIsLogoHovered] = useState(false);
   const [totalTripsCount, setTotalTripsCount] = useState<number | null>(null);
 
@@ -331,6 +357,20 @@ export default function PassengerPage() {
           : trip.otpCode;
         setCurrentTrip({ id: trip.id, otpCode: activeOtp, estimatedPrice: trip.estimatedPrice });
         setStatus(trip.status);
+        if (trip.originLat && trip.originLng) {
+          setOrigin({
+            lat: trip.originLat,
+            lng: trip.originLng,
+            address: trip.originAddress || 'Mi ubicación',
+          });
+        }
+        if (trip.destLat && trip.destLng) {
+          setDest({
+            lat: trip.destLat,
+            lng: trip.destLng,
+            address: trip.destAddress || 'Destino',
+          });
+        }
         if (trip.driver) {
           setDriver(trip.driver);
           if (trip.driver.lastLat && trip.driver.lastLng) {
@@ -717,10 +757,11 @@ export default function PassengerPage() {
       setPaymentRequested(true);
       setCompletionOtpVerified(false);
       if (data?.otpCode) {
-        setCurrentTrip(prev => {
-          if (!prev) return null;
-          return { ...prev, otpCode: data.otpCode };
-        });
+        setCurrentTrip(prev => ({
+          id: prev?.id || currentTrip?.id || '',
+          estimatedPrice: prev?.estimatedPrice || currentTrip?.estimatedPrice || 0,
+          otpCode: data.otpCode
+        }));
       }
     });
 
@@ -1544,43 +1585,85 @@ export default function PassengerPage() {
         <div className="bottom-sheet animate-slide-up" style={bottomSheetStyle()}>
           <BottomSheetHandle />
           {!paymentRequested ? (
-            <div style={{ textAlign: 'center', padding: '20px 0' }}>
-              <div className="spinner-sm" style={{ margin: '0 auto 16px' }} />
-              <h3 style={{ marginBottom: '4px' }}>Viaje en curso...</h3>
-              <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginBottom: '20px' }}>
-                Te avisaremos cuando el conductor solicite el pago al llegar.
-              </p>
-              <div style={{ position: 'relative', display: 'inline-block', margin: '0 auto' }}>
-                <button
-                  className="btn btn-secondary"
-                  style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '8px', padding: '10px 24px' }}
-                  onClick={() => setShowChat(true)}
-                >
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-                  Chat con conductor
-                </button>
-                {unreadCount > 0 && (
-                  <div style={{
-                    position: 'absolute',
-                    top: '-8px',
-                    right: '-8px',
-                    background: 'var(--danger)',
-                    color: 'white',
-                    borderRadius: '50%',
-                    minWidth: '22px',
-                    height: '22px',
-                    fontSize: '0.75rem',
-                    fontWeight: 800,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    boxShadow: '0 0 10px rgba(255, 69, 96, 0.8)',
-                    zIndex: 10
-                  }}>
-                    {unreadCount}
-                  </div>
-                )}
+            <div style={{ padding: '8px 0' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px' }}>
+                <div className="spinner-sm" style={{ borderLeftColor: 'transparent', width: '16px', height: '16px' }} />
+                <h3 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 900 }}>Viaje en curso a tu destino</h3>
               </div>
+
+              {driver && (
+                <div className="driver-card" style={{ marginBottom: '16px' }}>
+                  <div className="driver-avatar">{driver.name[0]}</div>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontWeight: 700, marginBottom: '2px', display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                      {driver.name}
+                      {driver.membershipPlan && (
+                        <span className={`badge seal-${driver.membershipPlan.toLowerCase()}`} style={{
+                          padding: '2px 8px',
+                          borderRadius: '6px',
+                          fontSize: '0.62rem',
+                          fontWeight: 900,
+                          letterSpacing: '0.05em',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '4px'
+                        }}>
+                          {driver.membershipPlan === 'BLACK' ? 'BLACK' : driver.membershipPlan === 'COMFORT' ? 'COMFORT' : 'FLEX'}
+                        </span>
+                      )}
+                    </div>
+                    <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
+                      {driver.vehicleBrand} {driver.vehicleModel}
+                    </div>
+                  </div>
+                  <div style={{
+                    padding: '8px 14px', background: 'var(--accent)', borderRadius: 'var(--radius)',
+                    fontWeight: 800, fontSize: '1.1rem', color: '#09090F', letterSpacing: '0.05em',
+                  }}>
+                    {driver.vehiclePlate}
+                  </div>
+                </div>
+              )}
+
+              {driverPos && dest && (
+                (() => {
+                  const dist = calculateDistance(driverPos.lat, driverPos.lng, dest.lat, dest.lng);
+                  const dur = estimateDuration(dist);
+                  const etaTime = new Date(Date.now() + dur * 60 * 1000);
+                  const etaStr = etaTime.toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' });
+                  return (
+                    <div style={{
+                      background: 'rgba(0, 229, 160, 0.08)',
+                      border: '1px solid rgba(0, 229, 160, 0.2)',
+                      borderRadius: 'var(--radius)',
+                      padding: '12px 16px',
+                      marginBottom: '16px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between'
+                    }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <span style={{ fontSize: '1.2rem' }}>🕒</span>
+                        <div style={{ textAlign: 'left' }}>
+                          <div style={{ fontSize: '0.88rem', fontWeight: 800, color: 'white' }}>
+                            Llegada estimada: {dur} {dur === 1 ? 'min' : 'minutos'}
+                          </div>
+                          <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                            Hora de llegada aprox: {etaStr}
+                          </div>
+                        </div>
+                      </div>
+                      <div style={{ textAlign: 'right', fontSize: '0.85rem', fontWeight: 700, color: 'var(--accent)' }}>
+                        {dist.toFixed(1)} km restantes
+                      </div>
+                    </div>
+                  );
+                })()
+              )}
+
+              <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', margin: 0, textAlign: 'center' }}>
+                Te avisaremos cuando el conductor solicite el pago al llegar al destino.
+              </p>
             </div>
           ) : (
             <div style={{ padding: '4px' }}>

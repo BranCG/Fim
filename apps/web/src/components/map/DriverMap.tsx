@@ -27,6 +27,7 @@ export default function DriverMap({ driverPos, passengerPos, destPos }: Props) {
   const routeLineRef = useRef<any>(null);
   const currentRouteEndpoints = useRef<string>('');
   const hasFittedBounds = useRef<string>('');
+  const currentAngleRef = useRef<number>(0);
 
   // Inicializar el mapa una sola vez
   useEffect(() => {
@@ -83,55 +84,14 @@ export default function DriverMap({ driverPos, passengerPos, destPos }: Props) {
     const L = LRef.current;
     const map = mapRef.current;
 
-    // ── Interpolación para movimiento fluido ──────────────────
-    const animateMarker = (marker: any, start: { lat: number; lng: number }, end: { lat: number; lng: number }, duration = 1200) => {
-      const startTime = performance.now();
-      
-      const dLng = end.lng - start.lng;
-      const dLat = end.lat - start.lat;
-      let angle = 0;
-      const hasMovement = Math.abs(dLng) > 1e-6 || Math.abs(dLat) > 1e-6;
-      if (hasMovement) {
-        angle = Math.atan2(dLng, dLat) * (180 / Math.PI);
-      }
-
-      const step = (now: number) => {
-        const elapsed = now - startTime;
-        const progress = Math.min(elapsed / duration, 1);
-        
-        // Easing OutQuad
-        const easeProgress = progress * (2 - progress); 
-        const currentLat = start.lat + (end.lat - start.lat) * easeProgress;
-        const currentLng = start.lng + (end.lng - start.lng) * easeProgress;
-        
-        marker.setLatLng([currentLat, currentLng]);
-
-        if (hasMovement) {
-          const element = marker.getElement();
-          if (element) {
-            const svg = element.querySelector('svg');
-            if (svg) {
-              svg.style.transform = `rotate(${angle}deg)`;
-              svg.style.transition = 'transform 0.3s ease';
-            }
-          }
-        }
-
-        if (progress < 1) {
-          requestAnimationFrame(step);
-        }
-      };
-      requestAnimationFrame(step);
-    };
-
-    // ── 1. Marcador Conductor (Con interpolación suave) ───────────────────
-    if (!driverMarkerRef.current) {
-      const driverIcon = L.divIcon({
+    // Helper to generate custom divIcon with correct rotation
+    const getDriverIcon = (angle: number) => {
+      return L.divIcon({
         className: 'transparent-icon',
         html: `
           <div style="position:relative;width:32px;height:32px;display:flex;align-items:center;justify-content:center">
             <div style="position:absolute;inset:-6px;background:rgba(0,229,160,0.18);border-radius:50%;animation:ping 2s ease-out infinite"></div>
-            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="filter:drop-shadow(0 2px 8px rgba(0,229,160,0.6));position:relative;z-index:2;display:block">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="filter:drop-shadow(0 2px 8px rgba(0,229,160,0.6));position:relative;z-index:2;display:block;transform:rotate(${angle}deg);transition:transform 0.3s ease">
               <defs>
                 <linearGradient id="ledGlowLeft" x1="8.5" y1="4.5" x2="3" y2="-1" gradientUnits="userSpaceOnUse">
                   <stop offset="0%" stop-color="#00E5A0" stop-opacity="0.8" />
@@ -163,6 +123,55 @@ export default function DriverMap({ driverPos, passengerPos, destPos }: Props) {
         iconSize: [32, 32],
         iconAnchor: [16, 16],
       });
+    };
+
+    // ── Interpolación para movimiento fluido ──────────────────
+    const animateMarker = (marker: any, start: { lat: number; lng: number }, end: { lat: number; lng: number }, duration = 1200) => {
+      const startTime = performance.now();
+      
+      const dLng = end.lng - start.lng;
+      const dLat = end.lat - start.lat;
+      let angle = currentAngleRef.current;
+      const hasMovement = Math.abs(dLng) > 1e-6 || Math.abs(dLat) > 1e-6;
+      if (hasMovement) {
+        angle = Math.atan2(dLng, dLat) * (180 / Math.PI);
+      }
+
+      const step = (now: number) => {
+        const elapsed = now - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+        
+        // Easing OutQuad
+        const easeProgress = progress * (2 - progress); 
+        const currentLat = start.lat + (end.lat - start.lat) * easeProgress;
+        const currentLng = start.lng + (end.lng - start.lng) * easeProgress;
+        
+        marker.setLatLng([currentLat, currentLng]);
+
+        if (hasMovement) {
+          const element = marker.getElement();
+          if (element) {
+            const svg = element.querySelector('svg');
+            if (svg) {
+              svg.style.transform = `rotate(${angle}deg)`;
+              svg.style.transition = 'transform 0.3s ease';
+            }
+          }
+        }
+
+        if (progress < 1) {
+          requestAnimationFrame(step);
+        } else if (hasMovement) {
+          currentAngleRef.current = angle;
+          marker.setIcon(getDriverIcon(angle));
+        }
+      };
+      requestAnimationFrame(step);
+    };
+
+    // ── 1. Marcador Conductor (Con interpolación suave) ───────────────────
+    if (!driverMarkerRef.current) {
+      const driverIcon = getDriverIcon(currentAngleRef.current);
       driverMarkerRef.current = L.marker([driverPos.lat, driverPos.lng], { icon: driverIcon }).addTo(map);
       driverMarkerRef.current.bindTooltip('Tu posición', { permanent: false, direction: 'top', className: 'fim-tooltip' });
     } else {
@@ -292,8 +301,8 @@ export default function DriverMap({ driverPos, passengerPos, destPos }: Props) {
         routeLineRef.current = null;
       }
       
-      // Auto-centrado suave en modo libre/disponible con compensación de latitud constante
-      map.panTo([driverPos.lat - 0.0006, driverPos.lng], { animate: true, duration: 1.2 });
+      // Auto-centrado suave en modo libre/disponible con compensación de latitud constante, y restablecer zoom a 18
+      map.setView([driverPos.lat - 0.0006, driverPos.lng], 18, { animate: true, duration: 1.2 });
     }
 
     map.invalidateSize(true);

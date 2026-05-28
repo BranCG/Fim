@@ -24,9 +24,9 @@ export default function PassengerMap({ origin, dest, driverPos, centerTrigger = 
   const destMarkerRef = useRef<any>(null);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const driverMarkerRef = useRef<any>(null);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const routeLineRef = useRef<any>(null);
   const currentRouteEndpoints = useRef<string>('');
+  const currentAngleRef = useRef<number>(0);
 
   // Inicializar el mapa una sola vez
   useEffect(() => {
@@ -87,13 +87,54 @@ export default function PassengerMap({ origin, dest, driverPos, centerTrigger = 
     const L = LRef.current;
     const map = mapRef.current;
 
+    // Helper to generate custom divIcon with correct rotation
+    const getDriverIcon = (angle: number) => {
+      return L.divIcon({
+        className: 'transparent-icon',
+        html: `
+          <div style="position:relative;width:32px;height:32px;display:flex;align-items:center;justify-content:center">
+            <div style="position:absolute;inset:-6px;background:rgba(0,229,160,0.18);border-radius:50%;animation:ping 2s ease-out infinite"></div>
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="filter:drop-shadow(0 2px 8px rgba(0,229,160,0.6));position:relative;z-index:2;display:block;transform:rotate(${angle}deg);transition:transform 0.3s ease">
+              <defs>
+                <linearGradient id="ledGlowLeft" x1="8.5" y1="4.5" x2="3" y2="-1" gradientUnits="userSpaceOnUse">
+                  <stop offset="0%" stop-color="#00E5A0" stop-opacity="0.8" />
+                  <stop offset="100%" stop-color="#00E5A0" stop-opacity="0" />
+                </linearGradient>
+                <linearGradient id="ledGlowRight" x1="15.5" y1="4.5" x2="21" y2="-1" gradientUnits="userSpaceOnUse">
+                  <stop offset="0%" stop-color="#00E5A0" stop-opacity="0.8" />
+                  <stop offset="100%" stop-color="#00E5A0" stop-opacity="0" />
+                </linearGradient>
+              </defs>
+              <style>
+                @keyframes ledPulse {
+                  0% { opacity: 0.15; }
+                  50% { opacity: 1; }
+                  100% { opacity: 0.15; }
+                }
+              </style>
+              <polygon points="8.5,4.5 2,-2 8,-3" fill="url(#ledGlowLeft)" style="animation: ledPulse 1.2s infinite ease-in-out; mix-blend-mode: screen;" />
+              <polygon points="15.5,4.5 16,-3 22,-2" fill="url(#ledGlowRight)" style="animation: ledPulse 1.2s infinite ease-in-out; mix-blend-mode: screen;" />
+              <rect x="5" y="19" width="14" height="2" rx="1" fill="#00E5A0" />
+              <path d="M9 3C7.5 3 6.5 4.5 6.5 6V18C6.5 19.5 7.5 20.5 9 20.5H15C16.5 20.5 17.5 19.5 17.5 18V6C17.5 4.5 16.5 3 15 3H9Z" fill="#131320" stroke="#00E5A0" stroke-width="2" />
+              <path d="M8 8C8 6.5 9.5 6 12 6C14.5 6 16 6.5 16 8H8Z" fill="#00E5A0" fill-opacity="0.8" />
+              <rect x="4.5" y="7" width="2" height="3" rx="1" fill="#00E5A0" />
+              <rect x="17.5" y="7" width="2" height="3" rx="1" fill="#00E5A0" />
+              <circle cx="8.5" cy="4.5" r="1.2" fill="#FFFFFF" style="animation: ledPulse 1.2s infinite ease-in-out; filter: drop-shadow(0 0 3px #FFFFFF);" />
+              <circle cx="15.5" cy="4.5" r="1.2" fill="#FFFFFF" style="animation: ledPulse 1.2s infinite ease-in-out; filter: drop-shadow(0 0 3px #FFFFFF);" />
+            </svg>
+          </div>`,
+        iconSize: [32, 32],
+        iconAnchor: [16, 16],
+      });
+    };
+
     // ── Interpolación para movimiento fluido ──────────────────
     const animateMarker = (marker: any, start: { lat: number; lng: number }, end: { lat: number; lng: number }, duration = 1200) => {
       const startTime = performance.now();
       
       const dLng = end.lng - start.lng;
       const dLat = end.lat - start.lat;
-      let angle = 0;
+      let angle = currentAngleRef.current;
       const hasMovement = Math.abs(dLng) > 1e-6 || Math.abs(dLat) > 1e-6;
       if (hasMovement) {
         angle = Math.atan2(dLng, dLat) * (180 / Math.PI);
@@ -123,6 +164,9 @@ export default function PassengerMap({ origin, dest, driverPos, centerTrigger = 
 
         if (progress < 1) {
           requestAnimationFrame(step);
+        } else if (hasMovement) {
+          currentAngleRef.current = angle;
+          marker.setIcon(getDriverIcon(angle));
         }
       };
       requestAnimationFrame(step);
@@ -231,43 +275,7 @@ export default function PassengerMap({ origin, dest, driverPos, centerTrigger = 
     // ── 4. Conductor en Movimiento (Con interpolación suave) ───────────────
     if (driverPos) {
       if (!driverMarkerRef.current) {
-        const driverIcon = L.divIcon({
-          className: 'transparent-icon',
-          html: `
-            <div style="position:relative;width:32px;height:32px;display:flex;align-items:center;justify-content:center">
-              <div style="position:absolute;inset:-6px;background:rgba(0,229,160,0.18);border-radius:50%;animation:ping 2s ease-out infinite"></div>
-              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="filter:drop-shadow(0 2px 8px rgba(0,229,160,0.6));position:relative;z-index:2;display:block">
-                <defs>
-                  <linearGradient id="ledGlowLeft" x1="8.5" y1="4.5" x2="3" y2="-1" gradientUnits="userSpaceOnUse">
-                    <stop offset="0%" stop-color="#00E5A0" stop-opacity="0.8" />
-                    <stop offset="100%" stop-color="#00E5A0" stop-opacity="0" />
-                  </linearGradient>
-                  <linearGradient id="ledGlowRight" x1="15.5" y1="4.5" x2="21" y2="-1" gradientUnits="userSpaceOnUse">
-                    <stop offset="0%" stop-color="#00E5A0" stop-opacity="0.8" />
-                    <stop offset="100%" stop-color="#00E5A0" stop-opacity="0" />
-                  </linearGradient>
-                </defs>
-                <style>
-                  @keyframes ledPulse {
-                    0% { opacity: 0.15; }
-                    50% { opacity: 1; }
-                    100% { opacity: 0.15; }
-                  }
-                </style>
-                <polygon points="8.5,4.5 2,-2 8,-3" fill="url(#ledGlowLeft)" style="animation: ledPulse 1.2s infinite ease-in-out; mix-blend-mode: screen;" />
-                <polygon points="15.5,4.5 16,-3 22,-2" fill="url(#ledGlowRight)" style="animation: ledPulse 1.2s infinite ease-in-out; mix-blend-mode: screen;" />
-                <rect x="5" y="19" width="14" height="2" rx="1" fill="#00E5A0" />
-                <path d="M9 3C7.5 3 6.5 4.5 6.5 6V18C6.5 19.5 7.5 20.5 9 20.5H15C16.5 20.5 17.5 19.5 17.5 18V6C17.5 4.5 16.5 3 15 3H9Z" fill="#131320" stroke="#00E5A0" stroke-width="2" />
-                <path d="M8 8C8 6.5 9.5 6 12 6C14.5 6 16 6.5 16 8H8Z" fill="#00E5A0" fill-opacity="0.8" />
-                <rect x="4.5" y="7" width="2" height="3" rx="1" fill="#00E5A0" />
-                <rect x="17.5" y="7" width="2" height="3" rx="1" fill="#00E5A0" />
-                <circle cx="8.5" cy="4.5" r="1.2" fill="#FFFFFF" style="animation: ledPulse 1.2s infinite ease-in-out; filter: drop-shadow(0 0 3px #FFFFFF);" />
-                <circle cx="15.5" cy="4.5" r="1.2" fill="#FFFFFF" style="animation: ledPulse 1.2s infinite ease-in-out; filter: drop-shadow(0 0 3px #FFFFFF);" />
-              </svg>
-            </div>`,
-          iconSize: [32, 32],
-          iconAnchor: [16, 16],
-        });
+        const driverIcon = getDriverIcon(currentAngleRef.current);
         driverMarkerRef.current = L.marker([driverPos.lat, driverPos.lng], { icon: driverIcon }).addTo(map);
         driverMarkerRef.current.bindTooltip('Tu conductor', { permanent: false, direction: 'top', className: 'fim-tooltip' });
       } else {
