@@ -4,7 +4,8 @@ import { useEffect, useRef, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import api, { formatCLP, clearSession, getSession, roundCLP } from '@/lib/api';
-import { connectSocket } from '@/lib/socket';
+import { connectSocket, forceReconnectSocket } from '@/lib/socket';
+import { sendLocalNotification } from '@/lib/notifications';
 
 const DriverMap = dynamic(() => import('@/components/map/DriverMap'), { ssr: false });
 
@@ -325,22 +326,37 @@ export default function DriverPage() {
   useEffect(() => {
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible') {
-        console.log('[Visibility] App en primer plano (Conductor). Sincronizando estado...');
+        console.log('[Visibility] App en primer plano (Conductor). Sincronizando estado y socket...');
+        forceReconnectSocket();
         checkActiveTrip();
       }
     };
 
     const handleFocus = () => {
-      console.log('[Focus] Ventana enfocada (Conductor). Sincronizando estado...');
+      console.log('[Focus] Ventana enfocada (Conductor). Sincronizando estado y socket...');
+      forceReconnectSocket();
+      checkActiveTrip();
+    };
+
+    const handleResume = () => {
+      console.log('[Resume] App reanudada desde segundo plano (Conductor). Sincronizando estado y socket...');
+      forceReconnectSocket();
       checkActiveTrip();
     };
 
     document.addEventListener('visibilitychange', handleVisibilityChange);
     window.addEventListener('focus', handleFocus);
+    document.addEventListener('resume', handleResume);
+
+    // Solicitar permisos de notificación al cargar inicialmente la página en cliente
+    import('@/lib/notifications').then(({ requestNotificationPermission }) => {
+      requestNotificationPermission().catch(() => {});
+    });
 
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
       window.removeEventListener('focus', handleFocus);
+      document.removeEventListener('resume', handleResume);
     };
   }, [checkActiveTrip]);
 
@@ -447,12 +463,16 @@ export default function DriverPage() {
     socket.on('connect', () => {
       console.log('[Socket] Conductor conectado/reconectado. Consultando estado del viaje...');
       socket.emit('driver:online', { driverId, lat: posRef.current.lat, lng: posRef.current.lng });
+      if (activeTripRef.current?.id) {
+        socket.emit('passenger:join-trip', { tripId: activeTripRef.current.id });
+      }
       checkActiveTrip();
     });
 
     socket.on('trip:request', ({ trip }: { trip: TripRequest }) => {
       setTripRequest(trip);
       setTimer(30);
+      sendLocalNotification("¡Nueva Solicitud de Viaje!", `Tienes un viaje disponible por ${formatCLP(trip.estimatedPrice)}.`);
       if (timerRef.current) clearInterval(timerRef.current);
       timerRef.current = setInterval(() => {
         setTimer(prev => {
@@ -471,6 +491,7 @@ export default function DriverPage() {
       setActiveTrip(trip);
       setTripPhase('going_to_passenger');
       setTripRequest(null);
+      sendLocalNotification("¡Viaje Confirmado!", `Vas en camino a recoger a ${trip.passenger.name}.`);
     });
 
     socket.on('trip:started', (data?: { trip?: any }) => {
@@ -484,6 +505,7 @@ export default function DriverPage() {
       if (!data.tripId || (activeTripRef.current && data.tripId === activeTripRef.current.id)) {
         setPassengerConfirmed(true);
         if (data.receiptUrl) setReceiptUrl(data.receiptUrl);
+        sendLocalNotification("Pago Recibido", "El pasajero ha confirmado el pago del viaje.");
       }
     });
 
@@ -493,6 +515,7 @@ export default function DriverPage() {
         setChatMessages(prev => [...prev, msg]);
         if (!showChatRef.current) {
           setUnreadCount(prev => prev + 1);
+          sendLocalNotification(`Mensaje de ${msg.senderName}`, msg.text);
         }
       }
     });
@@ -501,6 +524,8 @@ export default function DriverPage() {
       console.log('[Socket] Viaje cancelado por pasajero', data);
       const activeTripId = activeTripRef.current?.id;
       const requestTripId = tripRequestRef.current?.id;
+
+      sendLocalNotification("Viaje Cancelado", `El pasajero canceló la solicitud: "${data.reason}".`);
 
       if (data.tripId && data.tripId === activeTripId) {
         setCancellationNotice({ 

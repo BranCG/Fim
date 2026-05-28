@@ -4,7 +4,8 @@ import { useEffect, useState, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import api, { formatCLP, calculatePrice, clearSession, getSession, roundCLP } from '@/lib/api';
-import { connectSocket, getSocket } from '@/lib/socket';
+import { connectSocket, getSocket, forceReconnectSocket } from '@/lib/socket';
+import { sendLocalNotification } from '@/lib/notifications';
 
 // Leaflet solo en cliente (SSR incompatible)
 const PassengerMap = dynamic(() => import('@/components/map/PassengerMap'), { ssr: false });
@@ -357,22 +358,37 @@ export default function PassengerPage() {
   useEffect(() => {
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible') {
-        console.log('[Visibility] App en primer plano (Pasajero). Sincronizando estado...');
+        console.log('[Visibility] App en primer plano (Pasajero). Sincronizando estado y socket...');
+        forceReconnectSocket();
         checkActiveTrip();
       }
     };
 
     const handleFocus = () => {
-      console.log('[Focus] Ventana enfocada (Pasajero). Sincronizando estado...');
+      console.log('[Focus] Ventana enfocada (Pasajero). Sincronizando estado y socket...');
+      forceReconnectSocket();
+      checkActiveTrip();
+    };
+
+    const handleResume = () => {
+      console.log('[Resume] App reanudada desde segundo plano (Pasajero). Sincronizando estado y socket...');
+      forceReconnectSocket();
       checkActiveTrip();
     };
 
     document.addEventListener('visibilitychange', handleVisibilityChange);
     window.addEventListener('focus', handleFocus);
+    document.addEventListener('resume', handleResume);
+
+    // Solicitar permisos de notificación al cargar inicialmente la página en cliente
+    import('@/lib/notifications').then(({ requestNotificationPermission }) => {
+      requestNotificationPermission().catch(() => {});
+    });
 
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
       window.removeEventListener('focus', handleFocus);
+      document.removeEventListener('resume', handleResume);
     };
   }, [checkActiveTrip]);
 
@@ -653,6 +669,7 @@ export default function PassengerPage() {
 
     socket.on('connect', () => {
       console.log('[Socket] Pasajero conectado/reconectado. Consultando estado del viaje...');
+      socket.emit('passenger:join-trip', { tripId: currentTrip.id });
       checkActiveTrip();
     });
 
@@ -662,6 +679,7 @@ export default function PassengerPage() {
       setDriverPos({ lat: trip.driver.lastLat, lng: trip.driver.lastLng });
       setCurrentTrip({ id: trip.id, otpCode: trip.otpCode, estimatedPrice: trip.estimatedPrice });
       setStatus('driver_assigned');
+      sendLocalNotification("¡Viaje Aceptado!", `${trip.driver.name} va en camino en un ${trip.driver.vehicleBrand} (${trip.driver.vehiclePlate}).`);
     });
 
     socket.on('driver:moved', ({ lat, lng }: { lat: number; lng: number }) => {
@@ -670,11 +688,13 @@ export default function PassengerPage() {
 
     socket.on('trip:driver-arrived', () => {
       console.log('[Socket] El conductor ha llegado');
+      sendLocalNotification("¡Tu conductor ha llegado!", "El conductor te está esperando en el punto de recogida.");
       setStatus('driver_arrived');
     });
 
     socket.on('trip:started', () => {
       console.log('[Socket] El viaje ha iniciado');
+      sendLocalNotification("¡Viaje Iniciado!", "Tu viaje hacia el destino ha comenzado. ¡Buen viaje!");
       setStatus('in_progress');
     });
 
@@ -690,6 +710,7 @@ export default function PassengerPage() {
 
     socket.on('trip:payment-requested', (data?: { otpCode?: string }) => {
       console.log('[Socket] El conductor solicita el pago', data);
+      sendLocalNotification("Pago Solicitado", "El conductor ha solicitado el pago del viaje.");
       setPaymentRequested(true);
       setCompletionOtpVerified(false);
       if (data?.otpCode) {
@@ -707,6 +728,7 @@ export default function PassengerPage() {
 
     socket.on('trip:completed', () => {
       console.log('[Socket] Viaje finalizado por el conductor');
+      sendLocalNotification("Viaje Finalizado", "Has llegado a tu destino. ¡Esperamos que hayas tenido un excelente viaje!");
       setStatus('completed');
     });
 
@@ -715,6 +737,7 @@ export default function PassengerPage() {
       setChatMessages(prev => [...prev, msg]);
       if (!showChatRef.current) {
         setUnreadCount(prev => prev + 1);
+        sendLocalNotification(`Mensaje de ${msg.senderName}`, msg.text);
       }
     });
 

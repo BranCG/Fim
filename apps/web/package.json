@@ -15,6 +15,7 @@
     "@capacitor/core": "^8.3.4",
     "@capacitor/geolocation": "^8.2.0",
     "@capacitor/ios": "^8.3.4",
+    "@capacitor/local-notifications": "^8.2.0",
     "axios": "^1.6.8",
     "leaflet": "^1.9.4",
     "next": "14.2.3",

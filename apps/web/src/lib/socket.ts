@@ -24,3 +24,10 @@ export function connectSocket(): Socket {
 export function disconnectSocket() {
   if (socket?.connected) socket.disconnect();
 }
+
+export function forceReconnectSocket(): Socket {
+  const s = getSocket();
+  s.disconnect();
+  s.connect();
+  return s;
+}
