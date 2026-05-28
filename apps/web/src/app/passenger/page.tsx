@@ -359,10 +359,12 @@ export default function PassengerPage() {
       const res = await api.get('/trips/active');
       if (res.data.trip) {
         const trip = res.data.trip;
-        const activeOtp = (trip.paymentStatus === 'requested' || trip.paymentStatus === 'otp_verified' || trip.paymentStatus === 'passenger_confirmed')
-          ? trip.dropoffOtpCode
-          : trip.otpCode;
-        setCurrentTrip({ id: trip.id, otpCode: activeOtp, estimatedPrice: trip.estimatedPrice });
+        setCurrentTrip(prev => {
+          const activeOtp = (trip.paymentStatus === 'requested' || trip.paymentStatus === 'otp_verified' || trip.paymentStatus === 'passenger_confirmed')
+            ? (trip.dropoffOtpCode || prev?.otpCode)
+            : (trip.otpCode || prev?.otpCode);
+          return { id: trip.id, otpCode: activeOtp, estimatedPrice: trip.estimatedPrice };
+        });
         setStatus(trip.status);
         if (trip.originLat && trip.originLng) {
           setOrigin({

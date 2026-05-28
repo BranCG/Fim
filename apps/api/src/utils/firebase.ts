@@ -65,7 +65,6 @@ export async function sendPushNotification(
         priority: 'high',
         notification: {
           sound: 'default',
-          clickAction: 'FCM_PLUGIN_ACTIVITY',
           channelId: 'fim-notifications-high-v1',
           defaultVibrateTimings: true,
         },
