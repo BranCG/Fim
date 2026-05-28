@@ -326,7 +326,10 @@ export default function PassengerPage() {
       const res = await api.get('/trips/active');
       if (res.data.trip) {
         const trip = res.data.trip;
-        setCurrentTrip({ id: trip.id, otpCode: trip.otpCode, estimatedPrice: trip.estimatedPrice });
+        const activeOtp = (trip.paymentStatus === 'requested' || trip.paymentStatus === 'otp_verified' || trip.paymentStatus === 'passenger_confirmed')
+          ? trip.dropoffOtpCode
+          : trip.otpCode;
+        setCurrentTrip({ id: trip.id, otpCode: activeOtp, estimatedPrice: trip.estimatedPrice });
         setStatus(trip.status);
         if (trip.driver) {
           setDriver(trip.driver);

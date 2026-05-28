@@ -87,6 +87,21 @@ export function setupSocketHandlers(io: Server) {
       await setDriverLocationInRedis(driverId, lat, lng);
 
       console.log(`[Socket] Conductor ${driverId} en línea en (${lat}, ${lng})`);
+
+      // Al conectarse el conductor, verificar si hay búsquedas activas sin asignar e intentar notificarle
+      for (const [tripId, search] of activeSearches.entries()) {
+        if (!search.currentDriverId) {
+          const trip = await prisma.trip.findUnique({
+            where: { id: tripId },
+            select: { originLat: true, originLng: true }
+          }).catch(() => null);
+          
+          if (trip) {
+            console.log(`[Socket] Re-evaluando viaje pendiente ${tripId} para el conductor recién conectado ${driverId}`);
+            findAndNotifyDriver(io, tripId, trip.originLat, trip.originLng);
+          }
+        }
+      }
     });
 
     // ─── CONDUCTOR: se desconecta manualmente ──────────────────────────────
@@ -416,14 +431,24 @@ async function findAndNotifyDriver(
   availableDrivers.forEach(d => console.log(` - Conductor ${d.driverId} a ${d.distance.toFixed(2)}km`));
 
   if (availableDrivers.length === 0) {
-    // No hay conductores disponibles
-    await prisma.trip.update({
-      where: { id: tripId },
-      data: { status: 'cancelled', cancelReason: 'Sin conductores disponibles', cancelledAt: new Date() },
-    }).catch(console.error);
+    console.log(`[Socket] No hay conductores disponibles en este momento para viaje ${tripId}. Esperando reconexión...`);
+    
+    // Para evitar búsquedas infinitas, ponemos un temporizador de cancelación final tras 60 segundos si nadie acepta.
+    if (!search.timer) {
+      search.timer = setTimeout(async () => {
+        const currentSearch = activeSearches.get(tripId);
+        if (currentSearch && !currentSearch.currentDriverId) {
+          console.log(`[Socket] Timeout de búsqueda alcanzado para viaje ${tripId}. Cancelando viaje...`);
+          await prisma.trip.update({
+            where: { id: tripId },
+            data: { status: 'cancelled', cancelReason: 'Sin conductores disponibles', cancelledAt: new Date() },
+          }).catch(console.error);
 
-    io.to(`trip:${tripId}`).emit('trip:no-drivers', { tripId });
-    activeSearches.delete(tripId);
+          io.to(`trip:${tripId}`).emit('trip:no-drivers', { tripId });
+          activeSearches.delete(tripId);
+        }
+      }, 60000); // 1 minuto de tolerancia
+    }
     return;
   }
 
