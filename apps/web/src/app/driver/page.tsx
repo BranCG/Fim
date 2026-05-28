@@ -245,6 +245,80 @@ export default function DriverPage() {
     }
   };
 
+  const resetTrip = useCallback(() => {
+    setActiveTrip(null);
+    setTripPhase('idle');
+    setPassengerConfirmed(false);
+    setReceiptUrl(null);
+    setPaymentRequested(false);
+    setCompletionOtp('');
+    setCompletionOtpVerified(false);
+    setChatMessages([]);
+    setShowChat(false);
+    setUnreadCount(0);
+  }, []);
+
+  const checkActiveTrip = useCallback(async () => {
+    try {
+      const res = await api.get('/trips/active');
+      if (res.data.trip) {
+        const trip = res.data.trip;
+        setActiveTrip(trip);
+        if (trip.status === 'driver_assigned') {
+          setTripPhase('going_to_passenger');
+        } else if (trip.status === 'driver_arrived') {
+          setTripPhase('arrived');
+        } else if (trip.status === 'in_progress') {
+          setTripPhase('in_progress');
+        }
+        if (trip.paymentStatus === 'requested') {
+          setPaymentRequested(true);
+          setCompletionOtpVerified(false);
+        } else if (trip.paymentStatus === 'otp_verified') {
+          setPaymentRequested(true);
+          setCompletionOtpVerified(true);
+        } else if (trip.paymentStatus === 'passenger_confirmed') {
+          setPaymentRequested(true);
+          setCompletionOtpVerified(true);
+          setPassengerConfirmed(true);
+        }
+        if (trip.receiptUrl) {
+          setReceiptUrl(trip.receiptUrl);
+        }
+        const socket = connectSocket();
+        socket.emit('passenger:join-trip', { tripId: trip.id });
+      } else {
+        if (activeTripRef.current) {
+          resetTrip();
+        }
+      }
+    } catch (err) {
+      console.error('Error fetching active trip in checkActiveTrip:', err);
+    }
+  }, [resetTrip]);
+
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        console.log('[Visibility] App en primer plano (Conductor). Sincronizando estado...');
+        checkActiveTrip();
+      }
+    };
+
+    const handleFocus = () => {
+      console.log('[Focus] Ventana enfocada (Conductor). Sincronizando estado...');
+      checkActiveTrip();
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('focus', handleFocus);
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('focus', handleFocus);
+    };
+  }, [checkActiveTrip]);
+
   // Cargar datos del conductor
   useEffect(() => {
     const s = getSession();
@@ -279,39 +353,7 @@ export default function DriverPage() {
       setTotalEarnings(sum);
     }).catch(() => { });
 
-    api.get('/trips/active')
-      .then(res => {
-        if (res.data.trip) {
-          const trip = res.data.trip;
-          setActiveTrip(trip);
-          if (trip.status === 'driver_assigned') {
-            setTripPhase('going_to_passenger');
-          } else if (trip.status === 'driver_arrived') {
-            setTripPhase('arrived');
-          } else if (trip.status === 'in_progress') {
-            setTripPhase('in_progress');
-          }
-          if (trip.paymentStatus === 'requested') {
-            setPaymentRequested(true);
-            setCompletionOtpVerified(false);
-          } else if (trip.paymentStatus === 'otp_verified') {
-            setPaymentRequested(true);
-            setCompletionOtpVerified(true);
-          } else if (trip.paymentStatus === 'passenger_confirmed') {
-            setPaymentRequested(true);
-            setCompletionOtpVerified(true);
-            setPassengerConfirmed(true);
-          }
-          if (trip.receiptUrl) {
-            setReceiptUrl(trip.receiptUrl);
-          }
-          const socket = connectSocket();
-          socket.emit('passenger:join-trip', { tripId: trip.id });
-        }
-      })
-      .catch(err => {
-        console.error('Error fetching active trip on mount:', err);
-      });
+    checkActiveTrip();
     // eslint-disable-next-line react-hooks/exhaustive-deps
     return () => clearTimeout(timeoutId);
   }, []);
@@ -378,12 +420,9 @@ export default function DriverPage() {
     }
 
     socket.on('connect', () => {
-      console.log('[Socket] Conductor conectado/reconectado');
+      console.log('[Socket] Conductor conectado/reconectado. Consultando estado del viaje...');
       socket.emit('driver:online', { driverId, lat: posRef.current.lat, lng: posRef.current.lng });
-      const currentActiveTripId = activeTripRef.current?.id;
-      if (currentActiveTripId) {
-        socket.emit('passenger:join-trip', { tripId: currentActiveTripId });
-      }
+      checkActiveTrip();
     });
 
     socket.on('trip:request', ({ trip }: { trip: TripRequest }) => {
@@ -495,7 +534,7 @@ export default function DriverPage() {
       socket.off('trip:completion-otp-failed');
       socket.off('error');
     };
-  }, [driver?.id, driver?.status, driver?.membershipPaid, driver?.membershipPlan, isOnline, session?.user?.id, activeTrip?.id]);
+  }, [driver?.id, driver?.status, driver?.membershipPaid, driver?.membershipPlan, isOnline, session?.user?.id, activeTrip?.id, checkActiveTrip]);
 
   const acceptTrip = () => {
     if (!tripRequest) return;
@@ -576,18 +615,7 @@ export default function DriverPage() {
     }, 800);
   };
 
-  const resetTrip = () => {
-    setActiveTrip(null);
-    setTripPhase('idle');
-    setPassengerConfirmed(false);
-    setReceiptUrl(null);
-    setPaymentRequested(false);
-    setCompletionOtp('');
-    setCompletionOtpVerified(false);
-    setChatMessages([]);
-    setShowChat(false);
-    setUnreadCount(0);
-  };
+
 
   const handleToggleOnline = async () => {
     const newStatus = !isOnline;

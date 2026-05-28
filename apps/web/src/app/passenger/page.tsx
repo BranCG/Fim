@@ -293,6 +293,89 @@ export default function PassengerPage() {
   const [isLogoHovered, setIsLogoHovered] = useState(false);
   const [totalTripsCount, setTotalTripsCount] = useState<number | null>(null);
 
+  const resetTrip = useCallback(() => {
+    setStatus('idle');
+    setCurrentTrip(null);
+    setDriver(null);
+    setDest(null);
+    setSearchQuery('');
+    setDestQuery('');
+    setActiveField(null);
+    setRating(0);
+    setRatingComment('');
+    setRatingDone(false);
+    setError('');
+    setPaymentRequested(false);
+    setCompletionOtpVerified(false);
+    setPassengerConfirmed(false);
+    setPaymentSent(false);
+    setReceiptUrl(null);
+    setChatMessages([]);
+    setShowChat(false);
+    setUnreadCount(0);
+  }, []);
+
+  const statusRef = useRef(status);
+  useEffect(() => {
+    statusRef.current = status;
+  }, [status]);
+
+  const checkActiveTrip = useCallback(async () => {
+    try {
+      const res = await api.get('/trips/active');
+      if (res.data.trip) {
+        const trip = res.data.trip;
+        setCurrentTrip({ id: trip.id, otpCode: trip.otpCode, estimatedPrice: trip.estimatedPrice });
+        setStatus(trip.status);
+        if (trip.driver) {
+          setDriver(trip.driver);
+          if (trip.driver.lastLat && trip.driver.lastLng) {
+            setDriverPos({ lat: trip.driver.lastLat, lng: trip.driver.lastLng });
+          }
+        }
+        if (trip.paymentStatus === 'requested') {
+          setPaymentRequested(true);
+          setCompletionOtpVerified(false);
+        } else if (trip.paymentStatus === 'otp_verified') {
+          setPaymentRequested(true);
+          setCompletionOtpVerified(true);
+        } else if (trip.paymentStatus === 'passenger_confirmed') {
+          setPaymentRequested(true);
+          setCompletionOtpVerified(true);
+          setPaymentSent(true);
+        }
+      } else {
+        if (['searching', 'driver_assigned', 'driver_arrived', 'in_progress'].includes(statusRef.current)) {
+          resetTrip();
+        }
+      }
+    } catch (err) {
+      console.error('Error fetching active trip in checkActiveTrip:', err);
+    }
+  }, [resetTrip]);
+
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        console.log('[Visibility] App en primer plano (Pasajero). Sincronizando estado...');
+        checkActiveTrip();
+      }
+    };
+
+    const handleFocus = () => {
+      console.log('[Focus] Ventana enfocada (Pasajero). Sincronizando estado...');
+      checkActiveTrip();
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('focus', handleFocus);
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('focus', handleFocus);
+    };
+  }, [checkActiveTrip]);
+
   // Obtener ubicación actual del pasajero
   useEffect(() => {
     const s = getSession();
@@ -317,34 +400,7 @@ export default function PassengerPage() {
       .then(r => setTotalTripsCount(r.data.trips.length))
       .catch(() => {});
 
-    api.get('/trips/active')
-      .then(res => {
-        if (res.data.trip) {
-          const trip = res.data.trip;
-          setCurrentTrip(trip);
-          setStatus(trip.status);
-          if (trip.driver) {
-            setDriver(trip.driver);
-            if (trip.driver.lastLat && trip.driver.lastLng) {
-              setDriverPos({ lat: trip.driver.lastLat, lng: trip.driver.lastLng });
-            }
-          }
-          if (trip.paymentStatus === 'requested') {
-            setPaymentRequested(true);
-            setCompletionOtpVerified(false);
-          } else if (trip.paymentStatus === 'otp_verified') {
-            setPaymentRequested(true);
-            setCompletionOtpVerified(true);
-          } else if (trip.paymentStatus === 'passenger_confirmed') {
-            setPaymentRequested(true);
-            setCompletionOtpVerified(true);
-            setPaymentSent(true);
-          }
-        }
-      })
-      .catch(err => {
-        console.error('Error fetching active trip on mount:', err);
-      });
+    checkActiveTrip();
 
     async function loadInitialLocation() {
       try {
@@ -595,6 +651,11 @@ export default function PassengerPage() {
     const socket = connectSocket();
     socket.emit('passenger:join-trip', { tripId: currentTrip.id });
 
+    socket.on('connect', () => {
+      console.log('[Socket] Pasajero conectado/reconectado. Consultando estado del viaje...');
+      checkActiveTrip();
+    });
+
     socket.on('trip:accepted', ({ trip }: { trip: any }) => {
       console.log('[Socket] Viaje aceptado por conductor:', trip.driver.name);
       setDriver(trip.driver);
@@ -659,6 +720,7 @@ export default function PassengerPage() {
 
     return () => {
       console.log('[Socket] Limpiando listeners de viaje');
+      socket.off('connect');
       socket.off('trip:accepted');
       socket.off('driver:moved');
       socket.off('trip:driver-arrived');
@@ -670,7 +732,7 @@ export default function PassengerPage() {
       socket.off('trip:passenger-confirmed-payment');
       socket.off('trip:message');
     };
-  }, [currentTrip?.id]);
+  }, [currentTrip?.id, checkActiveTrip]);
 
   const handleRequestTrip = useCallback(async () => {
     if (!origin || !dest) return;
@@ -731,27 +793,7 @@ export default function PassengerPage() {
   const [receiptUploading, setReceiptUploading] = useState(false);
   const [receiptUrl, setReceiptUrl] = useState<string | null>(null);
 
-  const resetTrip = useCallback(() => {
-    setStatus('idle');
-    setCurrentTrip(null);
-    setDriver(null);
-    setDest(null);
-    setSearchQuery('');
-    setDestQuery('');
-    setActiveField(null);
-    setRating(0);
-    setRatingComment('');
-    setRatingDone(false);
-    setError('');
-    setPaymentRequested(false);
-    setCompletionOtpVerified(false);
-    setPassengerConfirmed(false);
-    setPaymentSent(false);
-    setReceiptUrl(null);
-    setChatMessages([]);
-    setShowChat(false);
-    setUnreadCount(0);
-  }, []);
+
 
   const handleRate = useCallback(async () => {
     if (!currentTrip || rating === 0) return;
