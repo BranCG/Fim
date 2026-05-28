@@ -190,6 +190,13 @@ export default function PassengerPage() {
 
   const [isMinimized, setIsMinimized] = useState(false);
 
+  const [paymentRequested, setPaymentRequested] = useState(false);
+  const [completionOtpVerified, setCompletionOtpVerified] = useState(false);
+  const [passengerConfirmed, setPassengerConfirmed] = useState(false);
+  const [paymentSent, setPaymentSent] = useState(false);
+  const [receiptUploading, setReceiptUploading] = useState(false);
+  const [receiptUrl, setReceiptUrl] = useState<string | null>(null);
+
   // Reset minimize state when status changes
   useEffect(() => {
     setIsMinimized(false);
@@ -855,14 +862,6 @@ export default function PassengerPage() {
       await executeCancel('Cancelado por el pasajero');
     }
   }, [status, executeCancel]);
-
-  const [paymentRequested, setPaymentRequested] = useState(false);
-  const [completionOtpVerified, setCompletionOtpVerified] = useState(false);
-  const [passengerConfirmed, setPassengerConfirmed] = useState(false);
-  const [paymentSent, setPaymentSent] = useState(false);
-  const [receiptUploading, setReceiptUploading] = useState(false);
-  const [receiptUrl, setReceiptUrl] = useState<string | null>(null);
-
 
 
   const handleRate = useCallback(async () => {
