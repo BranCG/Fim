@@ -442,6 +442,18 @@ export default function PassengerPage() {
     };
   }, [checkActiveTrip]);
 
+  // Poll active trip state periodically as a fallback when a trip is active
+  useEffect(() => {
+    if (['idle', 'completed', 'cancelled'].includes(status)) return;
+
+    const intervalId = setInterval(() => {
+      console.log('[Poll] Sincronizando estado del viaje activo...');
+      checkActiveTrip();
+    }, 5000); // Check every 5 seconds
+
+    return () => clearInterval(intervalId);
+  }, [status, checkActiveTrip]);
+
   // Obtener ubicación actual del pasajero
   useEffect(() => {
     const s = getSession();

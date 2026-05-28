@@ -367,6 +367,18 @@ export default function DriverPage() {
     };
   }, [checkActiveTrip]);
 
+  // Poll active trip state periodically as a fallback when a trip is active
+  useEffect(() => {
+    if (tripPhase === 'idle') return;
+
+    const intervalId = setInterval(() => {
+      console.log('[Poll] Conductor: Sincronizando estado del viaje activo...');
+      checkActiveTrip();
+    }, 5000); // Check every 5 seconds
+
+    return () => clearInterval(intervalId);
+  }, [tripPhase, checkActiveTrip]);
+
   // Cargar datos del conductor
   useEffect(() => {
     const s = getSession();
