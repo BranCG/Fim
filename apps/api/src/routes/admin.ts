@@ -59,7 +59,7 @@ router.get('/drivers/pending', async (_req: Request, res: Response) => {
         id: true, name: true, email: true, phone: true,
         rut: true, birthDate: true, address: true,
         idFrontUrl: true, idBackUrl: true,
-        licenseNumber: true, licenseUrl: true,
+        licenseNumber: true, licenseUrl: true, licenseBackUrl: true,
         vehicleBrand: true, vehicleModel: true, vehicleYear: true,
         vehiclePlate: true, vehiclePhotoUrl: true, tagNumber: true,
         membershipPaid: true, createdAt: true,

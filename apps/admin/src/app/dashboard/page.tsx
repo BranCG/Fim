@@ -13,7 +13,7 @@ interface Stats {
 interface Driver {
   id: string; name: string; email: string; phone: string; rut: string;
   birthDate: string; address: string; status: string; membershipPaid: boolean;
-  idFrontUrl: string; idBackUrl: string; licenseNumber: string; licenseUrl: string;
+  idFrontUrl: string; idBackUrl: string; licenseNumber: string; licenseUrl: string; licenseBackUrl: string;
   vehicleBrand: string; vehicleModel: string; vehicleYear: number;
   vehiclePlate: string; vehiclePhotoUrl: string; tagNumber: string;
   totalRating: number; totalTrips: number; createdAt: string; adminNotes?: string;
@@ -401,7 +401,8 @@ export default function DashboardPage() {
                         {[
                           { label: 'Cédula Frontal', url: driver.idFrontUrl },
                           { label: 'Cédula Posterior', url: driver.idBackUrl },
-                          { label: 'Licencia', url: driver.licenseUrl },
+                          { label: 'Licencia Frente', url: driver.licenseUrl },
+                          { label: 'Licencia Dorso', url: driver.licenseBackUrl },
                           { label: 'Foto Vehículo', url: driver.vehiclePhotoUrl },
                         ].map(doc => (
                           doc.url ? (
@@ -706,7 +707,8 @@ export default function DashboardPage() {
                   { label: 'Cédula Frontal', url: selectedDriver.idFrontUrl },
                   { label: 'Cédula Posterior', url: selectedDriver.idBackUrl },
                   { label: 'Selfie Seguridad', url: selectedDriver.selfieUrl },
-                  { label: 'Licencia', url: selectedDriver.licenseUrl },
+                  { label: 'Licencia Frente', url: selectedDriver.licenseUrl },
+                  { label: 'Licencia Dorso', url: selectedDriver.licenseBackUrl },
                   { label: 'Foto Vehículo', url: selectedDriver.vehiclePhotoUrl },
                   { label: 'Comprobante COMFORT', url: selectedDriver.comfortReceiptUrl },
                 ].map(doc => (
@@ -720,7 +722,7 @@ export default function DashboardPage() {
                 ))}
               </div>
               {(() => {
-                const urls = [selectedDriver.idFrontUrl, selectedDriver.idBackUrl, selectedDriver.selfieUrl, selectedDriver.licenseUrl, selectedDriver.vehiclePhotoUrl].filter(Boolean);
+                const urls = [selectedDriver.idFrontUrl, selectedDriver.idBackUrl, selectedDriver.selfieUrl, selectedDriver.licenseUrl, selectedDriver.licenseBackUrl, selectedDriver.vehiclePhotoUrl].filter(Boolean);
                 const hasDuplicates = new Set(urls).size !== urls.length;
                 if (hasDuplicates) {
                   return (

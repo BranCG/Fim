@@ -94,7 +94,8 @@ function RegisterForm() {
 
   // Step 3 - Driver vehicle (solo conductores)
   const [licenseNumber, setLicenseNumber] = useState('');
-  const [licenseFile, setLicenseFile] = useState<FileUpload>(emptyUpload());
+  const [licenseFront, setLicenseFront] = useState<FileUpload>(emptyUpload());
+  const [licenseBack, setLicenseBack] = useState<FileUpload>(emptyUpload());
   const [vehicleBrand, setVehicleBrand] = useState('');
   const [vehicleModel, setVehicleModel] = useState('');
   const [vehicleYear, setVehicleYear] = useState('');
@@ -118,7 +119,7 @@ function RegisterForm() {
     const preview = URL.createObjectURL(file);
     
     // Validar duplicados
-    const currentUploads = [idFront, idBack, selfie, licenseFile, vehiclePhoto];
+    const currentUploads = [idFront, idBack, selfie, licenseFront, licenseBack, vehiclePhoto];
     const isDuplicate = currentUploads.some(u => u.file && u.file.name === file.name && u.file.size === file.size);
     if (isDuplicate) {
       setError('Ya has subido esta misma foto para otro documento.');
@@ -165,7 +166,7 @@ function RegisterForm() {
         if (docType === 'id-front' || docType === 'id-back') {
           keywords = ['CHILE', 'RUN', 'REPUBLICA', 'CEDULA', 'IDENTIDAD', 'NACIMIENTO', 'DOCUMENTO', 'ESTADO CIVIL', 'CHL', 'INCHL', 'PATERNO', 'MATERNO', '<<<<'];
           docName = 'Cédula de Identidad';
-        } else if (docType === 'license-file') {
+        } else if (docType === 'license-front' || docType === 'license-back') {
           keywords = ['LICENCIA', 'CONDUCTOR', 'CONDUCIR', 'CHILE', 'CLASE', 'MUNICIPALIDAD', 'OTORGADA', 'FECHA'];
           docName = 'Licencia de Conducir';
         }
@@ -243,7 +244,7 @@ function RegisterForm() {
         const res = await api.post('/auth/passenger/register', { name, email, phone, password, rut, birthDate, address, idFrontUrl: idFront.url, idBackUrl: idBack.url, selfieUrl: selfie.url });
         saveSession(res.data.accessToken, { ...res.data.user, role: 'passenger' });
       } else {
-        const res = await api.post('/auth/driver/register', { name, email, phone, password, rut, birthDate, address, idFrontUrl: idFront.url, idBackUrl: idBack.url, selfieUrl: selfie.url, licenseNumber, licenseUrl: licenseFile.url, vehicleBrand, vehicleModel, vehicleYear, vehiclePlate, tagNumber, vehiclePhotoUrl: vehiclePhoto.url, membershipPlan });
+        const res = await api.post('/auth/driver/register', { name, email, phone, password, rut, birthDate, address, idFrontUrl: idFront.url, idBackUrl: idBack.url, selfieUrl: selfie.url, licenseNumber, licenseUrl: licenseFront.url, licenseBackUrl: licenseBack.url, vehicleBrand, vehicleModel, vehicleYear, vehiclePlate, tagNumber, vehiclePhotoUrl: vehiclePhoto.url, membershipPlan });
         saveSession(res.data.accessToken, { ...res.data.driver, role: 'driver' });
       }
       success = true;
@@ -286,7 +287,8 @@ function RegisterForm() {
       if (!vehicleModel) { setError('Por favor, ingresa el modelo de tu vehículo.'); return; }
       if (!vehicleYear) { setError('Por favor, ingresa el año de tu vehículo.'); return; }
       if (!licenseNumber) { setError('Por favor, ingresa el número de tu licencia.'); return; }
-      if (!licenseFile.url) { setError('Por favor, sube la foto de tu licencia de conducir.'); return; }
+      if (!licenseFront.url) { setError('Por favor, sube la foto frontal de tu licencia de conducir.'); return; }
+      if (!licenseBack.url) { setError('Por favor, sube la foto posterior de tu licencia de conducir.'); return; }
       if (!vehiclePhoto.url) { setError('Por favor, sube la foto de tu vehículo.'); return; }
     }
     setStep(prev => (prev + 1) as Step);
@@ -463,7 +465,8 @@ function RegisterForm() {
                 <label className="form-label">Número de Licencia</label>
                 <input className="form-input" placeholder="Ej: 12.345.678-9" value={licenseNumber} onChange={e => setLicenseNumber(e.target.value)} />
               </div>
-              {renderUploadArea('Licencia de Conducir', licenseFile, setLicenseFile, 'license-file')}
+              {renderUploadArea('Licencia de Conducir (Frontal)', licenseFront, setLicenseFront, 'license-front')}
+              {renderUploadArea('Licencia de Conducir (Posterior)', licenseBack, setLicenseBack, 'license-back')}
               {renderUploadArea('Foto del Vehículo', vehiclePhoto, setVehiclePhoto, 'vehicle-photo')}
             </div>
           )}

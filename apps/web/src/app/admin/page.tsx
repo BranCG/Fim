@@ -155,6 +155,7 @@ interface Driver {
   idBackUrl: string;
   licenseNumber: string;
   licenseUrl: string;
+  licenseBackUrl?: string;
   vehicleBrand: string;
   vehicleModel: string;
   vehicleYear: number;
@@ -682,7 +683,8 @@ export default function AdminDashboardPage() {
                   { label: 'Cédula Frente', url: selectedDriver.idFrontUrl },
                   { label: 'Cédula Dorso', url: selectedDriver.idBackUrl },
                   { label: 'Selfie', url: selectedDriver.selfieUrl },
-                  { label: 'Licencia', url: selectedDriver.licenseUrl },
+                  { label: 'Licencia Frente', url: selectedDriver.licenseUrl },
+                  { label: 'Licencia Dorso', url: selectedDriver.licenseBackUrl },
                   { label: 'Vehículo', url: selectedDriver.vehiclePhotoUrl },
                   { label: 'Recibo COMFORT', url: selectedDriver.comfortReceiptUrl },
                 ].map(d => d.url ? (

@@ -95,14 +95,14 @@ router.post('/driver/register', async (req: Request, res: Response) => {
     const {
       email, phone, name, password, rut, birthDate, address,
       licenseNumber, vehicleBrand, vehicleModel, vehicleYear, vehiclePlate, tagNumber,
-      idFrontUrl, idBackUrl, selfieUrl, licenseUrl, vehiclePhotoUrl,
+      idFrontUrl, idBackUrl, selfieUrl, licenseUrl, licenseBackUrl, vehiclePhotoUrl,
       membershipPlan,
       bankName, bankAccountType, bankAccountNumber, bankAccountName, bankAccountRut, bankAccountEmail,
     } = req.body;
 
     const required = [email, phone, name, password, rut, birthDate, address,
       licenseNumber, vehicleBrand, vehicleModel, vehicleYear, vehiclePlate, tagNumber,
-      idFrontUrl, idBackUrl, selfieUrl, licenseUrl, vehiclePhotoUrl, membershipPlan,
+      idFrontUrl, idBackUrl, selfieUrl, licenseUrl, licenseBackUrl, vehiclePhotoUrl, membershipPlan,
       bankName, bankAccountType, bankAccountNumber, bankAccountName, bankAccountRut, bankAccountEmail];
 
     if (required.some(v => !v)) {
@@ -132,7 +132,7 @@ router.post('/driver/register', async (req: Request, res: Response) => {
         email, phone, name, passwordHash,
         rut, birthDate: new Date(birthDate), address,
         idFrontUrl, idBackUrl, selfieUrl,
-        licenseNumber, licenseUrl,
+        licenseNumber, licenseUrl, licenseBackUrl,
         vehicleBrand, vehicleModel,
         vehicleYear: Number(vehicleYear),
         vehiclePlate, vehiclePhotoUrl, tagNumber,

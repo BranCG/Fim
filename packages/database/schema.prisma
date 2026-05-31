@@ -46,6 +46,7 @@ model Driver {
   selfieUrl           String?
   licenseNumber       String
   licenseUrl          String
+  licenseBackUrl      String    @default("")
   vehicleBrand        String
   vehicleModel        String
   vehicleYear         Int
