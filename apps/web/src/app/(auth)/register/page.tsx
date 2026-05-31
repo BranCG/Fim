@@ -459,6 +459,10 @@ function RegisterForm() {
                 <label className="form-label">Año</label>
                 <input className="form-input" placeholder="2024" value={vehicleYear} onChange={e => setVehicleYear(e.target.value)} />
               </div>
+              <div className="form-group">
+                <label className="form-label">Número de Licencia</label>
+                <input className="form-input" placeholder="Ej: 12.345.678-9" value={licenseNumber} onChange={e => setLicenseNumber(e.target.value)} />
+              </div>
               {renderUploadArea('Licencia de Conducir', licenseFile, setLicenseFile, 'license-file')}
               {renderUploadArea('Foto del Vehículo', vehiclePhoto, setVehiclePhoto, 'vehicle-photo')}
             </div>
