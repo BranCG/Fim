@@ -14,6 +14,7 @@ export function broadcastNearbyDrivers() {
       lat: d.lat,
       lng: d.lng,
     }));
+    console.log(`[Socket] Transmitiendo ${driversList.length} conductores cercanos a la sala 'nearby-drivers'`);
     ioInstance.to('nearby-drivers').emit('drivers:nearby', { drivers: driversList });
   }
 }
@@ -184,10 +185,12 @@ export function setupSocketHandlers(io: Server) {
         lat: d.lat,
         lng: d.lng,
       }));
+      console.log(`[Socket] Pasajero se unió a 'nearby-drivers'. Enviando lista inicial de ${driversList.length} conductores.`);
       socket.emit('drivers:nearby', { drivers: driversList });
     });
 
     socket.on('passenger:leave-nearby', () => {
+      console.log(`[Socket] Pasajero dejó la sala 'nearby-drivers'`);
       socket.leave('nearby-drivers');
     });
 
