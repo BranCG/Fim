@@ -7,18 +7,23 @@ export interface SavedLocation {
 const FAVORITES_KEY = 'fim_favorite_locations';
 const RECENTS_KEY = 'fim_recent_locations';
 
-export function getFavoriteLocations(): { home: SavedLocation | null; work: SavedLocation | null } {
-  if (typeof window === 'undefined') return { home: null, work: null };
+export function getFavoriteLocations(): { home: SavedLocation | null; work: SavedLocation | null; mall: SavedLocation | null } {
+  if (typeof window === 'undefined') return { home: null, work: null, mall: null };
   const raw = localStorage.getItem(FAVORITES_KEY);
-  if (!raw) return { home: null, work: null };
+  if (!raw) return { home: null, work: null, mall: null };
   try {
-    return JSON.parse(raw);
+    const parsed = JSON.parse(raw);
+    return {
+      home: parsed.home || null,
+      work: parsed.work || null,
+      mall: parsed.mall || null
+    };
   } catch {
-    return { home: null, work: null };
+    return { home: null, work: null, mall: null };
   }
 }
 
-export function saveFavoriteLocation(type: 'home' | 'work', loc: SavedLocation | null) {
+export function saveFavoriteLocation(type: 'home' | 'work' | 'mall', loc: SavedLocation | null) {
   if (typeof window === 'undefined') return;
   const current = getFavoriteLocations();
   current[type] = loc;

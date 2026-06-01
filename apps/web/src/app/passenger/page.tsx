@@ -64,6 +64,7 @@ const IconLogout = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="n
 const IconUser = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>;
 const IconHome = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>;
 const IconBriefcase = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>;
+const IconShoppingBag = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>;
 
 
 
@@ -174,11 +175,17 @@ export default function PassengerPage() {
   const [nearbyDrivers, setNearbyDrivers] = useState<any[]>([]);
   
   // Direcciones guardadas y Pin flotante
-  const [favorites, setFavorites] = useState<{ home: SavedLocation | null; work: SavedLocation | null }>({ home: null, work: null });
+  const [favorites, setFavorites] = useState<{ home: SavedLocation | null; work: SavedLocation | null; mall: SavedLocation | null }>({ home: null, work: null, mall: null });
   const [recentLocs, setRecentLocs] = useState<SavedLocation[]>([]);
   const [isSelectingLocation, setIsSelectingLocation] = useState<'origin' | 'dest' | null>(null);
   const [selectedPinCoords, setSelectedPinCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [isReverseGeocoding, setIsReverseGeocoding] = useState(false);
+
+  // Estados para Modal de Configuración de Favoritos
+  const [favoriteConfigType, setFavoriteConfigType] = useState<'home' | 'work' | 'mall' | null>(null);
+  const [favoriteSearchQuery, setFavoriteSearchQuery] = useState('');
+  const [favoriteSearchResults, setFavoriteSearchResults] = useState<any[]>([]);
+  const [isSearchingFavorite, setIsSearchingFavorite] = useState(false);
 
   const [estimatedPrice, setEstimatedPrice] = useState(0);
   const [distanceKm, setDistanceKm] = useState(0);
@@ -225,6 +232,8 @@ export default function PassengerPage() {
   const bottomSheetStyle = (customStyle: React.CSSProperties = {}): React.CSSProperties => ({
     transform: isMinimized ? 'translateY(calc(100% - 62px))' : 'translateY(0)',
     transition: 'transform 0.35s cubic-bezier(0.4, 0, 0.2, 1)',
+    maxHeight: '85vh',
+    overflowY: 'auto',
     ...customStyle
   });
 
@@ -631,6 +640,28 @@ export default function PassengerPage() {
 
     return () => clearTimeout(delayDebounceFn);
   }, [searchQuery, origin]);
+
+  // Autocomplete para el Modal de Configuración de Favoritos
+  useEffect(() => {
+    const delayDebounceFn = setTimeout(async () => {
+      if (favoriteSearchQuery.length > 2) {
+        setIsSearchingFavorite(true);
+        try {
+          const originParam = origin ? `&originLat=${origin.lat}&originLng=${origin.lng}` : '';
+          const res = await api.get(`/trips/autocomplete?q=${encodeURIComponent(favoriteSearchQuery)}${originParam}`);
+          setFavoriteSearchResults(res.data.predictions || []);
+        } catch (error) {
+          console.error('Error searching favorite via geoproxy:', error);
+        } finally {
+          setIsSearchingFavorite(false);
+        }
+      } else {
+        setFavoriteSearchResults([]);
+      }
+    }, 350);
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [favoriteSearchQuery, origin]);
 
   const handleMapCenterChange = useCallback(async (coords: { lat: number; lng: number }) => {
     if (!isSelectingLocation) return;
@@ -1357,38 +1388,6 @@ export default function PassengerPage() {
               )}
             </div>
 
-            {/* Opción de Ajustar en el mapa */}
-            {activeField && (
-              <button
-                type="button"
-                onClick={() => {
-                  setIsSelectingLocation(activeField);
-                  // Establecer coordenadas iniciales del pin al centro actual del mapa o al origen si existe
-                  setSelectedPinCoords(activeField === 'origin' && origin ? { lat: origin.lat, lng: origin.lng } : (dest ? { lat: dest.lat, lng: dest.lng } : SANTIAGO_CENTER));
-                  setSearchResults([]);
-                }}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '8px',
-                  width: '100%',
-                  padding: '12px',
-                  background: 'rgba(0, 229, 160, 0.05)',
-                  border: '1.5px dashed var(--accent)',
-                  borderRadius: 'var(--radius)',
-                  color: 'var(--accent)',
-                  fontSize: '0.88rem',
-                  fontWeight: 700,
-                  cursor: 'pointer',
-                  transition: 'background 0.2s',
-                  marginTop: '4px'
-                }}
-              >
-                <span style={{ display: 'flex', alignItems: 'center', color: 'var(--accent)' }}><IconPin /></span> Ajustar ubicación en el mapa
-              </button>
-            )}
-
             {/* Search Results */}
             {searchResults.length > 0 && activeField && (
               <div className="search-results" style={{ marginTop: '4px' }}>
@@ -1416,115 +1415,165 @@ export default function PassengerPage() {
               {/* Favoritos */}
               <div>
                 <h4 style={{ fontSize: '0.8rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '10px', fontWeight: 800 }}>Ubicaciones Favoritas</h4>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                  
                   {/* Casa */}
                   <div 
-                    onClick={async () => {
-                      if (favorites.home) {
-                        handleSelectAddress({ ...favorites.home, isGoogle: false, description: favorites.home.address });
-                      } else {
-                        const addr = prompt('Ingresa la dirección para tu Casa:');
-                        if (addr && addr.trim().length > 2) {
-                          setIsSearching(true);
-                          try {
-                            const res = await api.get(`/trips/autocomplete?q=${encodeURIComponent(addr)}`);
-                            if (res.data.predictions && res.data.predictions.length > 0) {
-                              const pred = res.data.predictions[0];
-                              let loc;
-                              if (pred.isGoogle) {
-                                const details = await api.get(`/trips/place-details?placeId=${pred.id}`);
-                                loc = { lat: details.data.lat, lng: details.data.lng, address: details.data.address || pred.description };
-                              } else {
-                                loc = { lat: Number(pred.lat), lng: Number(pred.lng || pred.lon), address: pred.description };
-                              }
-                              saveFavoriteLocation('home', loc);
-                              setFavorites(getFavoriteLocations());
-                            } else {
-                              alert('No se encontró la dirección.');
-                            }
-                          } catch (err) {
-                            console.error(err);
-                            alert('Error al guardar favorito.');
-                          } finally {
-                            setIsSearching(false);
-                          }
-                        }
-                      }
-                    }}
                     style={{
                       background: 'rgba(255,255,255,0.02)',
-                      border: '1.5px solid var(--border)',
+                      border: '1px solid var(--border)',
                       borderRadius: 'var(--radius)',
-                      padding: '12px 14px',
-                      cursor: 'pointer',
+                      padding: '12px 16px',
                       display: 'flex',
                       alignItems: 'center',
-                      gap: '10px',
-                      transition: 'all 0.2s'
+                      justifyContent: 'space-between',
+                      gap: '12px',
+                      transition: 'all 0.2s',
+                      cursor: 'pointer'
                     }}
                   >
-                    <span style={{ display: 'flex', alignItems: 'center', color: 'var(--accent)' }}><IconHome /></span>
-                    <div style={{ textAlign: 'left', minWidth: 0, flex: 1 }}>
-                      <div style={{ fontSize: '0.88rem', fontWeight: 700, color: 'white' }}>Casa</div>
-                      <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                        {favorites.home ? favorites.home.address : 'Configurar...'}
+                    <div 
+                      onClick={() => {
+                        if (favorites.home) {
+                          handleSelectAddress({ ...favorites.home, isGoogle: false, description: favorites.home.address });
+                        } else {
+                          setFavoriteConfigType('home');
+                          setFavoriteSearchQuery('');
+                          setFavoriteSearchResults([]);
+                        }
+                      }}
+                      style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: 1, minWidth: 0 }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0, 229, 160, 0.08)', color: 'var(--accent)', borderRadius: '50%', width: '36px', height: '36px', flexShrink: 0 }}>
+                        <IconHome />
+                      </div>
+                      <div style={{ textAlign: 'left', minWidth: 0, flex: 1 }}>
+                        <div style={{ fontSize: '0.9rem', fontWeight: 800, color: 'white' }}>Casa</div>
+                        <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', whiteSpace: 'normal', wordBreak: 'break-word', lineHeight: '1.25' }}>
+                          {favorites.home ? favorites.home.address : 'Configurar dirección...'}
+                        </div>
                       </div>
                     </div>
+                    {favorites.home && (
+                      <button 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setFavoriteConfigType('home');
+                          setFavoriteSearchQuery(favorites.home?.address || '');
+                          setFavoriteSearchResults([]);
+                        }}
+                        style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '4px', display: 'flex', alignItems: 'center', flexShrink: 0 }}
+                        title="Editar dirección"
+                      >
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+                      </button>
+                    )}
                   </div>
 
                   {/* Trabajo */}
                   <div 
-                    onClick={async () => {
-                      if (favorites.work) {
-                        handleSelectAddress({ ...favorites.work, isGoogle: false, description: favorites.work.address });
-                      } else {
-                        const addr = prompt('Ingresa la dirección para tu Trabajo:');
-                        if (addr && addr.trim().length > 2) {
-                          setIsSearching(true);
-                          try {
-                            const res = await api.get(`/trips/autocomplete?q=${encodeURIComponent(addr)}`);
-                            if (res.data.predictions && res.data.predictions.length > 0) {
-                              const pred = res.data.predictions[0];
-                              let loc;
-                              if (pred.isGoogle) {
-                                const details = await api.get(`/trips/place-details?placeId=${pred.id}`);
-                                loc = { lat: details.data.lat, lng: details.data.lng, address: details.data.address || pred.description };
-                              } else {
-                                loc = { lat: Number(pred.lat), lng: Number(pred.lng || pred.lon), address: pred.description };
-                              }
-                              saveFavoriteLocation('work', loc);
-                              setFavorites(getFavoriteLocations());
-                            } else {
-                              alert('No se encontró la dirección.');
-                            }
-                          } catch (err) {
-                            console.error(err);
-                            alert('Error al guardar favorito.');
-                          } finally {
-                            setIsSearching(false);
-                          }
-                        }
-                      }
-                    }}
                     style={{
                       background: 'rgba(255,255,255,0.02)',
-                      border: '1.5px solid var(--border)',
+                      border: '1px solid var(--border)',
                       borderRadius: 'var(--radius)',
-                      padding: '12px 14px',
-                      cursor: 'pointer',
+                      padding: '12px 16px',
                       display: 'flex',
                       alignItems: 'center',
-                      gap: '10px',
-                      transition: 'all 0.2s'
+                      justifyContent: 'space-between',
+                      gap: '12px',
+                      transition: 'all 0.2s',
+                      cursor: 'pointer'
                     }}
                   >
-                    <span style={{ display: 'flex', alignItems: 'center', color: 'var(--accent)' }}><IconBriefcase /></span>
-                    <div style={{ textAlign: 'left', minWidth: 0, flex: 1 }}>
-                      <div style={{ fontSize: '0.88rem', fontWeight: 700, color: 'white' }}>Trabajo</div>
-                      <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                        {favorites.work ? favorites.work.address : 'Configurar...'}
+                    <div 
+                      onClick={() => {
+                        if (favorites.work) {
+                          handleSelectAddress({ ...favorites.work, isGoogle: false, description: favorites.work.address });
+                        } else {
+                          setFavoriteConfigType('work');
+                          setFavoriteSearchQuery('');
+                          setFavoriteSearchResults([]);
+                        }
+                      }}
+                      style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: 1, minWidth: 0 }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0, 229, 160, 0.08)', color: 'var(--accent)', borderRadius: '50%', width: '36px', height: '36px', flexShrink: 0 }}>
+                        <IconBriefcase />
+                      </div>
+                      <div style={{ textAlign: 'left', minWidth: 0, flex: 1 }}>
+                        <div style={{ fontSize: '0.9rem', fontWeight: 800, color: 'white' }}>Trabajo</div>
+                        <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', whiteSpace: 'normal', wordBreak: 'break-word', lineHeight: '1.25' }}>
+                          {favorites.work ? favorites.work.address : 'Configurar dirección...'}
+                        </div>
                       </div>
                     </div>
+                    {favorites.work && (
+                      <button 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setFavoriteConfigType('work');
+                          setFavoriteSearchQuery(favorites.work?.address || '');
+                          setFavoriteSearchResults([]);
+                        }}
+                        style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '4px', display: 'flex', alignItems: 'center', flexShrink: 0 }}
+                        title="Editar dirección"
+                      >
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Mall */}
+                  <div 
+                    style={{
+                      background: 'rgba(255,255,255,0.02)',
+                      border: '1px solid var(--border)',
+                      borderRadius: 'var(--radius)',
+                      padding: '12px 16px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      gap: '12px',
+                      transition: 'all 0.2s',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    <div 
+                      onClick={() => {
+                        if (favorites.mall) {
+                          handleSelectAddress({ ...favorites.mall, isGoogle: false, description: favorites.mall.address });
+                        } else {
+                          setFavoriteConfigType('mall');
+                          setFavoriteSearchQuery('');
+                          setFavoriteSearchResults([]);
+                        }
+                      }}
+                      style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: 1, minWidth: 0 }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0, 229, 160, 0.08)', color: 'var(--accent)', borderRadius: '50%', width: '36px', height: '36px', flexShrink: 0 }}>
+                        <IconShoppingBag />
+                      </div>
+                      <div style={{ textAlign: 'left', minWidth: 0, flex: 1 }}>
+                        <div style={{ fontSize: '0.9rem', fontWeight: 800, color: 'white' }}>Mall / Centro Comercial</div>
+                        <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', whiteSpace: 'normal', wordBreak: 'break-word', lineHeight: '1.25' }}>
+                          {favorites.mall ? favorites.mall.address : 'Configurar dirección...'}
+                        </div>
+                      </div>
+                    </div>
+                    {favorites.mall && (
+                      <button 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setFavoriteConfigType('mall');
+                          setFavoriteSearchQuery(favorites.mall?.address || '');
+                          setFavoriteSearchResults([]);
+                        }}
+                        style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '4px', display: 'flex', alignItems: 'center', flexShrink: 0 }}
+                        title="Editar dirección"
+                      >
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+                      </button>
+                    )}
                   </div>
                 </div>
               </div>
@@ -1555,76 +1604,6 @@ export default function PassengerPage() {
               )}
             </div>
           )}
-        </div>
-      )}
-
-      {/* BOTTOM SHEET DE CONFIRMACIÓN DEL PIN FLOTANTE */}
-      {isSelectingLocation && (
-        <div className="bottom-sheet animate-slide-up" style={{ zIndex: 1010, bottom: '20px' }}>
-          <h3 style={{ marginBottom: '8px', fontWeight: 900 }}>Ajustar ubicación</h3>
-          <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '16px' }}>
-            Arrastra el mapa para posicionar el pin en el lugar exacto.
-          </p>
-          
-          <div style={{
-            background: 'var(--bg-secondary)',
-            border: '1px solid var(--border)',
-            borderRadius: 'var(--radius)',
-            padding: '16px',
-            marginBottom: '20px',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '12px'
-          }}>
-            <div style={{ color: isSelectingLocation === 'origin' ? 'var(--accent)' : 'var(--danger)', display: 'flex', alignItems: 'center' }}>
-              <IconPin />
-            </div>
-            <div style={{ flex: 1 }}>
-              <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.05em' }}>
-                {isSelectingLocation === 'origin' ? 'Dirección de Origen' : 'Dirección de Destino'}
-              </span>
-              <div style={{ fontSize: '0.95rem', fontWeight: 600, color: 'white', marginTop: '2px', wordBreak: 'break-word' }}>
-                {isReverseGeocoding ? (
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <div className="spinner-sm" style={{ width: '14px', height: '14px', borderLeftColor: 'transparent' }} />
-                    <span>Buscando dirección...</span>
-                  </div>
-                ) : (
-                  (isSelectingLocation === 'origin' ? origin?.address : dest?.address) || 'Selecciona un punto en el mapa'
-                )}
-              </div>
-            </div>
-          </div>
-
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-            <button
-              className="btn btn-secondary"
-              onClick={() => {
-                setIsSelectingLocation(null);
-                setSelectedPinCoords(null);
-              }}
-            >
-              Cancelar
-            </button>
-            <button
-              className="btn btn-primary"
-              disabled={isReverseGeocoding || !(isSelectingLocation === 'origin' ? origin?.address : dest?.address)}
-              onClick={() => {
-                const selectedLoc = isSelectingLocation === 'origin' ? origin : dest;
-                if (selectedLoc) {
-                  addRecentLocation({ lat: selectedLoc.lat, lng: selectedLoc.lng, address: selectedLoc.address });
-                  setRecentLocs(getRecentLocations());
-                }
-                setIsSelectingLocation(null);
-                setSelectedPinCoords(null);
-                if (origin && dest) {
-                  setStatus('selecting_dest');
-                }
-              }}
-            >
-              Confirmar ubicación
-            </button>
-          </div>
         </div>
       )}
 
@@ -2554,6 +2533,181 @@ export default function PassengerPage() {
                 {passwordChangeLoading ? 'Actualizando...' : 'Actualizar Contraseña'}
               </button>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL DE CONFIGURACIÓN DE DIRECCIÓN FAVORITA (CASA / TRABAJO) */}
+      {favoriteConfigType && (
+        <div style={{
+          position: 'fixed',
+          inset: 0,
+          background: 'rgba(9, 9, 15, 0.85)',
+          backdropFilter: 'blur(8px)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 9999,
+          padding: '20px',
+          animation: 'fadeIn 0.2s ease'
+        }}>
+          <div style={{
+            background: 'var(--bg-secondary)',
+            border: '1px solid var(--border)',
+            borderRadius: 'var(--radius-lg)',
+            width: '100%',
+            maxWidth: '440px',
+            padding: '28px',
+            boxShadow: 'var(--shadow-lg)',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '20px',
+            position: 'relative'
+          }}>
+            <button 
+              onClick={() => {
+                setFavoriteConfigType(null);
+                setFavoriteSearchQuery('');
+                setFavoriteSearchResults([]);
+              }}
+              style={{
+                position: 'absolute',
+                top: '20px',
+                right: '20px',
+                background: 'rgba(255,255,255,0.03)',
+                border: '1px solid var(--border)',
+                borderRadius: '50%',
+                width: '32px',
+                height: '32px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                cursor: 'pointer',
+                color: 'var(--text-primary)',
+                transition: 'var(--transition)'
+              }}
+              onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.08)'}
+              onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.03)'}
+            >
+              <IconX />
+            </button>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <div style={{
+                background: 'rgba(0, 229, 160, 0.1)',
+                color: 'var(--accent)',
+                borderRadius: '10px',
+                padding: '8px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}>
+                {favoriteConfigType === 'home' ? <IconHome /> : favoriteConfigType === 'work' ? <IconBriefcase /> : <IconShoppingBag />}
+              </div>
+              <h3 style={{ margin: 0, fontWeight: 900, fontSize: '1.25rem' }}>
+                Configurar {favoriteConfigType === 'home' ? 'Casa' : favoriteConfigType === 'work' ? 'Trabajo' : 'Mall'}
+              </h3>
+            </div>
+
+            <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+              Ingresa la dirección para guardarla como favorita y tener acceso rápido.
+            </p>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', position: 'relative' }}>
+              <div className="form-group" style={{ position: 'relative', margin: 0 }}>
+                <input 
+                  type="text" 
+                  className="form-input" 
+                  placeholder="Escribe la dirección..." 
+                  style={{ paddingRight: '40px' }}
+                  value={favoriteSearchQuery}
+                  onChange={e => setFavoriteSearchQuery(e.target.value)}
+                  autoFocus
+                />
+                {isSearchingFavorite && (
+                  <div style={{ position: 'absolute', right: '16px', top: '50%', transform: 'translateY(-50%)' }}>
+                    <div className="spinner" style={{ width: '16px', height: '16px', borderWidth: '2px' }} />
+                  </div>
+                )}
+              </div>
+
+              {/* Resultados de búsqueda de favoritos */}
+              {favoriteSearchResults.length > 0 && (
+                <div className="search-results" style={{
+                  position: 'absolute',
+                  top: '100%',
+                  left: 0,
+                  right: 0,
+                  zIndex: 10,
+                  maxHeight: '200px',
+                  overflowY: 'auto',
+                  marginTop: '4px',
+                  boxShadow: 'var(--shadow-lg)',
+                  border: '1px solid var(--border)'
+                }}>
+                  {favoriteSearchResults.map((item, idx) => {
+                    const parts = item.description.split(',');
+                    const title = parts[0].trim();
+                    const subtitle = parts.slice(1).join(',').trim();
+                    return (
+                      <div 
+                        key={idx} 
+                        className="search-item" 
+                        onClick={async () => {
+                          try {
+                            let loc;
+                            if (item.isGoogle) {
+                              const details = await api.get(`/trips/place-details?placeId=${item.id}`);
+                              loc = {
+                                lat: details.data.lat,
+                                lng: details.data.lng,
+                                address: details.data.address || item.description
+                              };
+                            } else {
+                              loc = {
+                                lat: Number(item.lat),
+                                lng: Number(item.lng || item.lon),
+                                address: item.description || item.address
+                              };
+                            }
+                            saveFavoriteLocation(favoriteConfigType, loc);
+                            setFavorites(getFavoriteLocations());
+                            setFavoriteConfigType(null);
+                            setFavoriteSearchQuery('');
+                            setFavoriteSearchResults([]);
+                          } catch (err) {
+                            console.error(err);
+                            alert('Error al guardar la dirección favorita.');
+                          }
+                        }}
+                      >
+                        <div className="search-item-icon" style={{ display: 'flex', alignItems: 'center', color: 'var(--accent)' }}>
+                          <IconPin />
+                        </div>
+                        <div className="search-item-text">
+                          <div className="search-item-title">{title}</div>
+                          {subtitle && <div className="search-item-sub">{subtitle}</div>}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+            <div style={{ display: 'flex', gap: '12px', marginTop: '8px' }}>
+              <button
+                className="btn btn-secondary btn-block"
+                onClick={() => {
+                  setFavoriteConfigType(null);
+                  setFavoriteSearchQuery('');
+                  setFavoriteSearchResults([]);
+                }}
+                style={{ padding: '12px', fontWeight: 700, borderRadius: '10px' }}
+              >
+                Cancelar
+              </button>
+            </div>
           </div>
         </div>
       )}

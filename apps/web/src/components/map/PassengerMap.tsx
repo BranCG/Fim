@@ -292,9 +292,6 @@ export default function PassengerMap({
         routeLineRef.current.remove();
         routeLineRef.current = null;
       }
-      if (origin && !dest) {
-        map.setView([origin.lat, origin.lng], 18);
-      }
     }
 
     // ── 4. Conductor en Movimiento (Con interpolación suave) ───────────────
