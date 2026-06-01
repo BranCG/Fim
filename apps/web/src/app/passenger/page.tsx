@@ -161,6 +161,7 @@ export default function PassengerPage() {
   const [status, setStatus] = useState<TripStatus>('idle');
   const [origin, setOrigin] = useState<Location | null>(null);
   const [dest, setDest] = useState<Location | null>(null);
+  const [nearbyDrivers, setNearbyDrivers] = useState<any[]>([]);
   const [estimatedPrice, setEstimatedPrice] = useState(0);
   const [distanceKm, setDistanceKm] = useState(0);
   const [durationMin, setDurationMin] = useState(0);
@@ -727,18 +728,62 @@ export default function PassengerPage() {
     }
   }
 
-  // Socket.io listeners
+  // ── Conexión de socket general y Conductores Cercanos ────────────────────
+  useEffect(() => {
+    if (!session?.user?.id) return;
+
+    const socket = connectSocket();
+
+    const handleConnect = () => {
+      console.log('[Socket] Pasajero conectado al socket general.');
+      if (!currentTrip?.id) {
+        socket.emit('passenger:join-nearby');
+      }
+    };
+
+    const handleNearbyDrivers = ({ drivers }: { drivers: any[] }) => {
+      console.log('[Socket] Recibidos conductores cercanos:', drivers);
+      setNearbyDrivers(drivers);
+    };
+
+    socket.on('connect', handleConnect);
+    socket.on('drivers:nearby', handleNearbyDrivers);
+
+    // Si ya está conectado al iniciarse el efecto
+    if (socket.connected) {
+      handleConnect();
+    }
+
+    // Gestionar la sala nearby-drivers según el estado del viaje
+    if (!currentTrip?.id) {
+      socket.emit('passenger:join-nearby');
+    } else {
+      socket.emit('passenger:leave-nearby');
+      setNearbyDrivers([]); // Limpiar conductores cercanos si ya está en viaje
+    }
+
+    return () => {
+      console.log('[Socket] Limpiando listeners de conductores cercanos');
+      socket.emit('passenger:leave-nearby');
+      socket.off('connect', handleConnect);
+      socket.off('drivers:nearby', handleNearbyDrivers);
+    };
+  }, [session?.user?.id, currentTrip?.id]);
+
+  // Socket.io listeners para viaje activo
   useEffect(() => {
     if (!currentTrip?.id) return;
 
     const socket = connectSocket();
     socket.emit('passenger:join-trip', { tripId: currentTrip.id });
 
-    socket.on('connect', () => {
-      console.log('[Socket] Pasajero conectado/reconectado. Consultando estado del viaje...');
+    const handleTripConnect = () => {
+      console.log('[Socket] Pasajero conectado/reconectado para viaje activo. Consultando estado del viaje...');
       socket.emit('passenger:join-trip', { tripId: currentTrip.id });
       checkActiveTrip();
-    });
+    };
+
+    socket.on('connect', handleTripConnect);
 
     socket.on('trip:accepted', ({ trip }: { trip: any }) => {
       console.log('[Socket] Viaje aceptado por conductor:', trip.driver.name);
@@ -811,7 +856,7 @@ export default function PassengerPage() {
 
     return () => {
       console.log('[Socket] Limpiando listeners de viaje');
-      socket.off('connect');
+      socket.off('connect', handleTripConnect);
       socket.off('trip:accepted');
       socket.off('driver:moved');
       socket.off('trip:driver-arrived');
@@ -1173,6 +1218,7 @@ export default function PassengerPage() {
           dest={dest}
           driverPos={driverPos}
           centerTrigger={centerTrigger}
+          nearbyDrivers={nearbyDrivers}
         />
 
         {/* HUD de GPS y Controles Flotantes del Mapa */}

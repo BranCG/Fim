@@ -7,6 +7,17 @@ import { sendPushNotification } from '../utils/firebase';
 // driverId -> { socketId, lat, lng }
 const onlineDrivers = new Map<string, { socketId: string; lat: number; lng: number }>();
 
+export function broadcastNearbyDrivers() {
+  if (ioInstance) {
+    const driversList = Array.from(onlineDrivers.entries()).map(([id, d]) => ({
+      id,
+      lat: d.lat,
+      lng: d.lng,
+    }));
+    ioInstance.to('nearby-drivers').emit('drivers:nearby', { drivers: driversList });
+  }
+}
+
 import { setDriverLocationInRedis, removeDriverLocationFromRedis, updateDriverLocationDbThrottled } from '../utils/redis';
 
 export async function updateDriverLocation(driverId: string, lat: number, lng: number) {
@@ -37,6 +48,9 @@ export async function updateDriverLocation(driverId: string, lat: number, lng: n
       ioInstance.to(`trip:${activeTrip.id}`).emit('driver:moved', { lat, lng });
     }
   }
+
+  // 5. Transmitir a pasajeros inactivos
+  broadcastNearbyDrivers();
 }
 
 let ioInstance: Server | null = null;
@@ -118,6 +132,9 @@ export function setupSocketHandlers(io: Server) {
           }
         }
       }
+
+      // Transmitir a pasajeros inactivos
+      broadcastNearbyDrivers();
     });
 
     // ─── CONDUCTOR: se desconecta manualmente ──────────────────────────────
@@ -143,6 +160,9 @@ export function setupSocketHandlers(io: Server) {
       await removeDriverLocationFromRedis(driverId);
 
       console.log(`[Socket] Conductor ${driverId} fuera de línea`);
+
+      // Transmitir a pasajeros inactivos
+      broadcastNearbyDrivers();
     });
 
     // ─── CONDUCTOR: actualiza posición ────────────────────────────────────
@@ -154,6 +174,21 @@ export function setupSocketHandlers(io: Server) {
     socket.on('passenger:join-trip', ({ tripId }: { tripId: string }) => {
       socket.join(`trip:${tripId}`);
       socket.data.tripId = tripId;
+    });
+
+    // ─── PASAJERO: se une a la búsqueda de conductores cercanos ─────────────
+    socket.on('passenger:join-nearby', () => {
+      socket.join('nearby-drivers');
+      const driversList = Array.from(onlineDrivers.entries()).map(([id, d]) => ({
+        id,
+        lat: d.lat,
+        lng: d.lng,
+      }));
+      socket.emit('drivers:nearby', { drivers: driversList });
+    });
+
+    socket.on('passenger:leave-nearby', () => {
+      socket.leave('nearby-drivers');
     });
 
     // ─── PASAJERO: solicita un viaje ──────────────────────────────────────
@@ -536,6 +571,9 @@ export function setupSocketHandlers(io: Server) {
         await removeDriverLocationFromRedis(driverId);
 
         console.log(`[Socket] Conductor ${driverId} desconectado`);
+
+        // Transmitir a pasajeros inactivos
+        broadcastNearbyDrivers();
       }
     });
   });

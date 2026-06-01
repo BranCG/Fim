@@ -7,9 +7,10 @@ interface Props {
   dest: { lat: number; lng: number; address: string } | null;
   driverPos: { lat: number; lng: number } | null;
   centerTrigger?: number;
+  nearbyDrivers?: Array<{ id: string; lat: number; lng: number }>;
 }
 
-export default function PassengerMap({ origin, dest, driverPos, centerTrigger = 0 }: Props) {
+export default function PassengerMap({ origin, dest, driverPos, centerTrigger = 0, nearbyDrivers = [] }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const mapRef = useRef<any>(null);
@@ -27,6 +28,8 @@ export default function PassengerMap({ origin, dest, driverPos, centerTrigger = 
   const routeLineRef = useRef<any>(null);
   const currentRouteEndpoints = useRef<string>('');
   const currentAngleRef = useRef<number>(0);
+  const nearbyMarkersRef = useRef<Map<string, any>>(new Map());
+  const nearbyAnglesRef = useRef<Map<string, number>>(new Map());
 
   // Inicializar el mapa una sola vez
   useEffect(() => {
@@ -69,6 +72,8 @@ export default function PassengerMap({ origin, dest, driverPos, centerTrigger = 
         mapRef.current.remove();
         mapRef.current = null;
       }
+      nearbyMarkersRef.current.clear();
+      nearbyAnglesRef.current.clear();
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -129,12 +134,12 @@ export default function PassengerMap({ origin, dest, driverPos, centerTrigger = 
     };
 
     // ── Interpolación para movimiento fluido ──────────────────
-    const animateMarker = (marker: any, start: { lat: number; lng: number }, end: { lat: number; lng: number }, duration = 1200) => {
+    const animateMarker = (marker: any, start: { lat: number; lng: number }, end: { lat: number; lng: number }, driverId?: string, duration = 1200) => {
       const startTime = performance.now();
       
       const dLng = end.lng - start.lng;
       const dLat = end.lat - start.lat;
-      let angle = currentAngleRef.current;
+      let angle = driverId ? (nearbyAnglesRef.current.get(driverId) || 0) : currentAngleRef.current;
       const hasMovement = Math.abs(dLng) > 1e-6 || Math.abs(dLat) > 1e-6;
       if (hasMovement) {
         angle = Math.atan2(dLng, dLat) * (180 / Math.PI);
@@ -165,7 +170,11 @@ export default function PassengerMap({ origin, dest, driverPos, centerTrigger = 
         if (progress < 1) {
           requestAnimationFrame(step);
         } else if (hasMovement) {
-          currentAngleRef.current = angle;
+          if (driverId) {
+            nearbyAnglesRef.current.set(driverId, angle);
+          } else {
+            currentAngleRef.current = angle;
+          }
           marker.setIcon(getDriverIcon(angle));
         }
       };
@@ -282,7 +291,7 @@ export default function PassengerMap({ origin, dest, driverPos, centerTrigger = 
         // Si ya existe, animar suavemente a la nueva ubicación
         const prevPos = driverMarkerRef.current.getLatLng();
         if (prevPos.lat !== driverPos.lat || prevPos.lng !== driverPos.lng) {
-          animateMarker(driverMarkerRef.current, prevPos, driverPos, 1200);
+          animateMarker(driverMarkerRef.current, prevPos, driverPos, undefined, 1200);
         }
       }
     } else if (driverMarkerRef.current) {
@@ -290,9 +299,38 @@ export default function PassengerMap({ origin, dest, driverPos, centerTrigger = 
       driverMarkerRef.current = null;
     }
 
+    // ── 5. Conductores Cercanos (Búsqueda inactiva) ───────────────────────
+    const currentNearbyIds = new Set(nearbyDrivers.map(d => d.id));
+
+    // Eliminar conductores que ya no están online o ya no están en la lista
+    for (const [id, marker] of nearbyMarkersRef.current.entries()) {
+      if (!currentNearbyIds.has(id)) {
+        marker.remove();
+        nearbyMarkersRef.current.delete(id);
+        nearbyAnglesRef.current.delete(id);
+      }
+    }
+
+    // Agregar o actualizar marcadores para conductores en la lista
+    nearbyDrivers.forEach((driver) => {
+      const prevMarker = nearbyMarkersRef.current.get(driver.id);
+      if (!prevMarker) {
+        const driverAngle = nearbyAnglesRef.current.get(driver.id) || 0;
+        const driverIcon = getDriverIcon(driverAngle);
+        const marker = L.marker([driver.lat, driver.lng], { icon: driverIcon }).addTo(map);
+        marker.bindTooltip('Conductor disponible', { permanent: false, direction: 'top', className: 'fim-tooltip' });
+        nearbyMarkersRef.current.set(driver.id, marker);
+      } else {
+        const prevPos = prevMarker.getLatLng();
+        if (prevPos.lat !== driver.lat || prevPos.lng !== driver.lng) {
+          animateMarker(prevMarker, prevPos, { lat: driver.lat, lng: driver.lng }, driver.id, 1200);
+        }
+      }
+    });
+
     map.invalidateSize(true);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [origin, dest, driverPos, mapLoaded]);
+  }, [origin, dest, driverPos, mapLoaded, nearbyDrivers]);
 
   return (
     <div style={{ width: '100%', height: '100%', position: 'relative' }}>
