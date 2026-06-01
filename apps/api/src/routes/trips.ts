@@ -326,6 +326,10 @@ router.get('/autocomplete', requireAuth, async (req: Request, res: Response) => 
       const response = await fetch(url);
       const data = await response.json();
       
+      if (data.status && data.status !== 'OK' && data.status !== 'ZERO_RESULTS') {
+        console.error('Google Autocomplete ERROR:', data.status, data.error_message || '');
+      }
+
       const predictions = (data.predictions || []).map((p: any) => ({
         id: p.place_id,
         description: p.description,
@@ -378,6 +382,10 @@ router.get('/place-details', requireAuth, async (req: Request, res: Response) =>
       const response = await fetch(url);
       const data = await response.json();
       
+      if (data.status && data.status !== 'OK') {
+        console.error('Google Place Details ERROR:', data.status, data.error_message || '');
+      }
+
       if (data.result && data.result.geometry && data.result.geometry.location) {
         const { lat, lng } = data.result.geometry.location;
         return res.json({
@@ -412,6 +420,10 @@ router.get('/reverse-geocode', requireAuth, async (req: Request, res: Response) 
       const response = await fetch(url);
       const data = await response.json();
       
+      if (data.status && data.status !== 'OK' && data.status !== 'ZERO_RESULTS') {
+        console.error('Google Geocoding ERROR:', data.status, data.error_message || '');
+      }
+
       if (data.results && data.results.length > 0) {
         const address = data.results[0].formatted_address;
         return res.json({ address });
@@ -441,3 +453,4 @@ router.get('/reverse-geocode', requireAuth, async (req: Request, res: Response) 
 });
 
 export default router;
+

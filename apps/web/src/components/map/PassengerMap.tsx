@@ -435,7 +435,7 @@ export default function PassengerMap({
               alignItems: 'center',
               gap: '4px'
             }}>
-              {isSelectingLocation === 'origin' ? '📍 Origen' : '🏁 Destino'}
+              {isSelectingLocation === 'origin' ? 'Origen' : 'Destino'}
             </div>
             
             {/* El puntero del Pin */}

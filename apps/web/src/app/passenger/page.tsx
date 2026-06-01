@@ -62,6 +62,9 @@ const IconCard = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="non
 const IconParty = () => <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 4.5l9 9 3.5-4.5-9-9-3.5 4.5z"/><path d="M13 13.5l2 2.5 5-5-2-2.5-5 5z"/><path d="M15 15.5l4.5 4.5.5-1.5 1.5.5-4.5-4.5-.5 1.5-1.5-.5z"/><path d="M21 21l-9-9"/><path d="M18 11l.5.5"/><path d="M19 10l.5.5"/></svg>;
 const IconLogout = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" /><polyline points="16 17 21 12 16 7" /><line x1="21" y1="12" x2="9" y2="12" /></svg>;
 const IconUser = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>;
+const IconHome = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>;
+const IconBriefcase = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>;
+
 
 
 // Helper to format Nominatim response into a clean Chilean address format (e.g. "Calle 123, Comuna")
@@ -1382,7 +1385,7 @@ export default function PassengerPage() {
                   marginTop: '4px'
                 }}
               >
-                📍 Ajustar ubicación en el mapa
+                <span style={{ display: 'flex', alignItems: 'center', color: 'var(--accent)' }}><IconPin /></span> Ajustar ubicación en el mapa
               </button>
             )}
 
@@ -1421,7 +1424,7 @@ export default function PassengerPage() {
                         handleSelectAddress({ ...favorites.home, isGoogle: false, description: favorites.home.address });
                       } else {
                         const addr = prompt('Ingresa la dirección para tu Casa:');
-                        if (addr) {
+                        if (addr && addr.trim().length > 2) {
                           setIsSearching(true);
                           try {
                             const res = await api.get(`/trips/autocomplete?q=${encodeURIComponent(addr)}`);
@@ -1432,7 +1435,7 @@ export default function PassengerPage() {
                                 const details = await api.get(`/trips/place-details?placeId=${pred.id}`);
                                 loc = { lat: details.data.lat, lng: details.data.lng, address: details.data.address || pred.description };
                               } else {
-                                loc = { lat: Number(pred.lat), lng: Number(pred.lng), address: pred.description };
+                                loc = { lat: Number(pred.lat), lng: Number(pred.lng || pred.lon), address: pred.description };
                               }
                               saveFavoriteLocation('home', loc);
                               setFavorites(getFavoriteLocations());
@@ -1460,7 +1463,7 @@ export default function PassengerPage() {
                       transition: 'all 0.2s'
                     }}
                   >
-                    <span style={{ fontSize: '1.25rem', color: 'var(--accent)' }}>🏠</span>
+                    <span style={{ display: 'flex', alignItems: 'center', color: 'var(--accent)' }}><IconHome /></span>
                     <div style={{ textAlign: 'left', minWidth: 0, flex: 1 }}>
                       <div style={{ fontSize: '0.88rem', fontWeight: 700, color: 'white' }}>Casa</div>
                       <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
@@ -1476,7 +1479,7 @@ export default function PassengerPage() {
                         handleSelectAddress({ ...favorites.work, isGoogle: false, description: favorites.work.address });
                       } else {
                         const addr = prompt('Ingresa la dirección para tu Trabajo:');
-                        if (addr) {
+                        if (addr && addr.trim().length > 2) {
                           setIsSearching(true);
                           try {
                             const res = await api.get(`/trips/autocomplete?q=${encodeURIComponent(addr)}`);
@@ -1487,7 +1490,7 @@ export default function PassengerPage() {
                                 const details = await api.get(`/trips/place-details?placeId=${pred.id}`);
                                 loc = { lat: details.data.lat, lng: details.data.lng, address: details.data.address || pred.description };
                               } else {
-                                loc = { lat: Number(pred.lat), lng: Number(pred.lng), address: pred.description };
+                                loc = { lat: Number(pred.lat), lng: Number(pred.lng || pred.lon), address: pred.description };
                               }
                               saveFavoriteLocation('work', loc);
                               setFavorites(getFavoriteLocations());
@@ -1515,7 +1518,7 @@ export default function PassengerPage() {
                       transition: 'all 0.2s'
                     }}
                   >
-                    <span style={{ fontSize: '1.25rem', color: 'var(--accent)' }}>💼</span>
+                    <span style={{ display: 'flex', alignItems: 'center', color: 'var(--accent)' }}><IconBriefcase /></span>
                     <div style={{ textAlign: 'left', minWidth: 0, flex: 1 }}>
                       <div style={{ fontSize: '0.88rem', fontWeight: 700, color: 'white' }}>Trabajo</div>
                       <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
