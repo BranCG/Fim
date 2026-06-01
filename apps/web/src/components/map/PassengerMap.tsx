@@ -8,6 +8,8 @@ interface Props {
   driverPos: { lat: number; lng: number } | null;
   centerTrigger?: number;
   nearbyDrivers?: Array<{ id: string; lat: number; lng: number }>;
+  isSelectingLocation?: 'origin' | 'dest' | null;
+  onMapCenterChange?: (coords: { lat: number; lng: number }) => void;
 }
 
 const getDistanceMeters = (lat1: number, lng1: number, lat2: number, lng2: number) => {
@@ -16,7 +18,15 @@ const getDistanceMeters = (lat1: number, lng1: number, lat2: number, lng2: numbe
   return Math.sqrt(dx * dx + dy * dy);
 };
 
-export default function PassengerMap({ origin, dest, driverPos, centerTrigger = 0, nearbyDrivers = [] }: Props) {
+export default function PassengerMap({
+  origin,
+  dest,
+  driverPos,
+  centerTrigger = 0,
+  nearbyDrivers = [],
+  isSelectingLocation = null,
+  onMapCenterChange
+}: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const mapRef = useRef<any>(null);
@@ -188,7 +198,7 @@ export default function PassengerMap({ origin, dest, driverPos, centerTrigger = 
     };
 
     // ── 1. Origen ──────────────────────────────────────────────────────────
-    if (origin) {
+    if (origin && isSelectingLocation !== 'origin') {
       if (!originMarkerRef.current) {
         const originIcon = L.divIcon({
           className: 'transparent-icon',
@@ -211,7 +221,7 @@ export default function PassengerMap({ origin, dest, driverPos, centerTrigger = 
     }
 
     // ── 2. Destino ─────────────────────────────────────────────────────────
-    if (dest) {
+    if (dest && isSelectingLocation !== 'dest') {
       if (!destMarkerRef.current) {
         const destIcon = L.divIcon({
           className: 'transparent-icon',
@@ -340,6 +350,26 @@ export default function PassengerMap({ origin, dest, driverPos, centerTrigger = 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [origin, dest, driverPos, mapLoaded, nearbyDrivers]);
 
+  // Escuchar el movimiento del mapa para reportar el centro en selección manual
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !isSelectingLocation || !onMapCenterChange) return;
+
+    const handleMoveEnd = () => {
+      const center = map.getCenter();
+      onMapCenterChange({ lat: center.lat, lng: center.lng });
+    };
+
+    map.on('moveend', handleMoveEnd);
+
+    // Ejecutar una vez al inicio del modo selección para geocodificar la posición actual
+    handleMoveEnd();
+
+    return () => {
+      map.off('moveend', handleMoveEnd);
+    };
+  }, [isSelectingLocation, mapLoaded, onMapCenterChange]);
+
   return (
     <div style={{ width: '100%', height: '100%', position: 'relative' }}>
       <div
@@ -351,6 +381,75 @@ export default function PassengerMap({ origin, dest, driverPos, centerTrigger = 
           height: '100%',
         }}
       />
+      {isSelectingLocation && (
+        <div style={{
+          position: 'absolute',
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -100%)', // Centrar horizontalmente y alinear la base del pin al centro
+          pointerEvents: 'none', // Permitir arrastrar el mapa por debajo
+          zIndex: 1000,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center'
+        }}>
+          {/* Un punto brillante en el centro exacto de la base */}
+          <div style={{
+            width: '8px',
+            height: '8px',
+            background: isSelectingLocation === 'origin' ? '#00E5A0' : '#FF4560',
+            borderRadius: '50%',
+            boxShadow: `0 0 8px ${isSelectingLocation === 'origin' ? '#00E5A0' : '#FF4560'}`,
+            position: 'absolute',
+            bottom: '-4px'
+          }} />
+          
+          {/* El Pin flotante con animación de bote */}
+          <div style={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            animation: 'bouncePin 1.5s ease-in-out infinite alternate',
+            transformOrigin: 'bottom center'
+          }}>
+            <style>{`
+              @keyframes bouncePin {
+                0% { transform: translateY(0); }
+                100% { transform: translateY(-8px); }
+              }
+            `}</style>
+            
+            {/* El cuerpo del Pin */}
+            <div style={{
+              background: isSelectingLocation === 'origin' ? '#00E5A0' : '#FF4560',
+              padding: '8px 14px',
+              borderRadius: '20px',
+              color: '#131320',
+              fontSize: '0.8rem',
+              fontWeight: 700,
+              boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
+              border: '2px solid white',
+              whiteSpace: 'nowrap',
+              marginBottom: '2px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '4px'
+            }}>
+              {isSelectingLocation === 'origin' ? '📍 Origen' : '🏁 Destino'}
+            </div>
+            
+            {/* El puntero del Pin */}
+            <div style={{
+              width: 0,
+              height: 0,
+              borderLeft: '6px solid transparent',
+              borderRight: '6px solid transparent',
+              borderTop: `10px solid ${isSelectingLocation === 'origin' ? '#00E5A0' : '#FF4560'}`,
+              filter: 'drop-shadow(0 2px 2px rgba(0,0,0,0.2))'
+            }} />
+          </div>
+        </div>
+      )}
     </div>
   );
 }

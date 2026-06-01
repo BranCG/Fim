@@ -305,4 +305,139 @@ router.post('/:id/rate', requireAuth, requireRole('passenger'), async (req: Requ
   }
 });
 
+// ─── GOOGLE MAPS / NOMINATIM GEOPROXY ──────────────────────────────────────
+router.get('/autocomplete', requireAuth, async (req: Request, res: Response) => {
+  try {
+    const q = req.query.q as string;
+    const originLat = req.query.originLat ? Number(req.query.originLat) : null;
+    const originLng = req.query.originLng ? Number(req.query.originLng) : null;
+
+    if (!q || q.trim().length < 3) {
+      return res.json({ predictions: [] });
+    }
+
+    const apiKey = process.env.GOOGLE_MAPS_API_KEY;
+    if (apiKey) {
+      // Usar Google Places Autocomplete API
+      let url = `https://maps.googleapis.com/maps/api/place/autocomplete/json?input=${encodeURIComponent(q)}&key=${apiKey}&components=country:cl&language=es`;
+      if (originLat && originLng) {
+        url += `&location=${originLat},${originLng}&radius=20000`; // Sesgar a 20km alrededor del origen
+      }
+      const response = await fetch(url);
+      const data = await response.json();
+      
+      const predictions = (data.predictions || []).map((p: any) => ({
+        id: p.place_id,
+        description: p.description,
+        isGoogle: true
+      }));
+      return res.json({ predictions });
+    } else {
+      // Fallback a Nominatim (OpenStreetMap)
+      let url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(q)}&countrycodes=cl&limit=6&addressdetails=1`;
+      if (originLat && originLng) {
+        url += `&lat=${originLat}&lon=${originLng}`;
+      }
+      const response = await fetch(url, {
+        headers: { 'User-Agent': 'Fim-App-API/1.0 (contact@fim.cl)' }
+      });
+      const data = await response.json();
+      const predictions = (data || []).map((item: any) => {
+        const addr = item.address;
+        const street = addr?.road || addr?.pedestrian || addr?.footway || item.display_name.split(',')[0];
+        const number = addr?.house_number ? ` ${addr.house_number}` : '';
+        const comuna = addr?.suburb || addr?.neighbourhood || addr?.city_district || addr?.town || addr?.city || '';
+        const description = `${street}${number}, ${comuna}`.trim().replace(/^,\s*|,\s*$/g, '') || item.display_name;
+        return {
+          id: `osm:${item.place_id}`,
+          description,
+          lat: Number(item.lat),
+          lng: Number(item.lon),
+          isGoogle: false
+        };
+      });
+      return res.json({ predictions });
+    }
+  } catch (err) {
+    console.error('Error in /autocomplete proxy:', err);
+    return res.status(500).json({ error: 'Error al buscar direcciones' });
+  }
+});
+
+router.get('/place-details', requireAuth, async (req: Request, res: Response) => {
+  try {
+    const placeId = req.query.placeId as string;
+    if (!placeId) {
+      return res.status(400).json({ error: 'placeId requerido' });
+    }
+
+    const apiKey = process.env.GOOGLE_MAPS_API_KEY;
+    if (apiKey) {
+      // Usar Google Place Details API
+      const url = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${placeId}&key=${apiKey}&fields=geometry,formatted_address`;
+      const response = await fetch(url);
+      const data = await response.json();
+      
+      if (data.result && data.result.geometry && data.result.geometry.location) {
+        const { lat, lng } = data.result.geometry.location;
+        return res.json({
+          lat,
+          lng,
+          address: data.result.formatted_address || ''
+        });
+      }
+      return res.status(404).json({ error: 'Ubicación no encontrada' });
+    } else {
+      return res.status(400).json({ error: 'Google API key no configurada' });
+    }
+  } catch (err) {
+    console.error('Error in /place-details proxy:', err);
+    return res.status(500).json({ error: 'Error al obtener detalles del lugar' });
+  }
+});
+
+router.get('/reverse-geocode', requireAuth, async (req: Request, res: Response) => {
+  try {
+    const lat = Number(req.query.lat);
+    const lng = Number(req.query.lng);
+
+    if (isNaN(lat) || isNaN(lng)) {
+      return res.status(400).json({ error: 'Coordenadas lat/lng requeridas y deben ser números' });
+    }
+
+    const apiKey = process.env.GOOGLE_MAPS_API_KEY;
+    if (apiKey) {
+      // Usar Google Geocoding API
+      const url = `https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&key=${apiKey}&language=es`;
+      const response = await fetch(url);
+      const data = await response.json();
+      
+      if (data.results && data.results.length > 0) {
+        const address = data.results[0].formatted_address;
+        return res.json({ address });
+      }
+      return res.status(404).json({ error: 'Dirección no encontrada' });
+    } else {
+      // Fallback a Nominatim Reverse Geocoding
+      const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&addressdetails=1`;
+      const response = await fetch(url, {
+        headers: { 'User-Agent': 'Fim-App-API/1.0 (contact@fim.cl)' }
+      });
+      const data = await response.json();
+      if (data && data.display_name) {
+        const addr = data.address;
+        const street = addr?.road || addr?.pedestrian || addr?.footway || data.display_name.split(',')[0];
+        const number = addr?.house_number ? ` ${addr.house_number}` : '';
+        const comuna = addr?.suburb || addr?.neighbourhood || addr?.city_district || addr?.town || addr?.city || '';
+        const address = `${street}${number}, ${comuna}`.trim().replace(/^,\s*|,\s*$/g, '') || data.display_name;
+        return res.json({ address });
+      }
+      return res.status(404).json({ error: 'Dirección no encontrada' });
+    }
+  } catch (err) {
+    console.error('Error in /reverse-geocode proxy:', err);
+    return res.status(500).json({ error: 'Error al realizar geocodificación inversa' });
+  }
+});
+
 export default router;

@@ -6,6 +6,13 @@ import dynamic from 'next/dynamic';
 import api, { formatCLP, calculatePrice, clearSession, getSession, roundCLP } from '@/lib/api';
 import { connectSocket, getSocket, forceReconnectSocket } from '@/lib/socket';
 import { sendLocalNotification, initializePushNotifications } from '@/lib/notifications';
+import {
+  getFavoriteLocations,
+  saveFavoriteLocation,
+  getRecentLocations,
+  addRecentLocation,
+  SavedLocation
+} from '@/lib/savedLocations';
 
 // Leaflet solo en cliente (SSR incompatible)
 const PassengerMap = dynamic(() => import('@/components/map/PassengerMap'), { ssr: false });
@@ -162,6 +169,14 @@ export default function PassengerPage() {
   const [origin, setOrigin] = useState<Location | null>(null);
   const [dest, setDest] = useState<Location | null>(null);
   const [nearbyDrivers, setNearbyDrivers] = useState<any[]>([]);
+  
+  // Direcciones guardadas y Pin flotante
+  const [favorites, setFavorites] = useState<{ home: SavedLocation | null; work: SavedLocation | null }>({ home: null, work: null });
+  const [recentLocs, setRecentLocs] = useState<SavedLocation[]>([]);
+  const [isSelectingLocation, setIsSelectingLocation] = useState<'origin' | 'dest' | null>(null);
+  const [selectedPinCoords, setSelectedPinCoords] = useState<{ lat: number; lng: number } | null>(null);
+  const [isReverseGeocoding, setIsReverseGeocoding] = useState(false);
+
   const [estimatedPrice, setEstimatedPrice] = useState(0);
   const [distanceKm, setDistanceKm] = useState(0);
   const [durationMin, setDurationMin] = useState(0);
@@ -464,6 +479,8 @@ export default function PassengerPage() {
     // Si el usuario es admin, redirigir al panel de control
     if (s.user?.role === 'admin') { router.push('/admin'); return; }
     setSession(s);
+    setFavorites(getFavoriteLocations());
+    setRecentLocs(getRecentLocations());
 
     // Inicializar Notificaciones Push para móviles
     initializePushNotifications();
@@ -497,24 +514,16 @@ export default function PassengerPage() {
         });
         setGpsError(null);
         try {
-          const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${pos.lat}&lon=${pos.lng}&addressdetails=1`;
-          const res = await fetch(url, {
-            headers: {
-              'User-Agent': 'Fim-App-Client/1.0 (contact@fim.cl)'
-            }
-          });
-          const data = await res.json();
-          if (data && data.address) {
-            const formatted = formatNominatimAddress(data);
-            const fullAddress = formatted.title + (formatted.subtitle ? `, ${formatted.subtitle}` : '');
+          const res = await api.get(`/trips/reverse-geocode?lat=${pos.lat}&lng=${pos.lng}`);
+          if (res.data.address) {
             setOrigin({
               lat: pos.lat,
               lng: pos.lng,
-              address: fullAddress,
+              address: res.data.address,
             });
-            const commune = data.address.suburb || data.address.neighbourhood || data.address.city_district || data.address.town || data.address.city || '';
-            if (commune) {
-              setCurrentCommune(commune);
+            const parts = res.data.address.split(',');
+            if (parts.length > 1) {
+              setCurrentCommune(parts[1].trim());
             }
           }
         } catch (err) {
@@ -541,28 +550,19 @@ export default function PassengerPage() {
     if (origin.address === 'Mi ubicación actual' || origin.address === 'Centro de Santiago') {
       const resolveAddress = async () => {
         try {
-          const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${origin.lat}&lon=${origin.lng}&addressdetails=1`;
-          const res = await fetch(url, {
-            headers: {
-              'User-Agent': 'Fim-App-Client/1.0 (contact@fim.cl)'
-            }
-          });
-          const data = await res.json();
-          if (data && data.address) {
-            const formatted = formatNominatimAddress(data);
-            const fullAddress = formatted.title + (formatted.subtitle ? `, ${formatted.subtitle}` : '');
-            
+          const res = await api.get(`/trips/reverse-geocode?lat=${origin.lat}&lng=${origin.lng}`);
+          if (res.data.address) {
             setOrigin(prev => {
               if (!prev) return null;
               return {
                 ...prev,
-                address: fullAddress
+                address: res.data.address
               };
             });
             
-            const commune = data.address.suburb || data.address.neighbourhood || data.address.city_district || data.address.town || data.address.city || '';
-            if (commune) {
-              setCurrentCommune(commune);
+            const parts = res.data.address.split(',');
+            if (parts.length > 1) {
+              setCurrentCommune(parts[1].trim());
             }
           }
         } catch (err) {
@@ -607,124 +607,103 @@ export default function PassengerPage() {
     }
   }, [origin, dest, status]);
 
-  // Autocomplete con Nominatim
+  // Autocomplete con Google Maps / Geoproxy
   useEffect(() => {
     const delayDebounceFn = setTimeout(async () => {
-      if (searchQuery.length > 3) {
+      if (searchQuery.length > 2) {
         setIsSearching(true);
         try {
-          // Limpiar número de casa (cualquier número independiente, ej. "9701") en la consulta,
-          // incluso si está seguido de comas o de la comuna al final.
-          const cleanQuery = searchQuery
-            .replace(/(?:n[°o]|n°|#)?\s*\b\d+\b\s*(?=\b|,|$)/gi, '')
-            .replace(/\s*,\s*/g, ', ')
-            .replace(/\s+/g, ' ')
-            .trim()
-            .replace(/^,|,$/g, '')
-            .trim();
-
-          const fetchResults = async (q: string, useLocalBounds = false) => {
-            let url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(q)}&countrycodes=cl&limit=6&addressdetails=1`;
-            if (origin) {
-              url += `&lat=${origin.lat}&lon=${origin.lng}`;
-              if (useLocalBounds) {
-                // Forzar búsqueda hiper-local (~3km de radio) para calles menores/pasajes
-                const delta = 0.03;
-                const left = origin.lng - delta;
-                const right = origin.lng + delta;
-                const top = origin.lat + delta;
-                const bottom = origin.lat - delta;
-                url += `&viewbox=${left},${top},${right},${bottom}&bounded=1`;
-              } else {
-                // Sesgo de cuadrante (~25km a la redonda)
-                const left = origin.lng - 0.25;
-                const right = origin.lng + 0.25;
-                const top = origin.lat + 0.25;
-                const bottom = origin.lat - 0.25;
-                url += `&viewbox=${left},${top},${right},${bottom}`;
-              }
-            }
-            try {
-              const res = await fetch(url, {
-                headers: {
-                  'User-Agent': 'Fim-App-Client/1.0 (contact@fim.cl)'
-                }
-              });
-              return await res.json();
-            } catch (err) {
-              console.error('Error fetching from Nominatim:', err);
-              return [];
-            }
-          };
-
-          // Ejecutar llamadas de manera secuencial separadas por un delay
-          // para respetar los límites de concurrencia estrictos de Nominatim
-          let localBounded: any[] = [];
-          if (origin) {
-            localBounded = await fetchResults(cleanQuery, true);
-            await new Promise((resolve) => setTimeout(resolve, 150));
-          }
-
-          const general = await fetchResults(cleanQuery, false);
-
-          // Combinar y ordenar priorizando:
-          // 1. Local acotado (dentro de los 3km, súper cercano al pasajero)
-          // 2. Búsqueda general
-          const seen = new Set<number>();
-          const combined: any[] = [];
-
-          const addItems = (items: any[]) => {
-            for (const item of items) {
-              if (item && item.place_id && !seen.has(item.place_id)) {
-                seen.add(item.place_id);
-                combined.push(item);
-              }
-            }
-          };
-
-          addItems(localBounded);
-          addItems(general);
-
-          setSearchResults(combined.slice(0, 6));
+          const originParam = origin ? `&originLat=${origin.lat}&originLng=${origin.lng}` : '';
+          const res = await api.get(`/trips/autocomplete?q=${encodeURIComponent(searchQuery)}${originParam}`);
+          setSearchResults(res.data.predictions || []);
         } catch (error) {
-          console.error('Error searching address:', error);
+          console.error('Error searching address via geoproxy:', error);
         } finally {
           setIsSearching(false);
         }
       } else {
         setSearchResults([]);
       }
-    }, 300); // 300ms de retardo para mayor rapidez
+    }, 350);
 
     return () => clearTimeout(delayDebounceFn);
-  }, [searchQuery, origin, currentCommune]);
+  }, [searchQuery, origin]);
 
-  function handleSelectAddress(item: any) {
-    const formatted = formatNominatimAddress(item, searchQuery);
-    const loc = {
-      lat: parseFloat(item.lat),
-      lng: parseFloat(item.lon),
-      address: formatted.title + (formatted.subtitle ? `, ${formatted.subtitle}` : ''),
-    };
-    
-    if (activeField === 'origin') {
-      setOrigin(loc);
-      setOriginQuery(formatted.title);
-      setSearchResults([]);
-      setActiveField(null);
-      setSearchQuery('');
-      if (dest) {
-        setStatus('selecting_dest');
+  const handleMapCenterChange = useCallback(async (coords: { lat: number; lng: number }) => {
+    if (!isSelectingLocation) return;
+    setIsReverseGeocoding(true);
+    setSelectedPinCoords(coords);
+    try {
+      const res = await api.get(`/trips/reverse-geocode?lat=${coords.lat}&lng=${coords.lng}`);
+      const address = res.data.address;
+      
+      const loc = {
+        lat: coords.lat,
+        lng: coords.lng,
+        address
+      };
+
+      if (isSelectingLocation === 'origin') {
+        setOrigin(loc);
+        setOriginQuery(address.split(',')[0]);
+      } else {
+        setDest(loc);
+        setDestQuery(address.split(',')[0]);
       }
-    } else {
-      setDest(loc);
-      setDestQuery(formatted.title);
-      setSearchResults([]);
-      setActiveField(null);
-      setSearchQuery('');
-      if (origin) {
-        setStatus('selecting_dest');
+    } catch (err) {
+      console.error('Error in reverse geocoding map center:', err);
+    } finally {
+      setIsReverseGeocoding(false);
+    }
+  }, [isSelectingLocation]);
+
+  async function handleSelectAddress(item: any) {
+    let loc: Location;
+
+    try {
+      if (item.isGoogle) {
+        // Obtener coordenadas exactas mediante detalles del lugar de Google
+        const res = await api.get(`/trips/place-details?placeId=${item.id}`);
+        loc = {
+          lat: res.data.lat,
+          lng: res.data.lng,
+          address: res.data.address || item.description
+        };
+      } else {
+        // OSM fallback o ubicaciones guardadas locales
+        loc = {
+          lat: Number(item.lat),
+          lng: Number(item.lng || item.lon),
+          address: item.description || item.address
+        };
       }
+
+      // Guardar en Recientes localmente
+      addRecentLocation({ lat: loc.lat, lng: loc.lng, address: loc.address });
+      setRecentLocs(getRecentLocations());
+
+      if (activeField === 'origin') {
+        setOrigin(loc);
+        setOriginQuery(loc.address.split(',')[0]);
+        setSearchResults([]);
+        setActiveField(null);
+        setSearchQuery('');
+        if (dest) {
+          setStatus('selecting_dest');
+        }
+      } else {
+        setDest(loc);
+        setDestQuery(loc.address.split(',')[0]);
+        setSearchResults([]);
+        setActiveField(null);
+        setSearchQuery('');
+        if (origin) {
+          setStatus('selecting_dest');
+        }
+      }
+    } catch (err) {
+      console.error('Error selecting address:', err);
+      alert('No se pudieron obtener las coordenadas de esta dirección.');
     }
   }
 
@@ -1176,20 +1155,12 @@ export default function PassengerPage() {
               });
               setGpsError(null);
               try {
-                const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${pos.lat}&lon=${pos.lng}&addressdetails=1`;
-                const res = await fetch(url, {
-                  headers: {
-                    'User-Agent': 'Fim-App-Client/1.0 (contact@fim.cl)'
-                  }
-                });
-                const data = await res.json();
-                if (data && data.address) {
-                  const formatted = formatNominatimAddress(data);
-                  const fullAddress = formatted.title + (formatted.subtitle ? `, ${formatted.subtitle}` : '');
+                const res = await api.get(`/trips/reverse-geocode?lat=${pos.lat}&lng=${pos.lng}`);
+                if (res.data.address) {
                   setOrigin({
                     lat: pos.lat,
                     lng: pos.lng,
-                    address: fullAddress,
+                    address: res.data.address,
                   });
                 }
               } catch (e) {
@@ -1219,6 +1190,8 @@ export default function PassengerPage() {
           driverPos={driverPos}
           centerTrigger={centerTrigger}
           nearbyDrivers={nearbyDrivers}
+          isSelectingLocation={isSelectingLocation}
+          onMapCenterChange={handleMapCenterChange}
         />
 
         {/* HUD de GPS y Controles Flotantes del Mapa */}
@@ -1256,7 +1229,7 @@ export default function PassengerPage() {
       </main>
 
       {/* IDLE — Selección de destino */}
-      {status === 'idle' && (
+      {status === 'idle' && !isSelectingLocation && (
         <div className="bottom-sheet animate-slide-up" style={bottomSheetStyle()}>
           <BottomSheetHandle />
           <h3 style={{ marginBottom: '16px', fontWeight: 900 }}>¿A dónde vamos?</h3>
@@ -1381,17 +1354,51 @@ export default function PassengerPage() {
               )}
             </div>
 
+            {/* Opción de Ajustar en el mapa */}
+            {activeField && (
+              <button
+                type="button"
+                onClick={() => {
+                  setIsSelectingLocation(activeField);
+                  // Establecer coordenadas iniciales del pin al centro actual del mapa o al origen si existe
+                  setSelectedPinCoords(activeField === 'origin' && origin ? { lat: origin.lat, lng: origin.lng } : (dest ? { lat: dest.lat, lng: dest.lng } : SANTIAGO_CENTER));
+                  setSearchResults([]);
+                }}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '8px',
+                  width: '100%',
+                  padding: '12px',
+                  background: 'rgba(0, 229, 160, 0.05)',
+                  border: '1.5px dashed var(--accent)',
+                  borderRadius: 'var(--radius)',
+                  color: 'var(--accent)',
+                  fontSize: '0.88rem',
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  transition: 'background 0.2s',
+                  marginTop: '4px'
+                }}
+              >
+                📍 Ajustar ubicación en el mapa
+              </button>
+            )}
+
             {/* Search Results */}
             {searchResults.length > 0 && activeField && (
               <div className="search-results" style={{ marginTop: '4px' }}>
                 {searchResults.map((item, idx) => {
-                  const formatted = formatNominatimAddress(item, searchQuery);
+                  const parts = item.description.split(',');
+                  const title = parts[0].trim();
+                  const subtitle = parts.slice(1).join(',').trim();
                   return (
                     <div key={idx} className="search-item" onClick={() => handleSelectAddress(item)}>
                       <div className="search-item-icon" style={{ display: 'flex', alignItems: 'center', color: 'var(--accent)' }}><IconPin /></div>
                       <div className="search-item-text">
-                        <div className="search-item-title">{formatted.title}</div>
-                        <div className="search-item-sub">{formatted.subtitle}</div>
+                        <div className="search-item-title">{title}</div>
+                        {subtitle && <div className="search-item-sub">{subtitle}</div>}
                       </div>
                     </div>
                   );
@@ -1400,33 +1407,220 @@ export default function PassengerPage() {
             )}
           </div>
           
-          <div style={{ marginTop: '16px', display: 'flex', gap: '8px', overflowX: 'auto', paddingBottom: '4px' }}>
-            {['Casa', 'Trabajo', 'Mall Plaza', 'Aeropuerto'].map(fav => {
-              const getIcon = () => {
-                if (fav === 'Casa') return <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>;
-                if (fav === 'Trabajo') return <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>;
-                return <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>;
-              };
-              return (
-                <button 
-                  key={fav} 
-                  className="btn btn-secondary btn-sm" 
-                  style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }} 
-                  onClick={() => {
-                    const field = activeField || 'dest';
-                    if (field === 'origin') {
-                      setOriginQuery(fav);
-                    } else {
-                      setDestQuery(fav);
-                    }
-                    setActiveField(field);
-                    setSearchQuery(fav);
-                  }}
-                >
-                  {getIcon()} {fav}
-                </button>
-              );
-            })}
+          {/* UBICACIONES GUARDADAS / RECIENTES */}
+          {searchQuery.length === 0 && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginTop: '16px' }}>
+              {/* Favoritos */}
+              <div>
+                <h4 style={{ fontSize: '0.8rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '10px', fontWeight: 800 }}>Ubicaciones Favoritas</h4>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                  {/* Casa */}
+                  <div 
+                    onClick={async () => {
+                      if (favorites.home) {
+                        handleSelectAddress({ ...favorites.home, isGoogle: false, description: favorites.home.address });
+                      } else {
+                        const addr = prompt('Ingresa la dirección para tu Casa:');
+                        if (addr) {
+                          setIsSearching(true);
+                          try {
+                            const res = await api.get(`/trips/autocomplete?q=${encodeURIComponent(addr)}`);
+                            if (res.data.predictions && res.data.predictions.length > 0) {
+                              const pred = res.data.predictions[0];
+                              let loc;
+                              if (pred.isGoogle) {
+                                const details = await api.get(`/trips/place-details?placeId=${pred.id}`);
+                                loc = { lat: details.data.lat, lng: details.data.lng, address: details.data.address || pred.description };
+                              } else {
+                                loc = { lat: Number(pred.lat), lng: Number(pred.lng), address: pred.description };
+                              }
+                              saveFavoriteLocation('home', loc);
+                              setFavorites(getFavoriteLocations());
+                            } else {
+                              alert('No se encontró la dirección.');
+                            }
+                          } catch (err) {
+                            console.error(err);
+                            alert('Error al guardar favorito.');
+                          } finally {
+                            setIsSearching(false);
+                          }
+                        }
+                      }
+                    }}
+                    style={{
+                      background: 'rgba(255,255,255,0.02)',
+                      border: '1.5px solid var(--border)',
+                      borderRadius: 'var(--radius)',
+                      padding: '12px 14px',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '10px',
+                      transition: 'all 0.2s'
+                    }}
+                  >
+                    <span style={{ fontSize: '1.25rem', color: 'var(--accent)' }}>🏠</span>
+                    <div style={{ textAlign: 'left', minWidth: 0, flex: 1 }}>
+                      <div style={{ fontSize: '0.88rem', fontWeight: 700, color: 'white' }}>Casa</div>
+                      <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {favorites.home ? favorites.home.address : 'Configurar...'}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Trabajo */}
+                  <div 
+                    onClick={async () => {
+                      if (favorites.work) {
+                        handleSelectAddress({ ...favorites.work, isGoogle: false, description: favorites.work.address });
+                      } else {
+                        const addr = prompt('Ingresa la dirección para tu Trabajo:');
+                        if (addr) {
+                          setIsSearching(true);
+                          try {
+                            const res = await api.get(`/trips/autocomplete?q=${encodeURIComponent(addr)}`);
+                            if (res.data.predictions && res.data.predictions.length > 0) {
+                              const pred = res.data.predictions[0];
+                              let loc;
+                              if (pred.isGoogle) {
+                                const details = await api.get(`/trips/place-details?placeId=${pred.id}`);
+                                loc = { lat: details.data.lat, lng: details.data.lng, address: details.data.address || pred.description };
+                              } else {
+                                loc = { lat: Number(pred.lat), lng: Number(pred.lng), address: pred.description };
+                              }
+                              saveFavoriteLocation('work', loc);
+                              setFavorites(getFavoriteLocations());
+                            } else {
+                              alert('No se encontró la dirección.');
+                            }
+                          } catch (err) {
+                            console.error(err);
+                            alert('Error al guardar favorito.');
+                          } finally {
+                            setIsSearching(false);
+                          }
+                        }
+                      }
+                    }}
+                    style={{
+                      background: 'rgba(255,255,255,0.02)',
+                      border: '1.5px solid var(--border)',
+                      borderRadius: 'var(--radius)',
+                      padding: '12px 14px',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '10px',
+                      transition: 'all 0.2s'
+                    }}
+                  >
+                    <span style={{ fontSize: '1.25rem', color: 'var(--accent)' }}>💼</span>
+                    <div style={{ textAlign: 'left', minWidth: 0, flex: 1 }}>
+                      <div style={{ fontSize: '0.88rem', fontWeight: 700, color: 'white' }}>Trabajo</div>
+                      <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {favorites.work ? favorites.work.address : 'Configurar...'}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Recientes */}
+              {recentLocs.length > 0 && (
+                <div>
+                  <h4 style={{ fontSize: '0.8rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '8px', fontWeight: 800 }}>Ubicaciones Recientes</h4>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                    {recentLocs.map((loc, idx) => (
+                      <div 
+                        key={idx} 
+                        className="search-item" 
+                        onClick={() => handleSelectAddress({ ...loc, isGoogle: false, description: loc.address })}
+                        style={{ padding: '8px 12px' }}
+                      >
+                        <div className="search-item-icon" style={{ display: 'flex', alignItems: 'center', color: 'var(--text-muted)' }}>
+                          <IconClock />
+                        </div>
+                        <div className="search-item-text">
+                          <div className="search-item-title" style={{ fontSize: '0.85rem' }}>{loc.address.split(',')[0]}</div>
+                          <div className="search-item-sub" style={{ fontSize: '0.75rem' }}>{loc.address.split(',').slice(1).join(',').trim()}</div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* BOTTOM SHEET DE CONFIRMACIÓN DEL PIN FLOTANTE */}
+      {isSelectingLocation && (
+        <div className="bottom-sheet animate-slide-up" style={{ zIndex: 1010, bottom: '20px' }}>
+          <h3 style={{ marginBottom: '8px', fontWeight: 900 }}>Ajustar ubicación</h3>
+          <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '16px' }}>
+            Arrastra el mapa para posicionar el pin en el lugar exacto.
+          </p>
+          
+          <div style={{
+            background: 'var(--bg-secondary)',
+            border: '1px solid var(--border)',
+            borderRadius: 'var(--radius)',
+            padding: '16px',
+            marginBottom: '20px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '12px'
+          }}>
+            <div style={{ color: isSelectingLocation === 'origin' ? 'var(--accent)' : 'var(--danger)', display: 'flex', alignItems: 'center' }}>
+              <IconPin />
+            </div>
+            <div style={{ flex: 1 }}>
+              <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.05em' }}>
+                {isSelectingLocation === 'origin' ? 'Dirección de Origen' : 'Dirección de Destino'}
+              </span>
+              <div style={{ fontSize: '0.95rem', fontWeight: 600, color: 'white', marginTop: '2px', wordBreak: 'break-word' }}>
+                {isReverseGeocoding ? (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <div className="spinner-sm" style={{ width: '14px', height: '14px', borderLeftColor: 'transparent' }} />
+                    <span>Buscando dirección...</span>
+                  </div>
+                ) : (
+                  (isSelectingLocation === 'origin' ? origin?.address : dest?.address) || 'Selecciona un punto en el mapa'
+                )}
+              </div>
+            </div>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+            <button
+              className="btn btn-secondary"
+              onClick={() => {
+                setIsSelectingLocation(null);
+                setSelectedPinCoords(null);
+              }}
+            >
+              Cancelar
+            </button>
+            <button
+              className="btn btn-primary"
+              disabled={isReverseGeocoding || !(isSelectingLocation === 'origin' ? origin?.address : dest?.address)}
+              onClick={() => {
+                const selectedLoc = isSelectingLocation === 'origin' ? origin : dest;
+                if (selectedLoc) {
+                  addRecentLocation({ lat: selectedLoc.lat, lng: selectedLoc.lng, address: selectedLoc.address });
+                  setRecentLocs(getRecentLocations());
+                }
+                setIsSelectingLocation(null);
+                setSelectedPinCoords(null);
+                if (origin && dest) {
+                  setStatus('selecting_dest');
+                }
+              }}
+            >
+              Confirmar ubicación
+            </button>
           </div>
         </div>
       )}
