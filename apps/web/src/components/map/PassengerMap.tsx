@@ -10,6 +10,12 @@ interface Props {
   nearbyDrivers?: Array<{ id: string; lat: number; lng: number }>;
 }
 
+const getDistanceMeters = (lat1: number, lng1: number, lat2: number, lng2: number) => {
+  const dy = (lat2 - lat1) * 111139;
+  const dx = (lng2 - lng1) * 111139 * Math.cos((lat1 * Math.PI) / 180);
+  return Math.sqrt(dx * dx + dy * dy);
+};
+
 export default function PassengerMap({ origin, dest, driverPos, centerTrigger = 0, nearbyDrivers = [] }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -290,7 +296,8 @@ export default function PassengerMap({ origin, dest, driverPos, centerTrigger = 
       } else {
         // Si ya existe, animar suavemente a la nueva ubicación
         const prevPos = driverMarkerRef.current.getLatLng();
-        if (prevPos.lat !== driverPos.lat || prevPos.lng !== driverPos.lng) {
+        const dist = getDistanceMeters(prevPos.lat, prevPos.lng, driverPos.lat, driverPos.lng);
+        if (dist > 5) {
           animateMarker(driverMarkerRef.current, prevPos, driverPos, undefined, 1200);
         }
       }
@@ -322,7 +329,8 @@ export default function PassengerMap({ origin, dest, driverPos, centerTrigger = 
         nearbyMarkersRef.current.set(driver.id, marker);
       } else {
         const prevPos = prevMarker.getLatLng();
-        if (prevPos.lat !== driver.lat || prevPos.lng !== driver.lng) {
+        const dist = getDistanceMeters(prevPos.lat, prevPos.lng, driver.lat, driver.lng);
+        if (dist > 5) {
           animateMarker(prevMarker, prevPos, { lat: driver.lat, lng: driver.lng }, driver.id, 1200);
         }
       }
