@@ -324,7 +324,7 @@ router.get('/autocomplete', requireAuth, async (req: Request, res: Response) => 
         url += `&location=${originLat},${originLng}&radius=20000`; // Sesgar a 20km alrededor del origen
       }
       const response = await fetch(url);
-      const data = await response.json();
+      const data: any = await response.json();
       
       if (data.status && data.status !== 'OK' && data.status !== 'ZERO_RESULTS') {
         console.error('Google Autocomplete ERROR:', data.status, data.error_message || '');
@@ -345,7 +345,7 @@ router.get('/autocomplete', requireAuth, async (req: Request, res: Response) => 
       const response = await fetch(url, {
         headers: { 'User-Agent': 'Fim-App-API/1.0 (contact@fim.cl)' }
       });
-      const data = await response.json();
+      const data: any = await response.json();
       const predictions = (data || []).map((item: any) => {
         const addr = item.address;
         const street = addr?.road || addr?.pedestrian || addr?.footway || item.display_name.split(',')[0];
@@ -380,7 +380,7 @@ router.get('/place-details', requireAuth, async (req: Request, res: Response) =>
       // Usar Google Place Details API
       const url = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${placeId}&key=${apiKey}&fields=geometry,formatted_address`;
       const response = await fetch(url);
-      const data = await response.json();
+      const data: any = await response.json();
       
       if (data.status && data.status !== 'OK') {
         console.error('Google Place Details ERROR:', data.status, data.error_message || '');
@@ -418,7 +418,7 @@ router.get('/reverse-geocode', requireAuth, async (req: Request, res: Response) 
       // Usar Google Geocoding API
       const url = `https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&key=${apiKey}&language=es`;
       const response = await fetch(url);
-      const data = await response.json();
+      const data: any = await response.json();
       
       if (data.status && data.status !== 'OK' && data.status !== 'ZERO_RESULTS') {
         console.error('Google Geocoding ERROR:', data.status, data.error_message || '');
@@ -435,7 +435,7 @@ router.get('/reverse-geocode', requireAuth, async (req: Request, res: Response) 
       const response = await fetch(url, {
         headers: { 'User-Agent': 'Fim-App-API/1.0 (contact@fim.cl)' }
       });
-      const data = await response.json();
+      const data: any = await response.json();
       if (data && data.display_name) {
         const addr = data.address;
         const street = addr?.road || addr?.pedestrian || addr?.footway || data.display_name.split(',')[0];
