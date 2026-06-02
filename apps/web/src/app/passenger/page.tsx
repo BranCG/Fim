@@ -359,6 +359,7 @@ export default function PassengerPage() {
     setStatus('idle');
     setCurrentTrip(null);
     setDriver(null);
+    setDriverPos(null);
     setDest(null);
     setSearchQuery('');
     setDestQuery('');

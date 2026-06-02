@@ -603,7 +603,9 @@ export default function DriverPage() {
       if (!data.tripId || (activeTripRef.current && data.tripId === activeTripRef.current.id)) {
         setPassengerConfirmed(true);
         if (data.receiptUrl) setReceiptUrl(data.receiptUrl);
-        sendLocalNotification("Pago Recibido", "El pasajero ha confirmado el pago del viaje.");
+        const amountVal = activeTripRef.current ? (activeTripRef.current.paymentMethod === 'card' ? activeTripRef.current.estimatedPrice * 1.0319 : activeTripRef.current.estimatedPrice) : 0;
+        const amountStr = amountVal ? formatCLP(amountVal) : '';
+        sendLocalNotification("Pago Recibido", `El pasajero ha confirmado el pago del viaje${amountStr ? ' por ' + amountStr : ''}.`);
       }
     });
 
@@ -1985,6 +1987,17 @@ export default function DriverPage() {
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', color: 'var(--accent)', fontWeight: 800, fontSize: '1rem' }}>
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
                         ¡PAGO CONFIRMADO!
+                      </div>
+                      <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginTop: '8px', borderTop: '1px solid rgba(0,229,160,0.2)', paddingTop: '8px' }}>
+                        Monto del Pago realizado:
+                        <div style={{ fontSize: '1.4rem', fontWeight: 900, color: 'var(--accent)', marginTop: '4px' }}>
+                          {formatCLP(activeTrip.paymentMethod === 'card' ? activeTrip.estimatedPrice * 1.0319 : activeTrip.estimatedPrice)}
+                        </div>
+                        <span style={{ fontSize: '0.75rem', opacity: 0.8, color: 'var(--text-muted)' }}>
+                          {activeTrip.paymentMethod === 'card' 
+                            ? 'Tarjeta (Mercado Pago)' 
+                            : 'Efectivo'}
+                        </span>
                       </div>
                       {receiptUrl && (
                         <button onClick={() => window.open(receiptUrl, '_blank')} style={{ marginTop: '10px', border: 'none', background: 'none' }}>
