@@ -25,11 +25,14 @@ router.post('/membership/create-preference', async (req, res) => {
 
     const driver = await prisma.driver.findUnique({ where: { id: driverId } });
     if (!driver) return res.status(404).json({ error: 'Conductor no encontrado' });
-    if (driver.membershipPaid) return res.status(400).json({ error: 'El conductor ya tiene membresía pagada' });
+    if (plan !== 'COMFORT' && driver.membershipPaid) {
+      return res.status(400).json({ error: 'El conductor ya tiene membresía pagada' });
+    }
 
     const planConfig: Record<string, { title: string; amount: number }> = {
       BLACK: { title: 'Membresía BLACK Fim — Acceso Mensual Ilimitado', amount: 150000 },
       FLEX: { title: 'Membresía FLEX Fim — Fin de Semana (Vie-Sáb-Dom)', amount: 60000 },
+      COMFORT: { title: 'Cuota Diaria COMFORT Fim', amount: 20000 },
     };
 
     const config = planConfig[plan];
@@ -75,21 +78,44 @@ router.post('/membership-webhook', async (req, res) => {
       if (externalRef) {
         const [driverId, plan] = externalRef.split('|');
         if (driverId && plan) {
-          const now = new Date();
-          let expiresAt = new Date(now);
-          if (plan === 'BLACK') {
-            expiresAt.setMonth(expiresAt.getMonth() + 1);
-          } else if (plan === 'FLEX') {
-            // Expira el próximo lunes (fin del fin de semana)
-            const daysUntilMonday = (8 - now.getDay()) % 7 || 7;
-            expiresAt.setDate(expiresAt.getDate() + daysUntilMonday);
-          }
+          const driver = await prisma.driver.findUnique({ where: { id: driverId } });
+          if (driver) {
+            const now = new Date();
+            const newStatus = driver.status === 'approved' ? 'active' : driver.status;
 
-          await prisma.driver.update({
-            where: { id: driverId },
-            data: { membershipPaid: true, membershipDate: now, membershipExpiresAt: expiresAt, status: 'active' }
-          });
-          console.log(`✅ Membresía ${plan} activada para conductor ${driverId} hasta ${expiresAt.toLocaleDateString('es-CL')}`);
+            if (plan === 'COMFORT') {
+              const newDebt = Math.max(0, driver.comfortDebt - 20000);
+              await prisma.driver.update({
+                where: { id: driverId },
+                data: {
+                  comfortLastPaidAt: now,
+                  comfortDebt: newDebt,
+                  status: newStatus
+                }
+              });
+              console.log(`✅ COMFORT: Conductor ${driverId} pagó cuota diaria vía Mercado Pago. Deuda restante: $${newDebt}`);
+            } else {
+              let expiresAt = new Date(now);
+              if (plan === 'BLACK') {
+                expiresAt.setMonth(expiresAt.getMonth() + 1);
+              } else if (plan === 'FLEX') {
+                // Expira el próximo lunes (fin del fin de semana)
+                const daysUntilMonday = (8 - now.getDay()) % 7 || 7;
+                expiresAt.setDate(expiresAt.getDate() + daysUntilMonday);
+              }
+
+              await prisma.driver.update({
+                where: { id: driverId },
+                data: {
+                  membershipPaid: true,
+                  membershipDate: now,
+                  membershipExpiresAt: expiresAt,
+                  status: newStatus
+                }
+              });
+              console.log(`✅ Membresía ${plan} activada para conductor ${driverId} hasta ${expiresAt.toLocaleDateString('es-CL')}`);
+            }
+          }
         }
       }
     }

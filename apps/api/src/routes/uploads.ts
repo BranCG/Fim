@@ -43,7 +43,9 @@ router.post('/single', upload.single('file'), (req: Request, res: Response) => {
     return res.status(400).json({ error: 'No se recibió archivo' });
   }
 
-  const fileUrl = `${process.env.API_URL || 'http://localhost:3001'}/uploads/${req.file.filename}`;
+  const protocol = req.headers['x-forwarded-proto'] || req.protocol || 'http';
+  const host = req.headers.host || 'localhost:3001';
+  const fileUrl = `${protocol}://${host}/uploads/${req.file.filename}`;
   return res.json({ url: fileUrl, filename: req.file.filename });
 });
 
@@ -54,8 +56,11 @@ router.post('/multiple', upload.array('files', 10), (req: Request, res: Response
     return res.status(400).json({ error: 'No se recibieron archivos' });
   }
 
+  const protocol = req.headers['x-forwarded-proto'] || req.protocol || 'http';
+  const host = req.headers.host || 'localhost:3001';
+
   const urls = files.map(f => ({
-    url: `${process.env.API_URL || 'http://localhost:3001'}/uploads/${f.filename}`,
+    url: `${protocol}://${host}/uploads/${f.filename}`,
     filename: f.filename,
     originalname: f.originalname,
   }));

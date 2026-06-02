@@ -35,6 +35,16 @@ function formatCLP(n: number) {
   return new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP', minimumFractionDigits: 0 }).format(n);
 }
 
+function getImageUrl(url: string | null | undefined): string {
+  if (!url) return '';
+  if (url.includes('/uploads/')) {
+    const filename = url.split('/uploads/').pop();
+    const base = api.defaults.baseURL ? api.defaults.baseURL.replace(/\/api$/, '') : 'http://localhost:3001';
+    return `${base}/uploads/${filename}`;
+  }
+  return url;
+}
+
 // Eliminamos lógica de ciclos de viernes (ya no aplica en SaaS)
 
 function statusBadge(status: string) {
@@ -380,6 +390,14 @@ export default function DashboardPage() {
                         <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>{driver.email} · {driver.phone}</div>
                         <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>RUT: {driver.rut} · Nacimiento: {new Date(driver.birthDate).toLocaleDateString('es-CL')}</div>
                         <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>Domicilio: {driver.address}</div>
+                        <div style={{ marginTop: '8px', display: 'flex', gap: '8px', alignItems: 'center' }}>
+                          <span style={{ fontSize: '0.82rem', fontWeight: 700, color: '#fff', background: 'var(--bg-secondary)', padding: '3px 8px', borderRadius: '4px', border: '1px solid var(--border)' }}>
+                            Membresía: <span style={{ color: driver.membershipPlan === 'BLACK' ? '#D4AF37' : driver.membershipPlan === 'COMFORT' ? '#60A5FA' : '#34D399' }}>{driver.membershipPlan}</span>
+                          </span>
+                          <span className={`badge ${driver.membershipPaid ? 'badge-success' : 'badge-danger'}`}>
+                            {driver.membershipPaid ? 'Pago Registrado' : 'Pago No Registrado'}
+                          </span>
+                        </div>
                       </div>
                       <div style={{ textAlign: 'right', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
                         Registrado: {new Date(driver.createdAt).toLocaleDateString('es-CL')}
@@ -401,20 +419,22 @@ export default function DashboardPage() {
                         {[
                           { label: 'Cédula Frontal', url: driver.idFrontUrl },
                           { label: 'Cédula Posterior', url: driver.idBackUrl },
+                          { label: 'Selfie Seguridad', url: driver.selfieUrl },
                           { label: 'Licencia Frente', url: driver.licenseUrl },
                           { label: 'Licencia Dorso', url: driver.licenseBackUrl },
                           { label: 'Foto Vehículo', url: driver.vehiclePhotoUrl },
+                          { label: 'Comprobante COMFORT', url: driver.comfortReceiptUrl },
                         ].map(doc => (
                           doc.url ? (
                             <button
                               key={doc.label}
-                              onClick={() => setImgModal(doc.url)}
+                              onClick={() => setImgModal(getImageUrl(doc.url))}
                               style={{ padding: '0', border: '2px solid var(--border)', borderRadius: '8px', cursor: 'pointer', background: 'var(--bg-card)', overflow: 'hidden', display: 'flex', flexDirection: 'column', alignItems: 'center', minWidth: '90px', transition: 'var(--transition)' }}
                               onMouseEnter={e => (e.currentTarget.style.borderColor = 'var(--accent)')}
                               onMouseLeave={e => (e.currentTarget.style.borderColor = 'var(--border)')}
                             >
                               {/* eslint-disable-next-line @next/next/no-img-element */}
-                              <img src={doc.url} alt={doc.label} style={{ width: '90px', height: '60px', objectFit: 'cover' }} />
+                              <img src={getImageUrl(doc.url)} alt={doc.label} style={{ width: '90px', height: '60px', objectFit: 'cover' }} />
                               <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', padding: '4px 6px', textAlign: 'center' }}>{doc.label}</span>
                             </button>
                           ) : (
@@ -520,7 +540,16 @@ export default function DashboardPage() {
                       </td>
                       {driverPlanTab === 'COMFORT' && (
                         <td style={{ fontWeight: 700, color: (d.comfortDebt || 0) > 0 ? 'var(--danger)' : 'var(--success)' }}>
-                          {(d.comfortDebt || 0) > 0 ? `⚠️ $${(d.comfortDebt || 0).toLocaleString('es-CL')}` : '✅ Al día'}
+                          <div>{(d.comfortDebt || 0) > 0 ? `⚠️ $${(d.comfortDebt || 0).toLocaleString('es-CL')}` : '✅ Al día'}</div>
+                          {d.comfortReceiptUrl && (
+                            <button
+                              onClick={() => setImgModal(getImageUrl(d.comfortReceiptUrl))}
+                              className="btn btn-secondary btn-sm"
+                              style={{ marginTop: '4px', fontSize: '0.7rem', padding: '2px 6px', height: 'auto', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
+                            >
+                              📄 Ver Comprobante
+                            </button>
+                          )}
                         </td>
                       )}
                       {(driverPlanTab === 'BLACK' || driverPlanTab === 'FLEX') && (
@@ -713,9 +742,9 @@ export default function DashboardPage() {
                   { label: 'Comprobante COMFORT', url: selectedDriver.comfortReceiptUrl },
                 ].map(doc => (
                   doc.url ? (
-                    <button key={doc.label} onClick={() => setImgModal(doc.url || null)} style={{ border: '2px solid var(--border)', borderRadius: '10px', overflow: 'hidden', cursor: 'pointer', background: 'var(--bg-card)', transition: 'var(--transition)' }} onMouseEnter={e => (e.currentTarget.style.borderColor = 'var(--accent)')} onMouseLeave={e => (e.currentTarget.style.borderColor = 'var(--border)')}>
+                    <button key={doc.label} onClick={() => setImgModal(getImageUrl(doc.url) || null)} style={{ border: '2px solid var(--border)', borderRadius: '10px', overflow: 'hidden', cursor: 'pointer', background: 'var(--bg-card)', transition: 'var(--transition)' }} onMouseEnter={e => (e.currentTarget.style.borderColor = 'var(--accent)')} onMouseLeave={e => (e.currentTarget.style.borderColor = 'var(--border)')}>
                       {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={doc.url} alt={doc.label} style={{ width: '120px', height: '80px', objectFit: 'cover', display: 'block' }} />
+                      <img src={getImageUrl(doc.url)} alt={doc.label} style={{ width: '120px', height: '80px', objectFit: 'cover', display: 'block' }} />
                       <div style={{ padding: '6px 8px', fontSize: '0.75rem', color: 'var(--text-muted)', textAlign: 'center' }}>{doc.label}</div>
                     </button>
                   ) : null
@@ -967,13 +996,13 @@ export default function DashboardPage() {
                   doc.url ? (
                     <button 
                       key={doc.label} 
-                      onClick={() => setImgModal(doc.url || null)} 
+                      onClick={() => setImgModal(getImageUrl(doc.url) || null)} 
                       style={{ border: '2px solid var(--border)', borderRadius: '10px', overflow: 'hidden', cursor: 'pointer', background: 'var(--bg-card)', transition: 'var(--transition)' }} 
                       onMouseEnter={e => (e.currentTarget.style.borderColor = 'var(--accent)')} 
                       onMouseLeave={e => (e.currentTarget.style.borderColor = 'var(--border)')}
                     >
                       {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={doc.url} alt={doc.label} style={{ width: '150px', height: '100px', objectFit: 'cover', display: 'block' }} />
+                      <img src={getImageUrl(doc.url)} alt={doc.label} style={{ width: '150px', height: '100px', objectFit: 'cover', display: 'block' }} />
                       <div style={{ padding: '6px 8px', fontSize: '0.75rem', color: 'var(--text-muted)', textAlign: 'center', fontWeight: 600 }}>{doc.label}</div>
                     </button>
                   ) : (

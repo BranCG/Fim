@@ -58,11 +58,12 @@ router.get('/drivers/pending', async (_req: Request, res: Response) => {
       select: {
         id: true, name: true, email: true, phone: true,
         rut: true, birthDate: true, address: true,
-        idFrontUrl: true, idBackUrl: true,
+        idFrontUrl: true, idBackUrl: true, selfieUrl: true,
         licenseNumber: true, licenseUrl: true, licenseBackUrl: true,
         vehicleBrand: true, vehicleModel: true, vehicleYear: true,
         vehiclePlate: true, vehiclePhotoUrl: true, tagNumber: true,
-        membershipPaid: true, createdAt: true,
+        membershipPaid: true, membershipPlan: true, comfortReceiptUrl: true,
+        createdAt: true,
       },
     });
     return res.json({ drivers });
@@ -82,7 +83,7 @@ router.get('/drivers', async (req: Request, res: Response) => {
         id: true, name: true, email: true, phone: true,
         rut: true, status: true, membershipPaid: true,
         membershipPlan: true, membershipExpiresAt: true,
-        comfortDebt: true,
+        comfortDebt: true, comfortReceiptUrl: true, comfortLastPaidAt: true,
         vehicleBrand: true, vehicleModel: true, vehiclePlate: true,
         totalRating: true, totalTrips: true, isOnline: true,
         createdAt: true,
@@ -116,11 +117,16 @@ router.get('/drivers/:id', async (req: Request, res: Response) => {
 // ─── APROBAR CONDUCTOR ────────────────────────────────────────────────────
 router.post('/drivers/:id/approve', async (req: Request, res: Response) => {
   try {
-    const driver = await prisma.driver.update({
+    const driver = await prisma.driver.findUnique({ where: { id: req.params.id } });
+    if (!driver) return res.status(404).json({ error: 'Conductor no encontrado' });
+
+    const newStatus = driver.membershipPaid ? 'active' : 'approved';
+
+    const updated = await prisma.driver.update({
       where: { id: req.params.id },
-      data: { status: 'approved', adminNotes: null },
+      data: { status: newStatus, adminNotes: null },
     });
-    return res.json({ message: 'Conductor aprobado', driver });
+    return res.json({ message: `Conductor aprobado. Estado: ${newStatus}`, driver: updated });
   } catch (err) {
     return res.status(500).json({ error: 'Error interno' });
   }
