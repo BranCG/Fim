@@ -90,7 +90,6 @@ export default function DriverPage() {
   const [otp, setOtp] = useState('');
   const [completionOtp, setCompletionOtp] = useState('');
   const [completionOtpVerified, setCompletionOtpVerified] = useState(false);
-  const [showTaxGuide, setShowTaxGuide] = useState(false);
   const [gpsError, setGpsError] = useState<string | null>(null);
   const [payingMembership, setPayingMembership] = useState(false);
   const [uploadingReceipt, setUploadingReceipt] = useState(false);
@@ -1624,9 +1623,6 @@ export default function DriverPage() {
                   💵 Efectivo (Pasajero paga {formatCLP(tripRequest.estimatedPrice)})
                 </div>
               )}
-              <div style={{ fontSize: '0.72rem', color: '#CBD5E0', marginTop: '4px', background: 'rgba(255,255,255,0.03)', padding: '6px 10px', borderRadius: '6px', borderLeft: '2px solid var(--accent)' }}>
-                <strong>Retención sugerida Renta (15.25% SII):</strong> -{formatCLP(tripRequest.estimatedPrice * 0.1525)} · Estimado Líquido: {formatCLP(tripRequest.estimatedPrice * (1 - 0.1525))}
-              </div>
             </div>
 
             {/* Verification Badge */}
@@ -1938,13 +1934,9 @@ export default function DriverPage() {
                         <span>+{formatCLP(activeTrip.estimatedPrice * 0.0319)}</span>
                       </div>
                     )}
-                    <div style={{ display: 'flex', justifyContent: 'space-between', color: '#E2E8F0', borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '4px', marginTop: '4px' }}>
-                      <span>Retención sugerida Impuesto Renta (15.25% SII):</span>
-                      <span style={{ color: 'var(--danger)' }}>-{formatCLP(activeTrip.estimatedPrice * 0.1525)}</span>
-                    </div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 800, marginTop: '2px', color: 'var(--accent)' }}>
-                      <span>Estimado Líquido final:</span>
-                      <span>{formatCLP(activeTrip.estimatedPrice * 0.8475)}</span>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 800, marginTop: '4px', color: 'var(--accent)', borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '4px' }}>
+                      <span>Total Pasajero a Pagar:</span>
+                      <span>{formatCLP(activeTrip.paymentMethod === 'card' ? activeTrip.estimatedPrice * 1.0319 : activeTrip.estimatedPrice)}</span>
                     </div>
                   </div>
                 </div>
@@ -2200,157 +2192,7 @@ export default function DriverPage() {
           </div>
         </div>
       )}
-      {driver && !driver.taxCompliant && (
-        <div style={{
-          position: 'fixed',
-          inset: 0,
-          background: 'rgba(9, 9, 15, 0.95)',
-          backdropFilter: 'blur(15px)',
-          zIndex: 10000,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          padding: '24px'
-        }}>
-          <div className="card animate-scale-in" style={{ width: '100%', maxWidth: '400px', border: '1px solid var(--border-accent)', background: '#0D0D15' }}>
-            <div style={{ textAlign: 'center', marginBottom: '24px' }}>
-              <div style={{ fontSize: '3.5rem', marginBottom: '16px' }}>⚖️</div>
-              <h2 style={{ fontSize: '1.5rem', fontWeight: 900, color: 'white', marginBottom: '8px' }}>Cumplimiento Tributario</h2>
-              <span className="badge badge-danger" style={{ fontSize: '0.85rem' }}>CUENTA SUSPENDIDA TEMPORALMENTE</span>
-            </div>
 
-            <p style={{ fontSize: '0.88rem', color: 'var(--text-secondary)', lineHeight: '1.5', marginBottom: '20px' }}>
-              Para continuar conduciendo en Fim y cumplir con la legislación del <strong>SII de Chile (Año Tributario 2026)</strong>, debes emitir y subir tu <strong>Boleta de Honorarios Electrónica</strong> correspondiente a tus ganancias acumuladas.
-            </p>
-
-            <div style={{ 
-              background: 'rgba(255, 255, 255, 0.02)', 
-              border: '1px solid var(--border)', 
-              padding: '12px 16px', 
-              borderRadius: 'var(--radius)', 
-              marginBottom: '24px' 
-            }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px', fontSize: '0.85rem' }}>
-                <span style={{ color: 'var(--text-muted)' }}>Ganancias del período:</span>
-                <strong style={{ color: 'white' }}>{formatCLP(totalEarnings || 0)}</strong>
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem' }}>
-                <span style={{ color: 'var(--text-muted)' }}>Retención sugerida (15.25%):</span>
-                <strong style={{ color: 'var(--danger)' }}>{formatCLP((totalEarnings || 0) * 0.1525)}</strong>
-              </div>
-            </div>
-
-            <div style={{ marginBottom: '24px' }}>
-              <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '8px', textAlign: 'center' }}>Sube tu boleta en formato PDF o imagen:</p>
-              <label style={{ 
-                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
-                padding: '16px', border: '2px dashed var(--border)', borderRadius: 'var(--radius)',
-                cursor: 'pointer', color: taxDocumentUrl ? 'var(--accent)' : 'var(--text-muted)',
-                background: taxDocumentUrl ? 'rgba(0,229,160,0.05)' : 'transparent',
-                transition: 'var(--transition)'
-              }}>
-                <input type="file" hidden accept="image/*,application/pdf" onChange={handleUploadTaxDocument} />
-                {taxUploading ? 'Subiendo y verificando...' : taxDocumentUrl ? <><IconCheck /> Boleta cargada</> : (
-                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '0.85rem', fontWeight: 700 }}>
-                    📁 Seleccionar Archivo
-                  </span>
-                )}
-              </label>
-            </div>
-
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-              <button className="btn btn-accent btn-block" onClick={() => setShowTaxGuide(true)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
-                <span>📖</span> Guía: Cómo Emitir Boleta SII
-              </button>
-              <button className="btn btn-secondary btn-block" onClick={handleLogout}>Cerrar Sesión</button>
-              <button
-                onClick={handleDeleteAccount}
-                className="btn"
-                style={{
-                  width: '100%',
-                  padding: '12px',
-                  fontWeight: 700,
-                  borderRadius: '10px',
-                  background: 'rgba(255, 69, 96, 0.1)',
-                  color: 'var(--danger)',
-                  border: '1px solid rgba(255, 69, 96, 0.2)',
-                  cursor: 'pointer',
-                  transition: 'var(--transition)'
-                }}
-                onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255, 69, 96, 0.15)'; e.currentTarget.style.borderColor = 'var(--danger)'; }}
-                onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255, 69, 96, 0.1)'; e.currentTarget.style.borderColor = 'rgba(255, 69, 96, 0.2)'; }}
-              >
-                ✕ Eliminar Cuenta Permanentemente
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* MODAL DE GUÍA TRIBUTARIA SII */}
-      {showTaxGuide && (
-        <div style={{
-          position: 'fixed',
-          inset: 0,
-          background: 'rgba(9, 9, 15, 0.92)',
-          backdropFilter: 'blur(15px)',
-          zIndex: 11000,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          padding: '20px'
-        }}>
-          <div className="card animate-scale-in" style={{ 
-            width: '100%', 
-            maxWidth: '500px', 
-            maxHeight: '90vh', 
-            overflowY: 'auto', 
-            border: '1px solid var(--border-accent)', 
-            background: '#0D0D15',
-            padding: '24px'
-          }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-              <h3 style={{ fontSize: '1.25rem', fontWeight: 900, color: 'white', margin: 0 }}>📖 Guía SII: Cómo Emitir Boleta</h3>
-              <button className="btn btn-ghost" onClick={() => setShowTaxGuide(false)} style={{ padding: '4px 8px' }}>Cerrar</button>
-            </div>
-
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', fontSize: '0.85rem', color: 'var(--text-secondary)', lineHeight: '1.6' }}>
-              <div style={{ background: 'rgba(0,229,160,0.05)', border: '1px solid rgba(0,229,160,0.2)', padding: '12px 14px', borderRadius: 'var(--radius)', color: 'white' }}>
-                💡 <strong>¿Por qué debo hacer esto?</strong><br />
-                En Chile, el transporte terrestre de pasajeros está exento de IVA (19%), pero como conductor debes declarar tus ingresos para el Impuesto a la Renta. Para el año 2026, la retención es de <strong>15.25%</strong> sobre tus ganancias netas de la plataforma.
-              </div>
-
-              <div>
-                <strong style={{ color: 'var(--accent)', fontSize: '0.9rem' }}>Paso 1: Tener Inicio de Actividades en el SII</strong>
-                <ol style={{ margin: '6px 0 0 20px', padding: 0 }}>
-                  <li>Ingresa a <a href="https://www.sii.cl" target="_blank" rel="noreferrer" style={{ color: 'var(--accent)', textDecoration: 'underline' }}>sii.cl</a> con tu Clave Tributaria o Clave Única.</li>
-                  <li>Ve a <strong>Servicios Online</strong> &gt; <strong>Rut e Inicio de Actividades</strong> &gt; <strong>Inicio de Actividades</strong>.</li>
-                  <li>Declara el código de actividad: <strong>492230</strong> (Servicios de transporte de pasajeros por carretera).</li>
-                </ol>
-              </div>
-
-              <div>
-                <strong style={{ color: 'var(--accent)', fontSize: '0.9rem' }}>Paso 2: Emitir tu Boleta de Honorarios mensual</strong>
-                <ol style={{ margin: '6px 0 0 20px', padding: 0 }}>
-                  <li>Ve a <strong>Servicios Online</strong> &gt; <strong>Boletas de Honorarios Electrónicas</strong> &gt; <strong>Emisor de Boletas</strong>.</li>
-                  <li>Elige la opción: <strong>"El propio emisor se encargará de declarar y pagar el impuesto (15.25%)"</strong>.</li>
-                  <li>Completa los datos usando el monto de tus ganancias brutas acumuladas que te indica tu panel de Fim.</li>
-                  <li>Descarga la boleta en formato PDF.</li>
-                </ol>
-              </div>
-
-              <div>
-                <strong style={{ color: 'var(--accent)', fontSize: '0.9rem' }}>Paso 3: Carga la Boleta en Fim</strong>
-                <p style={{ margin: '4px 0 0 0' }}>
-                  Selecciona el archivo PDF o imagen de la boleta recién emitida y súbela en esta pantalla. Tu cuenta se reactivará de forma inmediata.
-                </p>
-              </div>
-            </div>
-            
-            <button className="btn btn-accent btn-block" onClick={() => setShowTaxGuide(false)} style={{ marginTop: '24px' }}>Entendido, continuar</button>
-          </div>
-        </div>
-      )}
 
       {cancellationNotice && (
         <div style={{

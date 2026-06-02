@@ -112,9 +112,7 @@ router.post('/toggle-online', requireAuth, requireRole('driver'), async (req: Re
       }
     }
 
-    if (!driver.taxCompliant) {
-      return res.status(403).json({ error: 'Debes subir tu boleta de honorarios para cumplir con tus obligaciones del SII antes de poder activarte' });
-    }
+
 
     const updated = await prisma.driver.update({
       where: { id: req.user!.id },

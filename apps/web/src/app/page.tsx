@@ -28,8 +28,8 @@ export default function Home() {
   }, [router]);
 
   useEffect(() => {
-    // Calculamos pérdida mensual (4 semanas) asumiendo 25% de comisión
-    const calculatedLoss = Math.round(tripsPerWeek * 4 * avgPrice * 0.25);
+    // Calculamos pérdida semanal asumiendo 25% de comisión
+    const calculatedLoss = Math.round(tripsPerWeek * avgPrice * 0.25);
     setLoss(calculatedLoss);
   }, [tripsPerWeek, avgPrice]);
 
@@ -353,7 +353,7 @@ export default function Home() {
                     <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
                   ),
                   title: '4. Viajes Regulados',
-                  desc: 'Viaja con conductores validados con control de identidad y cumplimiento tributario del SII al día.'
+                  desc: 'Viaja con conductores profesionales validados con estricto control de identidad y documentación al día.'
                 }
               ].map((step, idx) => (
                 <div key={idx} className="card" style={{ border: '1px solid var(--border)', background: 'var(--bg-secondary)', padding: '24px' }}>
@@ -408,7 +408,7 @@ export default function Home() {
             ))}
           </div>
 
-          {/* Línea de Tiempo del Conductor y el SII */}
+          {/* Línea de Tiempo del Conductor */}
           <section style={{ padding: '80px 24px', background: 'linear-gradient(180deg, var(--bg-primary) 0%, var(--bg-secondary) 100%)' }}>
             <div style={{ maxWidth: '800px', margin: '0 auto' }}>
               <div style={{ textAlign: 'center', marginBottom: '48px' }}>
@@ -417,7 +417,7 @@ export default function Home() {
                   Línea de Tiempo del Conductor
                 </h2>
                 <p style={{ color: 'var(--text-muted)', marginTop: '10px', fontSize: '0.95rem' }}>
-                  Sigue estos 4 sencillos pasos para registrarte, formalizarte y comenzar a conducir con Fim.
+                  Sigue estos 3 sencillos pasos para registrarte, activar tu cuenta y comenzar a conducir con Fim.
                 </p>
               </div>
 
@@ -437,22 +437,17 @@ export default function Home() {
                   {
                     step: '1',
                     title: 'Registro y Validación Biométrica',
-                    desc: 'Regístrate como Conductor en Fim. Deberás subir tu licencia de conducir profesional y pasar el control de verificación de identidad biométrico.'
+                    desc: 'Regístrate como Conductor en Fim. Sube tu licencia de conducir profesional y pasa la verificación de identidad para garantizar la seguridad de la comunidad.'
                   },
                   {
                     step: '2',
-                    title: 'Inicio de Actividades en el SII',
-                    desc: 'Declara el giro de transporte de pasajeros por carretera (Código 492230) en sii.cl para cumplir con el marco regulatorio tributario en Chile.'
+                    title: 'Vincula tu Mercado Pago',
+                    desc: 'Pega tu enlace de cobro de Mercado Pago en la app. Los pasajeros te pagarán directamente a tu cuenta al finalizar cada viaje.'
                   },
                   {
                     step: '3',
-                    title: 'Vincula tu Mercado Pago',
-                    desc: 'Pega tu enlace de cobro de Mercado Pago en la app. Los pasajeros te transferirán directo a tu cuenta el monto (incluyendo el recargo de 3.19% de la tarjeta).'
-                  },
-                  {
-                    step: '4',
-                    title: 'Cumplimiento Tributario Fim (15.25%)',
-                    desc: 'Fim valida mensualmente tu cumplimiento. Sube tu Boleta de Honorarios emitida en el SII con la retención provisoria sugerida para mantener tu cuenta habilitada.'
+                    title: 'Elige tu Plan y Comienza a Conducir',
+                    desc: 'Selecciona la membresía que mejor se adapte a tu ritmo de trabajo (diaria o mensual). ¡Todo lo que generes en los viajes es 100% tuyo!'
                   }
                 ].map((item) => (
                   <div key={item.step} style={{ display: 'flex', gap: '20px', position: 'relative', zIndex: 1 }}>
@@ -533,7 +528,7 @@ export default function Home() {
                 <div style={{ 
                   position: 'absolute', top: 0, left: 0, width: '100%', height: '4px', background: '#ff4757'
                 }} />
-                <div style={{ fontSize: '0.9rem', color: '#ff4757', fontWeight: 800, textTransform: 'uppercase', marginBottom: '8px', letterSpacing: '0.1em' }}>Pérdida mensual estimada</div>
+                <div style={{ fontSize: '0.9rem', color: '#ff4757', fontWeight: 800, textTransform: 'uppercase', marginBottom: '8px', letterSpacing: '0.1em' }}>Pérdida semanal estimada</div>
                 <div className="calc-loss-text" style={{ fontSize: 'var(--calc-loss-font-size, 3.5rem)', fontWeight: 900, marginBottom: '24px', color: '#ff4757', letterSpacing: '-0.02em' }}>{formatCLP(loss)}</div>
                 <div style={{ borderTop: '1px solid var(--border)', paddingTop: '24px' }}>
                   <p style={{ color: 'var(--text-muted)', marginBottom: '28px', fontSize: '1rem' }}>Con Fim, este dinero es <strong>100% tuyo</strong>.</p>
@@ -550,7 +545,8 @@ export default function Home() {
             <div style={{ maxWidth: '1100px', margin: '0 auto' }}>
               <div style={{ textAlign: 'center', marginBottom: '60px' }}>
                 <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '6px 16px', background: 'rgba(0,229,160,0.1)', border: '1px solid var(--border-accent)', borderRadius: 'var(--radius-full)', color: 'var(--accent)', fontSize: '0.8rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.15em', marginBottom: '20px' }}>
-                  💎 Membresías de Conductor
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '4px' }}><rect x="3" y="4" width="18" height="16" rx="2" /><line x1="3" y1="10" x2="21" y2="10" /><line x1="8" y1="14" x2="8" y2="14.01" /><line x1="12" y1="14" x2="16" y2="14" /></svg>
+                  Membresías de Conductor
                 </div>
                 <h2 style={{ fontSize: 'clamp(2rem, 5vw, 3rem)', fontWeight: 900, letterSpacing: '-0.03em', marginBottom: '16px' }}>
                   Elige tu plan. <span className="text-gradient">0% comisión por viaje.</span>
@@ -578,16 +574,18 @@ export default function Home() {
                   zIndex: 2,
                 }}>
                   {/* Badge MÁS POPULAR */}
-                  <div style={{ position: 'absolute', top: '-1px', left: '50%', transform: 'translateX(-50%)', background: 'linear-gradient(135deg, #D4AF37, #B8960C)', padding: '6px 20px', borderRadius: '0 0 10px 10px', fontSize: '0.72rem', fontWeight: 900, color: '#000', letterSpacing: '0.1em' }}>
-                    ⭐ MÁS POPULAR
+                  <div style={{ position: 'absolute', top: '-1px', left: '50%', transform: 'translateX(-50%)', background: 'linear-gradient(135deg, #D4AF37, #B8960C)', padding: '6px 20px', borderRadius: '0 0 10px 10px', fontSize: '0.72rem', fontWeight: 900, color: '#000', letterSpacing: '0.1em', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                    MÁS POPULAR
                   </div>
 
                   {/* Glow efecto */}
                   <div style={{ position: 'absolute', top: '-60px', right: '-60px', width: '200px', height: '200px', background: 'radial-gradient(circle, rgba(212,175,55,0.15) 0%, transparent 70%)', pointerEvents: 'none' }} />
                   
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginTop: '12px' }}>
-                    <div style={{ padding: '8px 14px', background: 'linear-gradient(135deg, #D4AF37, #B8960C)', borderRadius: '8px', fontSize: '0.75rem', fontWeight: 900, color: '#000', letterSpacing: '0.1em' }}>
-                      🖤 PLAN BLACK
+                    <div style={{ padding: '8px 14px', background: 'linear-gradient(135deg, #D4AF37, #B8960C)', borderRadius: '8px', fontSize: '0.75rem', fontWeight: 900, color: '#000', letterSpacing: '0.1em', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+                      PLAN BLACK
                     </div>
                     <div style={{ padding: '4px 12px', background: 'rgba(212,175,55,0.15)', border: '1px solid rgba(212,175,55,0.3)', borderRadius: '20px', fontSize: '0.7rem', color: '#D4AF37', fontWeight: 800 }}>
                       PREMIUM
@@ -651,8 +649,9 @@ export default function Home() {
                   boxShadow: '0 20px 60px rgba(59,130,246,0.1)',
                 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                    <div style={{ padding: '8px 14px', background: 'linear-gradient(135deg, #3B82F6, #1D4ED8)', borderRadius: '8px', fontSize: '0.75rem', fontWeight: 900, color: '#fff', letterSpacing: '0.1em' }}>
-                      🟡 PLAN COMFORT
+                    <div style={{ padding: '8px 14px', background: 'linear-gradient(135deg, #3B82F6, #1D4ED8)', borderRadius: '8px', fontSize: '0.75rem', fontWeight: 900, color: '#fff', letterSpacing: '0.1em', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10"/></svg>
+                      PLAN COMFORT
                     </div>
                     <div style={{ padding: '4px 12px', background: 'rgba(59,130,246,0.15)', border: '1px solid rgba(59,130,246,0.4)', borderRadius: '20px', fontSize: '0.7rem', color: '#60A5FA', fontWeight: 800 }}>
                       FINANCIADO
@@ -677,7 +676,10 @@ export default function Home() {
                   </p>
 
                   <div style={{ background: 'rgba(251,191,36,0.08)', border: '1px solid rgba(251,191,36,0.2)', borderRadius: '10px', padding: '14px', fontSize: '0.82rem' }}>
-                    <div style={{ color: '#FBBF24', fontWeight: 800, marginBottom: '6px' }}>⏰ ¿Cómo funciona?</div>
+                    <div style={{ color: '#FBBF24', fontWeight: 800, marginBottom: '6px', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                      ¿Cómo funciona?
+                    </div>
                     <div style={{ color: 'rgba(255,255,255,0.65)', lineHeight: 1.6 }}>
                       Pagas la cuota diaria solo los días que trabajas. La subes en la app cada mañana para activarte. A las 7am del día siguiente se pausa hasta la nueva cuota.
                     </div>
@@ -731,8 +733,9 @@ export default function Home() {
                   <div style={{ position: 'absolute', bottom: '-40px', left: '-40px', width: '180px', height: '180px', background: 'radial-gradient(circle, rgba(16,185,129,0.12) 0%, transparent 70%)', pointerEvents: 'none' }} />
 
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                    <div style={{ padding: '8px 14px', background: 'linear-gradient(135deg, #10B981, #059669)', borderRadius: '8px', fontSize: '0.75rem', fontWeight: 900, color: '#fff', letterSpacing: '0.1em' }}>
-                      🟢 PLAN FLEX
+                    <div style={{ padding: '8px 14px', background: 'linear-gradient(135deg, #10B981, #059669)', borderRadius: '8px', fontSize: '0.75rem', fontWeight: 900, color: '#fff', letterSpacing: '0.1em', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 2 22 22 22"/></svg>
+                      PLAN FLEX
                     </div>
                     <div style={{ padding: '4px 12px', background: 'rgba(16,185,129,0.15)', border: '1px solid rgba(16,185,129,0.3)', borderRadius: '20px', fontSize: '0.7rem', color: '#34D399', fontWeight: 800 }}>
                       FIN DE SEMANA
@@ -764,8 +767,13 @@ export default function Home() {
                         </div>
                       ))}
                     </div>
-                    <div style={{ textAlign: 'center', marginTop: '8px', fontSize: '0.75rem', color: 'rgba(255,255,255,0.4)' }}>
-                      🟢 Activo · ⬜ Bloqueado
+                    <div style={{ textAlign: 'center', marginTop: '8px', fontSize: '0.75rem', color: 'rgba(255,255,255,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px' }}>
+                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                        <span style={{ display: 'inline-block', width: '8px', height: '8px', borderRadius: '50%', background: '#10B981' }} /> Activo
+                      </span>
+                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                        <span style={{ display: 'inline-block', width: '8px', height: '8px', borderRadius: '2px', background: 'rgba(255,255,255,0.1)', border: '1px solid var(--border)' }} /> Bloqueado
+                      </span>
                     </div>
                   </div>
 
@@ -800,36 +808,6 @@ export default function Home() {
                     </Link>
                   </div>
                 </div>
-              </div>
-
-              {/* Comparador resumen */}
-              <div style={{ marginTop: '48px', background: 'var(--bg-secondary)', border: '1px solid var(--border)', borderRadius: '16px', padding: '28px', overflowX: 'auto' }}>
-                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.875rem' }}>
-                  <thead>
-                    <tr>
-                      <th style={{ textAlign: 'left', padding: '10px 16px', color: 'var(--text-muted)', fontWeight: 700, fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Característica</th>
-                      <th style={{ textAlign: 'center', padding: '10px 16px', color: '#D4AF37', fontWeight: 900 }}>🖤 BLACK</th>
-                      <th style={{ textAlign: 'center', padding: '10px 16px', color: '#60A5FA', fontWeight: 900 }}>🟡 COMFORT</th>
-                      <th style={{ textAlign: 'center', padding: '10px 16px', color: '#34D399', fontWeight: 900 }}>🟢 FLEX</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {[
-                      ['Precio', '$150.000/mes', '$20.000/día', '$60.000/fin de semana'],
-                      ['Días activos', 'Los 30 del mes', 'Los que trabajes', 'Vie · Sáb · Dom'],
-                      ['Forma de pago', 'Mercado Pago', 'Transferencia + comprobante', 'Mercado Pago'],
-                      ['Comisión por carrera', '0%', '0%', '0%'],
-                      ['Ideal para', 'Conductor full-time', 'Conductor variable', 'Conductor de fin de semana'],
-                    ].map(([feature, black, comfort, flex]) => (
-                      <tr key={String(feature)} style={{ borderTop: '1px solid var(--border)' }}>
-                        <td style={{ padding: '12px 16px', color: 'var(--text-muted)' }}>{feature}</td>
-                        <td style={{ padding: '12px 16px', textAlign: 'center', color: '#D4AF37', fontWeight: 700 }}>{black}</td>
-                        <td style={{ padding: '12px 16px', textAlign: 'center', color: '#60A5FA', fontWeight: 700 }}>{comfort}</td>
-                        <td style={{ padding: '12px 16px', textAlign: 'center', color: '#34D399', fontWeight: 700 }}>{flex}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
               </div>
             </div>
           </section>
