@@ -57,6 +57,7 @@ const IconGear = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="non
 const IconCheck = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>;
 const IconPhone = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" /></svg>;
 const IconLogout = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" /><polyline points="16 17 21 12 16 7" /><line x1="21" y1="12" x2="9" y2="12" /></svg>;
+const IconUser = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>;
 const IconCompass = () => (
   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <circle cx="12" cy="12" r="10" />
@@ -94,6 +95,13 @@ export default function DriverPage() {
   const [payingMembership, setPayingMembership] = useState(false);
   const [uploadingReceipt, setUploadingReceipt] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [showProfileModal, setShowProfileModal] = useState(false);
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmNewPassword, setConfirmNewPassword] = useState('');
+  const [passwordChangeMsg, setPasswordChangeMsg] = useState('');
+  const [passwordChangeLoading, setPasswordChangeLoading] = useState(false);
+  const [passwordChangeStatus, setPasswordChangeStatus] = useState<'success' | 'error' | ''>('');
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const geoRef = useRef<(() => void) | null>(null);
 
@@ -857,6 +865,49 @@ export default function DriverPage() {
     }
   };
 
+  const openProfileModal = async () => {
+    setShowProfileModal(true);
+    setPasswordChangeMsg('');
+    setPasswordChangeStatus('');
+    try {
+      const res = await api.get('/auth/me');
+      const latestUser = res.data.user;
+      const updatedSession = { ...session, user: latestUser };
+      setSession(updatedSession);
+      localStorage.setItem('fim_user', JSON.stringify(latestUser));
+    } catch (err) {
+      console.error('Error refreshing profile in modal open:', err);
+    }
+  };
+
+  const handlePasswordChange = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (newPassword !== confirmNewPassword) {
+      setPasswordChangeMsg('Las contraseñas nuevas no coinciden');
+      setPasswordChangeStatus('error');
+      return;
+    }
+    setPasswordChangeLoading(true);
+    setPasswordChangeMsg('');
+    setPasswordChangeStatus('');
+    try {
+      await api.post('/auth/change-password', {
+        currentPassword,
+        newPassword
+      });
+      setPasswordChangeMsg('Contraseña actualizada con éxito');
+      setPasswordChangeStatus('success');
+      setCurrentPassword('');
+      setNewPassword('');
+      setConfirmNewPassword('');
+    } catch (err: any) {
+      setPasswordChangeMsg(err.response?.data?.error || 'Error al cambiar contraseña');
+      setPasswordChangeStatus('error');
+    } finally {
+      setPasswordChangeLoading(false);
+    }
+  };
+
   if (fetchError && !driver) return (
     <div className="status-screen">
       <div style={{ color: 'var(--danger)', marginBottom: '20px' }}>
@@ -1165,9 +1216,9 @@ export default function DriverPage() {
             <IconLogout />
             <span className="btn-text">Salir</span>
           </button>
-          <button className="btn btn-ghost" onClick={handleDeleteAccount} style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', color: 'var(--danger)', borderColor: 'rgba(255, 69, 96, 0.2)' }}>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" /><line x1="10" y1="11" x2="10" y2="17" /><line x1="14" y1="11" x2="14" y2="17" /></svg>
-            <span className="btn-text">Eliminar Cuenta</span>
+          <button className="btn btn-ghost" onClick={openProfileModal} style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+            <IconUser />
+            <span className="btn-text">Mi Perfil</span>
           </button>
 
         </div>
@@ -2576,6 +2627,198 @@ export default function DriverPage() {
             <button className="btn btn-secondary btn-block" onClick={() => setShowPaymentModal(false)}>
               Cerrar
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL DE PERFIL DE CONDUCTOR */}
+      {showProfileModal && (
+        <div style={{
+          position: 'fixed',
+          inset: 0,
+          background: 'rgba(9, 9, 15, 0.85)',
+          backdropFilter: 'blur(8px)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 9999,
+          padding: '20px',
+          animation: 'fadeIn 0.2s ease'
+        }}>
+          <div style={{
+            background: 'var(--bg-secondary)',
+            border: '1px solid var(--border)',
+            borderRadius: 'var(--radius-lg)',
+            width: '100%',
+            maxWidth: '460px',
+            padding: '28px',
+            boxShadow: 'var(--shadow-lg)',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '20px',
+            position: 'relative'
+          }}>
+            <button 
+              onClick={() => setShowProfileModal(false)}
+              style={{
+                position: 'absolute',
+                top: '20px',
+                right: '20px',
+                background: 'rgba(255,255,255,0.03)',
+                border: '1px solid var(--border)',
+                borderRadius: '50%',
+                width: '32px',
+                height: '32px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                cursor: 'pointer',
+                color: 'var(--text-primary)',
+                transition: 'var(--transition)'
+              }}
+              onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.08)'}
+              onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.03)'}
+            >
+              <IconX />
+            </button>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <div style={{
+                background: 'var(--gold-light)',
+                color: 'var(--accent)',
+                borderRadius: '10px',
+                padding: '8px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}>
+                <IconUser />
+              </div>
+              <h3 style={{ margin: 0, fontWeight: 900, fontSize: '1.25rem' }}>Mi Perfil</h3>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', background: 'rgba(255,255,255,0.02)', padding: '16px', borderRadius: '12px', border: '1px solid var(--border)' }}>
+              <div>
+                <span style={{ fontSize: '0.7rem', textTransform: 'uppercase', color: 'var(--text-muted)', fontWeight: 700, letterSpacing: '0.05em' }}>Nombre Completo</span>
+                <div style={{ fontSize: '0.95rem', fontWeight: 600, marginTop: '2px' }}>{session?.user?.name || '—'}</div>
+              </div>
+              <div style={{ height: '1px', background: 'var(--border)' }} />
+              <div>
+                <span style={{ fontSize: '0.7rem', textTransform: 'uppercase', color: 'var(--text-muted)', fontWeight: 700, letterSpacing: '0.05em' }}>Correo Electrónico</span>
+                <div style={{ fontSize: '0.95rem', fontWeight: 600, marginTop: '2px' }}>{session?.user?.email || '—'}</div>
+              </div>
+              <div style={{ height: '1px', background: 'var(--border)' }} />
+              <div>
+                <span style={{ fontSize: '0.7rem', textTransform: 'uppercase', color: 'var(--text-muted)', fontWeight: 700, letterSpacing: '0.05em' }}>Número de Teléfono</span>
+                <div style={{ fontSize: '0.95rem', fontWeight: 600, marginTop: '2px' }}>{session?.user?.phone || '—'}</div>
+              </div>
+            </div>
+
+            <form onSubmit={handlePasswordChange} style={{ display: 'flex', flexDirection: 'column', gap: '12px', borderTop: '1px solid var(--border)', paddingTop: '20px' }}>
+              <h4 style={{ margin: '0 0 4px 0', fontSize: '0.95rem', fontWeight: 700, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ display: 'inline-block' }}><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                Cambiar Contraseña
+              </h4>
+              
+              <input 
+                type="password" 
+                placeholder="Contraseña actual" 
+                value={currentPassword}
+                onChange={e => setCurrentPassword(e.target.value)}
+                style={{
+                  background: 'var(--bg-primary)',
+                  border: '1.5px solid var(--border)',
+                  color: 'white',
+                  padding: '10px 14px',
+                  borderRadius: '10px',
+                  fontSize: '0.85rem'
+                }}
+              />
+              <input 
+                type="password" 
+                placeholder="Nueva contraseña" 
+                value={newPassword}
+                onChange={e => setNewPassword(e.target.value)}
+                style={{
+                  background: 'var(--bg-primary)',
+                  border: '1.5px solid var(--border)',
+                  color: 'white',
+                  padding: '10px 14px',
+                  borderRadius: '10px',
+                  fontSize: '0.85rem'
+                }}
+              />
+              <input 
+                type="password" 
+                placeholder="Confirmar nueva contraseña" 
+                value={confirmNewPassword}
+                onChange={e => setConfirmNewPassword(e.target.value)}
+                style={{
+                  background: 'var(--bg-primary)',
+                  border: '1.5px solid var(--border)',
+                  color: 'white',
+                  padding: '10px 14px',
+                  borderRadius: '10px',
+                  fontSize: '0.85rem'
+                }}
+              />
+
+              {passwordChangeMsg && (
+                <div style={{
+                  fontSize: '0.825rem',
+                  fontWeight: 600,
+                  color: passwordChangeStatus === 'success' ? 'var(--success)' : 'var(--danger)',
+                  marginTop: '6px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  background: passwordChangeStatus === 'success' ? 'rgba(0, 229, 160, 0.08)' : 'rgba(255, 69, 96, 0.08)',
+                  border: '1px solid ' + (passwordChangeStatus === 'success' ? 'rgba(0, 229, 160, 0.2)' : 'rgba(255, 69, 96, 0.2)'),
+                  padding: '8px 12px',
+                  borderRadius: '8px'
+                }}>
+                  <IconCheck />
+                  <span>{passwordChangeMsg}</span>
+                </div>
+              )}
+
+              <button 
+                type="submit" 
+                className="btn btn-primary"
+                disabled={passwordChangeLoading || !currentPassword || !newPassword || !confirmNewPassword}
+                style={{
+                  width: '100%',
+                  marginTop: '6px',
+                  padding: '12px',
+                  fontWeight: 700,
+                  borderRadius: '10px'
+                }}
+              >
+                {passwordChangeLoading ? 'Actualizando...' : 'Actualizar Contraseña'}
+              </button>
+            </form>
+
+            <div style={{ borderTop: '1px solid var(--border)', paddingTop: '20px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              <button
+                onClick={handleDeleteAccount}
+                className="btn"
+                style={{
+                  width: '100%',
+                  padding: '12px',
+                  fontWeight: 700,
+                  borderRadius: '10px',
+                  background: 'rgba(255, 69, 96, 0.1)',
+                  color: 'var(--danger)',
+                  border: '1px solid rgba(255, 69, 96, 0.2)',
+                  cursor: 'pointer',
+                  transition: 'var(--transition)'
+                }}
+                onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255, 69, 96, 0.15)'; e.currentTarget.style.borderColor = 'var(--danger)'; }}
+                onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255, 69, 96, 0.1)'; e.currentTarget.style.borderColor = 'rgba(255, 69, 96, 0.2)'; }}
+              >
+                ✕ Eliminar Cuenta Permanentemente
+              </button>
+            </div>
           </div>
         </div>
       )}
