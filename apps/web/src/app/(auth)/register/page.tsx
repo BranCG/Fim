@@ -7,6 +7,25 @@ import { createWorker } from 'tesseract.js';
 import api, { saveSession, getSession, uploadFile } from '@/lib/api';
 import Logo from '@/components/Logo';
 
+const IconCrown = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+    <path d="m2 4 3 12h14l3-12-6 7-4-7-4 7-6-7z"/>
+    <path d="M5 20h14"/>
+  </svg>
+);
+
+const IconShield = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+  </svg>
+);
+
+const IconZap = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+    <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+  </svg>
+);
+
 type Role = 'passenger' | 'driver';
 type Step = 1 | 2 | 3 | 4;
 type MembershipPlan = 'BLACK' | 'COMFORT' | 'FLEX';
@@ -477,15 +496,17 @@ function RegisterForm() {
 
               {/* PLAN BLACK */}
               <div onClick={() => setMembershipPlan('BLACK')} style={{ cursor: 'pointer', borderRadius: '14px', padding: '20px', transition: 'all 0.2s ease', background: 'linear-gradient(135deg, #0a0a0f, #1a1a2e)', border: membershipPlan === 'BLACK' ? '2px solid #D4AF37' : '1px solid rgba(212,175,55,0.2)', boxShadow: membershipPlan === 'BLACK' ? '0 0 20px rgba(212,175,55,0.2)' : 'none' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '10px' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-                    <div style={{ width: '24px', height: '24px', borderRadius: '50%', border: `2px solid #D4AF37`, display: 'flex', alignItems: 'center', justifyContent: 'center', background: membershipPlan === 'BLACK' ? '#D4AF37' : 'transparent' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px', marginBottom: '12px', flexWrap: 'wrap' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap', flex: 1, minWidth: '180px' }}>
+                    <div style={{ width: '24px', height: '24px', borderRadius: '50%', border: `2px solid #D4AF37`, display: 'flex', alignItems: 'center', justifyContent: 'center', background: membershipPlan === 'BLACK' ? '#D4AF37' : 'transparent', flexShrink: 0 }}>
                       {membershipPlan === 'BLACK' && <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#000" strokeWidth="4"><polyline points="20 6 9 17 4 12"/></svg>}
                     </div>
-                    <span style={{ color: '#D4AF37', fontWeight: 900, fontSize: '0.9rem' }}>🖤 PLAN BLACK</span>
+                    <span style={{ color: '#D4AF37', fontWeight: 900, fontSize: '0.9rem', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                      <IconCrown /> PLAN BLACK
+                    </span>
                     <span style={{ background: 'rgba(212,175,55,0.2)', border: '1px solid rgba(212,175,55,0.3)', borderRadius: '20px', padding: '2px 8px', fontSize: '0.62rem', color: '#D4AF37', fontWeight: 800 }}>MÁS POPULAR</span>
                   </div>
-                  <div style={{ textAlign: 'right' }}>
+                  <div style={{ textAlign: 'right', flexShrink: 0 }}>
                     <div style={{ color: '#D4AF37', fontWeight: 900, fontSize: '1.4rem', lineHeight: 1 }}>$150.000</div>
                     <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.72rem' }}>/mes</div>
                   </div>
@@ -495,15 +516,17 @@ function RegisterForm() {
 
               {/* PLAN COMFORT */}
               <div onClick={() => setMembershipPlan('COMFORT')} style={{ cursor: 'pointer', borderRadius: '14px', padding: '20px', transition: 'all 0.2s ease', background: 'linear-gradient(135deg, #0a0f1a, #0f1e35)', border: membershipPlan === 'COMFORT' ? '2px solid #3B82F6' : '1px solid rgba(59,130,246,0.2)', boxShadow: membershipPlan === 'COMFORT' ? '0 0 20px rgba(59,130,246,0.2)' : 'none' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '10px' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <div style={{ width: '24px', height: '24px', borderRadius: '50%', border: `2px solid #3B82F6`, display: 'flex', alignItems: 'center', justifyContent: 'center', background: membershipPlan === 'COMFORT' ? '#3B82F6' : 'transparent' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px', marginBottom: '12px', flexWrap: 'wrap' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap', flex: 1, minWidth: '180px' }}>
+                    <div style={{ width: '24px', height: '24px', borderRadius: '50%', border: `2px solid #3B82F6`, display: 'flex', alignItems: 'center', justifyContent: 'center', background: membershipPlan === 'COMFORT' ? '#3B82F6' : 'transparent', flexShrink: 0 }}>
                       {membershipPlan === 'COMFORT' && <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="4"><polyline points="20 6 9 17 4 12"/></svg>}
                     </div>
-                    <span style={{ color: '#60A5FA', fontWeight: 900, fontSize: '0.9rem' }}>🟡 PLAN COMFORT</span>
+                    <span style={{ color: '#60A5FA', fontWeight: 900, fontSize: '0.9rem', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                      <IconShield /> PLAN COMFORT
+                    </span>
                     <span style={{ background: 'rgba(96,165,250,0.15)', border: '1px solid rgba(96,165,250,0.3)', borderRadius: '20px', padding: '2px 8px', fontSize: '0.62rem', color: '#60A5FA', fontWeight: 800 }}>Membresía Crédito</span>
                   </div>
-                  <div style={{ textAlign: 'right' }}>
+                  <div style={{ textAlign: 'right', flexShrink: 0 }}>
                     <div style={{ color: '#FBBF24', fontWeight: 900, fontSize: '1.4rem', lineHeight: 1 }}>$180.000</div>
                     <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.72rem' }}>/mes total</div>
                   </div>
@@ -515,14 +538,16 @@ function RegisterForm() {
 
               {/* PLAN FLEX */}
               <div onClick={() => setMembershipPlan('FLEX')} style={{ cursor: 'pointer', borderRadius: '14px', padding: '20px', transition: 'all 0.2s ease', background: 'linear-gradient(135deg, #050f0a, #0a1f14)', border: membershipPlan === 'FLEX' ? '2px solid #10B981' : '1px solid rgba(16,185,129,0.2)', boxShadow: membershipPlan === 'FLEX' ? '0 0 20px rgba(16,185,129,0.2)' : 'none' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '10px' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <div style={{ width: '24px', height: '24px', borderRadius: '50%', border: `2px solid #10B981`, display: 'flex', alignItems: 'center', justifyContent: 'center', background: membershipPlan === 'FLEX' ? '#10B981' : 'transparent' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px', marginBottom: '12px', flexWrap: 'wrap' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap', flex: 1, minWidth: '180px' }}>
+                    <div style={{ width: '24px', height: '24px', borderRadius: '50%', border: `2px solid #10B981`, display: 'flex', alignItems: 'center', justifyContent: 'center', background: membershipPlan === 'FLEX' ? '#10B981' : 'transparent', flexShrink: 0 }}>
                       {membershipPlan === 'FLEX' && <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="4"><polyline points="20 6 9 17 4 12"/></svg>}
                     </div>
-                    <span style={{ color: '#34D399', fontWeight: 900, fontSize: '0.9rem' }}>🟢 PLAN FLEX</span>
+                    <span style={{ color: '#34D399', fontWeight: 900, fontSize: '0.9rem', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                      <IconZap /> PLAN FLEX
+                    </span>
                   </div>
-                  <div style={{ textAlign: 'right' }}>
+                  <div style={{ textAlign: 'right', flexShrink: 0 }}>
                     <div style={{ color: '#34D399', fontWeight: 900, fontSize: '1.4rem', lineHeight: 1 }}>$60.000</div>
                     <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.72rem' }}>/fin de semana</div>
                   </div>
@@ -531,10 +556,17 @@ function RegisterForm() {
               </div>
 
               {/* Resumen del plan elegido */}
-              <div style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '10px', padding: '14px', fontSize: '0.8rem', color: 'var(--text-muted)', lineHeight: 1.6 }}>
-                {membershipPlan === 'BLACK' && '🖤 Seleccionaste BLACK. Después del registro, serás redirigido a Mercado Pago para pagar $150.000. Tu cuenta se activa automáticamente al confirmar el pago.'}
-                {membershipPlan === 'COMFORT' && '🟡 Seleccionaste COMFORT. Pagas $20.000 cada mañana por transferencia y subes el comprobante en la app para activar el día. El admin valida el primer comprobante.'}
-                {membershipPlan === 'FLEX' && '🟢 Seleccionaste FLEX. Después del registro, pagas $60.000 con Mercado Pago. Tu cuenta queda activa los Viernes, Sábados y Domingos automáticamente.'}
+              <div style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '10px', padding: '14px', fontSize: '0.8rem', color: 'var(--text-muted)', lineHeight: 1.6, display: 'flex', gap: '10px', alignItems: 'flex-start' }}>
+                <div style={{ color: membershipPlan === 'BLACK' ? '#D4AF37' : membershipPlan === 'COMFORT' ? '#60A5FA' : '#34D399', marginTop: '2px', display: 'flex', alignItems: 'center', flexShrink: 0 }}>
+                  {membershipPlan === 'BLACK' && <IconCrown />}
+                  {membershipPlan === 'COMFORT' && <IconShield />}
+                  {membershipPlan === 'FLEX' && <IconZap />}
+                </div>
+                <div>
+                  {membershipPlan === 'BLACK' && 'Seleccionaste BLACK. Después del registro, serás redirigido a Mercado Pago para pagar $150.000. Tu cuenta se activa automáticamente al confirmar el pago.'}
+                  {membershipPlan === 'COMFORT' && 'Seleccionaste COMFORT. Pagas $20.000 cada mañana por transferencia y subes el comprobante en la app para activar el día. El admin valida el primer comprobante.'}
+                  {membershipPlan === 'FLEX' && 'Seleccionaste FLEX. Después del registro, pagas $60.000 con Mercado Pago. Tu cuenta queda activa los Viernes, Sábados y Domingos automáticamente.'}
+                </div>
               </div>
             </div>
           )}

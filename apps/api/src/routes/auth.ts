@@ -102,8 +102,7 @@ router.post('/driver/register', async (req: Request, res: Response) => {
 
     const required = [email, phone, name, password, rut, birthDate, address,
       licenseNumber, vehicleBrand, vehicleModel, vehicleYear, vehiclePlate, tagNumber,
-      idFrontUrl, idBackUrl, selfieUrl, licenseUrl, licenseBackUrl, vehiclePhotoUrl, membershipPlan,
-      bankName, bankAccountType, bankAccountNumber, bankAccountName, bankAccountRut, bankAccountEmail];
+      idFrontUrl, idBackUrl, selfieUrl, licenseUrl, licenseBackUrl, vehiclePhotoUrl, membershipPlan];
 
     if (required.some(v => !v)) {
       return res.status(400).json({ error: 'Todos los campos son obligatorios' });
