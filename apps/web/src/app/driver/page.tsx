@@ -93,6 +93,7 @@ export default function DriverPage() {
   const [gpsError, setGpsError] = useState<string | null>(null);
   const [payingMembership, setPayingMembership] = useState(false);
   const [uploadingReceipt, setUploadingReceipt] = useState(false);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const geoRef = useRef<(() => void) | null>(null);
 
@@ -128,6 +129,8 @@ export default function DriverPage() {
   const bottomSheetStyle = (customStyle: React.CSSProperties = {}): React.CSSProperties => ({
     transform: isMinimized ? 'translateY(calc(100% - 62px))' : 'translateY(0)',
     transition: 'transform 0.35s cubic-bezier(0.4, 0, 0.2, 1)',
+    maxHeight: '85vh',
+    overflowY: 'auto',
     ...customStyle
   });
 
@@ -264,6 +267,20 @@ export default function DriverPage() {
 
   const handlePayMembership = async () => {
     if (!driver) return;
+    
+    // Links estáticos de Mercado Pago provistos por el usuario
+    const staticLinks: Record<string, string> = {
+      BLACK: 'https://mpago.la/2GQQM65',
+      FLEX: 'https://mpago.la/2kxLWNy',
+      COMFORT: 'https://mpago.la/1geQas2',
+    };
+    
+    const url = staticLinks[driver.membershipPlan];
+    if (url) {
+      window.location.href = url;
+      return;
+    }
+    
     setPayingMembership(true);
     try {
       const res = await api.post('/payments/membership/create-preference', {
@@ -747,7 +764,7 @@ export default function DriverPage() {
     if (newStatus && driver) {
       const now = new Date();
       if (driver.membershipPlan === 'BLACK' && !driver.membershipPaid) {
-        alert('Debes realizar el pago de tu membresía BLACK ($150.000) antes de ponerte en línea.');
+        setShowPaymentModal(true);
         setLoading(false);
         return;
       }
@@ -760,7 +777,7 @@ export default function DriverPage() {
           return;
         }
         if (!driver.membershipPaid) {
-          alert('Debes pagar tu membresía FLEX ($60.000) para operar este fin de semana.');
+          setShowPaymentModal(true);
           setLoading(false);
           return;
         }
@@ -773,7 +790,7 @@ export default function DriverPage() {
           paidToday = lastPaid >= todayStart;
         }
         if (!paidToday) {
-          alert(`Debes pagar tu cuota diaria COMFORT de $20.000 para poder trabajar hoy. Deuda actual: $${(driver.comfortDebt || 0).toLocaleString('es-CL')}`);
+          setShowPaymentModal(true);
           setLoading(false);
           return;
         }
@@ -864,8 +881,8 @@ export default function DriverPage() {
   );
 
   if (driver.status === 'pending') return (
-    <div className="status-screen" style={{ padding: '24px', maxWidth: '480px', margin: '0 auto', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', gap: '20px' }}>
-      <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: '16px', padding: '28px', width: '100%', boxShadow: 'var(--shadow-lg)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px' }}>
+    <div style={{ padding: '24px 16px', minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-start', overflowY: 'auto', background: '#09090f', gap: '20px' }}>
+      <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: '16px', padding: '24px 16px', width: '100%', maxWidth: '440px', boxShadow: 'var(--shadow-lg)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px', margin: 'auto 0' }}>
         <div style={{ color: 'var(--warning)' }}>
           <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg>
         </div>
@@ -2362,6 +2379,138 @@ export default function DriverPage() {
               style={{ marginTop: '8px', cursor: 'pointer' }}
             >
               Cancelar
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL DE PAGO FLOTANTE AL PRESIONAR "PONERSE EN LÍNEA" */}
+      {showPaymentModal && driver && (
+        <div style={{
+          position: 'fixed',
+          inset: 0,
+          background: 'rgba(9, 9, 15, 0.9)',
+          backdropFilter: 'blur(12px)',
+          zIndex: 11000,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '20px',
+          animation: 'fadeIn 0.25s ease'
+        }}>
+          <div className="card animate-scale-in" style={{ 
+            width: '100%', 
+            maxWidth: '440px', 
+            maxHeight: '90vh', 
+            overflowY: 'auto', 
+            border: '1px solid var(--border-accent, rgba(0, 229, 160, 0.3))', 
+            background: '#0D0D15',
+            padding: '24px',
+            borderRadius: '20px',
+            boxShadow: 'var(--shadow-lg)'
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+              <h3 style={{ fontSize: '1.2rem', fontWeight: 900, color: 'white', margin: 0 }}>💳 Pago de Membresía requerido</h3>
+              <button 
+                onClick={() => setShowPaymentModal(false)} 
+                style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', fontSize: '1.25rem', fontWeight: 'bold' }}
+              >
+                ×
+              </button>
+            </div>
+
+            <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', lineHeight: '1.5', marginBottom: '20px' }}>
+              Debes estar al día con tu membresía para poder ponerte en línea y recibir solicitudes de viajes.
+            </p>
+
+            {driver.membershipPlan === 'BLACK' && (
+              <div style={{ background: 'linear-gradient(135deg, rgba(212,175,55,0.08), rgba(212,175,55,0.03))', border: '1px solid rgba(212,175,55,0.25)', borderRadius: '12px', padding: '16px', display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '20px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div>
+                    <div style={{ color: '#D4AF37', fontWeight: 900, fontSize: '0.85rem' }}>Plan BLACK</div>
+                    <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.7rem' }}>Pago Mensual Ilimitado</div>
+                  </div>
+                  <div style={{ textAlign: 'right' }}>
+                    <div style={{ color: '#D4AF37', fontWeight: 900, fontSize: '1.1rem' }}>$150.000</div>
+                    <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.65rem' }}>/mes</div>
+                  </div>
+                </div>
+                <button 
+                  className="btn btn-accent btn-block" 
+                  onClick={handlePayMembership} 
+                  disabled={payingMembership}
+                  style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
+                >
+                  {payingMembership ? <span className="spinner-sm"></span> : 'Pagar con Mercado Pago'}
+                </button>
+              </div>
+            )}
+
+            {driver.membershipPlan === 'FLEX' && (
+              <div style={{ background: 'linear-gradient(135deg, rgba(16,185,129,0.08), rgba(16,185,129,0.03))', border: '1px solid rgba(16,185,129,0.25)', borderRadius: '12px', padding: '16px', display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '20px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div>
+                    <div style={{ color: '#34D399', fontWeight: 900, fontSize: '0.85rem' }}>Plan FLEX</div>
+                    <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.7rem' }}>Fin de Semana (Vie·Sáb·Dom)</div>
+                  </div>
+                  <div style={{ textAlign: 'right' }}>
+                    <div style={{ color: '#34D399', fontWeight: 900, fontSize: '1.1rem' }}>$60.000</div>
+                    <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.65rem' }}>/fin de semana</div>
+                  </div>
+                </div>
+                <button 
+                  className="btn btn-accent btn-block" 
+                  onClick={handlePayMembership} 
+                  disabled={payingMembership}
+                  style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
+                >
+                  {payingMembership ? <span className="spinner-sm"></span> : 'Pagar con Mercado Pago'}
+                </button>
+              </div>
+            )}
+
+            {driver.membershipPlan === 'COMFORT' && (
+              <div style={{ background: 'linear-gradient(135deg, rgba(59,130,246,0.08), rgba(59,130,246,0.03))', border: '1px solid rgba(59,130,246,0.25)', borderRadius: '12px', padding: '16px', display: 'flex', flexDirection: 'column', gap: '14px', marginBottom: '20px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div>
+                    <div style={{ color: '#60A5FA', fontWeight: 900, fontSize: '0.85rem' }}>Plan COMFORT</div>
+                    <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.7rem' }}>Cuota Diaria de Operación</div>
+                  </div>
+                  <div style={{ textAlign: 'right' }}>
+                    <div style={{ color: '#60A5FA', fontWeight: 900, fontSize: '1.1rem' }}>$20.000</div>
+                    <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.65rem' }}>/día</div>
+                  </div>
+                </div>
+
+                <button 
+                  className="btn btn-accent btn-block" 
+                  onClick={handlePayMembership} 
+                  disabled={payingMembership}
+                  style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
+                >
+                  {payingMembership ? <span className="spinner-sm"></span> : 'Pagar con Mercado Pago'}
+                </button>
+                
+                <div style={{ borderTop: '1px dashed rgba(255,255,255,0.1)', paddingTop: '12px' }}>
+                  <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginBottom: '8px', lineHeight: '1.4' }}>
+                    O realiza transferencia bancaria y sube el comprobante:
+                    <br /><strong>Banco:</strong> Banco Estado | <strong>Cta Corriente:</strong> 987654321
+                    <br /><strong>RUT:</strong> 76.543.210-K | <strong>Destinatario:</strong> Fim SpA
+                    <br /><strong>Email:</strong> pagos@fim.cl
+                  </div>
+                  
+                  <label style={{ display: 'block', background: 'rgba(255,255,255,0.03)', border: '1px dashed var(--border)', borderRadius: '8px', padding: '10px', textAlign: 'center', cursor: 'pointer', transition: 'var(--transition)' }} onMouseEnter={e => e.currentTarget.style.borderColor = 'var(--accent)'} onMouseLeave={e => e.currentTarget.style.borderColor = 'var(--border)'}>
+                    <span style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--accent)' }}>
+                      {uploadingReceipt ? 'Subiendo comprobante...' : '📂 Subir Comprobante de Transferencia'}
+                    </span>
+                    <input type="file" accept="image/*" onChange={(e) => { handleReceiptUpload(e); setShowPaymentModal(false); }} disabled={uploadingReceipt} style={{ display: 'none' }} />
+                  </label>
+                </div>
+              </div>
+            )}
+
+            <button className="btn btn-secondary btn-block" onClick={() => setShowPaymentModal(false)}>
+              Cerrar
             </button>
           </div>
         </div>
