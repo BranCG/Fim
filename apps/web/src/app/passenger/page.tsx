@@ -1039,6 +1039,26 @@ export default function PassengerPage() {
     }
   };
 
+  const handleDeleteAccount = async () => {
+    const firstConfirm = confirm('⚠️ ¿Estás seguro de que deseas eliminar tu cuenta permanentemente? Esta acción borrará todo tu historial de viajes y datos personales de forma irreversible.');
+    if (!firstConfirm) return;
+
+    const secondConfirm = prompt('Para confirmar la eliminación permanente, escribe "ELIMINAR MI CUENTA" en el siguiente campo:');
+    if (secondConfirm !== 'ELIMINAR MI CUENTA') {
+      alert('Confirmación incorrecta. La cuenta no ha sido eliminada.');
+      return;
+    }
+
+    try {
+      await api.post('/auth/delete-account');
+      alert('Tu cuenta ha sido eliminada con éxito. Esperamos verte de nuevo.');
+      clearSession();
+      router.push('/login');
+    } catch (err: any) {
+      alert(err.response?.data?.error || 'Error al eliminar la cuenta');
+    }
+  };
+
   const handleLogout = () => {
     clearSession();
     router.push('/login');
@@ -2533,6 +2553,28 @@ export default function PassengerPage() {
                 {passwordChangeLoading ? 'Actualizando...' : 'Actualizar Contraseña'}
               </button>
             </form>
+
+            <div style={{ borderTop: '1px solid var(--border)', paddingTop: '20px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              <button
+                onClick={handleDeleteAccount}
+                className="btn"
+                style={{
+                  width: '100%',
+                  padding: '12px',
+                  fontWeight: 700,
+                  borderRadius: '10px',
+                  background: 'rgba(255, 69, 96, 0.1)',
+                  color: 'var(--danger)',
+                  border: '1px solid rgba(255, 69, 96, 0.2)',
+                  cursor: 'pointer',
+                  transition: 'var(--transition)'
+                }}
+                onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255, 69, 96, 0.15)'; e.currentTarget.style.borderColor = 'var(--danger)'; }}
+                onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255, 69, 96, 0.1)'; e.currentTarget.style.borderColor = 'rgba(255, 69, 96, 0.2)'; }}
+              >
+                ✕ Eliminar Cuenta Permanentemente
+              </button>
+            </div>
           </div>
         </div>
       )}

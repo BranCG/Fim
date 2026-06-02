@@ -361,4 +361,36 @@ router.post('/fcm-token', requireAuth, async (req: Request, res: Response) => {
   }
 });
 
+// ─── ELIMINAR CUENTA PERMANENTE ──────────────────────────────────────────
+router.post('/delete-account', requireAuth, async (req: Request, res: Response) => {
+  try {
+    const userId = req.user!.id;
+    const role = req.user!.role;
+
+    if (role === 'driver') {
+      await prisma.$transaction([
+        prisma.rating.deleteMany({ where: { OR: [{ driverId: userId }, { trip: { driverId: userId } }] } }),
+        prisma.payout.deleteMany({ where: { driverId: userId } }),
+        prisma.trip.deleteMany({ where: { driverId: userId } }),
+        prisma.refreshToken.deleteMany({ where: { driverId: userId } }),
+        prisma.driver.delete({ where: { id: userId } }),
+      ]);
+      console.log(`❌ Conductor ${userId} eliminado permanentemente.`);
+    } else {
+      await prisma.$transaction([
+        prisma.rating.deleteMany({ where: { OR: [{ passengerId: userId }, { trip: { passengerId: userId } }] } }),
+        prisma.trip.deleteMany({ where: { passengerId: userId } }),
+        prisma.refreshToken.deleteMany({ where: { userId: userId } }),
+        prisma.user.delete({ where: { id: userId } }),
+      ]);
+      console.log(`❌ Pasajero ${userId} eliminado permanentemente.`);
+    }
+
+    return res.json({ message: 'Tu cuenta ha sido eliminada permanentemente.' });
+  } catch (err) {
+    console.error('Error al eliminar cuenta:', err);
+    return res.status(500).json({ error: 'Error interno al eliminar la cuenta' });
+  }
+});
+
 export default router;

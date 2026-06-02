@@ -837,6 +837,26 @@ export default function DriverPage() {
     router.push('/login');
   };
 
+  const handleDeleteAccount = async () => {
+    const firstConfirm = confirm('⚠️ ¿Estás seguro de que deseas eliminar tu cuenta permanentemente? Esta acción borrará todo tu historial de viajes, saldo y datos personales de forma irreversible.');
+    if (!firstConfirm) return;
+
+    const secondConfirm = prompt('Para confirmar la eliminación permanente, escribe "ELIMINAR MI CUENTA" en el siguiente campo:');
+    if (secondConfirm !== 'ELIMINAR MI CUENTA') {
+      alert('Confirmación incorrecta. La cuenta no ha sido eliminada.');
+      return;
+    }
+
+    try {
+      await api.post('/auth/delete-account');
+      alert('Tu cuenta ha sido eliminada con éxito. Esperamos verte de nuevo.');
+      clearSession();
+      router.push('/login');
+    } catch (err: any) {
+      alert(err.response?.data?.error || 'Error al eliminar la cuenta');
+    }
+  };
+
   if (fetchError && !driver) return (
     <div className="status-screen">
       <div style={{ color: 'var(--danger)', marginBottom: '20px' }}>
@@ -1005,7 +1025,28 @@ export default function DriverPage() {
           )}
         </div>
       </div>
-      <button className="btn btn-secondary btn-block" onClick={handleLogout}>Salir</button>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', width: '100%', maxWidth: '440px' }}>
+        <button className="btn btn-secondary btn-block" onClick={handleLogout}>Salir</button>
+        <button
+          onClick={handleDeleteAccount}
+          className="btn"
+          style={{
+            width: '100%',
+            padding: '12px',
+            fontWeight: 700,
+            borderRadius: '10px',
+            background: 'rgba(255, 69, 96, 0.1)',
+            color: 'var(--danger)',
+            border: '1px solid rgba(255, 69, 96, 0.2)',
+            cursor: 'pointer',
+            transition: 'var(--transition)'
+          }}
+          onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255, 69, 96, 0.15)'; e.currentTarget.style.borderColor = 'var(--danger)'; }}
+          onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255, 69, 96, 0.1)'; e.currentTarget.style.borderColor = 'rgba(255, 69, 96, 0.2)'; }}
+        >
+          ✕ Eliminar Cuenta Permanentemente
+        </button>
+      </div>
     </div>
   );
 
@@ -1123,6 +1164,10 @@ export default function DriverPage() {
           <button className="btn btn-ghost" onClick={handleLogout} style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
             <IconLogout />
             <span className="btn-text">Salir</span>
+          </button>
+          <button className="btn btn-ghost" onClick={handleDeleteAccount} style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', color: 'var(--danger)', borderColor: 'rgba(255, 69, 96, 0.2)' }}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" /><line x1="10" y1="11" x2="10" y2="17" /><line x1="14" y1="11" x2="14" y2="17" /></svg>
+            <span className="btn-text">Eliminar Cuenta</span>
           </button>
 
         </div>
@@ -2154,6 +2199,25 @@ export default function DriverPage() {
                 <span>📖</span> Guía: Cómo Emitir Boleta SII
               </button>
               <button className="btn btn-secondary btn-block" onClick={handleLogout}>Cerrar Sesión</button>
+              <button
+                onClick={handleDeleteAccount}
+                className="btn"
+                style={{
+                  width: '100%',
+                  padding: '12px',
+                  fontWeight: 700,
+                  borderRadius: '10px',
+                  background: 'rgba(255, 69, 96, 0.1)',
+                  color: 'var(--danger)',
+                  border: '1px solid rgba(255, 69, 96, 0.2)',
+                  cursor: 'pointer',
+                  transition: 'var(--transition)'
+                }}
+                onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255, 69, 96, 0.15)'; e.currentTarget.style.borderColor = 'var(--danger)'; }}
+                onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255, 69, 96, 0.1)'; e.currentTarget.style.borderColor = 'rgba(255, 69, 96, 0.2)'; }}
+              >
+                ✕ Eliminar Cuenta Permanentemente
+              </button>
             </div>
           </div>
         </div>
