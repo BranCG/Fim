@@ -74,7 +74,7 @@ export function cancelActiveSearch(tripId: string, reason?: string) {
     if (search.currentDriverId && ioInstance) {
       ioInstance.to(`driver:${search.currentDriverId}`).emit('trip:cancelled', {
         tripId,
-        reason: reason || 'El pasajero canceló la solicitud antes de ser aceptada.'
+        reason: 'El pasajero ha cancelado el viaje'
       });
 
       // Enviar push notification al conductor si tiene fcmToken
@@ -86,7 +86,7 @@ export function cancelActiveSearch(tripId: string, reason?: string) {
           sendPushNotification(
             driver.fcmToken,
             "Viaje Cancelado",
-            reason || 'El pasajero canceló la solicitud.',
+            'El pasajero ha cancelado el viaje',
             { tripId, type: 'trip_cancelled' }
           );
         }

@@ -213,7 +213,7 @@ router.post('/:id/cancel', requireAuth, async (req: Request, res: Response) => {
       io.to(`trip:${id}`).emit('trip:cancelled', {
         tripId: id,
         cancelledBy: role,
-        reason: reason || 'Cancelado por el pasajero',
+        reason: role === 'passenger' ? 'El pasajero ha cancelado el viaje' : (reason || 'Cancelado por el conductor'),
       });
     }
 
@@ -230,7 +230,7 @@ router.post('/:id/cancel', requireAuth, async (req: Request, res: Response) => {
             sendPushNotification(
               driver.fcmToken,
               "Viaje Cancelado",
-              `El pasajero canceló el viaje: "${reason || 'Sin motivo especificado'}"`,
+              "El pasajero ha cancelado el viaje",
               { tripId: id, type: 'trip_cancelled' }
             );
           }

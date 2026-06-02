@@ -943,7 +943,7 @@ export default function PassengerPage() {
   }, [currentTrip, origin, dest]);
 
   const handleCancel = useCallback(async () => {
-    if (status === 'driver_assigned' || status === 'driver_arrived') {
+    if (status === 'searching' || status === 'driver_assigned' || status === 'driver_arrived') {
       setShowCancelModal(true);
     } else {
       await executeCancel('Cancelado por el pasajero');
