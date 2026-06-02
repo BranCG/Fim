@@ -518,7 +518,13 @@ export default function PassengerPage() {
 
     async function loadInitialLocation() {
       try {
-        const { getCurrentPosition } = await import('@/lib/geolocation');
+        const { requestLocationPermissions, getCurrentPosition } = await import('@/lib/geolocation');
+        const hasPermission = await requestLocationPermissions();
+        if (!hasPermission) {
+          setGpsError('Fim requiere permisos de GPS. Por favor, activa la localización en los ajustes de tu celular o navegador.');
+          setOrigin({ ...SANTIAGO_CENTER, address: 'Centro de Santiago' });
+          return;
+        }
         const pos = await getCurrentPosition();
         setOrigin({
           lat: pos.lat,
@@ -547,10 +553,14 @@ export default function PassengerPage() {
             address: 'Mi ubicación actual',
           });
         }
-      } catch (err) {
+      } catch (err: any) {
         console.warn('Passenger GPS initial warning:', err);
         setOrigin({ ...SANTIAGO_CENTER, address: 'Centro de Santiago' });
-        setGpsError('Señal de GPS inactiva. Mostrando centro de Santiago. Activa el GPS para mayor precisión.');
+        if (err?.message?.includes('Permission') || err?.code === 1) {
+          setGpsError('Fim requiere acceso a tu ubicación GPS. Por favor, activa los permisos en los ajustes de tu celular o navegador.');
+        } else {
+          setGpsError('Señal de GPS inactiva. Mostrando centro de Santiago. Activa el GPS para mayor precisión.');
+        }
       }
     }
     loadInitialLocation();
@@ -918,15 +928,19 @@ export default function PassengerPage() {
     if (currentTrip) {
       await api.post(`/trips/${currentTrip.id}/cancel`, { reason }).catch(() => {});
     }
-    setStatus('idle');
     setCurrentTrip(null);
     setDriver(null);
-    setDest(null);
     setSearchQuery('');
     setShowCancelModal(false);
     setSelectedCancelOption('');
     setCustomCancelReason('');
-  }, [currentTrip]);
+
+    if (origin && dest) {
+      setStatus('confirm');
+    } else {
+      setStatus('idle');
+    }
+  }, [currentTrip, origin, dest]);
 
   const handleCancel = useCallback(async () => {
     if (status === 'driver_assigned' || status === 'driver_arrived') {
@@ -1201,7 +1215,13 @@ export default function PassengerPage() {
           setCenterTrigger(prev => prev + 1);
           const getLoc = async () => {
             try {
-              const { getCurrentPosition } = await import('@/lib/geolocation');
+              const { requestLocationPermissions, getCurrentPosition } = await import('@/lib/geolocation');
+              const hasPermission = await requestLocationPermissions();
+              if (!hasPermission) {
+                alert('Fim no tiene acceso a tu GPS. Por favor, habilita los permisos de ubicación en tu celular o navegador.');
+                setGpsError('Habilita los permisos de GPS en los ajustes de tu dispositivo para continuar.');
+                return;
+              }
               const pos = await getCurrentPosition();
               setOrigin({
                 lat: pos.lat,
@@ -1225,9 +1245,14 @@ export default function PassengerPage() {
                   address: 'Mi ubicación actual',
                 });
               }
-            } catch (err) {
+            } catch (err: any) {
               console.error('Error al detectar ubicación:', err);
-              setGpsError('Error al detectar ubicación. Verifica que tu GPS esté encendido.');
+              if (err?.message?.includes('Permission') || err?.code === 1) {
+                alert('Fim requiere acceso a tu ubicación GPS. Habilita los permisos en los ajustes.');
+                setGpsError('Permisos de GPS denegados.');
+              } else {
+                setGpsError('Error al detectar ubicación. Verifica que tu GPS esté encendido.');
+              }
             }
           };
           getLoc();
