@@ -14,12 +14,18 @@ router.post('/passenger/register', async (req: Request, res: Response) => {
       return res.status(400).json({ error: 'Faltan campos obligatorios' });
     }
 
-    // Verificar si ya existe
+    // Verificar si ya existe (incluyendo RUT para evitar 500 Unique Constraint Error)
     const existing = await prisma.user.findFirst({
-      where: { OR: [{ email }, { phone }] },
+      where: {
+        OR: [
+          { email },
+          { phone },
+          ...(rut ? [{ rut }] : [])
+        ]
+      },
     });
     if (existing) {
-      return res.status(409).json({ error: 'Email o teléfono ya registrado' });
+      return res.status(409).json({ error: 'Email, teléfono o RUT ya registrado' });
     }
 
     const passwordHash = await bcrypt.hash(password, 12);
@@ -101,7 +107,7 @@ router.post('/driver/register', async (req: Request, res: Response) => {
     } = req.body;
 
     const required = [email, phone, name, password, rut, birthDate, address,
-      licenseNumber, vehicleBrand, vehicleModel, vehicleYear, vehiclePlate, tagNumber,
+      licenseNumber, vehicleBrand, vehicleModel, vehicleYear, vehiclePlate,
       idFrontUrl, idBackUrl, selfieUrl, licenseUrl, licenseBackUrl, vehiclePhotoUrl, membershipPlan];
 
     if (required.some(v => !v)) {
@@ -134,7 +140,7 @@ router.post('/driver/register', async (req: Request, res: Response) => {
         licenseNumber, licenseUrl, licenseBackUrl,
         vehicleBrand, vehicleModel,
         vehicleYear: Number(vehicleYear),
-        vehiclePlate, vehiclePhotoUrl, tagNumber,
+        vehiclePlate, vehiclePhotoUrl, tagNumber: tagNumber || "",
         membershipPlan,
         membershipGoal: membershipPlan === 'PROGRESSIVE' ? 120000 : 100000,
         bankName, bankAccountType, bankAccountNumber, bankAccountName, bankAccountRut, bankAccountEmail,
