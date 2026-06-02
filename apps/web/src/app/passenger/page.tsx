@@ -1043,9 +1043,9 @@ export default function PassengerPage() {
     const firstConfirm = confirm('⚠️ ¿Estás seguro de que deseas eliminar tu cuenta permanentemente? Esta acción borrará todo tu historial de viajes y datos personales de forma irreversible.');
     if (!firstConfirm) return;
 
-    const secondConfirm = prompt('Para confirmar la eliminación permanente, escribe "ELIMINAR MI CUENTA" en el siguiente campo:');
-    if (secondConfirm !== 'ELIMINAR MI CUENTA') {
-      alert('Confirmación incorrecta. La cuenta no ha sido eliminada.');
+    const secondConfirm = confirm('🚨 ¡ÚLTIMA ADVERTENCIA! Si continúas, perderás todo el acceso a tu cuenta de Fim inmediatamente y de forma definitiva. ¿Confirmas la eliminación permanente de tu cuenta?');
+    if (!secondConfirm) {
+      alert('Eliminación cancelada. Tu cuenta sigue activa.');
       return;
     }
 

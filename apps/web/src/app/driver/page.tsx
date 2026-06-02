@@ -849,9 +849,9 @@ export default function DriverPage() {
     const firstConfirm = confirm('⚠️ ¿Estás seguro de que deseas eliminar tu cuenta permanentemente? Esta acción borrará todo tu historial de viajes, saldo y datos personales de forma irreversible.');
     if (!firstConfirm) return;
 
-    const secondConfirm = prompt('Para confirmar la eliminación permanente, escribe "ELIMINAR MI CUENTA" en el siguiente campo:');
-    if (secondConfirm !== 'ELIMINAR MI CUENTA') {
-      alert('Confirmación incorrecta. La cuenta no ha sido eliminada.');
+    const secondConfirm = confirm('🚨 ¡ÚLTIMA ADVERTENCIA! Si continúas, perderás todo el acceso a tu cuenta de Fim inmediatamente y de forma definitiva. ¿Confirmas la eliminación permanente de tu cuenta?');
+    if (!secondConfirm) {
+      alert('Eliminación cancelada. Tu cuenta sigue activa.');
       return;
     }
 
@@ -1392,7 +1392,7 @@ export default function DriverPage() {
                   className="btn btn-accent btn-block"
                   onClick={handlePayMembership}
                   disabled={payingMembership}
-                  style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
+                  style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', whiteSpace: 'normal', height: 'auto', minHeight: '44px', padding: '10px 14px', lineHeight: '1.3', fontSize: '0.85rem', textAlign: 'center' }}
                 >
                   {payingMembership ? <span className="spinner-sm"></span> : 'Pagar Membresía BLACK con Mercado Pago'}
                 </button>
@@ -1435,7 +1435,7 @@ export default function DriverPage() {
                       className="btn btn-accent btn-block"
                       onClick={handlePayMembership}
                       disabled={payingMembership}
-                      style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
+                      style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', whiteSpace: 'normal', height: 'auto', minHeight: '44px', padding: '10px 14px', lineHeight: '1.3', fontSize: '0.85rem', textAlign: 'center' }}
                     >
                       {payingMembership ? <span className="spinner-sm"></span> : 'Pagar Cuota Diaria con Mercado Pago'}
                     </button>
@@ -1486,7 +1486,7 @@ export default function DriverPage() {
                   className="btn btn-accent btn-block"
                   onClick={handlePayMembership}
                   disabled={payingMembership}
-                  style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
+                  style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', whiteSpace: 'normal', height: 'auto', minHeight: '44px', padding: '10px 14px', lineHeight: '1.3', fontSize: '0.85rem', textAlign: 'center' }}
                 >
                   {payingMembership ? <span className="spinner-sm"></span> : 'Pagar Membresía FLEX con Mercado Pago'}
                 </button>
