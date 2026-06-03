@@ -200,6 +200,11 @@ function RegisterForm() {
     setError('');
     try {
       const { GoogleAuth } = await import('@codetrix-studio/capacitor-google-auth');
+      await GoogleAuth.initialize({
+        clientId: '974516739677-bvnm3kh8fn6qv6u59rqga6scbpdqtl4a.apps.googleusercontent.com',
+        scopes: ['profile', 'email'],
+        grantOfflineAccess: true,
+      });
       const user = await GoogleAuth.signIn();
       if (user && user.authentication && user.authentication.idToken) {
         const res = await api.post('/auth/google/check', {
@@ -224,7 +229,8 @@ function RegisterForm() {
       }
     } catch (err: any) {
       console.error('Native Google Signup Error:', err);
-      setError('Error al registrarse con Google nativo');
+      const errMsg = err?.message || err?.errorMessage || (typeof err === 'string' ? err : JSON.stringify(err));
+      setError(`Error al registrarse con Google nativo: ${errMsg}`);
     } finally {
       setLoading(false);
     }

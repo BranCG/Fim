@@ -1,7 +1,6 @@
 import axios from 'axios';
 
 const getApiUrl = () => {
-  if (process.env.NEXT_PUBLIC_API_URL) return process.env.NEXT_PUBLIC_API_URL;
   if (typeof window !== 'undefined') {
     // Under Capacitor on device/emulator, hostname is 'localhost' (Android) or empty, and port is empty (no dev server)
     const isMobileApp = (window.location.hostname === 'localhost' || window.location.hostname === '') && window.location.port === '';
@@ -9,7 +8,11 @@ const getApiUrl = () => {
     if (isCapacitor) {
       return 'https://fim-api.duckdns.org';
     }
-    
+  }
+
+  if (process.env.NEXT_PUBLIC_API_URL) return process.env.NEXT_PUBLIC_API_URL;
+  
+  if (typeof window !== 'undefined') {
     // If we are on localhost in a web browser, use local API
     if (window.location.hostname === 'localhost') {
       return 'http://localhost:3001';
