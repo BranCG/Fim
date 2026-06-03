@@ -3,6 +3,7 @@
 import { useState, useRef, useCallback, useEffect, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
+import Script from 'next/script';
 import { createWorker } from 'tesseract.js';
 import api, { saveSession, getSession, uploadFile } from '@/lib/api';
 import Logo from '@/components/Logo';
@@ -80,6 +81,23 @@ function RegisterForm() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
+  // Google specific states
+  const isGoogleParam = searchParams.get('google') === 'true';
+  const googleEmail = searchParams.get('email') || '';
+  const googleName = searchParams.get('name') || '';
+  const googleCredentialParam = searchParams.get('credential') || '';
+
+  const [isGoogle, setIsGoogle] = useState(isGoogleParam);
+  const [googleCredential, setGoogleCredential] = useState(googleCredentialParam);
+
+  // Email verification states
+  const [verificationPending, setVerificationPending] = useState(false);
+  const [verificationEmail, setVerificationEmail] = useState('');
+  const [verificationCode, setVerificationCode] = useState('');
+  const [verifying, setVerifying] = useState(false);
+  const [resending, setResending] = useState(false);
+  const [verificationSuccess, setVerificationSuccess] = useState(false);
+
   useEffect(() => {
     const s = getSession();
     if (s && s.user && s.user.role) {
@@ -90,6 +108,72 @@ function RegisterForm() {
       }
     }
   }, [router]);
+
+  useEffect(() => {
+    if (isGoogleParam) {
+      setIsGoogle(true);
+      setName(googleName);
+      setEmail(googleEmail);
+      setGoogleCredential(googleCredentialParam);
+    }
+  }, [isGoogleParam, googleName, googleEmail, googleCredentialParam]);
+
+  useEffect(() => {
+    const handleCredentialResponse = async (response: any) => {
+      setLoading(true);
+      setError('');
+      try {
+        const res = await api.post('/auth/google/check', {
+          credential: response.credential,
+        });
+
+        if (res.data.exists) {
+          const userData = res.data.user || res.data.driver;
+          saveSession(res.data.accessToken, { ...userData, role: res.data.role });
+          if (res.data.role === 'admin') router.push('/admin');
+          else if (res.data.role === 'driver') router.push('/driver');
+          else router.push('/passenger');
+        } else {
+          setIsGoogle(true);
+          setGoogleCredential(response.credential);
+          setName(res.data.name || '');
+          setEmail(res.data.email || '');
+          setError('');
+        }
+      } catch (err: any) {
+        setError(err.response?.data?.error || 'Error al conectar con Google');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    const initGoogleRegister = () => {
+      if (typeof window !== 'undefined' && (window as any).google?.accounts?.id) {
+        const client_id = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || '1047712170366-g8kvdh9cbrp0h9o9dghfsq7g8r0f6u1a.apps.googleusercontent.com';
+        (window as any).google.accounts.id.initialize({
+          client_id,
+          callback: handleCredentialResponse,
+        });
+
+        const btnContainer = document.getElementById('google-register-btn-container');
+        if (btnContainer) {
+          (window as any).google.accounts.id.renderButton(
+            btnContainer,
+            { theme: 'outline', size: 'large', type: 'standard', shape: 'rectangular', text: 'signup_with', logo_alignment: 'left', width: 356 }
+          );
+        }
+      }
+    };
+
+    if (!isGoogle) {
+      if ((window as any).google?.accounts?.id) {
+        initGoogleRegister();
+      } else {
+        const timer = setTimeout(initGoogleRegister, 1000);
+        return () => clearTimeout(timer);
+      }
+    }
+  }, [isGoogle, router]);
   
   // Legal
   const [acceptedTerms, setAcceptedTerms] = useState(false);
@@ -249,6 +333,50 @@ function RegisterForm() {
     );
   }
 
+  async function handleVerifyCode(e: React.FormEvent) {
+    e.preventDefault();
+    if (verificationCode.length !== 6) {
+      setError('El código debe tener 6 dígitos');
+      return;
+    }
+    setVerifying(true);
+    setError('');
+    try {
+      const res = await api.post('/auth/verify-email', {
+        email: verificationEmail,
+        role,
+        code: verificationCode
+      });
+      const userData = res.data.user;
+      saveSession(res.data.accessToken, { ...userData, role });
+      setVerificationSuccess(true);
+      setTimeout(() => {
+        if (role === 'driver') router.push('/driver');
+        else router.push('/passenger');
+      }, 1500);
+    } catch (err: any) {
+      setError(err.response?.data?.error || 'Código incorrecto o expirado');
+    } finally {
+      setVerifying(false);
+    }
+  }
+
+  async function handleResendCode() {
+    setResending(true);
+    setError('');
+    try {
+      await api.post('/auth/resend-code', {
+        email: verificationEmail,
+        role
+      });
+      alert('Código reenviado con éxito. Revisa tu correo (o los logs del servidor).');
+    } catch (err: any) {
+      setError(err.response?.data?.error || 'Error al reenviar código');
+    } finally {
+      setResending(false);
+    }
+  }
+
   async function handleSubmit() {
     setLoading(true);
     setError('');
@@ -257,25 +385,167 @@ function RegisterForm() {
       setLoading(false);
       return;
     }
-    let success = false;
     try {
       if (role === 'passenger') {
-        const res = await api.post('/auth/passenger/register', { name, email, phone, password, rut, birthDate, address, idFrontUrl: idFront.url, idBackUrl: idBack.url, selfieUrl: selfie.url });
-        saveSession(res.data.accessToken, { ...res.data.user, role: 'passenger' });
+        if (isGoogle) {
+          const res = await api.post('/auth/google/register', {
+            credential: googleCredential,
+            phone,
+            name,
+            rut,
+            birthDate,
+            address,
+            role: 'passenger',
+            idFrontUrl: idFront.url,
+            idBackUrl: idBack.url,
+            selfieUrl: selfie.url
+          });
+          saveSession(res.data.accessToken, { ...res.data.user, role: 'passenger' });
+          router.push('/passenger');
+        } else {
+          const res = await api.post('/auth/passenger/register', { name, email, phone, password, rut, birthDate, address, idFrontUrl: idFront.url, idBackUrl: idBack.url, selfieUrl: selfie.url });
+          if (res.data.status === 'verification_pending') {
+            setVerificationEmail(email);
+            setVerificationPending(true);
+          } else {
+            saveSession(res.data.accessToken, { ...res.data.user, role: 'passenger' });
+            router.push('/passenger');
+          }
+        }
       } else {
-        const res = await api.post('/auth/driver/register', { name, email, phone, password, rut, birthDate, address, idFrontUrl: idFront.url, idBackUrl: idBack.url, selfieUrl: selfie.url, licenseNumber, licenseUrl: licenseFront.url, licenseBackUrl: licenseBack.url, vehicleBrand, vehicleModel, vehicleYear, vehiclePlate, tagNumber, vehiclePhotoUrl: vehiclePhoto.url, membershipPlan });
-        saveSession(res.data.accessToken, { ...res.data.driver, role: 'driver' });
+        if (isGoogle) {
+          const res = await api.post('/auth/google/register', {
+            credential: googleCredential,
+            phone,
+            name,
+            rut,
+            birthDate,
+            address,
+            role: 'driver',
+            idFrontUrl: idFront.url,
+            idBackUrl: idBack.url,
+            selfieUrl: selfie.url,
+            licenseNumber,
+            licenseUrl: licenseFront.url,
+            licenseBackUrl: licenseBack.url,
+            vehicleBrand,
+            vehicleModel,
+            vehicleYear,
+            vehiclePlate,
+            tagNumber,
+            vehiclePhotoUrl: vehiclePhoto.url,
+            membershipPlan
+          });
+          saveSession(res.data.accessToken, { ...res.data.driver, role: 'driver' });
+          router.push('/driver');
+        } else {
+          const res = await api.post('/auth/driver/register', { name, email, phone, password, rut, birthDate, address, idFrontUrl: idFront.url, idBackUrl: idBack.url, selfieUrl: selfie.url, licenseNumber, licenseUrl: licenseFront.url, licenseBackUrl: licenseBack.url, vehicleBrand, vehicleModel, vehicleYear, vehiclePlate, tagNumber, vehiclePhotoUrl: vehiclePhoto.url, membershipPlan });
+          if (res.data.status === 'verification_pending') {
+            setVerificationEmail(email);
+            setVerificationPending(true);
+          } else {
+            saveSession(res.data.accessToken, { ...res.data.driver, role: 'driver' });
+            router.push('/driver');
+          }
+        }
       }
-      success = true;
     } catch (err: any) {
       setError(err.response?.data?.error || 'Error al registrarse.');
+    } finally {
       setLoading(false);
     }
+  }
 
-    if (success) {
-      if (role === 'passenger') router.push('/passenger');
-      else router.push('/driver');
-    }
+  if (verificationPending) {
+    return (
+      <div className="app-container" style={{ background: 'var(--bg-primary)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', padding: '24px' }}>
+        <div className="card" style={{ width: '100%', maxWidth: '420px', padding: '40px 32px', boxShadow: 'var(--shadow-lg)', border: '1px solid var(--border)', textAlign: 'center' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px', marginBottom: '32px' }}>
+            <Logo width="160" height="60" />
+            <div style={{
+              width: '56px', height: '56px', borderRadius: '50%',
+              background: 'rgba(212,175,55,0.1)', color: 'var(--accent)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '8px 0'
+            }}>
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                <polyline points="22,6 12,13 2,6"/>
+              </svg>
+            </div>
+            <h2 style={{ color: 'var(--text-primary)', fontWeight: 800, fontSize: '1.4rem' }}>Verifica tu correo</h2>
+            <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', lineHeight: 1.5 }}>
+              Hemos enviado un código de 6 dígitos a <br/>
+              <strong style={{ color: 'var(--text-primary)' }}>{verificationEmail}</strong>
+            </p>
+          </div>
+
+          {verificationSuccess ? (
+            <div style={{ background: 'rgba(16,185,129,0.06)', border: '1px solid rgba(16,185,129,0.2)', padding: '20px', borderRadius: '12px' }}>
+              <div style={{ color: '#10B981', fontSize: '1.2rem', fontWeight: 700, marginBottom: '4px' }}>¡Verificado con éxito!</div>
+              <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>Redirigiendo a tu panel...</p>
+            </div>
+          ) : (
+            <form onSubmit={handleVerifyCode} style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+              <div className="form-group">
+                <label className="form-label" style={{ textAlign: 'center', display: 'block', marginBottom: '12px' }}>Código de 6 dígitos</label>
+                <input
+                  className="form-input text-center"
+                  type="text"
+                  maxLength={6}
+                  placeholder="000000"
+                  value={verificationCode}
+                  onChange={e => setVerificationCode(e.target.value.replace(/\D/g, ''))}
+                  style={{
+                    fontSize: '1.8rem',
+                    letterSpacing: '8px',
+                    textAlign: 'center',
+                    fontWeight: 700,
+                    padding: '12px',
+                    background: 'var(--bg-secondary)',
+                    borderRadius: '12px',
+                    border: '2px solid var(--border)'
+                  }}
+                  required
+                />
+              </div>
+
+              {error && (
+                <div style={{ background: 'rgba(239, 68, 68, 0.06)', border: '1px solid rgba(239, 68, 68, 0.2)', padding: '12px', borderRadius: '8px', fontSize: '0.85rem', color: '#ef4444' }}>
+                  ⚠️ {error}
+                </div>
+              )}
+
+              <button
+                type="submit"
+                className={`btn btn-primary btn-lg btn-block ${verifying ? 'btn-loading' : ''}`}
+                disabled={verifying || verificationCode.length !== 6}
+              >
+                {verifying ? '' : 'Verificar código →'}
+              </button>
+
+              <div style={{ marginTop: '12px' }}>
+                <button
+                  type="button"
+                  onClick={handleResendCode}
+                  disabled={resending}
+                  style={{
+                    background: 'transparent',
+                    border: 'none',
+                    color: 'var(--accent)',
+                    fontWeight: 600,
+                    fontSize: '0.85rem',
+                    cursor: 'pointer',
+                    opacity: resending ? 0.5 : 1
+                  }}
+                >
+                  {resending ? 'Reenviando...' : 'Reenviar código por correo'}
+                </button>
+              </div>
+            </form>
+          )}
+        </div>
+      </div>
+    );
   }
 
   function nextStep() {
@@ -290,10 +560,12 @@ function RegisterForm() {
       if (!validatePhone(phone)) { setError('El teléfono es inválido. Debe tener el formato +569XXXXXXXX.'); return; }
       if (!address) { setError('Por favor, ingresa tu dirección.'); return; }
       if (!birthDate) { setError('Por favor, ingresa tu fecha de nacimiento.'); return; }
-      if (!password) { setError('Por favor, ingresa una contraseña.'); return; }
-      if (password.length < 6) { setError('La contraseña debe tener al menos 6 caracteres.'); return; }
-      if (!confirmPassword) { setError('Por favor, confirma tu contraseña.'); return; }
-      if (password !== confirmPassword) { setError('Las contraseñas ingresadas no coinciden.'); return; }
+      if (!isGoogle) {
+        if (!password) { setError('Por favor, ingresa una contraseña.'); return; }
+        if (password.length < 6) { setError('La contraseña debe tener al menos 6 caracteres.'); return; }
+        if (!confirmPassword) { setError('Por favor, confirma tu contraseña.'); return; }
+        if (password !== confirmPassword) { setError('Las contraseñas ingresadas no coinciden.'); return; }
+      }
     }
     if (step === 2) {
       if (!selfie.url) { setError('Por favor, sube la foto de tu Selfie con la Cédula.'); return; }
@@ -416,13 +688,44 @@ function RegisterForm() {
         <div style={{ minHeight: '300px', display: 'flex', flexDirection: 'column' }}>
           {step === 1 && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              {!isGoogle && (
+                <>
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '8px' }}>
+                    <div id="google-register-btn-container" style={{ width: '100%', minHeight: '44px', display: 'flex', justifyContent: 'center' }}></div>
+                  </div>
+                  <div className="divider" style={{ margin: '16px 0', color: 'var(--text-muted)', fontSize: '0.8rem', textAlign: 'center', position: 'relative' }}>
+                    <span style={{ background: 'var(--bg-card)', padding: '0 12px', position: 'relative', zIndex: 1 }}>o regístrate con email</span>
+                    <div style={{ position: 'absolute', top: '50%', left: 0, right: 0, height: '1px', background: 'var(--border)', zIndex: 0 }} />
+                  </div>
+                </>
+              )}
+              {isGoogle && (
+                <div style={{ background: 'rgba(212,175,55,0.06)', border: '1px solid rgba(212,175,55,0.2)', borderRadius: '10px', padding: '12px', fontSize: '0.85rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                  <span>Registro vinculado con cuenta de Google</span>
+                </div>
+              )}
               <div className="form-group">
                 <label className="form-label">Nombre completo</label>
-                <input className="form-input" placeholder="Ej: Juan Pérez" value={name} onChange={e => setName(e.target.value)} />
+                <input 
+                  className="form-input" 
+                  placeholder="Ej: Juan Pérez" 
+                  value={name} 
+                  onChange={e => setName(e.target.value)} 
+                  readOnly={isGoogle}
+                  style={isGoogle ? { opacity: 0.7, background: 'var(--bg-secondary)' } : {}}
+                />
               </div>
               <div className="form-group">
                 <label className="form-label">Email</label>
-                <input className="form-input" placeholder="tu@email.com" value={email} onChange={e => setEmail(e.target.value)} />
+                <input 
+                  className="form-input" 
+                  placeholder="tu@email.com" 
+                  value={email} 
+                  onChange={e => setEmail(e.target.value)} 
+                  readOnly={isGoogle}
+                  style={isGoogle ? { opacity: 0.7, background: 'var(--bg-secondary)' } : {}}
+                />
               </div>
               <div className="form-group">
                 <label className="form-label">RUT</label>
@@ -440,14 +743,18 @@ function RegisterForm() {
                 <label className="form-label">Fecha de Nacimiento</label>
                 <input className="form-input" type="date" value={birthDate} onChange={e => setBirthDate(e.target.value)} style={{ colorScheme: 'dark' }} />
               </div>
-              <div className="form-group">
-                <label className="form-label">Contraseña</label>
-                <input className="form-input" type="password" placeholder="Mínimo 6 caracteres" value={password} onChange={e => setPassword(e.target.value)} />
-              </div>
-              <div className="form-group">
-                <label className="form-label">Confirmar Contraseña</label>
-                <input className="form-input" type="password" placeholder="Repite tu contraseña" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} />
-              </div>
+              {!isGoogle && (
+                <>
+                  <div className="form-group">
+                    <label className="form-label">Contraseña</label>
+                    <input className="form-input" type="password" placeholder="Mínimo 6 caracteres" value={password} onChange={e => setPassword(e.target.value)} />
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">Confirmar Contraseña</label>
+                    <input className="form-input" type="password" placeholder="Repite tu contraseña" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} />
+                  </div>
+                </>
+              )}
             </div>
           )}
 
@@ -609,8 +916,20 @@ export default function RegisterPage() {
   return (
     <div className="app-container">
       <Suspense fallback={<div>Cargando...</div>}>
-        <RegisterForm />
+        <RegisterFormWithPendingWrapper />
       </Suspense>
     </div>
+  );
+}
+
+function RegisterFormWithPendingWrapper() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  
+  return (
+    <>
+      <RegisterForm />
+      <Script src="https://accounts.google.com/gsi/client" strategy="afterInteractive" />
+    </>
   );
 }

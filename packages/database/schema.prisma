@@ -19,6 +19,8 @@ model User {
   idFrontUrl    String?
   idBackUrl     String?
   isVerified    Boolean   @default(false)
+  emailVerified Boolean   @default(true)
+  emailCode     String?
   paymentMethod String?
   mpCardToken   String?
   role          String    @default("passenger")
@@ -84,6 +86,8 @@ model Driver {
   taxCompliant        Boolean   @default(true)
   taxDocumentUrl      String?
   taxPendingReview    Boolean   @default(false)
+  emailVerified       Boolean   @default(true)
+  emailCode           String?
   createdAt           DateTime  @default(now())
   updatedAt           DateTime  @updatedAt
   payouts             Payout[]

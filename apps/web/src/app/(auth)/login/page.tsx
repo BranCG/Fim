@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import Script from 'next/script';
 import api, { saveSession, getSession, API_URL } from '@/lib/api';
 import Logo from '@/components/Logo';
 
@@ -26,6 +27,63 @@ export default function LoginPage() {
       } else {
         router.push('/passenger');
       }
+    }
+  }, [router]);
+
+  useEffect(() => {
+    const handleCredentialResponse = async (response: any) => {
+      setLoading(true);
+      setError('');
+      try {
+        const res = await api.post('/auth/google/check', {
+          credential: response.credential,
+        });
+
+        if (res.data.exists) {
+          const userData = res.data.user || res.data.driver;
+          saveSession(res.data.accessToken, { ...userData, role: res.data.role });
+          
+          if (res.data.role === 'admin') router.push('/admin');
+          else if (res.data.role === 'driver') router.push('/driver');
+          else router.push('/passenger');
+        } else {
+          const params = new URLSearchParams({
+            google: 'true',
+            email: res.data.email || '',
+            name: res.data.name || '',
+            credential: response.credential,
+          });
+          router.push(`/register?${params.toString()}`);
+        }
+      } catch (err: any) {
+        setError(err.response?.data?.error || 'Error al iniciar sesión con Google');
+        setLoading(false);
+      }
+    };
+
+    const initGoogle = () => {
+      if (typeof window !== 'undefined' && (window as any).google?.accounts?.id) {
+        const client_id = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || '1047712170366-g8kvdh9cbrp0h9o9dghfsq7g8r0f6u1a.apps.googleusercontent.com';
+        (window as any).google.accounts.id.initialize({
+          client_id,
+          callback: handleCredentialResponse,
+        });
+
+        const btnContainer = document.getElementById('google-btn-container');
+        if (btnContainer) {
+          (window as any).google.accounts.id.renderButton(
+            btnContainer,
+            { theme: 'outline', size: 'large', type: 'standard', shape: 'rectangular', text: 'continue_with', logo_alignment: 'left', width: 356 }
+          );
+        }
+      }
+    };
+
+    if ((window as any).google?.accounts?.id) {
+      initGoogle();
+    } else {
+      const timer = setTimeout(initGoogle, 1000);
+      return () => clearTimeout(timer);
     }
   }, [router]);
 
@@ -143,6 +201,10 @@ export default function LoginPage() {
           </button>
         </form>
 
+        <div style={{ marginTop: '20px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+          <div id="google-btn-container" style={{ width: '100%', minHeight: '44px', display: 'flex', justifyContent: 'center' }}></div>
+        </div>
+
         <div className="divider" style={{ margin: '32px 0', color: 'var(--text-muted)', fontSize: '0.8rem', textAlign: 'center', position: 'relative' }}>
           <span style={{ background: 'var(--bg-card)', padding: '0 12px', position: 'relative', zIndex: 1 }}>o</span>
           <div style={{ position: 'absolute', top: '50%', left: 0, right: 0, height: '1px', background: 'var(--border)', zIndex: 0 }} />
@@ -156,6 +218,7 @@ export default function LoginPage() {
           API: {API_URL}
         </div>
       </div>
+      <Script src="https://accounts.google.com/gsi/client" strategy="afterInteractive" />
     </div>
   );
 }
