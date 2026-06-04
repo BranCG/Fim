@@ -263,10 +263,10 @@ export default function DriverPage() {
           taxDocumentUrl: url
         });
       }
-      alert('Documento tributario cargado y cuenta reactivada con éxito. Nuestro equipo auditará la boleta en las próximas 24 horas.');
+      showCustomAlert('Documento tributario cargado y cuenta reactivada con éxito. Nuestro equipo auditará la boleta en las próximas 24 horas.', 'Éxito', 'success');
     } catch (err) {
       console.error(err);
-      alert('Error al subir el documento tributario');
+      showCustomAlert('Error al subir el documento tributario', 'Error', 'error');
     } finally {
       setTaxUploading(false);
     }
@@ -298,10 +298,10 @@ export default function DriverPage() {
       if (res.data.init_point) {
         window.location.href = res.data.init_point;
       } else {
-        alert('No se pudo generar el link de pago.');
+        showCustomAlert('No se pudo generar el link de pago.', 'Error', 'error');
       }
     } catch (err: any) {
-      alert(err.response?.data?.error || 'Error al procesar el pago.');
+      showCustomAlert(err.response?.data?.error || 'Error al procesar el pago.', 'Error', 'error');
     } finally {
       setPayingMembership(false);
     }
@@ -320,13 +320,13 @@ export default function DriverPage() {
       const url = res.data.url;
       
       await api.post('/drivers/pay-comfort-daily', { receiptUrl: url });
-      alert('Comprobante de pago diario subido correctamente. Deuda actualizada.');
+      showCustomAlert('Comprobante de pago diario subido correctamente. Deuda actualizada.', 'Éxito', 'success');
       
       const meRes = await api.get('/drivers/me');
       setDriver(meRes.data.driver);
     } catch (err: any) {
       console.error(err);
-      alert(err.response?.data?.error || 'Error al subir el comprobante de pago.');
+      showCustomAlert(err.response?.data?.error || 'Error al subir el comprobante de pago.', 'Error', 'error');
     } finally {
       setUploadingReceipt(false);
     }
@@ -664,11 +664,11 @@ export default function DriverPage() {
     });
 
     socket.on('trip:completion-otp-failed', (data: { message: string }) => {
-      alert(data.message);
+      showCustomAlert(data.message, 'Código Incorrecto', 'error');
     });
 
     socket.on('error', (data: { message: string }) => {
-      alert(data.message);
+      showCustomAlert(data.message, 'Error', 'error');
     });
 
     return () => {
@@ -710,7 +710,7 @@ export default function DriverPage() {
   const startTrip = (code: string) => {
     if (!activeTrip) return;
     if (!code || code.length < 4) {
-      alert('Por favor ingresa el código de seguridad.');
+      showCustomAlert('Por favor ingresa el código de seguridad.', 'Atención', 'warning');
       return;
     }
     const socket = connectSocket();
@@ -719,18 +719,22 @@ export default function DriverPage() {
 
   const handleRequestPayment = () => {
     if (!activeTrip) return;
-    const confirmReq = confirm('¿Estás seguro de solicitar el pago al pasajero? Hazlo solo cuando hayas llegado al destino de forma segura.');
-    if (!confirmReq) return;
-    const socket = connectSocket();
-    socket.emit('trip:request-payment', { tripId: activeTrip.id });
-    setPaymentRequested(true);
-    setCompletionOtpVerified(false);
+    showCustomConfirm(
+      '¿Estás seguro de solicitar el pago al pasajero? Hazlo solo cuando hayas llegado al destino de forma segura.',
+      'Solicitar Pago',
+      () => {
+        const socket = connectSocket();
+        socket.emit('trip:request-payment', { tripId: activeTrip.id });
+        setPaymentRequested(true);
+        setCompletionOtpVerified(false);
+      }
+    );
   };
 
   const verifyCompletionOtp = (code: string) => {
     if (!activeTrip) return;
     if (!code || code.length < 4) {
-      alert('Por favor ingresa el código de término.');
+      showCustomAlert('Por favor ingresa el código de término.', 'Atención', 'warning');
       return;
     }
     const socket = connectSocket();
@@ -772,7 +776,7 @@ export default function DriverPage() {
 
     if (newStatus && driver) {
       if (!driver.mercadoPagoLink) {
-        alert('Debes vincular tu link de Mercado Pago para poder ponerte en línea y recibir pagos de tus viajes.');
+        showCustomAlert('Debes vincular tu link de Mercado Pago para poder ponerte en línea y recibir pagos de tus viajes.', 'Atención', 'warning');
         setLoading(false);
         return;
       }
@@ -786,7 +790,7 @@ export default function DriverPage() {
         const day = now.getDay();
         const isWeekend = day === 0 || day === 5 || day === 6;
         if (!isWeekend) {
-          alert('La membresía FLEX solo te permite operar los días Viernes, Sábado y Domingo.');
+          showCustomAlert('La membresía FLEX solo te permite operar los días Viernes, Sábado y Domingo.', 'Membresía FLEX', 'warning');
           setLoading(false);
           return;
         }
@@ -821,7 +825,7 @@ export default function DriverPage() {
         socket.emit('driver:offline', { driverId: session?.user?.id });
       }
     } catch (err: any) {
-      alert(err.response?.data?.error || 'Error al cambiar estado');
+      showCustomAlert(err.response?.data?.error || 'Error al cambiar estado', 'Error', 'error');
     } finally {
       setLoading(false);
     }
@@ -831,6 +835,45 @@ export default function DriverPage() {
   const [mpLink, setMpLink] = useState('');
   const [showMpTutorial, setShowMpTutorial] = useState(false);
 
+  const [customDialog, setCustomDialog] = useState<{
+    show: boolean;
+    title: string;
+    message: string;
+    type: 'success' | 'error' | 'warning' | 'info';
+    isConfirm: boolean;
+    onConfirm?: () => void;
+    onCancel?: () => void;
+  }>({
+    show: false,
+    title: 'Atención',
+    message: '',
+    type: 'info',
+    isConfirm: false
+  });
+
+  const showCustomAlert = (message: string, title = 'Atención', type: 'success' | 'error' | 'warning' | 'info' = 'info', onClose?: () => void) => {
+    setCustomDialog({
+      show: true,
+      title,
+      message,
+      type,
+      isConfirm: false,
+      onConfirm: onClose
+    });
+  };
+
+  const showCustomConfirm = (message: string, title: string, onConfirm: () => void, onCancel?: () => void, type: 'success' | 'error' | 'warning' | 'info' = 'warning') => {
+    setCustomDialog({
+      show: true,
+      title,
+      message,
+      type,
+      isConfirm: true,
+      onConfirm,
+      onCancel
+    });
+  };
+
   useEffect(() => {
     if (driver?.mercadoPagoLink) setMpLink(driver.mercadoPagoLink);
   }, [driver]);
@@ -838,12 +881,12 @@ export default function DriverPage() {
   const saveMPLink = async () => {
     try {
       await api.post('/drivers/payment-link', { mercadoPagoLink: mpLink });
-      alert('Link de pago vinculado correctamente.');
+      showCustomAlert('Link de pago vinculado correctamente.', 'Éxito', 'success');
       if (driver) {
         setDriver({ ...driver, mercadoPagoLink: mpLink });
       }
     } catch (err) {
-      alert('Error al guardar el link.');
+      showCustomAlert('Error al guardar el link.', 'Error', 'error');
     }
   };
 
@@ -852,24 +895,39 @@ export default function DriverPage() {
     router.push('/login');
   };
 
-  const handleDeleteAccount = async () => {
-    const firstConfirm = confirm('⚠️ ¿Estás seguro de que deseas eliminar tu cuenta permanentemente? Esta acción borrará todo tu historial de viajes, saldo y datos personales de forma irreversible.');
-    if (!firstConfirm) return;
-
-    const secondConfirm = confirm('🚨 ¡ÚLTIMA ADVERTENCIA! Si continúas, perderás todo el acceso a tu cuenta de Fim inmediatamente y de forma definitiva. ¿Confirmas la eliminación permanente de tu cuenta?');
-    if (!secondConfirm) {
-      alert('Eliminación cancelada. Tu cuenta sigue activa.');
-      return;
-    }
-
-    try {
-      await api.post('/auth/delete-account');
-      alert('Tu cuenta ha sido eliminada con éxito. Esperamos verte de nuevo.');
-      clearSession();
-      router.push('/login');
-    } catch (err: any) {
-      alert(err.response?.data?.error || 'Error al eliminar la cuenta');
-    }
+  const handleDeleteAccount = () => {
+    showCustomConfirm(
+      '¿Estás seguro de que deseas eliminar tu cuenta permanentemente? Esta acción borrará todo tu historial de viajes, saldo y datos personales de forma irreversible.',
+      'Eliminar Cuenta',
+      () => {
+        showCustomConfirm(
+          'ÚLTIMA ADVERTENCIA: Si continúas, perderás todo el acceso a tu cuenta de Fim inmediatamente y de forma definitiva. ¿Confirmas la eliminación permanente de tu cuenta?',
+          'Última Advertencia',
+          async () => {
+            try {
+              await api.post('/auth/delete-account');
+              showCustomAlert(
+                'Tu cuenta ha sido eliminada con éxito. Esperamos verte de nuevo.',
+                'Cuenta Eliminada',
+                'success',
+                () => {
+                  clearSession();
+                  router.push('/login');
+                }
+              );
+            } catch (err: any) {
+              showCustomAlert(err.response?.data?.error || 'Error al eliminar la cuenta', 'Error', 'error');
+            }
+          },
+          () => {
+            showCustomAlert('Eliminación cancelada. Tu cuenta sigue activa.', 'Cancelado', 'info');
+          },
+          'error'
+        );
+      },
+      undefined,
+      'error'
+    );
   };
 
   const openProfileModal = async () => {
@@ -1396,7 +1454,7 @@ export default function DriverPage() {
                   margin: '4px auto 0'
                 }}
               >
-                {showMpTutorial ? '✕ Cerrar ayuda' : '❓ ¿Cómo obtener este link?'}
+                {showMpTutorial ? 'Cerrar ayuda' : '¿Cómo obtener este link?'}
               </button>
 
               {showMpTutorial && (
@@ -2062,9 +2120,16 @@ export default function DriverPage() {
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                     <button className={`btn btn-block btn-lg ${passengerConfirmed ? 'btn-primary' : 'btn-secondary'}`} onClick={() => {
                       if (!passengerConfirmed) {
-                        if (!confirm("El pasajero no ha confirmado. ¿Cerrar manual?")) return;
+                        showCustomConfirm(
+                          'El pasajero no ha confirmado el pago. ¿Deseas cerrar el viaje de forma manual?',
+                          'Cerrar Manualmente',
+                          () => {
+                            completeTrip();
+                          }
+                        );
+                      } else {
+                        completeTrip();
                       }
-                      completeTrip();
                     }}>
                       {passengerConfirmed ? 'Verificar y Finalizar' : 'Cerrar Manual (Sin Confirmación)'}
                     </button>
@@ -2732,6 +2797,97 @@ export default function DriverPage() {
               >
                 ✕ Eliminar Cuenta Permanentemente
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL DE ALERTAS Y CONFIRMACIONES PERSONALIZADAS ESTILO FIM */}
+      {customDialog.show && (
+        <div style={{
+          position: 'fixed',
+          inset: 0,
+          background: 'rgba(0,0,0,0.65)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 9999,
+          padding: '20px',
+          backdropFilter: 'blur(4px)'
+        }}>
+          <div style={{
+            background: 'var(--bg-secondary)',
+            border: '1px solid var(--border)',
+            borderRadius: '16px',
+            padding: '24px',
+            maxWidth: '380px',
+            width: '100%',
+            boxShadow: '0 20px 25px -5px rgba(0,0,0,0.5)',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            textAlign: 'center',
+            gap: '16px',
+            animation: 'fadeIn 0.25s ease'
+          }}>
+            <div style={{
+              width: '48px',
+              height: '48px',
+              borderRadius: '50%',
+              background: customDialog.type === 'error' ? 'rgba(255, 69, 96, 0.1)' : customDialog.type === 'success' ? 'rgba(0, 229, 160, 0.1)' : 'rgba(255, 193, 7, 0.1)',
+              color: customDialog.type === 'error' ? '#FF4560' : customDialog.type === 'success' ? '#00E5A0' : '#FFC107',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}>
+              {customDialog.type === 'error' ? (
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+              ) : customDialog.type === 'success' ? (
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              ) : (
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+              )}
+            </div>
+            <div>
+              <h3 style={{ color: 'var(--text-primary)', fontWeight: 800, fontSize: '1.1rem', marginBottom: '8px' }}>{customDialog.title}</h3>
+              <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', lineHeight: 1.5 }}>{customDialog.message}</p>
+            </div>
+            <div style={{ display: 'flex', gap: '10px', width: '100%', marginTop: '8px' }}>
+              {customDialog.isConfirm ? (
+                <>
+                  <button 
+                    className="btn btn-secondary" 
+                    onClick={() => {
+                      setCustomDialog(prev => ({ ...prev, show: false }));
+                      if (customDialog.onCancel) customDialog.onCancel();
+                    }}
+                    style={{ flex: 1 }}
+                  >
+                    Cancelar
+                  </button>
+                  <button 
+                    className="btn btn-primary" 
+                    onClick={() => {
+                      setCustomDialog(prev => ({ ...prev, show: false }));
+                      if (customDialog.onConfirm) customDialog.onConfirm();
+                    }}
+                    style={{ flex: 1 }}
+                  >
+                    Confirmar
+                  </button>
+                </>
+              ) : (
+                <button 
+                  className="btn btn-primary" 
+                  onClick={() => {
+                    setCustomDialog(prev => ({ ...prev, show: false }));
+                    if (customDialog.onConfirm) customDialog.onConfirm();
+                  }}
+                  style={{ width: '100%' }}
+                >
+                  Entendido
+                </button>
+              )}
             </div>
           </div>
         </div>
