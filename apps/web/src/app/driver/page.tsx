@@ -1029,7 +1029,21 @@ export default function DriverPage() {
 
         {/* Pago de Membresía */}
         <div style={{ width: '100%', borderTop: '1px solid var(--border)', paddingTop: '20px', marginTop: '10px' }}>
-          <h3 style={{ fontSize: '0.9rem', fontWeight: 800, marginBottom: '12px', color: '#fff' }}>📋 Pago de Membresía</h3>
+          <h3 style={{ fontSize: '0.9rem', fontWeight: 800, marginBottom: '12px', color: '#fff', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" id="Cash-Payment-Coin-Dollar--Streamline-Ultimate" height="20" width="20" style={{ flexShrink: 0 }}>
+              <desc>Cash Payment Coin Dollar Streamline Icon: https://streamlinehq.com</desc>
+              <path fill="#ffef5e" d="M15.348 13.2434c0.7813 0.0146 1.5576 -0.1266 2.2838 -0.4154 0.7261 -0.2888 1.3874 -0.7193 1.9453 -1.2665 0.5578 -0.5472 1.0011 -1.2001 1.3038 -1.92048 0.3028 -0.7204 0.459 -1.4939 0.4595 -2.27534 0.0005 -0.78143 -0.1547 -1.55514 -0.4565 -2.27593 -0.3018 -0.7208 -0.7442 -1.37424 -1.3014 -1.92216 -0.5571 -0.54792 -1.2179 -0.97934 -1.9436 -1.26907 -0.7258 -0.28973 -1.502 -0.43196 -2.2833 -0.41838 -1.5416 0.02678 -3.011 0.65771 -4.0921 1.75701 -1.081 1.09929 -1.6873 2.57908 -1.6883 4.12088 -0.00101 1.5418 0.6033 3.02237 1.683 4.12307 1.0796 1.1007 2.5482 1.7336 4.0898 1.7623Z" strokeWidth={1}></path>
+              <path fill="#fff9bf" d="M15.3475 1.47827c-1.1559 -0.00084 -2.2864 0.33914 -3.2501 0.97742 -0.9637 0.63829 -1.7178 1.54655 -2.16795 2.61117 -0.45018 1.06462 -0.57648 2.23835 -0.36308 3.37438 0.2134 1.13602 0.75703 2.18396 1.56283 3.01256l8.3122 -8.31214c-1.0951 -1.06775 -2.5644 -1.66475 -4.0939 -1.66339Z" strokeWidth={1}></path>
+              <path fill="#ffdda1" d="m20.1304 16.7826 -4.2287 1.4061h-0.0106c0.0866 -0.1598 0.1262 -0.3409 0.1142 -0.5223 -0.0119 -0.1813 -0.075 -0.3556 -0.1818 -0.5027 -0.1069 -0.1471 -0.2531 -0.2609 -0.4219 -0.3283 -0.1688 -0.0675 -0.3533 -0.0857 -0.532 -0.0528H12c-1.1337 -1.1699 -2.67626 -1.8555 -4.30435 -1.913H4.82609L1 16.7826v5.7391l3.82609 -2.3913C15.0877 23.5519 11.3027 23.5863 23 17.7391c-0.3227 -0.4342 -0.771 -0.7589 -1.2842 -0.9299 -0.5133 -0.1711 -1.0667 -0.1804 -1.5854 -0.0266Z" strokeWidth={1}></path>
+              <path stroke="#191919" strokeLinecap="round" strokeLinejoin="round" d="M15.348 13.2434c0.7813 0.0146 1.5576 -0.1266 2.2838 -0.4154 0.7261 -0.2888 1.3874 -0.7193 1.9453 -1.2665 0.5578 -0.5472 1.0011 -1.2001 1.3038 -1.92048 0.3028 -0.7204 0.459 -1.4939 0.4595 -2.27534 0.0005 -0.78143 -0.1547 -1.55514 -0.4565 -2.27593 -0.3018 -0.7208 -0.7442 -1.37424 -1.3014 -1.92216 -0.5571 -0.54792 -1.2179 -0.97934 -1.9436 -1.26907 -0.7258 -0.28973 -1.502 -0.43196 -2.2833 -0.41838 -1.5416 0.02678 -3.011 0.65771 -4.0921 1.75701 -1.081 1.09929 -1.6873 2.57908 -1.6883 4.12088 -0.00101 1.5418 0.6033 3.02237 1.683 4.12307 1.0796 1.1007 2.5482 1.7336 4.0898 1.7623Z" strokeWidth={1}></path>
+              <path stroke="#191919" strokeLinecap="round" strokeLinejoin="round" d="M15.3477 4.34782V3.3913" strokeWidth={1}></path>
+              <path stroke="#191919" strokeLinecap="round" strokeLinejoin="round" d="M16.7821 4.34784h-1.9407c-0.2981 0.00021 -0.5867 0.10411 -0.8165 0.29387 -0.2298 0.18977 -0.3864 0.45358 -0.443 0.74619 -0.0565 0.29261 -0.0095 0.59578 0.133 0.85751 0.1426 0.26173 0.3717 0.46571 0.6482 0.57695l1.9743 0.79009c0.2764 0.11124 0.5056 0.31522 0.6481 0.57695 0.1426 0.26173 0.1896 0.5649 0.133 0.85751 -0.0565 0.2926 -0.2131 0.55642 -0.4429 0.74618 -0.2298 0.18977 -0.5185 0.29371 -0.8165 0.29391h-1.9465" strokeWidth={1}></path>
+              <path stroke="#191919" strokeLinecap="round" strokeLinejoin="round" d="M15.3477 11.0435v-0.9565" strokeWidth={1}></path>
+              <path stroke="#191919" strokeLinecap="round" strokeLinejoin="round" d="m15.9017 18.1887 4.2287 -1.4061c0.5187 -0.1538 1.0721 -0.1445 1.5854 0.0266 0.5132 0.1711 0.9615 0.4957 1.2842 0.93 -11.6973 5.8472 -7.9123 5.8127 -18.17391 2.3913L1 22.5218" strokeWidth={1}></path>
+              <path stroke="#191919" strokeLinecap="round" strokeLinejoin="round" d="M9.6087 18.6957h5.2609c0.1399 0.0251 0.2836 0.0192 0.421 -0.0173 0.1375 -0.0364 0.2652 -0.1026 0.3743 -0.1938 0.109 -0.0912 0.1967 -0.2053 0.2569 -0.3341 0.0602 -0.1288 0.0914 -0.2692 0.0914 -0.4114 0 -0.1421 -0.0312 -0.2826 -0.0914 -0.4114 -0.0602 -0.1288 -0.1479 -0.2428 -0.2569 -0.334 -0.1091 -0.0912 -0.2368 -0.1574 -0.3743 -0.1939 -0.1374 -0.0364 -0.2811 -0.0423 -0.421 -0.0172H12c-1.1337 -1.1699 -2.67626 -1.8555 -4.30435 -1.913H4.82609L1 16.7826" strokeWidth={1}></path>
+            </svg>
+            Pago de Membresía
+          </h3>
           
           {driver.membershipPlan === 'BLACK' && (
             <div style={{ background: 'linear-gradient(135deg, rgba(212,175,55,0.08), rgba(212,175,55,0.03))', border: '1px solid rgba(212,175,55,0.25)', borderRadius: '12px', padding: '16px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
@@ -1129,8 +1143,25 @@ export default function DriverPage() {
                     </div>
                     
                     <label style={{ display: 'block', background: 'rgba(255,255,255,0.03)', border: '1px dashed var(--border)', borderRadius: '8px', padding: '10px', textAlign: 'center', cursor: 'pointer', transition: 'var(--transition)' }} onMouseEnter={e => e.currentTarget.style.borderColor = 'var(--accent)'} onMouseLeave={e => e.currentTarget.style.borderColor = 'var(--border)'}>
-                      <span style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--accent)' }}>
-                        {uploadingReceipt ? 'Subiendo comprobante...' : '📂 Subir Comprobante de Transferencia'}
+                      <span style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--accent)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
+                        {uploadingReceipt ? (
+                          'Subiendo comprobante...'
+                        ) : (
+                          <>
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" id="Office-Drawer--Streamline-Ultimate" height="16" width="16" style={{ flexShrink: 0 }}>
+                              <desc>Office Drawer Streamline Icon: https://streamlinehq.com</desc>
+                              <path fill="#e3e3e3" d="M2.9126 8.65216V3.86955c0 -0.25369 0.10078 -0.49698 0.28015 -0.67637 0.17939 -0.17938 0.42268 -0.28016 0.67637 -0.28016h8.13048c0.1484 0 0.2949 0.03457 0.4277 0.10098 0.1329 0.06642 0.2484 0.16283 0.3375 0.28163l1.1478 1.53044H20.13c0.2537 0 0.497 0.10078 0.6763 0.28015 0.1794 0.17939 0.2802 0.42268 0.2802 0.67637v2.86957" strokeWidth={1}></path>
+                              <path fill="#ffffff" d="M2.9126 12.4781V7.69554c0 -0.25369 0.10078 -0.49698 0.28015 -0.67637 0.17939 -0.17938 0.42268 -0.28016 0.67637 -0.28016h8.13048c0.1484 0 0.2949 0.03457 0.4277 0.10098 0.1329 0.06641 0.2484 0.16283 0.3375 0.28163l1.1478 1.53044H20.13c0.2537 0 0.497 0.10078 0.6763 0.28015 0.1794 0.17939 0.2802 0.42268 0.2802 0.67637v2.86952" strokeWidth={1}></path>
+                              <path stroke="#191919" strokeLinecap="round" strokeLinejoin="round" d="M2.9126 12.4781V7.69554c0 -0.25369 0.10078 -0.49698 0.28015 -0.67637 0.17939 -0.17938 0.42268 -0.28016 0.67637 -0.28016h8.13048c0.1484 0 0.2949 0.03457 0.4277 0.10098 0.1329 0.06641 0.2484 0.16283 0.3375 0.28163l1.1478 1.53044H20.13c0.2537 0 0.497 0.10078 0.6763 0.28015 0.1794 0.17939 0.2802 0.42268 0.2802 0.67637v2.86952" strokeWidth={1}></path>
+                              <path fill="#e3bfb3" d="M1 13.4347c0 -0.2537 0.10078 -0.497 0.28016 -0.6764 0.17938 -0.1793 0.42267 -0.2802 0.67636 -0.2802H22.0435c0.2536 0 0.497 0.1009 0.6763 0.2802 0.1794 0.1794 0.2802 0.4227 0.2802 0.6764v6.6956c0 0.2537 -0.1008 0.497 -0.2802 0.6764 -0.1793 0.1793 -0.4227 0.2801 -0.6763 0.2801H1.95652c-0.25369 0 -0.49698 -0.1008 -0.67636 -0.2801C1.10078 20.6273 1 20.384 1 20.1303v-6.6956Z" strokeWidth={1}></path>
+                              <path fill="#c77f67" d="M22.0435 18.2174H1.95652c-0.25369 0 -0.49698 -0.1008 -0.67636 -0.2802C1.10078 17.7579 1 17.5145 1 17.2609v2.8695c0 0.2537 0.10078 0.497 0.28016 0.6764 0.17938 0.1793 0.42267 0.2801 0.67636 0.2801H22.0435c0.2536 0 0.497 -0.1008 0.6763 -0.2801 0.1794 -0.1794 0.2802 -0.4227 0.2802 -0.6764v-2.8695c0 0.2536 -0.1008 0.497 -0.2802 0.6763 -0.1793 0.1794 -0.4227 0.2802 -0.6763 0.2802Z" strokeWidth={1}></path>
+                              <path stroke="#191919" strokeLinecap="round" strokeLinejoin="round" d="M1 13.4347c0 -0.2537 0.10078 -0.497 0.28016 -0.6764 0.17938 -0.1793 0.42267 -0.2802 0.67636 -0.2802H22.0435c0.2536 0 0.497 0.1009 0.6763 0.2802 0.1794 0.1794 0.2802 0.4227 0.2802 0.6764v6.6956c0 0.2537 -0.1008 0.497 -0.2802 0.6764 -0.1793 0.1793 -0.4227 0.2801 -0.6763 0.2801H1.95652c-0.25369 0 -0.49698 -0.1008 -0.67636 -0.2801C1.10078 20.6273 1 20.384 1 20.1303v-6.6956Z" strokeWidth={1}></path>
+                              <path stroke="#191919" strokeLinecap="round" strokeLinejoin="round" d="M2.9126 4.82607v-0.95652c0 -0.25369 0.10078 -0.49698 0.28015 -0.67637 0.17939 -0.17938 0.42268 -0.28016 0.67637 -0.28016h8.13048c0.1484 0 0.2949 0.03457 0.4277 0.10098 0.1329 0.06642 0.2484 0.16283 0.3375 0.28163l1.1478 1.53044H20.13c0.2537 0 0.497 0.10078 0.6763 0.28015 0.1794 0.17939 0.2802 0.42268 0.2802 0.67637" strokeWidth={1}></path>
+                              <path stroke="#191919" strokeLinecap="round" strokeLinejoin="round" d="M9.13037 15.3477h5.73913" strokeWidth={1}></path>
+                            </svg>
+                            Subir Comprobante de Transferencia
+                          </>
+                        )}
                       </span>
                       <input type="file" accept="image/*" onChange={handleReceiptUpload} disabled={uploadingReceipt} style={{ display: 'none' }} />
                     </label>
@@ -1527,11 +1558,27 @@ export default function DriverPage() {
                 <div style={{ background: 'linear-gradient(135deg, rgba(59,130,246,0.08), rgba(59,130,246,0.03))', border: `1px solid ${!paidToday ? 'rgba(239,68,68,0.4)' : 'rgba(59,130,246,0.25)'}`, borderRadius: '12px', padding: '14px 16px' }}>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                      <span style={{ fontSize: '1.3rem' }}>🟡</span>
+                      {paidToday ? (
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" id="Check--Streamline-Ultimate" height="24" width="24" style={{ flexShrink: 0 }}>
+                          <desc>Check Streamline Icon: https://streamlinehq.com</desc>
+                          <path fill="#78eb7b" d="M1.98657 13.7043c-0.4235 0.4235 -0.4235 1.1101 0 1.5336l5.20337 5.2042c0.42414 0.4225 1.11017 0.4225 1.53441 0L22.013 7.1525c0.4235 -0.42341 0.4235 -1.10999 0 -1.53349l-2.0591 -2.05994c-0.4235 -0.42414 -1.1108 -0.42414 -1.5344 0L7.9571 14.0224l-2.37701 -2.3781c-0.42378 -0.4235 -1.11073 -0.4235 -1.53441 0l-2.05911 2.06Z" strokeWidth={1}></path>
+                          <path fill="#c9f7ca" d="M7.95731 17.1666 20.7591 4.3649l-0.8086 -0.8085c-0.4238 -0.42359 -1.1106 -0.42359 -1.5344 0L7.95731 14.0224 5.5803 11.6443c-0.42359 -0.424 -1.1109 -0.424 -1.5344 0l-0.8086 0.8086 4.72001 4.7137Z" strokeWidth={1}></path>
+                          <path stroke="#191919" strokeLinecap="round" strokeLinejoin="round" d="M1.98657 13.7043c-0.4235 0.4235 -0.4235 1.1101 0 1.5336l5.20337 5.2042c0.42414 0.4225 1.11017 0.4225 1.53441 0L22.013 7.1525c0.4235 -0.42341 0.4235 -1.10999 0 -1.53349l-2.0591 -2.05994c-0.4235 -0.42414 -1.1108 -0.42414 -1.5344 0L7.9571 14.0224l-2.37701 -2.3781c-0.42378 -0.4235 -1.11073 -0.4235 -1.53441 0l-2.05911 2.06Z" strokeWidth={1}></path>
+                        </svg>
+                      ) : (
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" id="Alert-Triangle--Streamline-Ultimate" height="24" width="24" style={{ flexShrink: 0 }}>
+                          <desc>Alert Triangle Streamline Icon: https://streamlinehq.com</desc>
+                          <path fill="#ffb834" d="M12 2L1 21h22L12 2z" strokeWidth={1}></path>
+                          <path fill="#ffe5aa" d="M12 6l7.5 13H4.5L12 6z" strokeWidth={1}></path>
+                          <path stroke="#191919" strokeLinecap="round" strokeLinejoin="round" d="M12 2L1 21h22L12 2z" strokeWidth={1}></path>
+                          <path stroke="#191919" strokeLinecap="round" d="M12 9v5" strokeWidth={2}></path>
+                          <circle cx="12" cy="17" r="1.5" fill="#191919"></circle>
+                        </svg>
+                      )}
                       <div>
                         <div style={{ color: '#60A5FA', fontWeight: 900, fontSize: '0.85rem' }}>Plan COMFORT</div>
                         <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.75rem' }}>
-                          {paidToday ? '✅ Pagado hoy — puedes trabajar' : '⚠️ Debes pagar la cuota de hoy'}
+                          {paidToday ? 'Pagado hoy — puedes trabajar' : 'Debes pagar la cuota de hoy'}
                         </div>
                       </div>
                     </div>
@@ -1566,8 +1613,25 @@ export default function DriverPage() {
                       </div>
                       
                       <label style={{ display: 'block', background: 'rgba(255,255,255,0.03)', border: '1px dashed var(--border)', borderRadius: '8px', padding: '8px', textAlign: 'center', cursor: 'pointer', transition: 'var(--transition)' }} onMouseEnter={e => e.currentTarget.style.borderColor = 'var(--accent)'} onMouseLeave={e => e.currentTarget.style.borderColor = 'var(--border)'}>
-                        <span style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--accent)' }}>
-                          {uploadingReceipt ? 'Subiendo comprobante...' : '📂 Subir Comprobante de Transferencia'}
+                        <span style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--accent)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
+                          {uploadingReceipt ? (
+                            'Subiendo comprobante...'
+                          ) : (
+                            <>
+                              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" id="Office-Drawer--Streamline-Ultimate" height="16" width="16" style={{ flexShrink: 0 }}>
+                                <desc>Office Drawer Streamline Icon: https://streamlinehq.com</desc>
+                                <path fill="#e3e3e3" d="M2.9126 8.65216V3.86955c0 -0.25369 0.10078 -0.49698 0.28015 -0.67637 0.17939 -0.17938 0.42268 -0.28016 0.67637 -0.28016h8.13048c0.1484 0 0.2949 0.03457 0.4277 0.10098 0.1329 0.06642 0.2484 0.16283 0.3375 0.28163l1.1478 1.53044H20.13c0.2537 0 0.497 0.10078 0.6763 0.28015 0.1794 0.17939 0.2802 0.42268 0.2802 0.67637v2.86957" strokeWidth={1}></path>
+                                <path fill="#ffffff" d="M2.9126 12.4781V7.69554c0 -0.25369 0.10078 -0.49698 0.28015 -0.67637 0.17939 -0.17938 0.42268 -0.28016 0.67637 -0.28016h8.13048c0.1484 0 0.2949 0.03457 0.4277 0.10098 0.1329 0.06641 0.2484 0.16283 0.3375 0.28163l1.1478 1.53044H20.13c0.2537 0 0.497 0.10078 0.6763 0.28015 0.1794 0.17939 0.2802 0.42268 0.2802 0.67637v2.86952" strokeWidth={1}></path>
+                                <path stroke="#191919" strokeLinecap="round" strokeLinejoin="round" d="M2.9126 12.4781V7.69554c0 -0.25369 0.10078 -0.49698 0.28015 -0.67637 0.17939 -0.17938 0.42268 -0.28016 0.67637 -0.28016h8.13048c0.1484 0 0.2949 0.03457 0.4277 0.10098 0.1329 0.06641 0.2484 0.16283 0.3375 0.28163l1.1478 1.53044H20.13c0.2537 0 0.497 0.10078 0.6763 0.28015 0.1794 0.17939 0.2802 0.42268 0.2802 0.67637v2.86952" strokeWidth={1}></path>
+                                <path fill="#e3bfb3" d="M1 13.4347c0 -0.2537 0.10078 -0.497 0.28016 -0.6764 0.17938 -0.1793 0.42267 -0.2802 0.67636 -0.2802H22.0435c0.2536 0 0.497 0.1009 0.6763 0.2802 0.1794 0.1794 0.2802 0.4227 0.2802 0.6764v6.6956c0 0.2537 -0.1008 0.497 -0.2802 0.6764 -0.1793 0.1793 -0.4227 0.2801 -0.6763 0.2801H1.95652c-0.25369 0 -0.49698 -0.1008 -0.67636 -0.2801C1.10078 20.6273 1 20.384 1 20.1303v-6.6956Z" strokeWidth={1}></path>
+                                <path fill="#c77f67" d="M22.0435 18.2174H1.95652c-0.25369 0 -0.49698 -0.1008 -0.67636 -0.2802C1.10078 17.7579 1 17.5145 1 17.2609v2.8695c0 0.2537 0.10078 0.497 0.28016 0.6764 0.17938 0.1793 0.42267 0.2801 0.67636 0.2801H22.0435c0.2536 0 0.497 -0.1008 0.6763 -0.2801 0.1794 -0.1794 0.2802 -0.4227 0.2802 -0.6764v-2.8695c0 0.2536 -0.1008 0.497 -0.2802 0.6763 -0.1793 0.1794 -0.4227 0.2802 -0.6763 0.2802Z" strokeWidth={1}></path>
+                                <path stroke="#191919" strokeLinecap="round" strokeLinejoin="round" d="M1 13.4347c0 -0.2537 0.10078 -0.497 0.28016 -0.6764 0.17938 -0.1793 0.42267 -0.2802 0.67636 -0.2802H22.0435c0.2536 0 0.497 0.1009 0.6763 0.2802 0.1794 0.1794 0.2802 0.4227 0.2802 0.6764v6.6956c0 0.2537 -0.1008 0.497 -0.2802 0.6764 -0.1793 0.1793 -0.4227 0.2801 -0.6763 0.2801H1.95652c-0.25369 0 -0.49698 -0.1008 -0.67636 -0.2801C1.10078 20.6273 1 20.384 1 20.1303v-6.6956Z" strokeWidth={1}></path>
+                                <path stroke="#191919" strokeLinecap="round" strokeLinejoin="round" d="M2.9126 4.82607v-0.95652c0 -0.25369 0.10078 -0.49698 0.28015 -0.67637 0.17939 -0.17938 0.42268 -0.28016 0.67637 -0.28016h8.13048c0.1484 0 0.2949 0.03457 0.4277 0.10098 0.1329 0.06642 0.2484 0.16283 0.3375 0.28163l1.1478 1.53044H20.13c0.2537 0 0.497 0.10078 0.6763 0.28015 0.1794 0.17939 0.2802 0.42268 0.2802 0.67637" strokeWidth={1}></path>
+                                <path stroke="#191919" strokeLinecap="round" strokeLinejoin="round" d="M9.13037 15.3477h5.73913" strokeWidth={1}></path>
+                              </svg>
+                              Subir Comprobante de Transferencia
+                            </>
+                          )}
                         </span>
                         <input type="file" accept="image/*" onChange={handleReceiptUpload} disabled={uploadingReceipt} style={{ display: 'none' }} />
                       </label>
@@ -2504,7 +2568,21 @@ export default function DriverPage() {
             boxShadow: 'var(--shadow-lg)'
           }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-              <h3 style={{ fontSize: '1.2rem', fontWeight: 900, color: 'white', margin: 0 }}>💳 Pago de Membresía requerido</h3>
+              <h3 style={{ fontSize: '1.2rem', fontWeight: 900, color: 'white', margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" id="Cash-Payment-Coin-Dollar--Streamline-Ultimate" height="24" width="24" style={{ flexShrink: 0 }}>
+                  <desc>Cash Payment Coin Dollar Streamline Icon: https://streamlinehq.com</desc>
+                  <path fill="#ffef5e" d="M15.348 13.2434c0.7813 0.0146 1.5576 -0.1266 2.2838 -0.4154 0.7261 -0.2888 1.3874 -0.7193 1.9453 -1.2665 0.5578 -0.5472 1.0011 -1.2001 1.3038 -1.92048 0.3028 -0.7204 0.459 -1.4939 0.4595 -2.27534 0.0005 -0.78143 -0.1547 -1.55514 -0.4565 -2.27593 -0.3018 -0.7208 -0.7442 -1.37424 -1.3014 -1.92216 -0.5571 -0.54792 -1.2179 -0.97934 -1.9436 -1.26907 -0.7258 -0.28973 -1.502 -0.43196 -2.2833 -0.41838 -1.5416 0.02678 -3.011 0.65771 -4.0921 1.75701 -1.081 1.09929 -1.6873 2.57908 -1.6883 4.12088 -0.00101 1.5418 0.6033 3.02237 1.683 4.12307 1.0796 1.1007 2.5482 1.7336 4.0898 1.7623Z" strokeWidth={1}></path>
+                  <path fill="#fff9bf" d="M15.3475 1.47827c-1.1559 -0.00084 -2.2864 0.33914 -3.2501 0.97742 -0.9637 0.63829 -1.7178 1.54655 -2.16795 2.61117 -0.45018 1.06462 -0.57648 2.23835 -0.36308 3.37438 0.2134 1.13602 0.75703 2.18396 1.56283 3.01256l8.3122 -8.31214c-1.0951 -1.06775 -2.5644 -1.66475 -4.0939 -1.66339Z" strokeWidth={1}></path>
+                  <path fill="#ffdda1" d="m20.1304 16.7826 -4.2287 1.4061h-0.0106c0.0866 -0.1598 0.1262 -0.3409 0.1142 -0.5223 -0.0119 -0.1813 -0.075 -0.3556 -0.1818 -0.5027 -0.1069 -0.1471 -0.2531 -0.2609 -0.4219 -0.3283 -0.1688 -0.0675 -0.3533 -0.0857 -0.532 -0.0528H12c-1.1337 -1.1699 -2.67626 -1.8555 -4.30435 -1.913H4.82609L1 16.7826v5.7391l3.82609 -2.3913C15.0877 23.5519 11.3027 23.5863 23 17.7391c-0.3227 -0.4342 -0.771 -0.7589 -1.2842 -0.9299 -0.5133 -0.1711 -1.0667 -0.1804 -1.5854 -0.0266Z" strokeWidth={1}></path>
+                  <path stroke="#191919" strokeLinecap="round" strokeLinejoin="round" d="M15.348 13.2434c0.7813 0.0146 1.5576 -0.1266 2.2838 -0.4154 0.7261 -0.2888 1.3874 -0.7193 1.9453 -1.2665 0.5578 -0.5472 1.0011 -1.2001 1.3038 -1.92048 0.3028 -0.7204 0.459 -1.4939 0.4595 -2.27534 0.0005 -0.78143 -0.1547 -1.55514 -0.4565 -2.27593 -0.3018 -0.7208 -0.7442 -1.37424 -1.3014 -1.92216 -0.5571 -0.54792 -1.2179 -0.97934 -1.9436 -1.26907 -0.7258 -0.28973 -1.502 -0.43196 -2.2833 -0.41838 -1.5416 0.02678 -3.011 0.65771 -4.0921 1.75701 -1.081 1.09929 -1.6873 2.57908 -1.6883 4.12088 -0.00101 1.5418 0.6033 3.02237 1.683 4.12307 1.0796 1.1007 2.5482 1.7336 4.0898 1.7623Z" strokeWidth={1}></path>
+                  <path stroke="#191919" strokeLinecap="round" strokeLinejoin="round" d="M15.3477 4.34782V3.3913" strokeWidth={1}></path>
+                  <path stroke="#191919" strokeLinecap="round" strokeLinejoin="round" d="M16.7821 4.34784h-1.9407c-0.2981 0.00021 -0.5867 0.10411 -0.8165 0.29387 -0.2298 0.18977 -0.3864 0.45358 -0.443 0.74619 -0.0565 0.29261 -0.0095 0.59578 0.133 0.85751 0.1426 0.26173 0.3717 0.46571 0.6482 0.57695l1.9743 0.79009c0.2764 0.11124 0.5056 0.31522 0.6481 0.57695 0.1426 0.26173 0.1896 0.5649 0.133 0.85751 -0.0565 0.2926 -0.2131 0.55642 -0.4429 0.74618 -0.2298 0.18977 -0.5185 0.29371 -0.8165 0.29391h-1.9465" strokeWidth={1}></path>
+                  <path stroke="#191919" strokeLinecap="round" strokeLinejoin="round" d="M15.3477 11.0435v-0.9565" strokeWidth={1}></path>
+                  <path stroke="#191919" strokeLinecap="round" strokeLinejoin="round" d="m15.9017 18.1887 4.2287 -1.4061c0.5187 -0.1538 1.0721 -0.1445 1.5854 0.0266 0.5132 0.1711 0.9615 0.4957 1.2842 0.93 -11.6973 5.8472 -7.9123 5.8127 -18.17391 2.3913L1 22.5218" strokeWidth={1}></path>
+                  <path stroke="#191919" strokeLinecap="round" strokeLinejoin="round" d="M9.6087 18.6957h5.2609c0.1399 0.0251 0.2836 0.0192 0.421 -0.0173 0.1375 -0.0364 0.2652 -0.1026 0.3743 -0.1938 0.109 -0.0912 0.1967 -0.2053 0.2569 -0.3341 0.0602 -0.1288 0.0914 -0.2692 0.0914 -0.4114 0 -0.1421 -0.0312 -0.2826 -0.0914 -0.4114 -0.0602 -0.1288 -0.1479 -0.2428 -0.2569 -0.334 -0.1091 -0.0912 -0.2368 -0.1574 -0.3743 -0.1939 -0.1374 -0.0364 -0.2811 -0.0423 -0.421 -0.0172H12c-1.1337 -1.1699 -2.67626 -1.8555 -4.30435 -1.913H4.82609L1 16.7826" strokeWidth={1}></path>
+                </svg>
+                Pago de Membresía requerido
+              </h3>
               <button 
                 onClick={() => setShowPaymentModal(false)} 
                 style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', fontSize: '1.25rem', fontWeight: 'bold' }}
@@ -2594,8 +2672,25 @@ export default function DriverPage() {
                   </div>
                   
                   <label style={{ display: 'block', background: 'rgba(255,255,255,0.03)', border: '1px dashed var(--border)', borderRadius: '8px', padding: '10px', textAlign: 'center', cursor: 'pointer', transition: 'var(--transition)' }} onMouseEnter={e => e.currentTarget.style.borderColor = 'var(--accent)'} onMouseLeave={e => e.currentTarget.style.borderColor = 'var(--border)'}>
-                    <span style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--accent)' }}>
-                      {uploadingReceipt ? 'Subiendo comprobante...' : '📂 Subir Comprobante de Transferencia'}
+                    <span style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--accent)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
+                      {uploadingReceipt ? (
+                        'Subiendo comprobante...'
+                      ) : (
+                        <>
+                          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" id="Office-Drawer--Streamline-Ultimate" height="16" width="16" style={{ flexShrink: 0 }}>
+                            <desc>Office Drawer Streamline Icon: https://streamlinehq.com</desc>
+                            <path fill="#e3e3e3" d="M2.9126 8.65216V3.86955c0 -0.25369 0.10078 -0.49698 0.28015 -0.67637 0.17939 -0.17938 0.42268 -0.28016 0.67637 -0.28016h8.13048c0.1484 0 0.2949 0.03457 0.4277 0.10098 0.1329 0.06642 0.2484 0.16283 0.3375 0.28163l1.1478 1.53044H20.13c0.2537 0 0.497 0.10078 0.6763 0.28015 0.1794 0.17939 0.2802 0.42268 0.2802 0.67637v2.86957" strokeWidth={1}></path>
+                            <path fill="#ffffff" d="M2.9126 12.4781V7.69554c0 -0.25369 0.10078 -0.49698 0.28015 -0.67637 0.17939 -0.17938 0.42268 -0.28016 0.67637 -0.28016h8.13048c0.1484 0 0.2949 0.03457 0.4277 0.10098 0.1329 0.06641 0.2484 0.16283 0.3375 0.28163l1.1478 1.53044H20.13c0.2537 0 0.497 0.10078 0.6763 0.28015 0.1794 0.17939 0.2802 0.42268 0.2802 0.67637v2.86952" strokeWidth={1}></path>
+                            <path stroke="#191919" strokeLinecap="round" strokeLinejoin="round" d="M2.9126 12.4781V7.69554c0 -0.25369 0.10078 -0.49698 0.28015 -0.67637 0.17939 -0.17938 0.42268 -0.28016 0.67637 -0.28016h8.13048c0.1484 0 0.2949 0.03457 0.4277 0.10098 0.1329 0.06641 0.2484 0.16283 0.3375 0.28163l1.1478 1.53044H20.13c0.2537 0 0.497 0.10078 0.6763 0.28015 0.1794 0.17939 0.2802 0.42268 0.2802 0.67637v2.86952" strokeWidth={1}></path>
+                            <path fill="#e3bfb3" d="M1 13.4347c0 -0.2537 0.10078 -0.497 0.28016 -0.6764 0.17938 -0.1793 0.42267 -0.2802 0.67636 -0.2802H22.0435c0.2536 0 0.497 0.1009 0.6763 0.2802 0.1794 0.1794 0.2802 0.4227 0.2802 0.6764v6.6956c0 0.2537 -0.1008 0.497 -0.2802 0.6764 -0.1793 0.1793 -0.4227 0.2801 -0.6763 0.2801H1.95652c-0.25369 0 -0.49698 -0.1008 -0.67636 -0.2801C1.10078 20.6273 1 20.384 1 20.1303v-6.6956Z" strokeWidth={1}></path>
+                            <path fill="#c77f67" d="M22.0435 18.2174H1.95652c-0.25369 0 -0.49698 -0.1008 -0.67636 -0.2802C1.10078 17.7579 1 17.5145 1 17.2609v2.8695c0 0.2537 0.10078 0.497 0.28016 0.6764 0.17938 0.1793 0.42267 0.2801 0.67636 0.2801H22.0435c0.2536 0 0.497 -0.1008 0.6763 -0.2801 0.1794 -0.1794 0.2802 -0.4227 0.2802 -0.6764v-2.8695c0 0.2536 -0.1008 0.497 -0.2802 0.6763 -0.1793 0.1794 -0.4227 0.2802 -0.6763 0.2802Z" strokeWidth={1}></path>
+                            <path stroke="#191919" strokeLinecap="round" strokeLinejoin="round" d="M1 13.4347c0 -0.2537 0.10078 -0.497 0.28016 -0.6764 0.17938 -0.1793 0.42267 -0.2802 0.67636 -0.2802H22.0435c0.2536 0 0.497 0.1009 0.6763 0.2802 0.1794 0.1794 0.2802 0.4227 0.2802 0.6764v6.6956c0 0.2537 -0.1008 0.497 -0.2802 0.6764 -0.1793 0.1793 -0.4227 0.2801 -0.6763 0.2801H1.95652c-0.25369 0 -0.49698 -0.1008 -0.67636 -0.2801C1.10078 20.6273 1 20.384 1 20.1303v-6.6956Z" strokeWidth={1}></path>
+                            <path stroke="#191919" strokeLinecap="round" strokeLinejoin="round" d="M2.9126 4.82607v-0.95652c0 -0.25369 0.10078 -0.49698 0.28015 -0.67637 0.17939 -0.17938 0.42268 -0.28016 0.67637 -0.28016h8.13048c0.1484 0 0.2949 0.03457 0.4277 0.10098 0.1329 0.06642 0.2484 0.16283 0.3375 0.28163l1.1478 1.53044H20.13c0.2537 0 0.497 0.10078 0.6763 0.28015 0.1794 0.17939 0.2802 0.42268 0.2802 0.67637" strokeWidth={1}></path>
+                            <path stroke="#191919" strokeLinecap="round" strokeLinejoin="round" d="M9.13037 15.3477h5.73913" strokeWidth={1}></path>
+                          </svg>
+                          Subir Comprobante de Transferencia
+                        </>
+                      )}
                     </span>
                     <input type="file" accept="image/*" onChange={(e) => { handleReceiptUpload(e); setShowPaymentModal(false); }} disabled={uploadingReceipt} style={{ display: 'none' }} />
                   </label>
