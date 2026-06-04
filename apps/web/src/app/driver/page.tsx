@@ -771,6 +771,11 @@ export default function DriverPage() {
     setLoading(true);
 
     if (newStatus && driver) {
+      if (!driver.mercadoPagoLink) {
+        alert('Debes vincular tu link de Mercado Pago para poder ponerte en línea y recibir pagos de tus viajes.');
+        setLoading(false);
+        return;
+      }
       const now = new Date();
       if (driver.membershipPlan === 'BLACK' && !driver.membershipPaid) {
         setShowPaymentModal(true);
@@ -824,6 +829,7 @@ export default function DriverPage() {
 
   const [showHistory, setShowHistory] = useState(false);
   const [mpLink, setMpLink] = useState('');
+  const [showMpTutorial, setShowMpTutorial] = useState(false);
 
   useEffect(() => {
     if (driver?.mercadoPagoLink) setMpLink(driver.mercadoPagoLink);
@@ -1362,7 +1368,60 @@ export default function DriverPage() {
                 value={mpLink} onChange={(e) => setMpLink(e.target.value)}
                 style={{ marginBottom: '12px' }}
               />
-              <button className="btn btn-accent btn-block" onClick={saveMPLink} disabled={!mpLink.includes('mercadopago')}>Vincular Cuenta</button>
+              <button 
+                className="btn btn-accent btn-block" 
+                onClick={saveMPLink} 
+                disabled={!mpLink.toLowerCase().includes('mercadopago') && !mpLink.toLowerCase().includes('mpago')}
+                style={{ marginBottom: '10px' }}
+              >
+                Vincular Cuenta
+              </button>
+
+              {/* Collapsible Mini Tutorial */}
+              <button
+                type="button"
+                onClick={() => setShowMpTutorial(!showMpTutorial)}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: 'var(--accent)',
+                  fontSize: '0.75rem',
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                  padding: '4px 0',
+                  outline: 'none',
+                  margin: '4px auto 0'
+                }}
+              >
+                {showMpTutorial ? '✕ Cerrar ayuda' : '❓ ¿Cómo obtener este link?'}
+              </button>
+
+              {showMpTutorial && (
+                <div style={{
+                  marginTop: '12px',
+                  padding: '12px',
+                  background: 'rgba(255, 255, 255, 0.03)',
+                  border: '1px solid rgba(255, 255, 255, 0.08)',
+                  borderRadius: '10px',
+                  fontSize: '0.75rem',
+                  color: 'var(--text-muted)',
+                  lineHeight: '1.45',
+                  textAlign: 'left',
+                  animation: 'fadeIn 0.25s ease'
+                }}>
+                  <div style={{ fontWeight: 800, color: '#fff', marginBottom: '6px' }}>Pasos para obtener tu link de cobro:</div>
+                  <ol style={{ paddingLeft: '14px', margin: 0, display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                    <li>Abre la app de <strong>Mercado Pago</strong> o inicia sesión en su sitio web.</li>
+                    <li>Busca la opción <strong>"Link de pago"</strong> (o "Cobrar con link") en el menú principal.</li>
+                    <li>Crea un link nuevo. Puedes asignarle un título (ej: <em>"Viajes Fim"</em>) y dejar el monto en blanco (para que el pasajero ingrese el valor exacto del viaje).</li>
+                    <li>Copia el enlace generado (ej: <code>https://mpago.li/...</code> o <code>https://www.mercadopago.cl/...</code>).</li>
+                    <li>Pégalo en el campo superior y presiona <strong>Vincular Cuenta</strong>.</li>
+                  </ol>
+                </div>
+              )}
             </div>
           )}
 
