@@ -99,6 +99,47 @@ function RegisterForm() {
   const [resending, setResending] = useState(false);
   const [verificationSuccess, setVerificationSuccess] = useState(false);
 
+  // Legal
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
+  const [showTerms, setShowTerms] = useState(false);
+  const [showPrivacy, setShowPrivacy] = useState(false);
+
+  // Step 1 - Basic data
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('+569');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [rut, setRut] = useState('');
+  const [birthDate, setBirthDate] = useState('');
+  const [address, setAddress] = useState('');
+
+  // Autocomplete address states
+  const [addressSuggestions, setAddressSuggestions] = useState<any[]>([]);
+  const [isSearchingAddress, setIsSearchingAddress] = useState(false);
+  const [showAddressDropdown, setShowAddressDropdown] = useState(false);
+  const [skipAutocomplete, setSkipAutocomplete] = useState(false);
+  const addressContainerRef = useRef<HTMLDivElement>(null);
+
+  // Step 2 - Documents
+  const [idFront, setIdFront] = useState<FileUpload>(emptyUpload());
+  const [idBack, setIdBack] = useState<FileUpload>(emptyUpload());
+  const [selfie, setSelfie] = useState<FileUpload>(emptyUpload());
+
+  // Step 3 - Driver vehicle (solo conductores)
+  const [licenseNumber, setLicenseNumber] = useState('');
+  const [licenseFront, setLicenseFront] = useState<FileUpload>(emptyUpload());
+  const [licenseBack, setLicenseBack] = useState<FileUpload>(emptyUpload());
+  const [vehicleBrand, setVehicleBrand] = useState('');
+  const [vehicleModel, setVehicleModel] = useState('');
+  const [vehicleYear, setVehicleYear] = useState('');
+  const [vehiclePlate, setVehiclePlate] = useState('');
+  const [tagNumber, setTagNumber] = useState('');
+  const [vehiclePhoto, setVehiclePhoto] = useState<FileUpload>(emptyUpload());
+
+  // Step 4 — Membresía (solo conductores)
+  const [membershipPlan, setMembershipPlan] = useState<MembershipPlan>(planParam);
+
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const isMobileApp = (window as any).Capacitor || 
@@ -282,46 +323,6 @@ function RegisterForm() {
     }
   };
   
-  // Legal
-  const [acceptedTerms, setAcceptedTerms] = useState(false);
-  const [showTerms, setShowTerms] = useState(false);
-  const [showPrivacy, setShowPrivacy] = useState(false);
-
-  // Step 1 - Basic data
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [phone, setPhone] = useState('+569');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [rut, setRut] = useState('');
-  const [birthDate, setBirthDate] = useState('');
-  const [address, setAddress] = useState('');
-
-  // Autocomplete address states
-  const [addressSuggestions, setAddressSuggestions] = useState<any[]>([]);
-  const [isSearchingAddress, setIsSearchingAddress] = useState(false);
-  const [showAddressDropdown, setShowAddressDropdown] = useState(false);
-  const [skipAutocomplete, setSkipAutocomplete] = useState(false);
-  const addressContainerRef = useRef<HTMLDivElement>(null);
-
-  // Step 2 - Documents
-  const [idFront, setIdFront] = useState<FileUpload>(emptyUpload());
-  const [idBack, setIdBack] = useState<FileUpload>(emptyUpload());
-  const [selfie, setSelfie] = useState<FileUpload>(emptyUpload());
-
-  // Step 3 - Driver vehicle (solo conductores)
-  const [licenseNumber, setLicenseNumber] = useState('');
-  const [licenseFront, setLicenseFront] = useState<FileUpload>(emptyUpload());
-  const [licenseBack, setLicenseBack] = useState<FileUpload>(emptyUpload());
-  const [vehicleBrand, setVehicleBrand] = useState('');
-  const [vehicleModel, setVehicleModel] = useState('');
-  const [vehicleYear, setVehicleYear] = useState('');
-  const [vehiclePlate, setVehiclePlate] = useState('');
-  const [tagNumber, setTagNumber] = useState('');
-  const [vehiclePhoto, setVehiclePhoto] = useState<FileUpload>(emptyUpload());
-
-  // Step 4 — Membresía (solo conductores)
-  const [membershipPlan, setMembershipPlan] = useState<MembershipPlan>(planParam);
 
   const totalSteps = role === 'driver' ? 4 : 2;
 
