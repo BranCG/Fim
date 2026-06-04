@@ -7,23 +7,28 @@ import Logo from '@/components/Logo';
 import SplashScreen from '@/components/SplashScreen';
 import { getSession } from '@/lib/api';
 
-// Ultimate Colors Free style icons
-const IconPassengerColor = () => (
-  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ display: 'inline-block', flexShrink: 0 }}>
-    <path d="M12 11c2.761 0 5-2.239 5-5s-2.239-5-5-5-5 2.239-5 5 2.239 5 5 5z" fill="#4FC3F7"/>
-    <path d="M12 13c-4.418 0-8 3.582-8 8v1h16v-1c0-4.418-3.582-8-8-8z" fill="#00E5A0"/>
-    <path d="M12 13c-2.209 0-4 1.791-4 4v1h8v-1c0-2.209-1.791-4-4-4z" fill="#00B37E" opacity="0.3"/>
-  </svg>
-);
-
-const IconDriverColor = () => (
-  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ display: 'inline-block', flexShrink: 0 }}>
-    <path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2" fill="#FFB800" />
-    <circle cx="7" cy="17" r="3" fill="#FF4560" />
-    <circle cx="7" cy="17" r="1" fill="#FFFFFF" />
-    <circle cx="17" cy="17" r="3" fill="#FF4560" />
-    <circle cx="17" cy="17" r="1" fill="#FFFFFF" />
-    <path d="M5 8h7v3H5V8z" fill="#4FC3F7" opacity="0.8" />
+const SingleNeutralCircleIcon = ({ width = 24, height = 24, style }: { width?: number | string; height?: number | string; style?: React.CSSProperties }) => (
+  <svg 
+    xmlns="http://www.w3.org/2000/svg" 
+    fill="none" 
+    viewBox="0 0 24 24" 
+    id="Single-Neutral-Circle--Streamline-Ultimate" 
+    height={height} 
+    width={width}
+    style={style}
+  >
+    <desc>
+      Single Neutral Circle Streamline Icon: https://streamlinehq.com
+    </desc>
+    <path fill="#c2f3ff" d="M12.0001 23c6.0733 0 10.9972 -4.9239 10.9972 -10.9972 0 -6.07331 -4.9239 -10.99718 -10.9972 -10.99718 -6.07329 0 -10.99717 4.92387 -10.99717 10.99718C1.00293 18.0761 5.92681 23 12.0001 23Z" strokeWidth={1}></path>
+    <path fill="#66e1ff" d="M12.0001 5.55652c2.5213 0.00022 4.9658 0.86676 6.9244 2.45446 1.9585 1.5877 3.312 3.80012 3.8338 6.26682 0.3396 -1.6021 0.3171 -3.2599 -0.0659 -4.85222s-1.1167 -3.079 -2.1477 -4.35147c-1.031 -1.27248 -2.3332 -2.29861 -3.8115 -3.00347C15.2549 1.36579 13.6379 1 12.0001 1c-1.6377 0 -3.25475 0.36579 -4.73303 1.07064 -1.47829 0.70486 -2.78048 1.73099 -3.81148 3.00347 -1.031 1.27247 -1.76478 2.75915 -2.14776 4.35147C0.924863 11.0179 0.902371 12.6757 1.242 14.2778c0.52178 -2.4667 1.87528 -4.67912 3.8338 -6.26682 1.95851 -1.5877 4.4031 -2.45424 6.9243 -2.45446Z" strokeWidth={1}></path>
+    <path stroke="#191919" strokeLinecap="round" strokeLinejoin="round" d="M12.0001 23c6.0733 0 10.9972 -4.9239 10.9972 -10.9972 0 -6.07331 -4.9239 -10.99718 -10.9972 -10.99718 -6.07329 0 -10.99717 4.92387 -10.99717 10.99718C1.00293 18.0761 5.92681 23 12.0001 23Z" strokeWidth={1}></path>
+    <path fill="#ffdda1" d="M12.0005 9.61208c0.8242 0 1.6148 -0.32744 2.1976 -0.91029 0.5828 -0.58284 0.9103 -1.37335 0.9103 -2.19762 0 -0.82426 -0.3275 -1.61477 -0.9103 -2.19762 -0.5828 -0.58284 -1.3734 -0.91028 -2.1976 -0.91028 -0.8243 0 -1.6148 0.32744 -2.19764 0.91028 -0.58284 0.58285 -0.91028 1.37336 -0.91028 2.19762 0 0.82427 0.32744 1.61478 0.91028 2.19762 0.58284 0.58285 1.37334 0.91029 2.19764 0.91029Z" strokeWidth={1}></path>
+    <path fill="#ffffff" d="m13.9561 20.6093 0.4351 -2.3907h1.9126v-2.8688c0 -1.1413 -0.4534 -2.2359 -1.2604 -3.0429 -0.807 -0.807 -1.9016 -1.2604 -3.0429 -1.2604s-2.23583 0.4534 -3.04284 1.2604c-0.80702 0.807 -1.26039 1.9016 -1.26039 3.0429v2.8688h1.91255l0.43508 2.3907" strokeWidth={1}></path>
+    <path fill="#ffdda1" d="M12.0005 5.30883c0.655 0.00133 1.2927 0.21033 1.8214 0.59694s0.9212 0.93093 1.121 1.55468c0.1052 -0.30792 0.1617 -0.63114 0.1655 -0.95628 0 -0.82426 -0.3275 -1.61477 -0.9103 -2.19762 -0.5828 -0.58284 -1.3734 -0.91028 -2.1976 -0.91028 -0.8243 0 -1.6148 0.32744 -2.19764 0.91028 -0.58284 0.58285 -0.91028 1.37336 -0.91028 2.19762 0.00382 0.32514 0.06024 0.64836 0.16543 0.95628 0.19986 -0.62375 0.59236 -1.16807 1.12109 -1.55468 0.5287 -0.38661 1.1664 -0.59561 1.8214 -0.59694Z" strokeWidth={1}></path>
+    <path stroke="#191919" strokeLinecap="round" strokeLinejoin="round" d="M12.0005 9.61208c0.8242 0 1.6148 -0.32744 2.1976 -0.91029 0.5828 -0.58284 0.9103 -1.37335 0.9103 -2.19762 0 -0.82426 -0.3275 -1.61477 -0.9103 -2.19762 -0.5828 -0.58284 -1.3734 -0.91028 -2.1976 -0.91028 -0.8243 0 -1.6148 0.32744 -2.19764 0.91028 -0.58284 0.58285 -0.91028 1.37336 -0.91028 2.19762 0 0.82427 0.32744 1.61478 0.91028 2.19762 0.58284 0.58285 1.37334 0.91029 2.19764 0.91029Z" strokeWidth={1}></path>
+    <path fill="#ffffff" d="M12.0005 11.0465c-1.1413 0 -2.23583 0.4534 -3.04284 1.2604 -0.80702 0.807 -1.26039 1.9016 -1.26039 3.0429v1.9125c0 -0.5651 0.1113 -1.1247 0.32756 -1.6468s0.53324 -0.9964 0.93283 -1.396c0.39959 -0.3996 0.87398 -0.7166 1.39604 -0.9329 0.5221 -0.2162 1.0817 -0.3275 1.6468 -0.3275 0.5651 0 1.1247 0.1113 1.6468 0.3275 0.5221 0.2163 0.9965 0.5333 1.3961 0.9329 0.3996 0.3996 0.7165 0.8739 0.9328 1.396 0.2163 0.5221 0.3276 1.0817 0.3276 1.6468v-1.9125c0 -1.1413 -0.4534 -2.2359 -1.2604 -3.0429 -0.807 -0.807 -1.9016 -1.2604 -3.0429 -1.2604Z" strokeWidth={1}></path>
+    <path stroke="#191919" strokeLinecap="round" strokeLinejoin="round" d="m13.9561 20.6093 0.4351 -2.3907h1.9126v-2.8688c0 -1.1413 -0.4534 -2.2359 -1.2604 -3.0429 -0.807 -0.807 -1.9016 -1.2604 -3.0429 -1.2604s-2.23583 0.4534 -3.04284 1.2604c-0.80702 0.807 -1.26039 1.9016 -1.26039 3.0429v2.8688h1.91255l0.43508 2.3907" strokeWidth={1}></path>
   </svg>
 );
 
@@ -191,7 +196,7 @@ export default function Home() {
             justifyContent: 'center',
             gap: '6px'
           }}>
-            <IconPassengerColor />
+            <SingleNeutralCircleIcon width={18} height={18} style={{ display: 'inline-block', flexShrink: 0 }} />
             Pasajero
           </div>
           <div style={{
@@ -208,7 +213,7 @@ export default function Home() {
             justifyContent: 'center',
             gap: '6px'
           }}>
-            <IconDriverColor />
+            <SingleNeutralCircleIcon width={18} height={18} style={{ display: 'inline-block', flexShrink: 0 }} />
             Conductor
           </div>
         </div>
@@ -390,28 +395,28 @@ export default function Home() {
               {[
                 {
                   icon: (
-                    <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                    <SingleNeutralCircleIcon width={36} height={36} />
                   ),
                   title: '1. Cotiza y Pide',
                   desc: 'Ingresa tu origen y destino. El sistema calculará la tarifa justa sin tarifas dinámicas especulativas.'
                 },
                 {
                   icon: (
-                    <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                    <SingleNeutralCircleIcon width={36} height={36} />
                   ),
                   title: '2. Código OTP Seguro',
                   desc: 'Al abordar el auto, indícale al conductor tu código de seguridad OTP exclusivo para autorizar el viaje.'
                 },
                 {
                   icon: (
-                    <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="2"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+                    <SingleNeutralCircleIcon width={36} height={36} />
                   ),
                   title: '3. Pago Directo',
                   desc: 'Paga con tarjeta mediante el enlace de Mercado Pago del conductor o en efectivo. Sin cargos extra de intermediación.'
                 },
                 {
                   icon: (
-                    <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                    <SingleNeutralCircleIcon width={36} height={36} />
                   ),
                   title: '4. Viajes Regulados',
                   desc: 'Viaja con conductores profesionales validados con estricto control de identidad y documentación al día.'
