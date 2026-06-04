@@ -45,7 +45,13 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401 && typeof window !== 'undefined') {
+    const url = error.config?.url || '';
+    const isLoginOrAuth = url.includes('/auth/driver/login') ||
+                          url.includes('/auth/passenger/login') ||
+                          url.includes('/auth/admin/login') ||
+                          url.includes('/auth/google/check');
+
+    if (error.response?.status === 401 && !isLoginOrAuth && typeof window !== 'undefined') {
       localStorage.removeItem('fim_token');
       localStorage.removeItem('fim_user');
       

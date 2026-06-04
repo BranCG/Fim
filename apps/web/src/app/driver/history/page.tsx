@@ -122,7 +122,13 @@ export default function DriverHistoryPage() {
         </div>
       ) : trips.length === 0 ? (
         <div className="card" style={{ textAlign: 'center', padding: '48px 24px' }}>
-          <div style={{ fontSize: '3rem', marginBottom: '16px', opacity: 0.3 }}>🛣️</div>
+          <div style={{ color: 'var(--text-muted)', marginBottom: '16px', opacity: 0.3, display: 'flex', justifyContent: 'center' }}>
+            <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="6" cy="19" r="3" />
+              <circle cx="18" cy="5" r="3" />
+              <path d="M9 19h8.5a4.5 4.5 0 0 0 0-9H9a4.5 4.5 0 0 1 0-9h6" />
+            </svg>
+          </div>
           <p style={{ color: 'var(--text-muted)' }}>Aún no has completado ningún viaje.</p>
           <Link href="/driver" className="btn btn-primary" style={{ marginTop: '24px' }}>Empezar a conducir</Link>
         </div>

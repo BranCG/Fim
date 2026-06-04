@@ -68,7 +68,18 @@ export default function LoginPage() {
           router.push(`/register?${params.toString()}`);
         }
       } catch (err: any) {
-        setError(err.response?.data?.error || 'Error al iniciar sesión con Google');
+        const e = err as { response?: { status?: number; data?: { error?: string } } };
+        const status = e.response?.status;
+        const errorMsg = e.response?.data?.error;
+        let friendlyError = '';
+        if (status === 401) {
+          friendlyError = 'La cuenta de Google no es válida o ha expirado. Por favor, inicia sesión de nuevo.';
+        } else if (!e.response) {
+          friendlyError = 'No pudimos conectar con el servidor. Verifica tu conexión a internet.';
+        } else {
+          friendlyError = errorMsg || 'Error al iniciar sesión con Google';
+        }
+        setError(friendlyError);
         setLoading(false);
       }
     };
@@ -148,8 +159,13 @@ export default function LoginPage() {
     } catch (err: any) {
       console.error('Native Google Error:', err);
       const errMsg = err?.message || err?.errorMessage || (typeof err === 'string' ? err : JSON.stringify(err));
-      alert(`Error Google Nativo: ${errMsg}`);
-      setError(`Error al iniciar sesión con Google nativo: ${errMsg}`);
+      let friendlyError = 'Error al iniciar sesión con Google.';
+      if (errMsg && errMsg.toLowerCase().includes('cancel')) {
+        friendlyError = 'Inicio de sesión con Google cancelado por el usuario.';
+      } else if (errMsg) {
+        friendlyError = `Error al iniciar sesión con Google: ${errMsg}`;
+      }
+      setError(friendlyError);
       setLoading(false);
     }
   };
@@ -158,6 +174,14 @@ export default function LoginPage() {
     e.preventDefault();
     setLoading(true);
     setError('');
+
+    // Validación de formato de email local
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      setError('Por favor, ingresa un correo electrónico válido (ejemplo: usuario@dominio.com).');
+      setLoading(false);
+      return;
+    }
 
     let success = false;
     try {
@@ -174,8 +198,24 @@ export default function LoginPage() {
       }
       success = true;
     } catch (err: unknown) {
-      const e = err as { response?: { data?: { error?: string } } };
-      setError(e.response?.data?.error || 'Error al iniciar sesión');
+      const e = err as { response?: { status?: number; data?: { error?: string } } };
+      const status = e.response?.status;
+      const errorMsg = e.response?.data?.error;
+
+      let friendlyError = '';
+      if (status === 401) {
+        friendlyError = 'El correo o la contraseña son incorrectos. Por favor, verifica tus datos e inténtalo de nuevo.';
+      } else if (status === 404) {
+        friendlyError = 'Esta cuenta no está registrada. Por favor, regístrate si aún no tienes una cuenta.';
+      } else if (status === 500) {
+        friendlyError = 'Hubo un problema interno en el servidor. Por favor, inténtalo de nuevo más tarde.';
+      } else if (!e.response) {
+        friendlyError = 'No pudimos conectar con el servidor. Verifica tu conexión a internet.';
+      } else {
+        friendlyError = errorMsg || 'Error al iniciar sesión. Por favor, inténtalo de nuevo.';
+      }
+
+      setError(friendlyError);
       setLoading(false);
     }
 
@@ -230,7 +270,12 @@ export default function LoginPage() {
           ))}
         </div>
 
-        {error && <div className="alert alert-error" style={{ marginBottom: '24px' }}>⚠️ {error}</div>}
+        {error && (
+          <div className="alert alert-error" style={{ marginBottom: '24px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            <span>{error}</span>
+          </div>
+        )}
 
         <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
           <div className="form-group">
