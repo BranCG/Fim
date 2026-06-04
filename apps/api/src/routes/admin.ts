@@ -205,6 +205,28 @@ router.post('/drivers/:id/suspend', async (req: Request, res: Response) => {
   }
 });
 
+// ─── ELIMINAR CONDUCTOR PERMANENTE ────────────────────────────────────────
+router.delete('/drivers/:id', async (req: Request, res: Response) => {
+  try {
+    const driverId = req.params.id;
+    const driver = await prisma.driver.findUnique({ where: { id: driverId } });
+    if (!driver) return res.status(404).json({ error: 'Conductor no encontrado' });
+
+    await prisma.$transaction([
+      prisma.rating.deleteMany({ where: { OR: [{ driverId }, { trip: { driverId } }] } }),
+      prisma.payout.deleteMany({ where: { driverId } }),
+      prisma.trip.deleteMany({ where: { driverId } }),
+      prisma.refreshToken.deleteMany({ where: { driverId } }),
+      prisma.driver.delete({ where: { id: driverId } }),
+    ]);
+
+    return res.json({ message: 'Conductor eliminado permanentemente' });
+  } catch (err) {
+    console.error('Error al eliminar conductor:', err);
+    return res.status(500).json({ error: 'Error al eliminar conductor' });
+  }
+});
+
 // ─── PASAJEROS ────────────────────────────────────────────────────────────
 router.get('/passengers', async (_req: Request, res: Response) => {
   try {
@@ -283,6 +305,29 @@ router.post('/passengers/:id/reject', async (req: Request, res: Response) => {
     return res.json({ message: 'Pasajero rechazado con éxito', passenger });
   } catch (err) {
     return res.status(500).json({ error: 'Error interno' });
+  }
+});
+
+// ─── ELIMINAR PASAJERO PERMANENTE ─────────────────────────────────────────
+router.delete('/passengers/:id', async (req: Request, res: Response) => {
+  try {
+    const passengerId = req.params.id;
+    const passenger = await prisma.user.findUnique({ where: { id: passengerId } });
+    if (!passenger || passenger.role !== 'passenger') {
+      return res.status(404).json({ error: 'Pasajero no encontrado' });
+    }
+
+    await prisma.$transaction([
+      prisma.rating.deleteMany({ where: { OR: [{ passengerId }, { trip: { passengerId } }] } }),
+      prisma.trip.deleteMany({ where: { passengerId } }),
+      prisma.refreshToken.deleteMany({ where: { userId: passengerId } }),
+      prisma.user.delete({ where: { id: passengerId } }),
+    ]);
+
+    return res.json({ message: 'Pasajero eliminado permanentemente' });
+  } catch (err) {
+    console.error('Error al eliminar pasajero:', err);
+    return res.status(500).json({ error: 'Error al eliminar pasajero' });
   }
 });
 

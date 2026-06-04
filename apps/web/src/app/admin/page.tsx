@@ -304,14 +304,19 @@ export default function AdminDashboardPage() {
       else if (action === 'reject') await api.post(`/admin/drivers/${driverId}/reject`, { reason });
       else if (action === 'membership') await api.post(`/admin/drivers/${driverId}/membership-paid`);
       else if (action === 'suspend') await api.post(`/admin/drivers/${driverId}/suspend`, { reason });
+      else if (action === 'delete') await api.delete(`/admin/drivers/${driverId}`);
 
-      setActionMsg('Acción realizada con éxito');
+      setActionMsg(action === 'delete' ? 'Conductor eliminado con éxito' : 'Acción realizada con éxito');
       loadStats();
       if (view === 'pending') loadPending();
       if (view === 'drivers') loadAllDrivers();
       if (selectedDriver && selectedDriver.id === driverId) {
-        const r = await api.get(`/admin/drivers/${driverId}`);
-        setSelectedDriver(r.data.driver);
+        if (action === 'delete') {
+          setSelectedDriver(null);
+        } else {
+          const r = await api.get(`/admin/drivers/${driverId}`);
+          setSelectedDriver(r.data.driver);
+        }
       }
     } catch (err) {
       setActionMsg('Error al procesar la acción');
@@ -325,30 +330,39 @@ export default function AdminDashboardPage() {
     setLoading(true); setActionMsg('');
     // Update optimista inmediato del estado local (botones cambian al instante)
     const newVerified = action === 'approve';
-    setPassengers(prev => prev.map(p => p.id === passengerId ? { ...p, isVerified: newVerified } : p));
-    if (selectedPassenger && selectedPassenger.id === passengerId) {
-      setSelectedPassenger(prev => prev ? { ...prev, isVerified: newVerified } : prev);
+    if (action !== 'delete') {
+      setPassengers(prev => prev.map(p => p.id === passengerId ? { ...p, isVerified: newVerified } : p));
+      if (selectedPassenger && selectedPassenger.id === passengerId) {
+        setSelectedPassenger(prev => prev ? { ...prev, isVerified: newVerified } : prev);
+      }
     }
     try {
       if (action === 'approve') await api.post(`/admin/passengers/${passengerId}/approve`);
       else if (action === 'reject') await api.post(`/admin/passengers/${passengerId}/reject`);
+      else if (action === 'delete') await api.delete(`/admin/passengers/${passengerId}`);
 
-      setActionMsg(action === 'approve' ? 'Pasajero aprobado con éxito' : 'Verificación revocada');
+      setActionMsg(action === 'approve' ? 'Pasajero aprobado con éxito' : action === 'delete' ? 'Pasajero eliminado con éxito' : 'Verificación revocada');
       loadStats();
       // Recargar detalle con OTPs si está abierto
       if (selectedPassenger && selectedPassenger.id === passengerId) {
-        try {
-          const r = await api.get(`/admin/passengers/${passengerId}`);
-          setSelectedPassenger(r.data.passenger);
-        } catch {}
+        if (action === 'delete') {
+          setSelectedPassenger(null);
+        } else {
+          try {
+            const r = await api.get(`/admin/passengers/${passengerId}`);
+            setSelectedPassenger(r.data.passenger);
+          } catch {}
+        }
       }
       if (view === 'passengers') loadPassengers();
     } catch (err) {
-      // Revertir update optimista si falla
-      const original = !newVerified;
-      setPassengers(prev => prev.map(p => p.id === passengerId ? { ...p, isVerified: original } : p));
-      if (selectedPassenger && selectedPassenger.id === passengerId) {
-        setSelectedPassenger(prev => prev ? { ...prev, isVerified: original } : prev);
+      if (action !== 'delete') {
+        // Revertir update optimista si falla
+        const original = !newVerified;
+        setPassengers(prev => prev.map(p => p.id === passengerId ? { ...p, isVerified: original } : p));
+        if (selectedPassenger && selectedPassenger.id === passengerId) {
+          setSelectedPassenger(prev => prev ? { ...prev, isVerified: original } : prev);
+        }
       }
       setActionMsg('Error al procesar la acción');
     } finally {
@@ -705,14 +719,16 @@ export default function AdminDashboardPage() {
             <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
               <h3 style={{ fontSize: '0.82rem', color: 'var(--accent)' }}>ACCIONES ADMINISTRADOR</h3>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                {selectedDriver.status === 'pending' && (
+                {(selectedDriver.status === 'pending' || selectedDriver.status === 'suspended') && (
                   <>
                     <button className="btn btn-success" onClick={() => doDriverAction(selectedDriver.id, 'approve')} disabled={loading} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
-                      <Icon name="check" size={15} color="currentColor" /> Aprobar Conductor
+                      <Icon name="check" size={15} color="currentColor" /> {selectedDriver.status === 'suspended' ? 'Reactivar Conductor' : 'Aprobar Conductor'}
                     </button>
-                    <button className="btn btn-warning" onClick={() => doDriverAction(selectedDriver.id, 'membership')} disabled={loading} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
-                      <Icon name="creditcard" size={15} color="currentColor" /> Aprobar + Activar Membresía
-                    </button>
+                    {selectedDriver.status === 'pending' && (
+                      <button className="btn btn-warning" onClick={() => doDriverAction(selectedDriver.id, 'membership')} disabled={loading} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
+                        <Icon name="creditcard" size={15} color="currentColor" /> Aprobar + Activar Membresía
+                      </button>
+                    )}
                   </>
                 )}
 
@@ -722,17 +738,17 @@ export default function AdminDashboardPage() {
                   </button>
                 )}
 
-                {selectedDriver.status === 'active' && (
+                {(selectedDriver.status === 'active' || selectedDriver.status === 'approved') && (
                   <button
                     className="btn btn-danger"
                     onClick={() => {
-                      const reason = prompt('Escribe el motivo de suspensión del conductor:');
+                      const reason = prompt('Escribe el motivo de suspensión/desactivación del conductor:');
                       if (reason) doDriverAction(selectedDriver.id, 'suspend', reason);
                     }}
                     disabled={loading}
                     style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
                   >
-                    <Icon name="suspend" size={15} color="currentColor" /> Suspender Conductor
+                    <Icon name="suspend" size={15} color="currentColor" /> Desactivar / Suspender Conductor
                   </button>
                 )}
 
@@ -754,6 +770,20 @@ export default function AdminDashboardPage() {
                     </button>
                   </div>
                 )}
+
+                {/* Botón para eliminar permanentemente */}
+                <button
+                  className="btn btn-danger"
+                  onClick={() => {
+                    if (confirm(`¿Estás seguro de que deseas eliminar permanentemente la cuenta del conductor ${selectedDriver.name}? Esta acción no se puede deshacer y borrará todo su historial, viajes, calificaciones y pagos.`)) {
+                      doDriverAction(selectedDriver.id, 'delete');
+                    }
+                  }}
+                  disabled={loading}
+                  style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', background: 'var(--danger)', color: 'white', marginTop: '12px', fontWeight: 800 }}
+                >
+                  <Icon name="x" size={15} color="currentColor" /> Eliminar Conductor
+                </button>
               </div>
             </div>
           </div>
@@ -839,7 +869,7 @@ export default function AdminDashboardPage() {
                     )}
                     {p.isVerified && (
                       <button className="btn btn-danger btn-sm" onClick={() => doPassengerAction(p.id, 'reject')} style={{ padding: '6px 12px', display: 'flex', alignItems: 'center', gap: '5px' }}>
-                        <Icon name="x" size={12} color="currentColor" /> Deshacer
+                        <Icon name="x" size={12} color="currentColor" /> Desactivar
                       </button>
                     )}
                   </div>
@@ -923,25 +953,41 @@ export default function AdminDashboardPage() {
             {/* Acciones Pasajero */}
             <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
               <h3 style={{ fontSize: '0.82rem', color: 'var(--accent)' }}>ACCIONES PASAJERO</h3>
-              {!selectedPassenger.isVerified ? (
-                <button
-                  className="btn btn-success"
-                  onClick={() => doPassengerAction(selectedPassenger.id, 'approve')}
-                  disabled={loading}
-                  style={{ fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '7px' }}
-                >
-                  <Icon name="check" size={15} color="currentColor" /> Aprobar Pasajero
-                </button>
-              ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                {!selectedPassenger.isVerified ? (
+                  <button
+                    className="btn btn-success"
+                    onClick={() => doPassengerAction(selectedPassenger.id, 'approve')}
+                    disabled={loading}
+                    style={{ fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '7px' }}
+                  >
+                    <Icon name="check" size={15} color="currentColor" /> Aprobar / Activar Pasajero
+                  </button>
+                ) : (
+                  <button
+                    className="btn btn-danger"
+                    onClick={() => doPassengerAction(selectedPassenger.id, 'reject')}
+                    disabled={loading}
+                    style={{ fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '7px' }}
+                  >
+                    <Icon name="x" size={15} color="currentColor" /> Desactivar Pasajero
+                  </button>
+                )}
+
+                {/* Botón para eliminar permanentemente */}
                 <button
                   className="btn btn-danger"
-                  onClick={() => doPassengerAction(selectedPassenger.id, 'reject')}
+                  onClick={() => {
+                    if (confirm(`¿Estás seguro de que deseas eliminar permanentemente la cuenta del pasajero ${selectedPassenger.name}? Esta acción no se puede deshacer y borrará todo su historial, viajes y calificaciones.`)) {
+                      doPassengerAction(selectedPassenger.id, 'delete');
+                    }
+                  }}
                   disabled={loading}
-                  style={{ fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '7px' }}
+                  style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', background: 'var(--danger)', color: 'white', marginTop: '12px', fontWeight: 800 }}
                 >
-                  <Icon name="x" size={15} color="currentColor" /> Revocar Verificación
+                  <Icon name="x" size={15} color="currentColor" /> Eliminar Pasajero
                 </button>
-              )}
+              </div>
             </div>
 
             {/* Historial de Viajes con Trazabilidad */}

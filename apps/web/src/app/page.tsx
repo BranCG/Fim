@@ -889,7 +889,7 @@ export default function Home() {
 
                       <div style={{ borderTop: '1px solid rgba(212,175,55,0.2)', paddingTop: '20px', marginTop: 'auto' }}>
                         <div style={{ fontSize: '0.78rem', color: 'rgba(255,255,255,0.4)', marginBottom: '12px', textAlign: 'center' }}>
-                          Pago seguro con Mercado Pago — activación instantánea
+                          Pago seguro con Mercado Pago
                         </div>
                         <Link href="/register?role=driver&plan=BLACK" style={{
                           display: 'block', textAlign: 'center', padding: '14px',
@@ -982,7 +982,7 @@ export default function Home() {
 
                       <div style={{ borderTop: '1px solid rgba(59,130,246,0.2)', paddingTop: '20px', marginTop: 'auto' }}>
                         <div style={{ fontSize: '0.78rem', color: 'rgba(255,255,255,0.4)', marginBottom: '12px', textAlign: 'center' }}>
-                          Transferencia bancaria diaria + comprobante en la app
+                          Pago seguro con Mercado Pago
                         </div>
                         <Link href="/register?role=driver&plan=COMFORT" style={{
                           display: 'block', textAlign: 'center', padding: '14px',
@@ -1085,7 +1085,7 @@ export default function Home() {
 
                       <div style={{ borderTop: '1px solid rgba(16,185,129,0.2)', paddingTop: '20px', marginTop: 'auto' }}>
                         <div style={{ fontSize: '0.78rem', color: 'rgba(255,255,255,0.4)', marginBottom: '12px', textAlign: 'center' }}>
-                          Pago seguro con Mercado Pago — activo el próximo viernes
+                          Pago seguro con Mercado Pago
                         </div>
                         <Link href="/register?role=driver&plan=FLEX" style={{
                           display: 'block', textAlign: 'center', padding: '14px',
