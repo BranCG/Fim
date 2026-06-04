@@ -315,9 +315,13 @@ function RegisterForm() {
       }
     } catch (err: any) {
       console.error('Native Google Signup Error:', err);
-      const errMsg = err?.message || err?.errorMessage || (typeof err === 'string' ? err : JSON.stringify(err));
-      alert(`Error Google Nativo: ${errMsg}`);
-      setError(`Error al registrarse con Google nativo: ${errMsg}`);
+      const errMsg = err?.message || err?.errorMessage || (typeof err === 'string' ? err : JSON.stringify(err)) || '';
+      const isCancel = errMsg.toLowerCase().includes('cancel') ||
+                       errMsg.toLowerCase().includes('12501') ||
+                       errMsg.toLowerCase().includes('user finished');
+      if (!isCancel) {
+        setError(`Error al registrarse con Google: ${errMsg}`);
+      }
     } finally {
       setLoading(false);
     }
