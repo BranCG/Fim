@@ -5,6 +5,18 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import api, { formatCLP, getSession } from '@/lib/api';
 
+const IconMap = ({ size = 24 }: { size?: number }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" id="Maps--Streamline-Ultimate" height={size} width={size}>
+    <desc>Maps Streamline Icon: https://streamlinehq.com</desc>
+    <path fill="#c2f3ff" d="M3 5.82L9 3v14.77l-6 2.82V5.82z" strokeWidth="1" />
+    <path fill="#e3e3e3" d="M9 3l6 2.82v14.77L9 17.77V3z" strokeWidth="1" />
+    <path fill="#c2f3ff" d="M15 5.82L21 3v14.77l-6 2.82V5.82z" strokeWidth="1" />
+    <path stroke="#191919" strokeLinecap="round" strokeLinejoin="round" d="M3 5.82v14.77l6-2.82 6 2.82 6-2.82V3l-6 2.82L9 3 3 5.82zM9 3v14.77M15 5.82v14.77" strokeWidth="1" />
+    <path fill="#ff808c" d="M12 7.5a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3z" strokeWidth="1" />
+    <path stroke="#191919" strokeLinecap="round" strokeLinejoin="round" d="M12 7.5a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3z" strokeWidth="1" />
+  </svg>
+);
+
 interface Trip {
   id: string;
   createdAt: string;
@@ -42,7 +54,10 @@ export default function PassengerHistoryPage() {
       </header>
 
       <div style={{ marginBottom: '32px' }}>
-        <h1 style={{ fontSize: '1.75rem', fontWeight: 900, marginBottom: '8px' }}>Mis Viajes</h1>
+        <h1 style={{ fontSize: '1.75rem', fontWeight: 900, marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <IconMap size={28} />
+          Mis Viajes
+        </h1>
         <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>Registro de tus traslados en Fim.</p>
       </div>
 

@@ -45,19 +45,66 @@ interface DriverInfo {
 const SANTIAGO = { lat: -33.4489, lng: -70.6693 };
 
 // --- ICONOS SVG ---
-const IconClock = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg>;
-const IconX = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>;
-const IconLock = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" /></svg>;
-const IconCar = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="1" y="13" width="22" height="8" rx="2" /><path d="M17 13l-1.5-6h-7L7 13" /><circle cx="7" cy="17" r="2" /><circle cx="17" cy="17" r="2" /></svg>;
-const IconPin = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" /><circle cx="12" cy="10" r="3" /></svg>;
-const IconStar = () => <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" /></svg>;
-const IconWallet = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 12V8H6a2 2 0 0 1-2-2c0-1.1.9-2 2-2h12v4" /><path d="M4 6v12c0 1.1.9 2 2 2h14v-4" /><path d="M18 12a2 2 0 0 0-2 2c0 1.1.9 2 2 2h4v-4h-4z" /></svg>;
-const IconAlert = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" /><line x1="12" y1="9" x2="12" y2="13" /><line x1="12" y1="17" x2="12.01" y2="17" /></svg>;
-const IconGear = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" /></svg>;
-const IconCheck = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>;
-const IconPhone = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" /></svg>;
-const IconLogout = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" /><polyline points="16 17 21 12 16 7" /><line x1="21" y1="12" x2="9" y2="12" /></svg>;
-const IconUser = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>;
+const IconClock = ({ size = 24 }: { size?: number }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" id="Time-Clock-Circle--Streamline-Ultimate" height={size} width={size}>
+    <desc>
+      Time Clock Circle Streamline Icon: https://streamlinehq.com
+    </desc>
+    <path fill="#66e1ff" d="M11.9992 22.5426c5.822 0 10.5417 -4.7197 10.5417 -10.5417 0 -5.82201 -4.7197 -10.54167 -10.5417 -10.54167 -5.82201 0 -10.54168 4.71966 -10.54168 10.54167 0 5.822 4.71967 10.5417 10.54168 10.5417Z" strokeWidth="1" />
+    <path fill="#c2f3ff" d="M4.54472 19.4554c-1.97702 -1.977 -3.08769 -4.6585 -3.08769 -7.4544 0 -2.79588 1.11067 -5.47728 3.08769 -7.4543C6.52173 2.56969 9.20313 1.45901 11.999 1.45901c2.796 0 5.4774 1.11068 7.4544 3.08769L4.54472 19.4554Z" strokeWidth="1" />
+    <path stroke="#191919" strokeLinecap="round" strokeLinejoin="round" d="M11.9992 22.5426c5.822 0 10.5417 -4.7197 10.5417 -10.5417 0 -5.82201 -4.7197 -10.54167 -10.5417 -10.54167 -5.82201 0 -10.54168 4.71966 -10.54168 10.54167 0 5.822 4.71967 10.5417 10.54168 10.5417Z" strokeWidth="1" />
+    <path stroke="#191919" strokeLinecap="round" strokeLinejoin="round" d="M12 6.95923v5.04167l5.5 5.0417" strokeWidth="1" />
+  </svg>
+);
+
+const IconLogout = ({ size = 24 }: { size?: number }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" id="Login-1--Streamline-Ultimate" height={size} width={size}>
+    <desc>
+      Login 1 Streamline Icon: https://streamlinehq.com
+    </desc>
+    <path fill="#66e1ff" d="M10.6248 3.29163H4.20817c-0.50626 0 -0.91667 0.41041 -0.91667 0.91666V19.7916c0 0.5063 0.41041 0.9167 0.91667 0.9167h6.41663c0.5063 0 0.9167 -0.4104 0.9167 -0.9167V4.20829c0 -0.50625 -0.4104 -0.91666 -0.9167 -0.91666Z" strokeWidth="1" />
+    <path stroke="#191919" strokeLinecap="round" strokeLinejoin="round" d="M13.3752 5.58337V2.37504c0 -0.24312 -0.0967 -0.47627 -0.2685 -0.64818 -0.1719 -0.17191 -0.4051 -0.26849 -0.6482 -0.26849H2.37516c-0.24312 0 -0.47627 0.09658 -0.64818 0.26849 -0.17191 0.17191 -0.26848 0.40506 -0.26848 0.64818V21.625c0 0.2431 0.09657 0.4763 0.26848 0.6482s0.40506 0.2685 0.64818 0.2685H12.4585c0.2431 0 0.4763 -0.0966 0.6482 -0.2685 0.1718 -0.1719 0.2685 -0.4051 0.2685 -0.6482v-3.2083" strokeWidth="1" />
+    <path stroke="#191919" strokeLinecap="round" strokeLinejoin="round" d="M5.125 12h17.4167" strokeWidth="1" />
+    <path stroke="#191919" strokeLinecap="round" strokeLinejoin="round" d="M9.70833 7.41663 5.125 12l4.58333 4.5833" strokeWidth="1" />
+  </svg>
+);
+
+const IconUser = ({ size = 24 }: { size?: number }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" id="Single-Man-Focus--Streamline-Ultimate" height={size} width={size}>
+    <desc>
+      Single Man Focus Streamline Icon: https://streamlinehq.com
+    </desc>
+    <path fill="#c2f3ff" d="M19.652 3.39154H4.3481c-0.52826 0 -0.9565 0.42824 -0.9565 0.9565V19.652c0 0.5283 0.42824 0.9565 0.9565 0.9565H19.652c0.5283 0 0.9565 -0.4282 0.9565 -0.9565V4.34804c0 -0.52826 -0.4282 -0.9565 -0.9565 -0.9565Z" strokeWidth="1" />
+    <path stroke="#191919" strokeLinecap="round" strokeLinejoin="round" d="M7.69548 22.9997H1.9565c-0.25369 0 -0.49697 -0.1008 -0.67635 -0.2802C1.10077 22.5402 1 22.2969 1 22.0432v-5.739" strokeWidth="1" />
+    <path stroke="#191919" strokeLinecap="round" strokeLinejoin="round" d="M7.69548 1.00031H1.9565c-0.25369 0 -0.49697 0.10077 -0.67635 0.28015C1.10077 1.45983 1 1.70312 1 1.9568v5.73898" strokeWidth="1" />
+    <path stroke="#191919" strokeLinecap="round" strokeLinejoin="round" d="M16.3047 22.9997h5.739c0.2536 0 0.497 -0.1008 0.6763 -0.2802 0.1794 -0.1793 0.2802 -0.4226 0.2802 -0.6763v-5.739" strokeWidth="1" />
+    <path stroke="#191919" strokeLinecap="round" strokeLinejoin="round" d="M16.3047 1.00031h5.739c0.2536 0 0.497 0.10077 0.6763 0.28015 0.1794 0.17937 0.2802 0.42266 0.2802 0.67634v5.73898" strokeWidth="1" />
+    <path fill="#e3e3e3" d="M17.2607 18.2172c0 -1.3952 -0.5543 -2.7333 -1.5408 -3.7199 -0.9866 -0.9865 -2.3247 -1.5408 -3.7199 -1.5408 -1.3953 0 -2.73333 0.5543 -3.71991 1.5408 -0.98658 0.9866 -1.54083 2.3247 -1.54083 3.7199H17.2607Z" strokeWidth="1" />
+    <path fill="#c77f67" d="M15.0142 7.99235c-0.64 0.27769 -1.3302 0.42094 -2.0278 0.42085 -0.6945 0.00112 -1.3821 -0.1381 -2.0215 -0.4093 -0.6394 -0.27121 -1.21736 -0.6688 -1.69928 -1.16892 0.32693 -0.55636 0.81918 -0.99691 1.40838 -1.2603 0.5891 -0.26339 1.2456 -0.33649 1.8782 -0.20912 0.6327 0.12735 1.2098 0.44884 1.6511 0.91968 0.4413 0.47083 0.7247 1.06757 0.8109 1.70711Z" strokeWidth="1" />
+    <path fill="#ffffff" d="M12.0048 14.4869c1.1276 -0.0004 2.2255 0.3621 3.1312 1.0339 0.9057 0.6718 1.5712 1.6172 1.898 2.6964h0.2267c0 -1.3952 -0.5543 -2.7333 -1.5408 -3.7199 -0.9866 -0.9865 -2.3247 -1.5408 -3.7199 -1.5408 -1.3953 0 -2.73333 0.5543 -3.71991 1.5408 -0.98658 0.9866 -1.54083 2.3247 -1.54083 3.7199h0.22764c0.32839 -1.08 0.99545 -2.0258 1.90265 -2.6975s2.00635 -1.0338 3.13525 -1.0328Z" strokeWidth="1" />
+    <path fill="#e3bfb3" d="M11.9438 6.83501c0.502 0.00044 0.9963 0.12364 1.4397 0.35888 0.4435 0.23523 0.8227 0.57536 1.1046 0.99074 0.1785 -0.0549 0.354 -0.11875 0.5261 -0.1913 -0.086 -0.63959 -0.3693 -1.23644 -0.8106 -1.7074 -0.4412 -0.47097 -1.0183 -0.79259 -1.651 -0.92007 -0.6326 -0.12747 -1.2892 -0.05445 -1.8784 0.20888 -0.5892 0.26335 -1.0816 0.70389 -1.40858 1.26027 0.23368 0.24194 0.4899 0.46102 0.76518 0.65425 0.5464 -0.42625 1.22 -0.65666 1.913 -0.65425Z" strokeWidth="1" />
+    <path stroke="#191919" strokeLinecap="round" strokeLinejoin="round" d="M17.2607 18.2172c0 -1.3952 -0.5543 -2.7333 -1.5408 -3.7199 -0.9866 -0.9865 -2.3247 -1.5408 -3.7199 -1.5408 -1.3953 0 -2.73333 0.5543 -3.71991 1.5408 -0.98658 0.9866 -1.54083 2.3247 -1.54083 3.7199H17.2607Z" strokeWidth="1" />
+    <path stroke="#191919" strokeLinecap="round" strokeLinejoin="round" d="M15.0223 7.99231h-0.0096" strokeWidth="1" />
+    <path stroke="#191919" strokeLinecap="round" strokeLinejoin="round" d="M15.0142 7.99235c-0.64 0.27769 -1.3302 0.42094 -2.0278 0.42085 -0.6945 0.00112 -1.3821 -0.1381 -2.0215 -0.4093 -0.6394 -0.27121 -1.21736 -0.6688 -1.69928 -1.16892 0.32693 -0.55636 0.81918 -0.99691 1.40838 -1.2603 0.5891 -0.26339 1.2456 -0.33649 1.8782 -0.20912 0.6327 0.12735 1.2098 0.44884 1.6511 0.91968 0.4413 0.47083 0.7247 1.06757 0.8109 1.70711Z" strokeWidth="1" />
+    <path fill="#ffdda1" stroke="#191919" strokeLinecap="round" strokeLinejoin="round" d="M15.0512 8.41321c0 0.82445 -0.3275 1.61519 -0.9105 2.19809 -0.583 0.583 -1.3736 0.9105 -2.1981 0.9105 -0.8245 0 -1.6151 -0.3275 -2.19812 -0.9105 -0.58298 -0.5829 -0.9105 -1.37364 -0.9105 -2.19809 0.00297 -0.55466 0.15139 -1.09885 0.43043 -1.57822 0.48191 0.50012 1.05989 0.89771 1.69929 1.16892 0.6393 0.2712 1.327 0.41042 2.0215 0.4093 0.6976 0.00009 1.3878 -0.14316 2.0278 -0.42086 0.0273 0.13857 0.0401 0.27963 0.0382 0.42086Z" strokeWidth="1" />
+  </svg>
+);
+
+const IconShieldLock = ({ size = 24 }: { size?: number }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" id="Shield-Lock--Streamline-Ultimate" height={size} width={size}>
+    <desc>
+      Shield Lock Streamline Icon: https://streamlinehq.com
+    </desc>
+    <path fill="#e3e3e3" d="M1.95703 4.13347V11.438c0.02797 2.4137 0.7971 4.7604 2.20322 6.7224 1.40613 1.9619 3.38129 3.4443 5.65797 4.2463l1.07218 0.396c0.7163 0.2631 1.5027 0.2631 2.219 0l1.0722 -0.396c2.2765 -0.8022 4.2516 -2.2847 5.6576 -4.2466 1.4061 -1.9619 2.1754 -4.3085 2.2036 -6.7221V4.13347c-0.0008 -0.28701 -0.0859 -0.56745 -0.2448 -0.80652 -0.1588 -0.23907 -0.3843 -0.42624 -0.6485 -0.53827 -2.8974 -1.2093 -6.0101 -1.817476 -9.1496 -1.78763 -3.13942 -0.029846 -6.2522 0.57833 -9.14953 1.78763 -0.26417 0.11213 -0.48963 0.29933 -0.64842 0.53837 -0.1588 0.23905 -0.24396 0.51944 -0.24492 0.80642Z" strokeWidth="1" />
+    <path fill="#ffffff" d="M11.9999 1.00105c-3.13942 -0.029846 -6.2522 0.57833 -9.14953 1.78763 -0.26417 0.11213 -0.48963 0.29933 -0.64842 0.53837 -0.1588 0.23905 -0.24396 0.51944 -0.24492 0.80642V11.438c0.02797 2.4137 0.7971 4.7604 2.20322 6.7224 1.40613 1.9619 3.38129 3.4443 5.65797 4.2463l1.07218 0.396c0.3558 0.1301 0.7308 0.1971 1.1095 0.1971V1.00105Z" strokeWidth="1" />
+    <path stroke="#191919" strokeLinecap="round" strokeLinejoin="round" d="M1.95703 4.13347V11.438c0.02797 2.4137 0.7971 4.7604 2.20322 6.7224 1.40613 1.9619 3.38129 3.4443 5.65797 4.2463l1.07218 0.396c0.7163 0.2631 1.5027 0.2631 2.219 0l1.0722 -0.396c2.2765 -0.8022 4.2516 -2.2847 5.6576 -4.2466 1.4061 -1.9619 2.1754 -4.3085 2.2036 -6.7221V4.13347c-0.0008 -0.28701 -0.0859 -0.56745 -0.2448 -0.80652 -0.1588 -0.23907 -0.3843 -0.42624 -0.6485 -0.53827 -2.8974 -1.2093 -6.0101 -1.817476 -9.1496 -1.78763 -3.13942 -0.029846 -6.2522 0.57833 -9.14953 1.78763 -0.26417 0.11213 -0.48963 0.29933 -0.64842 0.53837 -0.1588 0.23905 -0.24396 0.51944 -0.24492 0.80642Z" strokeWidth="1" />
+    <path fill="#ffef5e" d="M15.3475 9.3634H8.65227c-0.12561 0 -0.24998 0.02474 -0.36603 0.07281 -0.11604 0.04807 -0.22148 0.11852 -0.3103 0.20734 -0.08881 0.08881 -0.15927 0.19425 -0.20733 0.31029 -0.04807 0.11606 -0.07281 0.24046 -0.07281 0.36606v5.7378c0 0.2537 0.10077 0.497 0.28014 0.6763 0.17937 0.1794 0.42266 0.2802 0.67633 0.2802h6.69523c0.2537 0 0.497 -0.1008 0.6763 -0.2802 0.1794 -0.1793 0.2802 -0.4226 0.2802 -0.6763v-5.7378c0 -0.2537 -0.1008 -0.49698 -0.2802 -0.67635 -0.1793 -0.17938 -0.4226 -0.28015 -0.6763 -0.28015Z" strokeWidth="1" />
+    <path fill="#fff9bf" d="M11.9999 9.3634H8.65227c-0.12561 0 -0.24998 0.02474 -0.36603 0.07281 -0.11604 0.04807 -0.22148 0.11852 -0.3103 0.20734 -0.08881 0.08881 -0.15927 0.19425 -0.20733 0.31029 -0.04807 0.11606 -0.07281 0.24046 -0.07281 0.36606v5.7388c0 0.2536 0.10077 0.4969 0.28014 0.6763s0.42266 0.2801 0.67633 0.2801h3.34763V9.3634Z" strokeWidth="1" />
+    <path stroke="#191919" strokeLinecap="round" strokeLinejoin="round" d="M15.3475 9.3634H8.65227c-0.12561 0 -0.24998 0.02474 -0.36603 0.07281 -0.11604 0.04807 -0.22148 0.11852 -0.3103 0.20734 -0.08881 0.08881 -0.15927 0.19425 -0.20733 0.31029 -0.04807 0.11606 -0.07281 0.24046 -0.07281 0.36606v5.7378c0 0.2537 0.10077 0.497 0.28014 0.6763 0.17937 0.1794 0.42266 0.2802 0.67633 0.2802h6.69523c0.2537 0 0.497 -0.1008 0.6763 -0.2802 0.1794 -0.1793 0.2802 -0.4226 0.2802 -0.6763v-5.7378c0 -0.2537 -0.1008 -0.49698 -0.2802 -0.67635 -0.1793 -0.17938 -0.4226 -0.28015 -0.6763 -0.28015Z" strokeWidth="1" />
+    <path fill="#808080" stroke="#191919" strokeLinecap="round" strokeLinejoin="round" d="M11.9998 14.4451c0.3171 0 0.6212 -0.126 0.8454 -0.3502 0.2242 -0.2242 0.3502 -0.5283 0.3502 -0.8454 0 -0.3171 -0.126 -0.6212 -0.3502 -0.8454 -0.2242 -0.2242 -0.5283 -0.3502 -0.8454 -0.3502 -0.3171 0 -0.6212 0.126 -0.8454 0.3502 -0.2242 0.2242 -0.3502 0.5283 -0.3502 0.8454 0 0.3171 0.126 0.6212 0.3502 0.8454 0.2242 0.2242 0.5283 0.3502 0.8454 0.3502Z" strokeWidth="1" />
+    <path stroke="#191919" strokeLinecap="round" strokeLinejoin="round" d="M14.3912 7.9287c0 -0.63418 -0.2519 -1.24238 -0.7003 -1.69081 -0.4485 -0.44843 -1.0567 -0.70035 -1.6909 -0.70035 -0.6341 0 -1.2423 0.25192 -1.6908 0.70035 -0.44839 0.44843 -0.70031 1.05663 -0.70031 1.69081v1.4347h4.78231V7.9287Z" strokeWidth="1" />
+  </svg>
+);
 const IconCompass = () => (
   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <circle cx="12" cy="12" r="10" />
@@ -70,6 +117,7 @@ const IconCompass = () => (
 export default function DriverPage() {
   const router = useRouter();
   const [session, setSession] = useState<any>(null);
+  const [centerTrigger, setCenterTrigger] = useState(0);
 
   const formatDuration = (min: number) => {
     if (min < 60) return `${min} min aprox.`;
@@ -897,8 +945,8 @@ export default function DriverPage() {
 
   const handleDeleteAccount = () => {
     showCustomConfirm(
-      '¿Estás seguro de que deseas eliminar tu cuenta permanentemente? Esta acción borrará todo tu historial de viajes, saldo y datos personales de forma irreversible.',
-      'Eliminar Cuenta',
+      '¿Estás seguro?\n\nSe eliminarán todos los datos de tu cuenta en FIM de forma irreversible, todo quedará fuera de la base de datos.',
+      'Borrar mi cuenta',
       () => {
         showCustomConfirm(
           'ÚLTIMA ADVERTENCIA: Si continúas, perderás todo el acceso a tu cuenta de Fim inmediatamente y de forma definitiva. ¿Confirmas la eliminación permanente de tu cuenta?',
@@ -1191,7 +1239,7 @@ export default function DriverPage() {
           onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255, 69, 96, 0.15)'; e.currentTarget.style.borderColor = 'var(--danger)'; }}
           onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255, 69, 96, 0.1)'; e.currentTarget.style.borderColor = 'rgba(255, 69, 96, 0.2)'; }}
         >
-          ✕ Eliminar Cuenta Permanentemente
+          ✕ Borrar mi cuenta
         </button>
       </div>
     </div>
@@ -1294,7 +1342,7 @@ export default function DriverPage() {
             )}
           </div>
         </div>
-        <div className="header-actions" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+        <div className="header-actions" style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
           <div className="header-status-badge" style={{
             padding: '4px 10px', background: isOnline ? 'rgba(0,229,160,0.1)' : 'rgba(255,255,255,0.05)',
             borderRadius: '100px', fontSize: '0.75rem', fontWeight: 700,
@@ -1304,21 +1352,40 @@ export default function DriverPage() {
             <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: isOnline ? 'var(--accent)' : 'var(--text-muted)' }} />
             <span className="status-text">{isOnline ? 'EN LÍNEA' : 'DESCONECTADO'}</span>
           </div>
-          <button className="btn btn-ghost" onClick={() => router.push('/driver/history')} style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-            <IconClock />
-            <span className="btn-text">Historial</span>
-          </button>
-          <button className="btn btn-ghost" onClick={handleLogout} style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-            <IconLogout />
-            <span className="btn-text">Salir</span>
-          </button>
-          <button className="btn btn-ghost" onClick={openProfileModal} style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-            <IconUser />
-            <span className="btn-text">Mi Perfil</span>
+          
+          <button className="header-nav-btn" onClick={openProfileModal}>
+            <div className="icon-circle">
+              <IconUser />
+            </div>
+            <span className="btn-label">Usuario</span>
           </button>
 
+          <button className="header-nav-btn" onClick={() => router.push('/driver/history')}>
+            <div className="icon-circle">
+              <IconClock />
+            </div>
+            <span className="btn-label">Historial</span>
+          </button>
+
+          <button className="header-nav-btn" onClick={handleLogout}>
+            <div className="icon-circle">
+              <IconLogout />
+            </div>
+            <span className="btn-label">Salir</span>
+          </button>
         </div>
       </header>
+
+      {/* Botón flotante de GPS de alta prioridad fuera de main-content */}
+      <button 
+        onClick={() => {
+          setCenterTrigger(prev => prev + 1);
+        }}
+        title="Mi ubicación actual"
+        className="gps-button"
+      >
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/></svg>
+      </button>
 
       <main className="main-content">
         {driver && driver.taxPendingReview && (
@@ -1373,6 +1440,7 @@ export default function DriverPage() {
           driverPos={pos}
           passengerPos={(activeTrip && (tripPhase === 'going_to_passenger' || tripPhase === 'arrived')) ? { lat: activeTrip.originLat, lng: activeTrip.originLng } : null}
           destPos={(activeTrip && tripPhase === 'in_progress') ? { lat: activeTrip.destLat, lng: activeTrip.destLng } : null}
+          centerTrigger={centerTrigger}
         />
       </main>
 
@@ -2790,7 +2858,7 @@ export default function DriverPage() {
 
             <form onSubmit={handlePasswordChange} style={{ display: 'flex', flexDirection: 'column', gap: '12px', borderTop: '1px solid var(--border)', paddingTop: '20px' }}>
               <h4 style={{ margin: '0 0 4px 0', fontSize: '0.95rem', fontWeight: 700, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ display: 'inline-block' }}><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                <IconShieldLock size={16} />
                 Cambiar Contraseña
               </h4>
               
@@ -2890,7 +2958,7 @@ export default function DriverPage() {
                 onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255, 69, 96, 0.15)'; e.currentTarget.style.borderColor = 'var(--danger)'; }}
                 onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255, 69, 96, 0.1)'; e.currentTarget.style.borderColor = 'rgba(255, 69, 96, 0.2)'; }}
               >
-                ✕ Eliminar Cuenta Permanentemente
+                ✕ Borrar mi cuenta
               </button>
             </div>
           </div>
@@ -2945,7 +3013,7 @@ export default function DriverPage() {
             </div>
             <div>
               <h3 style={{ color: 'var(--text-primary)', fontWeight: 800, fontSize: '1.1rem', marginBottom: '8px' }}>{customDialog.title}</h3>
-              <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', lineHeight: 1.5 }}>{customDialog.message}</p>
+              <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', lineHeight: 1.5, whiteSpace: 'pre-line' }}>{customDialog.message}</p>
             </div>
             <div style={{ display: 'flex', gap: '10px', width: '100%', marginTop: '8px' }}>
               {customDialog.isConfirm ? (

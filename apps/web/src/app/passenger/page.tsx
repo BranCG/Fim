@@ -48,7 +48,16 @@ interface Driver {
 const SANTIAGO_CENTER = { lat: -33.4489, lng: -70.6693 };
 
 // --- ICONOS SVG ---
-const IconClock = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>;
+const IconClock = ({ size = 24 }: { size?: number }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" id="Time-Clock-Circle--Streamline-Ultimate" height={size} width={size}>
+    <desc>
+      Time Clock Circle Streamline Icon: https://streamlinehq.com
+    </desc>
+    <path fill="#c2f3ff" d="M12 21a9 9 0 1 0 0 -18 9 9 0 0 0 0 18Z" strokeWidth="1" />
+    <path stroke="#191919" strokeLinecap="round" strokeLinejoin="round" d="M12 21a9 9 0 1 0 0 -18 9 9 0 0 0 0 18Z" strokeWidth="1" />
+    <path stroke="#191919" strokeLinecap="round" strokeLinejoin="round" d="M12 6.5v6.2c0 0.16 0.08 0.31 0.22 0.39l4.28 2.51" strokeWidth="1" />
+  </svg>
+);
 const IconX = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>;
 const IconCar = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="1" y="13" width="22" height="8" rx="2"/><path d="M17 13l-1.5-6h-7L7 13"/><circle cx="7" cy="17" r="2"/><circle cx="17" cy="17" r="2"/></svg>;
 const IconPin = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>;
@@ -60,8 +69,46 @@ const IconAlert = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="no
 const IconCash = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2"/><path d="M6 12h.01M18 12h.01"/></svg>;
 const IconCard = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>;
 const IconParty = () => <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 4.5l9 9 3.5-4.5-9-9-3.5 4.5z"/><path d="M13 13.5l2 2.5 5-5-2-2.5-5 5z"/><path d="M15 15.5l4.5 4.5.5-1.5 1.5.5-4.5-4.5-.5 1.5-1.5-.5z"/><path d="M21 21l-9-9"/><path d="M18 11l.5.5"/><path d="M19 10l.5.5"/></svg>;
-const IconLogout = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" /><polyline points="16 17 21 12 16 7" /><line x1="21" y1="12" x2="9" y2="12" /></svg>;
-const IconUser = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>;
+const IconLogout = ({ size = 24 }: { size?: number }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" id="Login-1--Streamline-Ultimate" height={size} width={size}>
+    <desc>
+      Login 1 Streamline Icon: https://streamlinehq.com
+    </desc>
+    <path fill="#ffbfc5" d="M22.9997 12a1 1 0 0 1 -1 1H9.8665c-0.12 1.4886 -0.6353 2.9158 -1.4878 4.1202 -0.8524 1.2045 -2.0195 2.1158 -3.3697 2.6318 -1.3501 0.5161 -2.8183 0.6558 -4.24103 0.4035C-0.654817 19.903 -1.97828 19.2323 -3.0003 18.212v2.7877c0 1.1046 0.8954 2 2 2h18.000000000000004c1.1045 0 2 -0.8954 2 -2V12Z" strokeWidth="1" />
+    <path fill="#ff808c" d="M22.9997 12H9.8665c0.0002 0.0441 0.0002 0.0883 0 0.1324V13H21.9997a1 1 0 0 0 1 -1Z" strokeWidth="1" />
+    <path stroke="#191919" strokeLinecap="round" strokeLinejoin="round" d="M10 22h9c1.1046 0 2 -0.8954 2 -2V4c0 -1.10457 -0.8954 -2 -2 -2h-9" strokeWidth="1" />
+    <path stroke="#191919" strokeLinecap="round" strokeLinejoin="round" d="M14.5 15.5 18 12l-3.5-3.5" strokeWidth="1" />
+    <path stroke="#191919" strokeLinecap="round" strokeLinejoin="round" d="M18 12H3" strokeWidth="1" />
+  </svg>
+);
+
+const IconUser = ({ size = 24 }: { size?: number }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" id="Single-Man-Focus--Streamline-Ultimate" height={size} width={size}>
+    <desc>
+      Single Man Focus Streamline Icon: https://streamlinehq.com
+    </desc>
+    <path fill="#c2f3ff" d="M19.652 3.39154H4.3481c-0.52826 0 -0.9565 0.42824 -0.9565 0.9565V19.652c0 0.5283 0.42824 0.9565 0.9565 0.9565H19.652c0.5283 0 0.9565 -0.4282 0.9565 -0.9565V4.34804c0 -0.52826 -0.4282 -0.9565 -0.9565 -0.9565Z" strokeWidth="1" />
+    <path stroke="#191919" strokeLinecap="round" strokeLinejoin="round" d="M7.69548 22.9997H1.9565c-0.25369 0 -0.49697 -0.1008 -0.67635 -0.2802C1.10077 22.5402 1 22.2969 1 22.0432v-5.739" strokeWidth="1" />
+    <path stroke="#191919" strokeLinecap="round" strokeLinejoin="round" d="M7.69548 1.00031H1.9565c-0.25369 0 -0.49697 0.10077 -0.67635 0.28015C1.10077 1.45983 1 1.70312 1 1.9568v5.73898" strokeWidth="1" />
+    <path stroke="#191919" strokeLinecap="round" strokeLinejoin="round" d="M16.3047 22.9997h5.739c0.2536 0 0.497 -0.1008 0.6763 -0.2802 0.1794 -0.1793 0.2802 -0.4226 0.2802 -0.6763v-5.739" strokeWidth="1" />
+    <path stroke="#191919" strokeLinecap="round" strokeLinejoin="round" d="M16.3047 1.00031h5.739c0.2536 0 0.497 0.10077 0.6763 0.28015C22.8994 1.45983 23 1.70312 23 1.9568v5.73898" strokeWidth="1" />
+    <path stroke="#191919" strokeLinecap="round" strokeLinejoin="round" d="M12 12a3.5 3.5 0 1 0 0 -7 3.5 3.5 0 0 0 0 7Z" strokeWidth="1" />
+    <path stroke="#191919" strokeLinecap="round" strokeLinejoin="round" d="M5.3042 19.1738a7.1739 7.1739 0 0 1 13.3916 0" strokeWidth="1" />
+  </svg>
+);
+
+const IconShieldLock = ({ size = 24 }: { size?: number }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" id="Shield-Lock--Streamline-Ultimate" height={size} width={size}>
+    <desc>
+      Shield Lock Streamline Icon: https://streamlinehq.com
+    </desc>
+    <path fill="#ffd5a4" d="M12 21.9997C9.3908 21.054 7.2003 19.3496 5.64819 17.057C4.0961 14.7645 3.2458 11.9744 3.1818 9.096L12 3L20.8182 9.096c-0.064 2.8784 -0.9143 5.6685 -2.4664 7.961 -1.5521 2.2926 -3.7426 3.997 -6.3518 4.9427Z" strokeWidth="1" />
+    <path fill="#fe9b24" d="M12.0003 21.9997c2.6092 -0.9457 4.7997 -2.6501 6.3518 -4.9427 1.5521 -2.2925 2.4024 -5.0826 2.4664 -7.961L12.0003 3v18.9997Z" strokeWidth="1" />
+    <path stroke="#191919" strokeLinecap="round" strokeLinejoin="round" d="M12 21.9997C9.3908 21.054 7.2003 19.3496 5.64819 17.057C4.0961 14.7645 3.2458 11.9744 3.1818 9.096L12 3L20.8182 9.096c-0.064 2.8784 -0.9143 5.6685 -2.4664 7.961 -1.5521 2.2926 -3.7426 3.997 -6.3518 4.9427Z" strokeWidth="1" />
+    <path fill="#808080" stroke="#191919" strokeLinecap="round" strokeLinejoin="round" d="M13.5 12a1.5 1.5 0 1 0 -3 0 1.5 1.5 0 0 0 3 0Z" strokeWidth="1" />
+    <path stroke="#191919" strokeLinecap="round" strokeLinejoin="round" d="M12 13.5v3" strokeWidth="1" />
+  </svg>
+);
 const IconHome = () => (
   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" id="House-Chimney--Streamline-Ultimate" height="20" width="20">
     <desc>House Chimney Streamline Icon: https://streamlinehq.com</desc>
@@ -1092,7 +1139,7 @@ export default function PassengerPage() {
   };
 
   const handleDeleteAccount = async () => {
-    const firstConfirm = confirm('⚠️ ¿Estás seguro de que deseas eliminar tu cuenta permanentemente? Esta acción borrará todo tu historial de viajes y datos personales de forma irreversible.');
+    const firstConfirm = confirm('¿Estás seguro?\n\nSe eliminarán todos los datos de tu cuenta en FIM de forma irreversible, todo quedará fuera de la base de datos.');
     if (!firstConfirm) return;
 
     const secondConfirm = confirm('🚨 ¡ÚLTIMA ADVERTENCIA! Si continúas, perderás todo el acceso a tu cuenta de Fim inmediatamente y de forma definitiva. ¿Confirmas la eliminación permanente de tu cuenta?');
@@ -2535,7 +2582,7 @@ export default function PassengerPage() {
 
             <form onSubmit={handlePasswordChange} style={{ display: 'flex', flexDirection: 'column', gap: '12px', borderTop: '1px solid var(--border)', paddingTop: '20px' }}>
               <h4 style={{ margin: '0 0 4px 0', fontSize: '0.95rem', fontWeight: 700, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ display: 'inline-block' }}><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                <IconShieldLock size={16} />
                 Cambiar Contraseña
               </h4>
               
@@ -2635,7 +2682,7 @@ export default function PassengerPage() {
                 onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255, 69, 96, 0.15)'; e.currentTarget.style.borderColor = 'var(--danger)'; }}
                 onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255, 69, 96, 0.1)'; e.currentTarget.style.borderColor = 'rgba(255, 69, 96, 0.2)'; }}
               >
-                ✕ Eliminar Cuenta Permanentemente
+                ✕ Borrar mi cuenta
               </button>
             </div>
           </div>

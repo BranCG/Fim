@@ -6,9 +6,10 @@ interface Props {
   driverPos: { lat: number; lng: number };
   passengerPos: { lat: number; lng: number } | null;
   destPos: { lat: number; lng: number } | null;
+  centerTrigger?: number;
 }
 
-export default function DriverMap({ driverPos, passengerPos, destPos }: Props) {
+export default function DriverMap({ driverPos, passengerPos, destPos, centerTrigger }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const mapRef = useRef<any>(null);
@@ -308,6 +309,14 @@ export default function DriverMap({ driverPos, passengerPos, destPos }: Props) {
     map.invalidateSize(true);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [driverPos, passengerPos, destPos, mapLoaded]);
+
+  useEffect(() => {
+    if (!mapLoaded || !mapRef.current) return;
+    const map = mapRef.current;
+    const offset = passengerPos || destPos ? 0.0004 : 0.0006;
+    map.setView([driverPos.lat - offset, driverPos.lng], 18, { animate: true, duration: 1.2 });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [centerTrigger]);
 
   return (
     <div style={{ width: '100%', height: '100%', position: 'relative' }}>
