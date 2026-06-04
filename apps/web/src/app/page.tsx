@@ -118,100 +118,6 @@ const SignBadgeIcon = ({ width = 24, height = 24, style }: { width?: number | st
   </svg>
 );
 
-const TypewriterText = ({ 
-  text, 
-  highlightText, 
-  fontFamily = "'Outfit', var(--font-sans)"
-}: { 
-  text: string; 
-  highlightText?: string;
-  fontFamily?: string;
-}) => {
-  const [displayText, setDisplayText] = useState('');
-  const [isDeleting, setIsDeleting] = useState(false);
-  const [typingSpeed, setTypingSpeed] = useState(80);
-
-  useEffect(() => {
-    let timer: NodeJS.Timeout;
-    const handleType = () => {
-      if (!isDeleting) {
-        setDisplayText(text.substring(0, displayText.length + 1));
-        setTypingSpeed(80);
-
-        if (displayText === text) {
-          timer = setTimeout(() => setIsDeleting(true), 3000);
-          return;
-        }
-      } else {
-        setDisplayText(text.substring(0, displayText.length - 1));
-        setTypingSpeed(40);
-
-        if (displayText === '') {
-          setIsDeleting(false);
-          setTypingSpeed(500);
-        }
-      }
-    };
-
-    timer = setTimeout(handleType, typingSpeed);
-    return () => clearTimeout(timer);
-  }, [displayText, isDeleting, text, typingSpeed]);
-
-  if (highlightText && text.includes(highlightText)) {
-    const parts = text.split(highlightText);
-    const beforeText = parts[0];
-    
-    if (displayText.length <= beforeText.length) {
-      return (
-        <h1 style={{ 
-          fontSize: 'clamp(2.3rem, 7vw, 4rem)', 
-          fontWeight: 900, 
-          lineHeight: 1.1,
-          letterSpacing: '-0.02em',
-          marginBottom: '16px',
-          fontFamily,
-          minHeight: '2.2em'
-        }}>
-          {displayText}
-          <span className="typewriter-cursor" style={{ marginLeft: '4px', animation: 'blink 0.8s infinite', color: 'var(--accent)' }}>|</span>
-        </h1>
-      );
-    } else {
-      const typedHighlight = displayText.substring(beforeText.length);
-      return (
-        <h1 style={{ 
-          fontSize: 'clamp(2.3rem, 7vw, 4rem)', 
-          fontWeight: 900, 
-          lineHeight: 1.1,
-          letterSpacing: '-0.02em',
-          marginBottom: '16px',
-          fontFamily,
-          minHeight: '2.2em'
-        }}>
-          {beforeText}
-          <span className="text-gradient">{typedHighlight}</span>
-          <span className="typewriter-cursor" style={{ marginLeft: '4px', animation: 'blink 0.8s infinite', color: 'var(--accent)' }}>|</span>
-        </h1>
-      );
-    }
-  }
-
-  return (
-    <h1 style={{ 
-      fontSize: 'clamp(2.3rem, 7vw, 4rem)', 
-      fontWeight: 900, 
-      lineHeight: 1.1,
-      letterSpacing: '-0.02em',
-      marginBottom: '16px',
-      fontFamily,
-      minHeight: '2.2em'
-    }}>
-      {displayText}
-      <span className="typewriter-cursor" style={{ marginLeft: '4px', animation: 'blink 0.8s infinite', color: 'var(--accent)' }}>|</span>
-    </h1>
-  );
-};
-
 const CursiveSegmentTypewriter = ({
   prefix,
   typingText,
@@ -276,11 +182,11 @@ const CursiveSegmentTypewriter = ({
       >
         {displayText}
       </span>
-      <span className="typewriter-cursor" style={{ animation: 'blink 0.8s infinite', color: 'var(--accent)' }}>|</span>
       {suffix}
     </h1>
   );
 };
+
 
 const IconWalletColor = () => (
   <svg width="36" height="36" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ flexShrink: 0 }}>
@@ -531,9 +437,10 @@ export default function Home() {
               Viajes Económicos y Directos
             </div>
 
-            <TypewriterText 
-              text="Viaja sin comisiones intermedias. Paga el precio justo." 
-              highlightText="Paga el precio justo." 
+            <CursiveSegmentTypewriter 
+              prefix="Viaja "
+              typingText="sin comisiones intermedias"
+              suffix=". Paga el precio justo."
             />
 
             <p style={{ 
