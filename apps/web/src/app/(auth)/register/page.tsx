@@ -118,7 +118,7 @@ function RegisterForm() {
   const [addressSuggestions, setAddressSuggestions] = useState<any[]>([]);
   const [isSearchingAddress, setIsSearchingAddress] = useState(false);
   const [showAddressDropdown, setShowAddressDropdown] = useState(false);
-  const [skipAutocomplete, setSkipAutocomplete] = useState(false);
+  const ignoreNextAutocompleteRef = useRef(false);
   const addressContainerRef = useRef<HTMLDivElement>(null);
 
   // Step 2 - Documents
@@ -244,8 +244,8 @@ function RegisterForm() {
       return;
     }
 
-    if (skipAutocomplete) {
-      setSkipAutocomplete(false);
+    if (ignoreNextAutocompleteRef.current) {
+      ignoreNextAutocompleteRef.current = false;
       return;
     }
 
@@ -265,7 +265,7 @@ function RegisterForm() {
     }, 500);
 
     return () => clearTimeout(delayDebounceFn);
-  }, [address, skipAutocomplete]);
+  }, [address]);
 
   // Click outside to close suggestion dropdown
   useEffect(() => {
@@ -917,7 +917,7 @@ function RegisterForm() {
                   placeholder="Tu dirección actual" 
                   value={address} 
                   onChange={e => {
-                    setSkipAutocomplete(false);
+                    ignoreNextAutocompleteRef.current = false;
                     setAddress(e.target.value);
                   }} 
                   onFocus={() => {
@@ -950,7 +950,7 @@ function RegisterForm() {
                       <div
                         key={suggestion.id}
                         onClick={() => {
-                          setSkipAutocomplete(true);
+                          ignoreNextAutocompleteRef.current = true;
                           setAddress(suggestion.description);
                           setAddressSuggestions([]);
                           setShowAddressDropdown(false);
@@ -963,7 +963,7 @@ function RegisterForm() {
                           borderRadius: '8px',
                           transition: 'background 0.15s ease',
                           display: 'flex',
-                          alignItems: 'center',
+                          alignItems: 'flex-start',
                           gap: '10px'
                         }}
                         onMouseEnter={e => {
@@ -973,11 +973,11 @@ function RegisterForm() {
                           e.currentTarget.style.background = 'transparent';
                         }}
                       >
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, marginTop: '2px' }}>
                           <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
                           <circle cx="12" cy="10" r="3" />
                         </svg>
-                        <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        <span style={{ fontSize: '0.82rem', lineHeight: '1.4' }}>
                           {suggestion.description}
                         </span>
                       </div>
