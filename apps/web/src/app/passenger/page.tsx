@@ -74,11 +74,10 @@ const IconLogout = ({ size = 24 }: { size?: number }) => (
     <desc>
       Login 1 Streamline Icon: https://streamlinehq.com
     </desc>
-    <path fill="#ffbfc5" d="M22.9997 12a1 1 0 0 1 -1 1H9.8665c-0.12 1.4886 -0.6353 2.9158 -1.4878 4.1202 -0.8524 1.2045 -2.0195 2.1158 -3.3697 2.6318 -1.3501 0.5161 -2.8183 0.6558 -4.24103 0.4035C-0.654817 19.903 -1.97828 19.2323 -3.0003 18.212v2.7877c0 1.1046 0.8954 2 2 2h18.000000000000004c1.1045 0 2 -0.8954 2 -2V12Z" strokeWidth="1" />
-    <path fill="#ff808c" d="M22.9997 12H9.8665c0.0002 0.0441 0.0002 0.0883 0 0.1324V13H21.9997a1 1 0 0 0 1 -1Z" strokeWidth="1" />
-    <path stroke="#191919" strokeLinecap="round" strokeLinejoin="round" d="M10 22h9c1.1046 0 2 -0.8954 2 -2V4c0 -1.10457 -0.8954 -2 -2 -2h-9" strokeWidth="1" />
-    <path stroke="#191919" strokeLinecap="round" strokeLinejoin="round" d="M14.5 15.5 18 12l-3.5-3.5" strokeWidth="1" />
-    <path stroke="#191919" strokeLinecap="round" strokeLinejoin="round" d="M18 12H3" strokeWidth="1" />
+    <path fill="#ffbfc5" d="M10.6248 3.29163H4.20817c-0.50626 0 -0.91667 0.41041 -0.91667 0.91666V19.7916c0 0.5063 0.41041 0.9167 0.91667 0.9167h6.41663c0.5063 0 0.9167 -0.4104 0.9167 -0.9167V4.20829c0 -0.50625 -0.4104 -0.91666 -0.9167 -0.91666Z" strokeWidth={1} />
+    <path stroke="#191919" strokeLinecap="round" strokeLinejoin="round" d="M13.3752 5.58337V2.37504c0 -0.24312 -0.0967 -0.47627 -0.2685 -0.64818 -0.1719 -0.17191 -0.4051 -0.26849 -0.6482 -0.26849H2.37516c-0.24312 0 -0.47627 0.09658 -0.64818 0.26849 -0.17191 0.17191 -0.26848 0.40506 -0.26848 0.64818V21.625c0 0.2431 0.09657 0.4763 0.26848 0.6482s0.40506 0.2685 0.64818 0.2685H12.4585c0.2431 0 0.4763 -0.0966 0.6482 -0.2685 0.1718 -0.1719 0.2685 -0.4051 0.2685 -0.6482v-3.2083" strokeWidth={1} />
+    <path stroke="#191919" strokeLinecap="round" strokeLinejoin="round" d="M5.125 12h17.4167" strokeWidth={1} />
+    <path stroke="#191919" strokeLinecap="round" strokeLinejoin="round" d="M9.70833 7.41663 5.125 12l4.58333 4.5833" strokeWidth={1} />
   </svg>
 );
 

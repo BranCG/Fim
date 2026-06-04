@@ -112,6 +112,13 @@ const IconCompass = () => (
   </svg>
 );
 
+const IconX = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+    <line x1="18" y1="6" x2="6" y2="18" />
+    <line x1="6" y1="6" x2="18" y2="18" />
+  </svg>
+);
+
 
 
 export default function DriverPage() {
@@ -1343,16 +1350,6 @@ export default function DriverPage() {
           </div>
         </div>
         <div className="header-actions" style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-          <div className="header-status-badge" style={{
-            padding: '4px 10px', background: isOnline ? 'rgba(0,229,160,0.1)' : 'rgba(255,255,255,0.05)',
-            borderRadius: '100px', fontSize: '0.75rem', fontWeight: 700,
-            color: isOnline ? 'var(--accent)' : 'var(--text-muted)',
-            display: 'flex', alignItems: 'center', gap: '6px'
-          }}>
-            <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: isOnline ? 'var(--accent)' : 'var(--text-muted)' }} />
-            <span className="status-text">{isOnline ? 'EN LÍNEA' : 'DESCONECTADO'}</span>
-          </div>
-          
           <button className="header-nav-btn" onClick={openProfileModal}>
             <div className="icon-circle">
               <IconUser />
