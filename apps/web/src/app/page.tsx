@@ -333,6 +333,9 @@ export default function Home() {
   const [avgPrice, setAvgPrice] = useState(6000);
   const [loss, setLoss] = useState(0);
   const [activeView, setActiveView] = useState<'passenger' | 'driver'>('passenger');
+  const [selectedPlan, setSelectedPlan] = useState<'BLACK' | 'COMFORT' | 'FLEX'>('BLACK');
+  const [activeStep, setActiveStep] = useState<number>(1);
+  const [showFimPagos, setShowFimPagos] = useState<boolean>(false);
 
   useEffect(() => {
     const s = getSession();
@@ -716,7 +719,7 @@ export default function Home() {
           {/* ═══════════════════════════════════════════════════════════════ */}
           <section id="planes" style={{ padding: '80px 24px', background: 'var(--bg-primary)', borderTop: '1px solid var(--border)' }}>
             <div style={{ maxWidth: '1100px', margin: '0 auto' }}>
-              <div style={{ textAlign: 'center', marginBottom: '60px' }}>
+              <div style={{ textAlign: 'center', marginBottom: '40px' }}>
                 <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '6px 16px', background: 'rgba(0,229,160,0.1)', border: '1px solid var(--border-accent)', borderRadius: 'var(--radius-full)', color: 'var(--accent)', fontSize: '0.8rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.15em', marginBottom: '20px' }}>
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '4px' }}><rect x="3" y="4" width="18" height="16" rx="2" /><line x1="3" y1="10" x2="21" y2="10" /><line x1="8" y1="14" x2="8" y2="14.01" /><line x1="12" y1="14" x2="16" y2="14" /></svg>
                   Membresías de Conductor
@@ -729,267 +732,363 @@ export default function Home() {
                 </p>
               </div>
 
-              <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '28px', alignItems: 'stretch' }}>
+              {/* Horizontal Tabs Selector */}
+              <div style={{
+                display: 'flex',
+                justifyContent: 'center',
+                gap: '16px',
+                flexWrap: 'wrap',
+                marginBottom: '40px'
+              }}>
+                {/* PLAN BLACK Button */}
+                <button
+                  onClick={() => setSelectedPlan('BLACK')}
+                  style={{
+                    padding: '12px 28px',
+                    borderRadius: '50px',
+                    fontWeight: 800,
+                    fontSize: '0.95rem',
+                    letterSpacing: '0.05em',
+                    cursor: 'pointer',
+                    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                    border: '2px solid #D4AF37',
+                    background: selectedPlan === 'BLACK' ? '#D4AF37' : 'rgba(212,175,55,0.05)',
+                    color: selectedPlan === 'BLACK' ? '#000' : '#D4AF37',
+                    boxShadow: selectedPlan === 'BLACK' ? '0 0 24px rgba(212,175,55,0.3)' : 'none',
+                    transform: selectedPlan === 'BLACK' ? 'scale(1.05)' : 'scale(1)'
+                  }}
+                >
+                  PLAN BLACK
+                </button>
 
-                {/* ── PLAN BLACK ────────────────────────────────────────── */}
-                <div style={{
-                  flex: '1 1 340px',
-                  maxWidth: '520px',
-                  minWidth: '290px',
-                  background: 'linear-gradient(145deg, #0a0a0f 0%, #1a1a2e 50%, #0d0d1a 100%)',
-                  border: '2px solid rgba(212,175,55,0.7)',
-                  borderRadius: '20px',
-                  padding: '36px 28px',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: '20px',
-                  position: 'relative',
-                  overflow: 'hidden',
-                  boxShadow: '0 20px 60px rgba(212,175,55,0.2), 0 0 0 1px rgba(212,175,55,0.15)',
-                  transform: 'scale(1.02)',
-                  zIndex: 2,
-                }}>
-                  {/* Badge MÁS POPULAR */}
-                  <div style={{ position: 'absolute', top: '-1px', left: '50%', transform: 'translateX(-50%)', background: 'linear-gradient(135deg, #D4AF37, #B8960C)', padding: '6px 20px', borderRadius: '0 0 10px 10px', fontSize: '0.72rem', fontWeight: 900, color: '#000', letterSpacing: '0.1em', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-                    MÁS POPULAR
-                  </div>
+                {/* PLAN COMFORT Button */}
+                <button
+                  onClick={() => setSelectedPlan('COMFORT')}
+                  style={{
+                    padding: '12px 28px',
+                    borderRadius: '50px',
+                    fontWeight: 800,
+                    fontSize: '0.95rem',
+                    letterSpacing: '0.05em',
+                    cursor: 'pointer',
+                    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                    border: '2px solid #3B82F6',
+                    background: selectedPlan === 'COMFORT' ? '#3B82F6' : 'rgba(59,130,246,0.05)',
+                    color: selectedPlan === 'COMFORT' ? '#fff' : '#3B82F6',
+                    boxShadow: selectedPlan === 'COMFORT' ? '0 0 24px rgba(59,130,246,0.3)' : 'none',
+                    transform: selectedPlan === 'COMFORT' ? 'scale(1.05)' : 'scale(1)'
+                  }}
+                >
+                  PLAN COMFORT
+                </button>
 
-                  {/* Glow efecto */}
-                  <div style={{ position: 'absolute', top: '-60px', right: '-60px', width: '200px', height: '200px', background: 'radial-gradient(circle, rgba(212,175,55,0.15) 0%, transparent 70%)', pointerEvents: 'none' }} />
-                  
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginTop: '12px' }}>
-                    <div style={{ padding: '8px 14px', background: 'linear-gradient(135deg, #D4AF37, #B8960C)', borderRadius: '8px', fontSize: '0.75rem', fontWeight: 900, color: '#000', letterSpacing: '0.1em', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-                      <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
-                      PLAN BLACK
-                    </div>
-                    <div style={{ padding: '4px 12px', background: 'rgba(212,175,55,0.15)', border: '1px solid rgba(212,175,55,0.3)', borderRadius: '20px', fontSize: '0.7rem', color: '#D4AF37', fontWeight: 800 }}>
-                      PREMIUM
-                    </div>
-                  </div>
+                {/* PLAN FLEX Button */}
+                <button
+                  onClick={() => setSelectedPlan('FLEX')}
+                  style={{
+                    padding: '12px 28px',
+                    borderRadius: '50px',
+                    fontWeight: 800,
+                    fontSize: '0.95rem',
+                    letterSpacing: '0.05em',
+                    cursor: 'pointer',
+                    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                    border: '2px solid #10B981',
+                    background: selectedPlan === 'FLEX' ? '#10B981' : 'rgba(16,185,129,0.05)',
+                    color: selectedPlan === 'FLEX' ? '#fff' : '#10B981',
+                    boxShadow: selectedPlan === 'FLEX' ? '0 0 24px rgba(16,185,129,0.3)' : 'none',
+                    transform: selectedPlan === 'FLEX' ? 'scale(1.05)' : 'scale(1)'
+                  }}
+                >
+                  PLAN FLEX
+                </button>
+              </div>
 
-                  <div>
-                    <div style={{ fontSize: 'clamp(2.5rem, 5vw, 3.5rem)', fontWeight: 900, color: '#D4AF37', letterSpacing: '-0.03em', lineHeight: 1 }}>
-                      $150.000
-                    </div>
-                    <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.9rem', marginTop: '6px' }}>por mes — pago único mensual</div>
-                  </div>
-
-                  <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.95rem', lineHeight: 1.6, borderLeft: '2px solid rgba(212,175,55,0.4)', paddingLeft: '12px' }}>
-                    Pagas una vez al mes. Acceso ilimitado los 30 días. Sin cobros diarios, sin restricciones de días.
-                  </p>
-
-                  <ul style={{ listStyle: 'none', padding: 0, display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                    {[
-                      '✓  Acceso ilimitado 30 días completos',
-                      '✓  Sin pagos diarios ni interrupciones',
-                      '✓  100% de cada carrera directo a ti',
-                      '✓  Pago vía Mercado Pago (automático)',
-                      '✓  Renovación mensual simple',
-                    ].map(f => (
-                      <li key={f} style={{ color: 'rgba(255,255,255,0.8)', fontSize: '0.875rem', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                        <span style={{ color: '#D4AF37', fontWeight: 800 }}>{f.split('  ')[0]}</span>
-                        <span>{f.split('  ')[1]}</span>
-                      </li>
-                    ))}
-                  </ul>
-
-                  <div style={{ borderTop: '1px solid rgba(212,175,55,0.2)', paddingTop: '20px', marginTop: 'auto' }}>
-                    <div style={{ fontSize: '0.78rem', color: 'rgba(255,255,255,0.4)', marginBottom: '12px', textAlign: 'center' }}>
-                      Pago seguro con Mercado Pago — activación instantánea
-                    </div>
-                    <Link href="/register?role=driver&plan=BLACK" style={{
-                      display: 'block', textAlign: 'center', padding: '14px',
-                      background: 'linear-gradient(135deg, #D4AF37, #B8960C)',
-                      color: '#000', borderRadius: '10px', fontWeight: 900,
-                      fontSize: '0.95rem', textDecoration: 'none',
-                      boxShadow: '0 4px 20px rgba(212,175,55,0.3)',
-                      transition: 'all 0.2s ease',
+              {/* Conditional Cards Render */}
+              <div style={{ display: 'flex', justifyContent: 'center', minHeight: '520px' }}>
+                {selectedPlan === 'BLACK' && (
+                  <div style={{
+                    animation: 'fadeIn 0.3s ease',
+                    width: '100%',
+                    maxWidth: '520px',
+                    display: 'flex',
+                    flexDirection: 'column'
+                  }}>
+                    {/* ── PLAN BLACK ────────────────────────────────────────── */}
+                    <div style={{
+                      flex: 1,
+                      background: 'linear-gradient(145deg, #0a0a0f 0%, #1a1a2e 50%, #0d0d1a 100%)',
+                      border: '2px solid rgba(212,175,55,0.7)',
+                      borderRadius: '20px',
+                      padding: '36px 28px',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '20px',
+                      position: 'relative',
+                      overflow: 'hidden',
+                      boxShadow: '0 20px 60px rgba(212,175,55,0.2), 0 0 0 1px rgba(212,175,55,0.15)',
+                      transform: 'scale(1.02)',
+                      zIndex: 2,
                     }}>
-                      Quiero el Plan BLACK →
-                    </Link>
-                  </div>
-                </div>
-
-                {/* ── PLAN COMFORT ──────────────────────────────────────── */}
-                <div style={{
-                  flex: '1 1 340px',
-                  maxWidth: '520px',
-                  minWidth: '290px',
-                  background: 'linear-gradient(145deg, #0a0f1a 0%, #0f1e35 50%, #0a1020 100%)',
-                  border: '1px solid rgba(59,130,246,0.4)',
-                  borderRadius: '20px',
-                  padding: '36px 28px',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: '20px',
-                  position: 'relative',
-                  overflow: 'hidden',
-                  boxShadow: '0 20px 60px rgba(59,130,246,0.1)',
-                }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                    <div style={{ padding: '8px 14px', background: 'linear-gradient(135deg, #3B82F6, #1D4ED8)', borderRadius: '8px', fontSize: '0.75rem', fontWeight: 900, color: '#fff', letterSpacing: '0.1em', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-                      <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10"/></svg>
-                      PLAN COMFORT
-                    </div>
-                    <div style={{ padding: '4px 12px', background: 'rgba(59,130,246,0.15)', border: '1px solid rgba(59,130,246,0.4)', borderRadius: '20px', fontSize: '0.7rem', color: '#60A5FA', fontWeight: 800 }}>
-                      FINANCIADO
-                    </div>
-                  </div>
-
-                  <div>
-                    <div style={{ display: 'flex', alignItems: 'flex-end', gap: '8px' }}>
-                      <div style={{ fontSize: 'clamp(2.5rem, 5vw, 3.5rem)', fontWeight: 900, color: '#FBBF24', letterSpacing: '-0.03em', lineHeight: 1 }}>
-                        $180.000
+                      {/* Badge MÁS POPULAR */}
+                      <div style={{ position: 'absolute', top: '-1px', left: '50%', transform: 'translateX(-50%)', background: 'linear-gradient(135deg, #D4AF37, #B8960C)', padding: '6px 20px', borderRadius: '0 0 10px 10px', fontSize: '0.72rem', fontWeight: 900, color: '#000', letterSpacing: '0.1em', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                        MÁS POPULAR
                       </div>
-                      <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.9rem', paddingBottom: '6px' }}>/mes total</div>
-                    </div>
-                    <div style={{ marginTop: '8px', padding: '6px 12px', background: 'rgba(59,130,246,0.1)', border: '1px solid rgba(59,130,246,0.2)', borderRadius: '6px', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-                      <span style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.78rem' }}>Cuota diaria:</span>
-                      <span style={{ color: '#60A5FA', fontWeight: 800, fontSize: '0.85rem' }}>$20.000 /día operado</span>
-                    </div>
-                  </div>
 
-                  <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.95rem', lineHeight: 1.6, borderLeft: '2px solid rgba(59,130,246,0.5)', paddingLeft: '12px' }}>
-                    <strong>Membresía Crédito:</strong> Te financiamos la membresía de inicio para que empieces sin capital. Pagas $20.000 por día trabajado hasta completar la meta de $180.000. ¡Al cumplir la meta, el resto del mes es 100% gratis!
-                  </p>
-
-                  <div style={{ background: 'rgba(251,191,36,0.08)', border: '1px solid rgba(251,191,36,0.2)', borderRadius: '10px', padding: '14px', fontSize: '0.82rem' }}>
-                    <div style={{ color: '#FBBF24', fontWeight: 800, marginBottom: '6px', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                      ¿Cómo funciona?
-                    </div>
-                    <div style={{ color: 'rgba(255,255,255,0.65)', lineHeight: 1.6 }}>
-                      Pagas la cuota diaria solo los días que trabajas. La subes en la app cada mañana para activarte. A las 7am del día siguiente se pausa hasta la nueva cuota.
-                    </div>
-                  </div>
-
-                  <ul style={{ listStyle: 'none', padding: 0, display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                    {[
-                      '✓  Crédito Fim (inicia sin capital)',
-                      '✓  Solo pagas los días que trabajas',
-                      '✓  Gratis al completar la meta mensual',
-                      '✓  100% de cada carrera directo a ti',
-                      '✓  Comprobante diario verificado',
-                    ].map(f => (
-                      <li key={f} style={{ color: 'rgba(255,255,255,0.8)', fontSize: '0.875rem', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                        <span style={{ color: '#60A5FA', fontWeight: 800 }}>{f.split('  ')[0]}</span>
-                        <span>{f.split('  ')[1]}</span>
-                      </li>
-                    ))}
-                  </ul>
-
-                  <div style={{ borderTop: '1px solid rgba(59,130,246,0.2)', paddingTop: '20px', marginTop: 'auto' }}>
-                    <div style={{ fontSize: '0.78rem', color: 'rgba(255,255,255,0.4)', marginBottom: '12px', textAlign: 'center' }}>
-                      Transferencia bancaria diaria + comprobante en la app
-                    </div>
-                    <Link href="/register?role=driver&plan=COMFORT" style={{
-                      display: 'block', textAlign: 'center', padding: '14px',
-                      background: 'linear-gradient(135deg, #3B82F6, #1D4ED8)',
-                      color: '#fff', borderRadius: '10px', fontWeight: 900,
-                      fontSize: '0.95rem', textDecoration: 'none',
-                      boxShadow: '0 4px 20px rgba(59,130,246,0.3)',
-                      transition: 'all 0.2s ease',
-                    }}>
-                      Quiero el Plan COMFORT →
-                    </Link>
-                  </div>
-                </div>
-
-                {/* ── PLAN FLEX ─────────────────────────────────────────── */}
-                <div style={{
-                  flex: '1 1 340px',
-                  maxWidth: '520px',
-                  minWidth: '290px',
-                  background: 'linear-gradient(145deg, #050f0a 0%, #0a1f14 50%, #07120d 100%)',
-                  border: '1px solid rgba(16,185,129,0.35)',
-                  borderRadius: '20px',
-                  padding: '36px 28px',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: '20px',
-                  position: 'relative',
-                  overflow: 'hidden',
-                  boxShadow: '0 20px 60px rgba(16,185,129,0.08)',
-                }}>
-                  <div style={{ position: 'absolute', bottom: '-40px', left: '-40px', width: '180px', height: '180px', background: 'radial-gradient(circle, rgba(16,185,129,0.12) 0%, transparent 70%)', pointerEvents: 'none' }} />
-
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                    <div style={{ padding: '8px 14px', background: 'linear-gradient(135deg, #10B981, #059669)', borderRadius: '8px', fontSize: '0.75rem', fontWeight: 900, color: '#fff', letterSpacing: '0.1em', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-                      <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 2 22 22 22"/></svg>
-                      PLAN FLEX
-                    </div>
-                    <div style={{ padding: '4px 12px', background: 'rgba(16,185,129,0.15)', border: '1px solid rgba(16,185,129,0.3)', borderRadius: '20px', fontSize: '0.7rem', color: '#34D399', fontWeight: 800 }}>
-                      FIN DE SEMANA
-                    </div>
-                  </div>
-
-                  <div>
-                    <div style={{ fontSize: 'clamp(2.5rem, 5vw, 3.5rem)', fontWeight: 900, color: '#34D399', letterSpacing: '-0.03em', lineHeight: 1 }}>
-                      $60.000
-                    </div>
-                    <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.9rem', marginTop: '6px' }}>por fin de semana (Vie → Dom)</div>
-                  </div>
-
-                  <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.95rem', lineHeight: 1.6, borderLeft: '2px solid rgba(16,185,129,0.4)', paddingLeft: '12px' }}>
-                    Pensado para quienes solo trabajan el fin de semana. Pagas $60.000 y tienes acceso los Viernes, Sábado y Domingo. El resto de la semana la cuenta queda inactiva automáticamente.
-                  </p>
-
-                  <div style={{ background: 'rgba(52,211,153,0.06)', border: '1px solid rgba(52,211,153,0.15)', borderRadius: '10px', padding: '14px' }}>
-                    <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
-                      {['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'].map((d, i) => (
-                        <div key={d} style={{
-                          width: '36px', height: '36px', borderRadius: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
-                          background: i >= 4 ? 'rgba(16,185,129,0.25)' : 'rgba(255,255,255,0.04)',
-                          border: `1px solid ${i >= 4 ? 'rgba(16,185,129,0.4)' : 'rgba(255,255,255,0.08)'}`,
-                          color: i >= 4 ? '#34D399' : 'rgba(255,255,255,0.25)',
-                          fontSize: '0.65rem', fontWeight: 800,
-                        }}>
-                          {d}
+                      {/* Glow efecto */}
+                      <div style={{ position: 'absolute', top: '-60px', right: '-60px', width: '200px', height: '200px', background: 'radial-gradient(circle, rgba(212,175,55,0.15) 0%, transparent 70%)', pointerEvents: 'none' }} />
+                      
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginTop: '12px' }}>
+                        <div style={{ padding: '8px 14px', background: 'linear-gradient(135deg, #D4AF37, #B8960C)', borderRadius: '8px', fontSize: '0.75rem', fontWeight: 900, color: '#000', letterSpacing: '0.1em', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+                          PLAN BLACK
                         </div>
-                      ))}
-                    </div>
-                    <div style={{ textAlign: 'center', marginTop: '8px', fontSize: '0.75rem', color: 'rgba(255,255,255,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px' }}>
-                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-                        <span style={{ display: 'inline-block', width: '8px', height: '8px', borderRadius: '50%', background: '#10B981' }} /> Activo
-                      </span>
-                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-                        <span style={{ display: 'inline-block', width: '8px', height: '8px', borderRadius: '2px', background: 'rgba(255,255,255,0.1)', border: '1px solid var(--border)' }} /> Bloqueado
-                      </span>
+                        <div style={{ padding: '4px 12px', background: 'rgba(212,175,55,0.15)', border: '1px solid rgba(212,175,55,0.3)', borderRadius: '20px', fontSize: '0.7rem', color: '#D4AF37', fontWeight: 800 }}>
+                          PREMIUM
+                        </div>
+                      </div>
+
+                      <div>
+                        <div style={{ fontSize: 'clamp(2.5rem, 5vw, 3.5rem)', fontWeight: 900, color: '#D4AF37', letterSpacing: '-0.03em', lineHeight: 1 }}>
+                          $150.000
+                        </div>
+                        <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.9rem', marginTop: '6px' }}>por mes — pago único mensual</div>
+                      </div>
+
+                      <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.95rem', lineHeight: 1.6, borderLeft: '2px solid rgba(212,175,55,0.4)', paddingLeft: '12px' }}>
+                        Pagas una vez al mes. Acceso ilimitado los 30 días. Sin cobros diarios, sin restricciones de días.
+                      </p>
+
+                      <ul style={{ listStyle: 'none', padding: 0, display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                        {[
+                          '✓  Acceso ilimitado 30 días completos',
+                          '✓  Sin pagos diarios ni interrupciones',
+                          '✓  100% de cada carrera directo a ti',
+                          '✓  Pago vía Mercado Pago (automático)',
+                          '✓  Renovación mensual simple',
+                        ].map(f => (
+                          <li key={f} style={{ color: 'rgba(255,255,255,0.8)', fontSize: '0.875rem', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                            <span style={{ color: '#D4AF37', fontWeight: 800 }}>{f.split('  ')[0]}</span>
+                            <span>{f.split('  ')[1]}</span>
+                          </li>
+                        ))}
+                      </ul>
+
+                      <div style={{ borderTop: '1px solid rgba(212,175,55,0.2)', paddingTop: '20px', marginTop: 'auto' }}>
+                        <div style={{ fontSize: '0.78rem', color: 'rgba(255,255,255,0.4)', marginBottom: '12px', textAlign: 'center' }}>
+                          Pago seguro con Mercado Pago — activación instantánea
+                        </div>
+                        <Link href="/register?role=driver&plan=BLACK" style={{
+                          display: 'block', textAlign: 'center', padding: '14px',
+                          background: 'linear-gradient(135deg, #D4AF37, #B8960C)',
+                          color: '#000', borderRadius: '10px', fontWeight: 900,
+                          fontSize: '0.95rem', textDecoration: 'none',
+                          boxShadow: '0 4px 20px rgba(212,175,55,0.3)',
+                          transition: 'all 0.2s ease',
+                        }}>
+                          Quiero el Plan BLACK →
+                        </Link>
+                      </div>
                     </div>
                   </div>
+                )}
 
-                  <ul style={{ listStyle: 'none', padding: 0, display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                    {[
-                      '✓  Activo solo Viernes, Sábado y Domingo',
-                      '✓  Pago único semanal $60.000',
-                      '✓  100% de cada carrera directo a ti',
-                      '✓  Pago vía Mercado Pago (automático)',
-                      '✓  Sin sorpresas ni cobros extras',
-                    ].map(f => (
-                      <li key={f} style={{ color: 'rgba(255,255,255,0.8)', fontSize: '0.875rem', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                        <span style={{ color: '#34D399', fontWeight: 800 }}>{f.split('  ')[0]}</span>
-                        <span>{f.split('  ')[1]}</span>
-                      </li>
-                    ))}
-                  </ul>
-
-                  <div style={{ borderTop: '1px solid rgba(16,185,129,0.2)', paddingTop: '20px', marginTop: 'auto' }}>
-                    <div style={{ fontSize: '0.78rem', color: 'rgba(255,255,255,0.4)', marginBottom: '12px', textAlign: 'center' }}>
-                      Pago seguro con Mercado Pago — activo el próximo viernes
-                    </div>
-                    <Link href="/register?role=driver&plan=FLEX" style={{
-                      display: 'block', textAlign: 'center', padding: '14px',
-                      background: 'linear-gradient(135deg, #10B981, #059669)',
-                      color: '#fff', borderRadius: '10px', fontWeight: 900,
-                      fontSize: '0.95rem', textDecoration: 'none',
-                      boxShadow: '0 4px 20px rgba(16,185,129,0.25)',
-                      transition: 'all 0.2s ease',
+                {selectedPlan === 'COMFORT' && (
+                  <div style={{
+                    animation: 'fadeIn 0.3s ease',
+                    width: '100%',
+                    maxWidth: '520px',
+                    display: 'flex',
+                    flexDirection: 'column'
+                  }}>
+                    {/* ── PLAN COMFORT ──────────────────────────────────────── */}
+                    <div style={{
+                      flex: 1,
+                      background: 'linear-gradient(145deg, #0a0f1a 0%, #0f1e35 50%, #0a1020 100%)',
+                      border: '1px solid rgba(59,130,246,0.4)',
+                      borderRadius: '20px',
+                      padding: '36px 28px',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '20px',
+                      position: 'relative',
+                      overflow: 'hidden',
+                      boxShadow: '0 20px 60px rgba(59,130,246,0.1)',
                     }}>
-                      Quiero el Plan FLEX →
-                    </Link>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                        <div style={{ padding: '8px 14px', background: 'linear-gradient(135deg, #3B82F6, #1D4ED8)', borderRadius: '8px', fontSize: '0.75rem', fontWeight: 900, color: '#fff', letterSpacing: '0.1em', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10"/></svg>
+                          PLAN COMFORT
+                        </div>
+                        <div style={{ padding: '4px 12px', background: 'rgba(59,130,246,0.15)', border: '1px solid rgba(59,130,246,0.4)', borderRadius: '20px', fontSize: '0.7rem', color: '#60A5FA', fontWeight: 800 }}>
+                          FINANCIADO
+                        </div>
+                      </div>
+
+                      <div>
+                        <div style={{ display: 'flex', alignItems: 'flex-end', gap: '8px' }}>
+                          <div style={{ fontSize: 'clamp(2.5rem, 5vw, 3.5rem)', fontWeight: 900, color: '#FBBF24', letterSpacing: '-0.03em', lineHeight: 1 }}>
+                            $180.000
+                          </div>
+                          <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.9rem', paddingBottom: '6px' }}>/mes total</div>
+                        </div>
+                        <div style={{ marginTop: '8px', padding: '6px 12px', background: 'rgba(59,130,246,0.1)', border: '1px solid rgba(59,130,246,0.2)', borderRadius: '6px', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                          <span style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.78rem' }}>Cuota diaria:</span>
+                          <span style={{ color: '#60A5FA', fontWeight: 800, fontSize: '0.85rem' }}>$20.000 /día operado</span>
+                        </div>
+                      </div>
+
+                      <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.95rem', lineHeight: 1.6, borderLeft: '2px solid rgba(59,130,246,0.5)', paddingLeft: '12px' }}>
+                        <strong>Membresía Crédito:</strong> Te financiamos la membresía de inicio para que empieces sin capital. Pagas $20.000 por día trabajado hasta completar la meta de $180.000. ¡Al cumplir la meta, el resto del mes es 100% gratis!
+                      </p>
+
+                      <div style={{ background: 'rgba(251,191,36,0.08)', border: '1px solid rgba(251,191,36,0.2)', borderRadius: '10px', padding: '14px', fontSize: '0.82rem' }}>
+                        <div style={{ color: '#FBBF24', fontWeight: 800, marginBottom: '6px', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                          ¿Cómo funciona?
+                        </div>
+                        <div style={{ color: 'rgba(255,255,255,0.65)', lineHeight: 1.6 }}>
+                          Pagas la cuota diaria solo los días que trabajas. La subes en la app cada mañana para activarte. A las 7am del día siguiente se pausa hasta la nueva cuota.
+                        </div>
+                      </div>
+
+                      <ul style={{ listStyle: 'none', padding: 0, display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                        {[
+                          '✓  Crédito Fim (inicia sin capital)',
+                          '✓  Solo pagas los días que trabajas',
+                          '✓  Gratis al completar la meta mensual',
+                          '✓  100% de cada carrera directo a ti',
+                          '✓  Comprobante diario verificado',
+                        ].map(f => (
+                          <li key={f} style={{ color: 'rgba(255,255,255,0.8)', fontSize: '0.875rem', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                            <span style={{ color: '#60A5FA', fontWeight: 800 }}>{f.split('  ')[0]}</span>
+                            <span>{f.split('  ')[1]}</span>
+                          </li>
+                        ))}
+                      </ul>
+
+                      <div style={{ borderTop: '1px solid rgba(59,130,246,0.2)', paddingTop: '20px', marginTop: 'auto' }}>
+                        <div style={{ fontSize: '0.78rem', color: 'rgba(255,255,255,0.4)', marginBottom: '12px', textAlign: 'center' }}>
+                          Transferencia bancaria diaria + comprobante en la app
+                        </div>
+                        <Link href="/register?role=driver&plan=COMFORT" style={{
+                          display: 'block', textAlign: 'center', padding: '14px',
+                          background: 'linear-gradient(135deg, #3B82F6, #1D4ED8)',
+                          color: '#fff', borderRadius: '10px', fontWeight: 900,
+                          fontSize: '0.95rem', textDecoration: 'none',
+                          boxShadow: '0 4px 20px rgba(59,130,246,0.3)',
+                          transition: 'all 0.2s ease',
+                        }}>
+                          Quiero el Plan COMFORT →
+                        </Link>
+                      </div>
+                    </div>
                   </div>
-                </div>
+                )}
+
+                {selectedPlan === 'FLEX' && (
+                  <div style={{
+                    animation: 'fadeIn 0.3s ease',
+                    width: '100%',
+                    maxWidth: '520px',
+                    display: 'flex',
+                    flexDirection: 'column'
+                  }}>
+                    {/* ── PLAN FLEX ─────────────────────────────────────────── */}
+                    <div style={{
+                      flex: 1,
+                      background: 'linear-gradient(145deg, #050f0a 0%, #0a1f14 50%, #07120d 100%)',
+                      border: '1px solid rgba(16,185,129,0.35)',
+                      borderRadius: '20px',
+                      padding: '36px 28px',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '20px',
+                      position: 'relative',
+                      overflow: 'hidden',
+                      boxShadow: '0 20px 60px rgba(16,185,129,0.08)',
+                    }}>
+                      <div style={{ position: 'absolute', bottom: '-40px', left: '-40px', width: '180px', height: '180px', background: 'radial-gradient(circle, rgba(16,185,129,0.12) 0%, transparent 70%)', pointerEvents: 'none' }} />
+
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                        <div style={{ padding: '8px 14px', background: 'linear-gradient(135deg, #10B981, #059669)', borderRadius: '8px', fontSize: '0.75rem', fontWeight: 900, color: '#fff', letterSpacing: '0.1em', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 2 22 22 22"/></svg>
+                          PLAN FLEX
+                        </div>
+                        <div style={{ padding: '4px 12px', background: 'rgba(16,185,129,0.15)', border: '1px solid rgba(16,185,129,0.3)', borderRadius: '20px', fontSize: '0.7rem', color: '#34D399', fontWeight: 800 }}>
+                          FIN DE SEMANA
+                        </div>
+                      </div>
+
+                      <div>
+                        <div style={{ fontSize: 'clamp(2.5rem, 5vw, 3.5rem)', fontWeight: 900, color: '#34D399', letterSpacing: '-0.03em', lineHeight: 1 }}>
+                          $60.000
+                        </div>
+                        <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.9rem', marginTop: '6px' }}>por fin de semana (Vie → Dom)</div>
+                      </div>
+
+                      <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.95rem', lineHeight: 1.6, borderLeft: '2px solid rgba(16,185,129,0.4)', paddingLeft: '12px' }}>
+                        Pensado para quienes solo trabajan el fin de semana. Pagas $60.000 y tienes acceso los Viernes, Sábado y Domingo. El resto de la semana la cuenta queda inactiva automáticamente.
+                      </p>
+
+                      <div style={{ background: 'rgba(52,211,153,0.06)', border: '1px solid rgba(52,211,153,0.15)', borderRadius: '10px', padding: '14px' }}>
+                        <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
+                          {['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'].map((d, i) => (
+                            <div key={d} style={{
+                              width: '36px', height: '36px', borderRadius: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+                              background: i >= 4 ? 'rgba(16,185,129,0.25)' : 'rgba(255,255,255,0.04)',
+                              border: `1px solid ${i >= 4 ? 'rgba(16,185,129,0.4)' : 'rgba(255,255,255,0.08)'}`,
+                              color: i >= 4 ? '#34D399' : 'rgba(255,255,255,0.25)',
+                              fontSize: '0.65rem', fontWeight: 800,
+                            }}>
+                              {d}
+                            </div>
+                          ))}
+                        </div>
+                        <div style={{ textAlign: 'center', marginTop: '8px', fontSize: '0.75rem', color: 'rgba(255,255,255,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px' }}>
+                          <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                            <span style={{ display: 'inline-block', width: '8px', height: '8px', borderRadius: '50%', background: '#10B981' }} /> Activo
+                          </span>
+                          <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                            <span style={{ display: 'inline-block', width: '8px', height: '8px', borderRadius: '2px', background: 'rgba(255,255,255,0.1)', border: '1px solid var(--border)' }} /> Bloqueado
+                          </span>
+                        </div>
+                      </div>
+
+                      <ul style={{ listStyle: 'none', padding: 0, display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                        {[
+                          '✓  Activo solo Viernes, Sábado y Domingo',
+                          '✓  Pago único semanal $60.000',
+                          '✓  100% de cada carrera directo a ti',
+                          '✓  Pago vía Mercado Pago (automático)',
+                          '✓  Sin sorpresas ni cobros extras',
+                        ].map(f => (
+                          <li key={f} style={{ color: 'rgba(255,255,255,0.8)', fontSize: '0.875rem', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                            <span style={{ color: '#34D399', fontWeight: 800 }}>{f.split('  ')[0]}</span>
+                            <span>{f.split('  ')[1]}</span>
+                          </li>
+                        ))}
+                      </ul>
+
+                      <div style={{ borderTop: '1px solid rgba(16,185,129,0.2)', paddingTop: '20px', marginTop: 'auto' }}>
+                        <div style={{ fontSize: '0.78rem', color: 'rgba(255,255,255,0.4)', marginBottom: '12px', textAlign: 'center' }}>
+                          Pago seguro con Mercado Pago — activo el próximo viernes
+                        </div>
+                        <Link href="/register?role=driver&plan=FLEX" style={{
+                          display: 'block', textAlign: 'center', padding: '14px',
+                          background: 'linear-gradient(135deg, #10B981, #059669)',
+                          color: '#fff', borderRadius: '10px', fontWeight: 900,
+                          fontSize: '0.95rem', textDecoration: 'none',
+                          boxShadow: '0 4px 20px rgba(16,185,129,0.25)',
+                          transition: 'all 0.2s ease',
+                        }}>
+                          Quiero el Plan FLEX →
+                        </Link>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           </section>
@@ -1067,92 +1166,168 @@ export default function Home() {
                 </p>
               </div>
 
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '32px', position: 'relative' }}>
-                {/* Center line for timeline on desktop */}
+              <div style={{ display: 'flex', gap: '32px', flexWrap: 'wrap', alignItems: 'stretch', marginTop: '32px' }}>
+                {/* Left: Interactive steps (Selector) */}
                 <div style={{
-                  position: 'absolute',
-                  left: '20px',
-                  top: '10px',
-                  bottom: '10px',
-                  width: '2px',
-                  background: 'linear-gradient(to bottom, var(--accent) 0%, rgba(255,255,255,0.05) 100%)',
-                  zIndex: 0
-                }} />
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '24px',
+                  alignItems: 'center',
+                  position: 'relative',
+                  minWidth: '60px',
+                  justifyContent: 'center'
+                }}>
+                  {/* Vertical Line */}
+                  <div style={{
+                    position: 'absolute',
+                    left: '50%',
+                    top: '20px',
+                    bottom: '20px',
+                    width: '2px',
+                    background: 'linear-gradient(to bottom, var(--accent) 0%, rgba(255,255,255,0.05) 100%)',
+                    transform: 'translateX(-50%)',
+                    zIndex: 0
+                  }} />
 
-                {[
-                  {
-                    step: '1',
-                    title: 'Registro y Validación Biométrica',
-                    desc: 'Regístrate como Conductor en Fim. Sube tu licencia de conducir profesional y pasa la verificación de identidad para garantizar la seguridad de la comunidad.'
-                  },
-                  {
-                    step: '2',
-                    title: 'Vincula tu Mercado Pago',
-                    desc: 'Pega tu enlace de cobro de Mercado Pago en la app. Los pasajeros te pagarán directamente a tu cuenta al finalizar cada viaje.',
-                    extra: (
-                      <div style={{ 
-                        marginTop: '20px', 
-                        background: 'rgba(9, 9, 15, 0.4)', 
-                        padding: '24px', 
-                        borderRadius: 'var(--radius-lg)', 
-                        border: '1px solid var(--border)',
+                  {[1, 2, 3].map((stepNum) => (
+                    <button
+                      key={stepNum}
+                      onClick={() => setActiveStep(stepNum)}
+                      style={{
+                        width: '46px',
+                        height: '46px',
+                        borderRadius: '50%',
+                        background: activeStep === stepNum ? 'var(--accent)' : 'var(--bg-primary)',
+                        border: `2px solid ${activeStep === stepNum ? 'var(--accent)' : 'rgba(255,255,255,0.15)'}`,
+                        color: activeStep === stepNum ? '#000' : 'var(--accent)',
                         display: 'flex',
-                        flexDirection: 'column',
-                        gap: '20px'
-                      }}>
-                        <h4 style={{ fontSize: '1rem', fontWeight: 800, color: 'white', marginBottom: '4px' }}>¿Cómo funciona FIM pagos?</h4>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', color: 'var(--text-secondary)' }}>
-                          <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
-                            <IconWalletColor />
-                            <p style={{ margin: 0, fontSize: '0.9rem', lineHeight: '1.4' }}>Crea una cuenta en <strong>Mercado Pago</strong> (es gratis y personal).</p>
-                          </div>
-                          <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
-                            <IconLinkColor />
-                            <p style={{ margin: 0, fontSize: '0.9rem', lineHeight: '1.4' }}>En tu app de Mercado Pago, ve a <strong>Cobrar con Link</strong> y crea un link genérico o usa tu código QR.</p>
-                          </div>
-                          <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
-                            <IconProfileColor />
-                            <p style={{ margin: 0, fontSize: '0.9rem', lineHeight: '1.4' }}>Pega ese link en tu perfil de <strong>Fim</strong> en la sección "Cobro Directo".</p>
-                          </div>
-                          <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
-                            <IconCheckColor />
-                            <p style={{ margin: 0, fontSize: '0.9rem', lineHeight: '1.4' }}>¡Listo! Al terminar un viaje, el pasajero verá tu link y te pagará <strong>directo a tu cuenta</strong>.</p>
-                          </div>
-                        </div>
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontWeight: 900,
+                        fontSize: '1.1rem',
+                        cursor: 'pointer',
+                        zIndex: 1,
+                        boxShadow: activeStep === stepNum ? 'var(--shadow-accent)' : 'none',
+                        transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                        transform: activeStep === stepNum ? 'scale(1.1)' : 'scale(1)'
+                      }}
+                    >
+                      {stepNum}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Right: Steps Details Box */}
+                <div style={{ flex: '1 1 300px' }}>
+                  <div className="card" style={{ 
+                    padding: '32px', 
+                    background: 'var(--bg-secondary)', 
+                    border: '1px solid var(--border)',
+                    boxShadow: '0 20px 40px rgba(0,0,0,0.3)',
+                    borderRadius: 'var(--radius-lg)',
+                    minHeight: '220px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    justifyContent: 'center'
+                  }}>
+                    {activeStep === 1 && (
+                      <div style={{ animation: 'fadeIn 0.3s ease' }}>
+                        <span style={{ fontSize: '0.8rem', color: 'var(--accent)', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.15em' }}>Paso 1</span>
+                        <h3 style={{ fontSize: '1.3rem', fontWeight: 800, marginTop: '8px', marginBottom: '12px', color: 'white' }}>Registro y Validación Biométrica</h3>
+                        <p style={{ fontSize: '0.95rem', color: 'var(--text-secondary)', lineHeight: '1.6', margin: 0 }}>
+                          Regístrate como Conductor en Fim. Sube tu licencia de conducir profesional y pasa la verificación de identidad para garantizar la seguridad de la comunidad.
+                        </p>
                       </div>
-                    )
-                  },
-                  {
-                    step: '3',
-                    title: 'Elige tu Plan y Comienza a Conducir',
-                    desc: 'Selecciona la membresía que mejor se adapte a tu ritmo de trabajo (diaria o mensual). ¡Todo lo que generes en los viajes es 100% tuyo!'
-                  }
-                ].map((item: { step: string; title: string; desc: string; extra?: React.ReactNode }) => (
-                  <div key={item.step} style={{ display: 'flex', gap: '20px', position: 'relative', zIndex: 1 }}>
-                    <div style={{
-                      width: '42px',
-                      height: '42px',
-                      borderRadius: '50%',
-                      background: 'var(--bg-primary)',
-                      border: '2px solid var(--accent)',
-                      color: 'var(--accent)',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      fontWeight: 900,
-                      fontSize: '1.1rem',
-                      flexShrink: 0,
-                      boxShadow: 'var(--shadow-accent)'
-                    }}>
-                      {item.step}
-                    </div>
-                    <div className="card" style={{ flex: 1, padding: '20px', background: 'var(--bg-secondary)', border: '1px solid var(--border)' }}>
-                      <h3 style={{ fontSize: '1.1rem', fontWeight: 800, marginBottom: '8px', color: 'white' }}>{item.title}</h3>
-                      <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', lineHeight: '1.5' }}>{item.desc}</p>
-                      {item.extra}
+                    )}
+                    {activeStep === 2 && (
+                      <div style={{ animation: 'fadeIn 0.3s ease' }}>
+                        <span style={{ fontSize: '0.8rem', color: 'var(--accent)', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.15em' }}>Paso 2</span>
+                        <h3 style={{ fontSize: '1.3rem', fontWeight: 800, marginTop: '8px', marginBottom: '12px', color: 'white' }}>Vincula tu Mercado Pago</h3>
+                        <p style={{ fontSize: '0.95rem', color: 'var(--text-secondary)', lineHeight: '1.6', margin: 0 }}>
+                          Pega tu enlace de cobro de Mercado Pago en la app. Los pasajeros te pagarán directamente a tu cuenta al finalizar cada viaje.
+                        </p>
+                      </div>
+                    )}
+                    {activeStep === 3 && (
+                      <div style={{ animation: 'fadeIn 0.3s ease' }}>
+                        <span style={{ fontSize: '0.8rem', color: 'var(--accent)', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.15em' }}>Paso 3</span>
+                        <h3 style={{ fontSize: '1.3rem', fontWeight: 800, marginTop: '8px', marginBottom: '12px', color: 'white' }}>Elige tu Plan y Comienza a Conducir</h3>
+                        <p style={{ fontSize: '0.95rem', color: 'var(--text-secondary)', lineHeight: '1.6', margin: 0 }}>
+                          Selecciona la membresía que mejor se adapte a tu ritmo de trabajo (diaria o mensual). ¡Todo lo que generes en los viajes es 100% tuyo!
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Botón de despliegue "¿Cómo funciona FIM pagos?" */}
+              <div style={{ textAlign: 'center', marginTop: '48px' }}>
+                <button
+                  onClick={() => setShowFimPagos(!showFimPagos)}
+                  className="btn btn-secondary btn-lg"
+                  style={{
+                    borderColor: showFimPagos ? 'var(--accent)' : 'rgba(255,255,255,0.15)',
+                    color: showFimPagos ? 'var(--accent)' : '#fff',
+                    minWidth: '320px',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '12px',
+                    transition: 'all 0.3s ease'
+                  }}
+                >
+                  ¿CÓMO FUNCIONA FIM PAGOS?
+                  <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    style={{
+                      transform: showFimPagos ? 'rotate(180deg)' : 'rotate(0deg)',
+                      transition: 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
+                    }}
+                  >
+                    <polyline points="6 9 12 15 18 9" />
+                  </svg>
+                </button>
+
+                {showFimPagos && (
+                  <div style={{
+                    maxWidth: '800px',
+                    margin: '32px auto 0',
+                    background: 'var(--bg-secondary)',
+                    padding: '36px',
+                    borderRadius: 'var(--radius-lg)',
+                    border: '1px solid var(--border)',
+                    textAlign: 'left',
+                    boxShadow: '0 20px 40px rgba(0,0,0,0.3)',
+                    animation: 'fadeIn 0.3s ease'
+                  }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '28px', color: 'var(--text-secondary)' }}>
+                      <div style={{ display: 'flex', gap: '20px', alignItems: 'center' }}>
+                        <IconWalletColor />
+                        <p style={{ margin: 0, fontSize: '0.95rem', lineHeight: '1.5' }}>Crea una cuenta en <strong>Mercado Pago</strong> (es gratis y personal).</p>
+                      </div>
+                      <div style={{ display: 'flex', gap: '20px', alignItems: 'center' }}>
+                        <IconLinkColor />
+                        <p style={{ margin: 0, fontSize: '0.95rem', lineHeight: '1.5' }}>En tu app de Mercado Pago, ve a <strong>Cobrar con Link</strong> y crea un link genérico o usa tu código QR.</p>
+                      </div>
+                      <div style={{ display: 'flex', gap: '20px', alignItems: 'center' }}>
+                        <IconProfileColor />
+                        <p style={{ margin: 0, fontSize: '0.95rem', lineHeight: '1.5' }}>Pega ese link en tu perfil de <strong>Fim</strong> en la sección "Cobro Directo".</p>
+                      </div>
+                      <div style={{ display: 'flex', gap: '20px', alignItems: 'center' }}>
+                        <IconCheckColor />
+                        <p style={{ margin: 0, fontSize: '0.95rem', lineHeight: '1.5' }}>¡Listo! Al terminar un viaje, el pasajero verá tu link y te pagará <strong>directo a tu cuenta</strong>.</p>
+                      </div>
                     </div>
                   </div>
-                ))}
+                )}
               </div>
             </div>
           </section>
