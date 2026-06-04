@@ -7,6 +7,61 @@ import Logo from '@/components/Logo';
 import SplashScreen from '@/components/SplashScreen';
 import { getSession } from '@/lib/api';
 
+// Ultimate Colors Free style icons
+const IconPassengerColor = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ display: 'inline-block', flexShrink: 0 }}>
+    <path d="M12 11c2.761 0 5-2.239 5-5s-2.239-5-5-5-5 2.239-5 5 2.239 5 5 5z" fill="#4FC3F7"/>
+    <path d="M12 13c-4.418 0-8 3.582-8 8v1h16v-1c0-4.418-3.582-8-8-8z" fill="#00E5A0"/>
+    <path d="M12 13c-2.209 0-4 1.791-4 4v1h8v-1c0-2.209-1.791-4-4-4z" fill="#00B37E" opacity="0.3"/>
+  </svg>
+);
+
+const IconDriverColor = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ display: 'inline-block', flexShrink: 0 }}>
+    <path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2" fill="#FFB800" />
+    <circle cx="7" cy="17" r="3" fill="#FF4560" />
+    <circle cx="7" cy="17" r="1" fill="#FFFFFF" />
+    <circle cx="17" cy="17" r="3" fill="#FF4560" />
+    <circle cx="17" cy="17" r="1" fill="#FFFFFF" />
+    <path d="M5 8h7v3H5V8z" fill="#4FC3F7" opacity="0.8" />
+  </svg>
+);
+
+const IconWalletColor = () => (
+  <svg width="36" height="36" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ flexShrink: 0 }}>
+    <rect x="2" y="5" width="20" height="14" rx="3" fill="#FFB800" />
+    <path d="M18 5h2a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2h-2V5z" fill="#FFA500" />
+    <path d="M2 8h16v4H2V8z" fill="#4FC3F7" opacity="0.8" />
+    <circle cx="14" cy="14" r="2" fill="#FF4560" />
+  </svg>
+);
+
+const IconLinkColor = () => (
+  <svg width="36" height="36" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ flexShrink: 0 }}>
+    <rect x="3" y="11" width="12" height="8" rx="2" transform="rotate(-45 3 11)" fill="#4FC3F7" />
+    <rect x="11" y="19" width="12" height="8" rx="2" transform="rotate(-45 11 19)" fill="#00E5A0" />
+    <rect x="8" y="12" width="8" height="3" rx="1.5" transform="rotate(-45 8 12)" fill="#FFFFFF" opacity="0.9" />
+  </svg>
+);
+
+const IconProfileColor = () => (
+  <svg width="36" height="36" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ flexShrink: 0 }}>
+    <rect x="2" y="3" width="20" height="18" rx="3" fill="#FF4560" />
+    <circle cx="12" cy="9" r="4" fill="#FFB800" />
+    <path d="M6 19c0-3.314 2.686-6 6-6s6 2.686 6 6H6z" fill="#FFFFFF" opacity="0.9" />
+  </svg>
+);
+
+const IconCheckColor = () => (
+  <svg width="36" height="36" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ flexShrink: 0 }}>
+    <rect x="2" y="6" width="20" height="12" rx="2" fill="#10B981" />
+    <circle cx="12" cy="12" r="4" fill="#00E5A0" />
+    <path d="M12 8l-2 2h4l-2-2z" fill="#FFFFFF" />
+    <circle cx="19" cy="6" r="5" fill="#FFB800" />
+    <path d="M17.5 6l1 1 2-2" stroke="#FFFFFF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+);
+
 export default function Home() {
   const router = useRouter();
   const [tripsPerWeek, setTripsPerWeek] = useState(60);
@@ -58,7 +113,7 @@ export default function Home() {
         transition: 'all 0.3s ease'
       }}>
         {activeView === 'passenger' 
-          ? '¡PROMO LANZAMIENTO! 50% DCTO EN TU 1er VIAJE (TOPE $8.000)'
+          ? '¡VIAJA SIN COMISIONES INTERMEDIAS! PAGA EL PRECIO JUSTO DIRECTO AL CONDUCTOR'
           : '¡0% COMISIÓN! CONDUCE BAJO TUS PROPIAS REGLAS Y QUÉDATE CON EL 100%'}
       </div>
 
@@ -130,8 +185,13 @@ export default function Home() {
             color: activeView === 'passenger' ? '#09090F' : 'var(--text-muted)',
             zIndex: 2,
             transition: 'color 0.3s ease',
-            userSelect: 'none'
+            userSelect: 'none',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '6px'
           }}>
+            <IconPassengerColor />
             Pasajero
           </div>
           <div style={{
@@ -142,8 +202,13 @@ export default function Home() {
             color: activeView === 'driver' ? '#09090F' : 'var(--text-muted)',
             zIndex: 2,
             transition: 'color 0.3s ease',
-            userSelect: 'none'
+            userSelect: 'none',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '6px'
           }}>
+            <IconDriverColor />
             Conductor
           </div>
         </div>
@@ -296,7 +361,7 @@ export default function Home() {
       {/* AMBIENTE PASAJERO */}
       {activeView === 'passenger' && (
         <div style={{ animation: 'fadeIn 0.3s ease' }}>
-          {/* Promo Pasajero Section */}
+          {/* Beneficio Pasajero Section */}
           <section style={{ 
             padding: '60px 24px', 
             background: 'linear-gradient(135deg, rgba(0,229,160,0.08) 0%, rgba(9,9,15,1) 100%)',
@@ -305,19 +370,15 @@ export default function Home() {
             textAlign: 'center'
           }}>
             <div style={{ maxWidth: '800px', margin: '0 auto' }}>
-              <div style={{ fontSize: '0.8rem', fontWeight: 800, color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '0.15em', marginBottom: '12px' }}>Beneficio Pasajeros</div>
+              <div style={{ fontSize: '0.8rem', fontWeight: 800, color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '0.15em', marginBottom: '12px' }}>El Trato Más Justo</div>
               <h2 style={{ fontSize: '2.2rem', fontWeight: 900, marginBottom: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px' }}>
-                50% DCTO en tu primer viaje 
-                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5"/><line x1="12" y1="22" x2="12" y2="7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/></svg>
+                Tarifas más bajas, sin comisiones
               </h2>
-              <p style={{ color: 'var(--text-secondary)', fontSize: '1.1rem', marginBottom: '24px' }}>
-                Regístrate hoy y viaja a mitad de precio. <br />
-                <span style={{ display: 'inline-block', background: 'rgba(255,165,0,0.1)', color: 'var(--warning)', padding: '6px 14px', borderRadius: '4px', fontWeight: 800, marginTop: '12px', fontSize: '0.95rem' }}>
-                  TOPE MÁXIMO DE DESCUENTO: $8.000
-                </span>
+              <p style={{ color: 'var(--text-secondary)', fontSize: '1.1rem', marginBottom: '24px', lineHeight: 1.6 }}>
+                Al eliminar el 25% de comisión que cobran otras plataformas, los pasajeros de Fim viajan más barato y los conductores independientes reciben el 100% de lo pagado de manera directa.
               </p>
-              <Link href="/register?role=passenger" className="btn btn-accent btn-lg" style={{ boxShadow: '0 0 20px rgba(0,229,160,0.25)' }}>
-                Obtener mi descuento ahora
+              <Link href="/register?role=passenger" className="btn btn-accent btn-lg" style={{ boxShadow: 'var(--shadow-accent)' }}>
+                Comenzar a viajar justo
               </Link>
             </div>
           </section>
@@ -815,24 +876,24 @@ export default function Home() {
           {/* Guía Mercado Pago */}
           <section style={{ padding: '80px 24px', background: 'var(--bg-secondary)', borderTop: '1px solid var(--border)' }}>
             <div style={{ maxWidth: '800px', margin: '0 auto' }}>
-              <h2 style={{ textAlign: 'center', marginBottom: '40px', fontSize: '2rem', fontWeight: 900 }}>Cómo recibir pagos con tarjeta</h2>
+              <h2 style={{ textAlign: 'center', marginBottom: '40px', fontSize: '2rem', fontWeight: 900 }}>¿Cómo funciona FIM pagos?</h2>
               <div style={{ background: 'var(--bg-primary)', padding: '32px', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border)' }}>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', color: 'var(--text-secondary)' }}>
-                  <div style={{ display: 'flex', gap: '16px' }}>
-                    <div style={{ background: 'var(--accent)', color: 'black', width: '28px', height: '28px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, flexShrink: 0 }}>1</div>
-                    <p>Crea una cuenta en <strong>Mercado Pago</strong> (es gratis y personal).</p>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', color: 'var(--text-secondary)' }}>
+                  <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
+                    <IconWalletColor />
+                    <p style={{ margin: 0, fontSize: '0.95rem' }}>Crea una cuenta en <strong>Mercado Pago</strong> (es gratis y personal).</p>
                   </div>
-                  <div style={{ display: 'flex', gap: '16px' }}>
-                    <div style={{ background: 'var(--accent)', color: 'black', width: '28px', height: '28px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, flexShrink: 0 }}>2</div>
-                    <p>En tu app de Mercado Pago, ve a <strong>Cobrar con Link</strong> y crea un link genérico o usa tu código QR.</p>
+                  <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
+                    <IconLinkColor />
+                    <p style={{ margin: 0, fontSize: '0.95rem' }}>En tu app de Mercado Pago, ve a <strong>Cobrar con Link</strong> y crea un link genérico o usa tu código QR.</p>
                   </div>
-                  <div style={{ display: 'flex', gap: '16px' }}>
-                    <div style={{ background: 'var(--accent)', color: 'black', width: '28px', height: '28px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, flexShrink: 0 }}>3</div>
-                    <p>Pega ese link en tu perfil de <strong>Fim</strong> en la sección "Cobro Directo".</p>
+                  <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
+                    <IconProfileColor />
+                    <p style={{ margin: 0, fontSize: '0.95rem' }}>Pega ese link en tu perfil de <strong>Fim</strong> en la sección "Cobro Directo".</p>
                   </div>
-                  <div style={{ display: 'flex', gap: '16px' }}>
-                    <div style={{ background: 'var(--accent)', color: 'black', width: '28px', height: '28px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, flexShrink: 0 }}>4</div>
-                    <p>¡Listo! Al terminar un viaje, el pasajero verá tu link y te pagará <strong>directo a tu cuenta</strong>.</p>
+                  <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
+                    <IconCheckColor />
+                    <p style={{ margin: 0, fontSize: '0.95rem' }}>¡Listo! Al terminar un viaje, el pasajero verá tu link y te pagará <strong>directo a tu cuenta</strong>.</p>
                   </div>
                 </div>
               </div>
