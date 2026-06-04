@@ -711,136 +711,6 @@ export default function Home() {
       {activeView === 'driver' && (
         <div style={{ animation: 'fadeIn 0.3s ease' }}>
 
-          {/* Línea de Tiempo del Conductor */}
-          <section style={{ padding: '80px 24px', background: 'linear-gradient(180deg, var(--bg-primary) 0%, var(--bg-secondary) 100%)' }}>
-            <div style={{ maxWidth: '800px', margin: '0 auto' }}>
-              <div style={{ textAlign: 'center', marginBottom: '48px' }}>
-                <div style={{ fontSize: '0.8rem', fontWeight: 800, color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '0.15em', marginBottom: '12px' }}>PROCESO DE ACTIVACIÓN</div>
-                <h2 style={{ fontSize: '2.2rem', fontWeight: 900, letterSpacing: '-0.02em', color: 'white' }}>
-                  Línea de Tiempo del Conductor
-                </h2>
-                <p style={{ color: 'var(--text-muted)', marginTop: '10px', fontSize: '0.95rem' }}>
-                  Sigue estos 3 sencillos pasos para registrarte, activar tu cuenta y comenzar a conducir con Fim.
-                </p>
-              </div>
-
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '32px', position: 'relative' }}>
-                {/* Center line for timeline on desktop */}
-                <div style={{
-                  position: 'absolute',
-                  left: '20px',
-                  top: '10px',
-                  bottom: '10px',
-                  width: '2px',
-                  background: 'linear-gradient(to bottom, var(--accent) 0%, rgba(255,255,255,0.05) 100%)',
-                  zIndex: 0
-                }} />
-
-                {[
-                  {
-                    step: '1',
-                    title: 'Registro y Validación Biométrica',
-                    desc: 'Regístrate como Conductor en Fim. Sube tu licencia de conducir profesional y pasa la verificación de identidad para garantizar la seguridad de la comunidad.'
-                  },
-                  {
-                    step: '2',
-                    title: 'Vincula tu Mercado Pago',
-                    desc: 'Pega tu enlace de cobro de Mercado Pago en la app. Los pasajeros te pagarán directamente a tu cuenta al finalizar cada viaje.'
-                  },
-                  {
-                    step: '3',
-                    title: 'Elige tu Plan y Comienza a Conducir',
-                    desc: 'Selecciona la membresía que mejor se adapte a tu ritmo de trabajo (diaria o mensual). ¡Todo lo que generes en los viajes es 100% tuyo!'
-                  }
-                ].map((item) => (
-                  <div key={item.step} style={{ display: 'flex', gap: '20px', position: 'relative', zIndex: 1 }}>
-                    <div style={{
-                      width: '42px',
-                      height: '42px',
-                      borderRadius: '50%',
-                      background: 'var(--bg-primary)',
-                      border: '2px solid var(--accent)',
-                      color: 'var(--accent)',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      fontWeight: 900,
-                      fontSize: '1.1rem',
-                      flexShrink: 0,
-                      boxShadow: 'var(--shadow-accent)'
-                    }}>
-                      {item.step}
-                    </div>
-                    <div className="card" style={{ flex: 1, padding: '20px', background: 'var(--bg-secondary)', border: '1px solid var(--border)' }}>
-                      <h3 style={{ fontSize: '1.1rem', fontWeight: 800, marginBottom: '8px', color: 'white' }}>{item.title}</h3>
-                      <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', lineHeight: '1.5' }}>{item.desc}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </section>
-
-          {/* Calculadora de Pérdida */}
-          <section id="calculator" style={{ padding: '80px 24px', background: 'var(--bg-primary)', borderTop: '1px solid var(--border)', borderBottom: '1px solid var(--border)' }}>
-            <div style={{ maxWidth: '1000px', margin: '0 auto', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '48px', alignItems: 'center' }}>
-              <div>
-                <h2 style={{ fontSize: '2.5rem', marginBottom: '20px', lineHeight: 1.2, fontWeight: 800 }}>
-                  ¿Cuánto dinero <span style={{ color: '#ff4757' }}>estás perdiendo</span> en comisiones?
-                </h2>
-                <p style={{ color: 'var(--text-muted)', fontSize: '1.1rem', marginBottom: '32px' }}>
-                  En otras aplicaciones, el 25% o más de tu trabajo se lo quedan ellos. Calcula cuánto queda en tu bolsillo con Fim.
-                </p>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-                  <div className="form-group">
-                    <label className="form-label" style={{ display: 'flex', justifyContent: 'space-between' }}>
-                      Viajes por semana <span style={{ color: 'var(--accent)', fontWeight: 800 }}>{tripsPerWeek}</span>
-                    </label>
-                    <input 
-                      type="range" 
-                      min="10" 
-                      max="150" 
-                      value={tripsPerWeek}
-                      onChange={(e) => setTripsPerWeek(parseInt(e.target.value))}
-                      style={{ width: '100%', accentColor: 'var(--accent)' }}
-                    />
-                  </div>
-                  <div className="form-group">
-                    <label className="form-label">Valor promedio por viaje ($)</label>
-                    <input 
-                      type="number" 
-                      value={avgPrice}
-                      onChange={(e) => setAvgPrice(parseInt(e.target.value) || 0)}
-                      className="form-input" 
-                      style={{ fontSize: '1.2rem', padding: '12px' }}
-                    />
-                  </div>
-                </div>
-              </div>
-
-              <div className="calc-card" style={{ 
-                background: 'var(--bg-secondary)', 
-                padding: '36px', 
-                borderRadius: 'var(--radius-lg)', 
-                border: '2px solid var(--border)',
-                textAlign: 'center',
-                boxShadow: '0 30px 60px rgba(0,0,0,0.4)',
-                position: 'relative',
-                overflow: 'hidden'
-              }}>
-                <div style={{ 
-                  position: 'absolute', top: 0, left: 0, width: '100%', height: '4px', background: '#ff4757'
-                }} />
-                <div style={{ fontSize: '0.9rem', color: '#ff4757', fontWeight: 800, textTransform: 'uppercase', marginBottom: '8px', letterSpacing: '0.1em' }}>Pérdida semanal estimada</div>
-                <div className="calc-loss-text" style={{ fontSize: 'var(--calc-loss-font-size, 3.5rem)', fontWeight: 900, marginBottom: '24px', color: '#ff4757', letterSpacing: '-0.02em' }}>{formatCLP(loss)}</div>
-                <div style={{ borderTop: '1px solid var(--border)', paddingTop: '24px' }}>
-                  <p style={{ color: 'var(--text-muted)', marginBottom: '28px', fontSize: '1rem' }}>Con Fim, este dinero es <strong>100% tuyo</strong>.</p>
-                  <Link href="/register?role=driver" className="btn btn-primary btn-block btn-lg calc-btn" style={{ fontSize: '1.1rem' }}>Empezar a ganar de verdad</Link>
-                </div>
-              </div>
-            </div>
-          </section>
-
           {/* ═══════════════════════════════════════════════════════════════ */}
           {/* PLANES DE MEMBRESÍA — Aparece primero, como segunda sección    */}
           {/* ═══════════════════════════════════════════════════════════════ */}
@@ -859,10 +729,13 @@ export default function Home() {
                 </p>
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '28px', alignItems: 'stretch' }}>
+              <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '28px', alignItems: 'stretch' }}>
 
                 {/* ── PLAN BLACK ────────────────────────────────────────── */}
                 <div style={{
+                  flex: '1 1 340px',
+                  maxWidth: '520px',
+                  minWidth: '290px',
                   background: 'linear-gradient(145deg, #0a0a0f 0%, #1a1a2e 50%, #0d0d1a 100%)',
                   border: '2px solid rgba(212,175,55,0.7)',
                   borderRadius: '20px',
@@ -940,6 +813,9 @@ export default function Home() {
 
                 {/* ── PLAN COMFORT ──────────────────────────────────────── */}
                 <div style={{
+                  flex: '1 1 340px',
+                  maxWidth: '520px',
+                  minWidth: '290px',
                   background: 'linear-gradient(145deg, #0a0f1a 0%, #0f1e35 50%, #0a1020 100%)',
                   border: '1px solid rgba(59,130,246,0.4)',
                   borderRadius: '20px',
@@ -1022,6 +898,9 @@ export default function Home() {
 
                 {/* ── PLAN FLEX ─────────────────────────────────────────── */}
                 <div style={{
+                  flex: '1 1 340px',
+                  maxWidth: '520px',
+                  minWidth: '290px',
                   background: 'linear-gradient(145deg, #050f0a 0%, #0a1f14 50%, #07120d 100%)',
                   border: '1px solid rgba(16,185,129,0.35)',
                   borderRadius: '20px',
@@ -1115,29 +994,165 @@ export default function Home() {
             </div>
           </section>
 
-          {/* Guía Mercado Pago */}
-          <section style={{ padding: '80px 24px', background: 'var(--bg-secondary)', borderTop: '1px solid var(--border)' }}>
-            <div style={{ maxWidth: '800px', margin: '0 auto' }}>
-              <h2 style={{ textAlign: 'center', marginBottom: '40px', fontSize: '2rem', fontWeight: 900 }}>¿Cómo funciona FIM pagos?</h2>
-              <div style={{ background: 'var(--bg-primary)', padding: '32px', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border)' }}>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', color: 'var(--text-secondary)' }}>
-                  <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
-                    <IconWalletColor />
-                    <p style={{ margin: 0, fontSize: '0.95rem' }}>Crea una cuenta en <strong>Mercado Pago</strong> (es gratis y personal).</p>
+          {/* Calculadora de Pérdida */}
+          <section id="calculator" style={{ padding: '80px 24px', background: 'var(--bg-secondary)', borderTop: '1px solid var(--border)', borderBottom: '1px solid var(--border)' }}>
+            <div style={{ maxWidth: '1000px', margin: '0 auto', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '48px', alignItems: 'center' }}>
+              <div>
+                <h2 style={{ fontSize: '2.5rem', marginBottom: '20px', lineHeight: 1.2, fontWeight: 800 }}>
+                  ¿Cuánto dinero <span style={{ color: '#ff4757' }}>estás perdiendo</span> en comisiones?
+                </h2>
+                <p style={{ color: 'var(--text-muted)', fontSize: '1.1rem', marginBottom: '32px' }}>
+                  En otras aplicaciones, el 25% o más de tu trabajo se lo quedan ellos. Calcula cuánto queda en tu bolsillo con Fim.
+                </p>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+                  <div className="form-group">
+                    <label className="form-label" style={{ display: 'flex', justifyContent: 'space-between' }}>
+                      Viajes por semana <span style={{ color: 'var(--accent)', fontWeight: 800 }}>{tripsPerWeek}</span>
+                    </label>
+                    <input 
+                      type="range" 
+                      min="10" 
+                      max="150" 
+                      value={tripsPerWeek}
+                      onChange={(e) => setTripsPerWeek(parseInt(e.target.value))}
+                      style={{ width: '100%', accentColor: 'var(--accent)' }}
+                    />
                   </div>
-                  <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
-                    <IconLinkColor />
-                    <p style={{ margin: 0, fontSize: '0.95rem' }}>En tu app de Mercado Pago, ve a <strong>Cobrar con Link</strong> y crea un link genérico o usa tu código QR.</p>
-                  </div>
-                  <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
-                    <IconProfileColor />
-                    <p style={{ margin: 0, fontSize: '0.95rem' }}>Pega ese link en tu perfil de <strong>Fim</strong> en la sección "Cobro Directo".</p>
-                  </div>
-                  <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
-                    <IconCheckColor />
-                    <p style={{ margin: 0, fontSize: '0.95rem' }}>¡Listo! Al terminar un viaje, el pasajero verá tu link y te pagará <strong>directo a tu cuenta</strong>.</p>
+                  <div className="form-group">
+                    <label className="form-label">Valor promedio por viaje ($)</label>
+                    <input 
+                      type="number" 
+                      value={avgPrice}
+                      onChange={(e) => setAvgPrice(parseInt(e.target.value) || 0)}
+                      className="form-input" 
+                      style={{ fontSize: '1.2rem', padding: '12px' }}
+                    />
                   </div>
                 </div>
+              </div>
+
+              <div className="calc-card" style={{ 
+                background: 'var(--bg-primary)', 
+                padding: '36px', 
+                borderRadius: 'var(--radius-lg)', 
+                border: '2px solid var(--border)',
+                textAlign: 'center',
+                boxShadow: '0 30px 60px rgba(0,0,0,0.4)',
+                position: 'relative',
+                overflow: 'hidden'
+              }}>
+                <div style={{ 
+                  position: 'absolute', top: 0, left: 0, width: '100%', height: '4px', background: '#ff4757'
+                }} />
+                <div style={{ fontSize: '0.9rem', color: '#ff4757', fontWeight: 800, textTransform: 'uppercase', marginBottom: '8px', letterSpacing: '0.1em' }}>Pérdida semanal estimada</div>
+                <div className="calc-loss-text" style={{ fontSize: 'var(--calc-loss-font-size, 3.5rem)', fontWeight: 900, marginBottom: '24px', color: '#ff4757', letterSpacing: '-0.02em' }}>{formatCLP(loss)}</div>
+                <div style={{ borderTop: '1px solid var(--border)', paddingTop: '24px' }}>
+                  <p style={{ color: 'var(--text-muted)', marginBottom: '28px', fontSize: '1rem' }}>Con Fim, este dinero es <strong>100% tuyo</strong>.</p>
+                  <Link href="/register?role=driver" className="btn btn-primary btn-block btn-lg calc-btn" style={{ fontSize: '1.1rem' }}>Empezar a ganar de verdad</Link>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          {/* Línea de Tiempo del Conductor */}
+          <section style={{ padding: '80px 24px', background: 'var(--bg-primary)' }}>
+            <div style={{ maxWidth: '800px', margin: '0 auto' }}>
+              <div style={{ textAlign: 'center', marginBottom: '48px' }}>
+                <div style={{ fontSize: '0.8rem', fontWeight: 800, color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '0.15em', marginBottom: '12px' }}>PROCESO DE ACTIVACIÓN</div>
+                <h2 style={{ fontSize: '2.2rem', fontWeight: 900, letterSpacing: '-0.02em', color: 'white' }}>
+                  Línea de Tiempo del Conductor
+                </h2>
+                <p style={{ color: 'var(--text-muted)', marginTop: '10px', fontSize: '0.95rem' }}>
+                  Sigue estos 3 sencillos pasos para registrarte, activar tu cuenta y comenzar a conducir con Fim.
+                </p>
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '32px', position: 'relative' }}>
+                {/* Center line for timeline on desktop */}
+                <div style={{
+                  position: 'absolute',
+                  left: '20px',
+                  top: '10px',
+                  bottom: '10px',
+                  width: '2px',
+                  background: 'linear-gradient(to bottom, var(--accent) 0%, rgba(255,255,255,0.05) 100%)',
+                  zIndex: 0
+                }} />
+
+                {[
+                  {
+                    step: '1',
+                    title: 'Registro y Validación Biométrica',
+                    desc: 'Regístrate como Conductor en Fim. Sube tu licencia de conducir profesional y pasa la verificación de identidad para garantizar la seguridad de la comunidad.'
+                  },
+                  {
+                    step: '2',
+                    title: 'Vincula tu Mercado Pago',
+                    desc: 'Pega tu enlace de cobro de Mercado Pago en la app. Los pasajeros te pagarán directamente a tu cuenta al finalizar cada viaje.',
+                    extra: (
+                      <div style={{ 
+                        marginTop: '20px', 
+                        background: 'rgba(9, 9, 15, 0.4)', 
+                        padding: '24px', 
+                        borderRadius: 'var(--radius-lg)', 
+                        border: '1px solid var(--border)',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: '20px'
+                      }}>
+                        <h4 style={{ fontSize: '1rem', fontWeight: 800, color: 'white', marginBottom: '4px' }}>¿Cómo funciona FIM pagos?</h4>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', color: 'var(--text-secondary)' }}>
+                          <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
+                            <IconWalletColor />
+                            <p style={{ margin: 0, fontSize: '0.9rem', lineHeight: '1.4' }}>Crea una cuenta en <strong>Mercado Pago</strong> (es gratis y personal).</p>
+                          </div>
+                          <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
+                            <IconLinkColor />
+                            <p style={{ margin: 0, fontSize: '0.9rem', lineHeight: '1.4' }}>En tu app de Mercado Pago, ve a <strong>Cobrar con Link</strong> y crea un link genérico o usa tu código QR.</p>
+                          </div>
+                          <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
+                            <IconProfileColor />
+                            <p style={{ margin: 0, fontSize: '0.9rem', lineHeight: '1.4' }}>Pega ese link en tu perfil de <strong>Fim</strong> en la sección "Cobro Directo".</p>
+                          </div>
+                          <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
+                            <IconCheckColor />
+                            <p style={{ margin: 0, fontSize: '0.9rem', lineHeight: '1.4' }}>¡Listo! Al terminar un viaje, el pasajero verá tu link y te pagará <strong>directo a tu cuenta</strong>.</p>
+                          </div>
+                        </div>
+                      </div>
+                    )
+                  },
+                  {
+                    step: '3',
+                    title: 'Elige tu Plan y Comienza a Conducir',
+                    desc: 'Selecciona la membresía que mejor se adapte a tu ritmo de trabajo (diaria o mensual). ¡Todo lo que generes en los viajes es 100% tuyo!'
+                  }
+                ].map((item: { step: string; title: string; desc: string; extra?: React.ReactNode }) => (
+                  <div key={item.step} style={{ display: 'flex', gap: '20px', position: 'relative', zIndex: 1 }}>
+                    <div style={{
+                      width: '42px',
+                      height: '42px',
+                      borderRadius: '50%',
+                      background: 'var(--bg-primary)',
+                      border: '2px solid var(--accent)',
+                      color: 'var(--accent)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontWeight: 900,
+                      fontSize: '1.1rem',
+                      flexShrink: 0,
+                      boxShadow: 'var(--shadow-accent)'
+                    }}>
+                      {item.step}
+                    </div>
+                    <div className="card" style={{ flex: 1, padding: '20px', background: 'var(--bg-secondary)', border: '1px solid var(--border)' }}>
+                      <h3 style={{ fontSize: '1.1rem', fontWeight: 800, marginBottom: '8px', color: 'white' }}>{item.title}</h3>
+                      <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', lineHeight: '1.5' }}>{item.desc}</p>
+                      {item.extra}
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
           </section>
