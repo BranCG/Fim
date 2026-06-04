@@ -158,32 +158,64 @@ const CursiveSegmentTypewriter = ({
   }, [displayText, isDeleting, typingText, typingSpeed]);
 
   return (
-    <h1 style={{ 
-      fontSize: 'clamp(2.3rem, 7vw, 4rem)', 
-      fontWeight: 900, 
-      lineHeight: 1.2,
-      letterSpacing: '-0.02em',
-      marginBottom: '16px',
+    <div style={{
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: '2px',
+      width: '100%',
       fontFamily: "'Outfit', var(--font-sans)",
-      minHeight: '2.4em'
+      textAlign: 'center',
+      marginBottom: '20px'
     }}>
-      {prefix}
-      <span 
-        className="text-gradient" 
-        style={{ 
-          fontFamily: "'Satisfy', 'Dancing Script', 'Caveat', cursive",
-          fontWeight: 'normal',
-          padding: '0 8px',
-          display: 'inline-block',
-          fontSize: '1.15em',
-          transform: 'rotate(-2deg)',
-          verticalAlign: 'middle'
-        }}
-      >
-        {displayText}
-      </span>
-      {suffix}
-    </h1>
+      {/* Prefix */}
+      <h1 style={{ 
+        fontSize: 'clamp(2.3rem, 7vw, 4rem)', 
+        fontWeight: 900, 
+        lineHeight: 1.1,
+        letterSpacing: '-0.02em',
+        margin: 0
+      }}>
+        {prefix}
+      </h1>
+      
+      {/* Cursive segment container - stable height to avoid shifting */}
+      <div style={{
+        height: 'clamp(3.2rem, 10vw, 5.2rem)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        overflow: 'visible',
+        margin: '4px 0'
+      }}>
+        <span 
+          className="text-gradient" 
+          style={{ 
+            fontFamily: "'Satisfy', 'Dancing Script', 'Caveat', cursive",
+            fontWeight: 'normal',
+            fontSize: 'clamp(2.5rem, 8vw, 4.5rem)',
+            display: 'inline-block',
+            transform: 'rotate(-2deg)',
+            whiteSpace: 'nowrap',
+            lineHeight: 1
+          }}
+        >
+          {displayText || '\u00A0'}
+        </span>
+      </div>
+
+      {/* Suffix */}
+      <h1 style={{ 
+        fontSize: 'clamp(2.3rem, 7vw, 4rem)', 
+        fontWeight: 900, 
+        lineHeight: 1.1,
+        letterSpacing: '-0.02em',
+        margin: 0
+      }}>
+        {suffix}
+      </h1>
+    </div>
   );
 };
 
@@ -438,9 +470,9 @@ export default function Home() {
             </div>
 
             <CursiveSegmentTypewriter 
-              prefix="Viaja "
+              prefix="Viaja"
               typingText="sin comisiones intermedias"
-              suffix=". Paga el precio justo."
+              suffix="Paga el precio justo."
             />
 
             <p style={{ 
@@ -495,9 +527,9 @@ export default function Home() {
             </div>
 
             <CursiveSegmentTypewriter 
-              prefix="La red de conductores independientes "
+              prefix="La red de conductores independientes"
               typingText="más rentable"
-              suffix=" de Chile."
+              suffix="de Chile."
             />
 
             <p style={{ 
