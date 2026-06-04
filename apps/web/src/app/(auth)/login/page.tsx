@@ -108,7 +108,8 @@ export default function LoginPage() {
     };
   }, [isMobile, router]);
 
-  const handleNativeGoogleLogin = async () => {
+  const handleNativeGoogleLogin = async (e?: React.MouseEvent) => {
+    e?.preventDefault();
     setLoading(true);
     setError('');
     try {
@@ -147,6 +148,7 @@ export default function LoginPage() {
     } catch (err: any) {
       console.error('Native Google Error:', err);
       const errMsg = err?.message || err?.errorMessage || (typeof err === 'string' ? err : JSON.stringify(err));
+      alert(`Error Google Nativo: ${errMsg}`);
       setError(`Error al iniciar sesión con Google nativo: ${errMsg}`);
       setLoading(false);
     }

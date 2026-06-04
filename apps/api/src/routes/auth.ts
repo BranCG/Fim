@@ -654,4 +654,58 @@ router.post('/google/register', async (req: Request, res: Response) => {
   }
 });
 
+// ─── PUBLIC NOMINATIM/GOOGLE AUTOCOMPLETE GEOPROXY ────────────────────────
+router.get('/autocomplete', async (req: Request, res: Response) => {
+  try {
+    const q = req.query.q as string;
+    if (!q || q.trim().length < 3) {
+      return res.json({ predictions: [] });
+    }
+
+    const apiKey = process.env.GOOGLE_MAPS_API_KEY;
+    if (apiKey) {
+      // Usar Google Places Autocomplete API
+      const url = `https://maps.googleapis.com/maps/api/place/autocomplete/json?input=${encodeURIComponent(q)}&key=${apiKey}&components=country:cl&language=es`;
+      const response = await fetch(url);
+      const data: any = await response.json();
+      
+      if (data.status && data.status !== 'OK' && data.status !== 'ZERO_RESULTS') {
+        console.error('Google Autocomplete ERROR:', data.status, data.error_message || '');
+      }
+
+      const predictions = (data.predictions || []).map((p: any) => ({
+        id: p.place_id,
+        description: p.description,
+        isGoogle: true
+      }));
+      return res.json({ predictions });
+    } else {
+      // Fallback a Nominatim (OpenStreetMap)
+      const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(q)}&countrycodes=cl&limit=6&addressdetails=1`;
+      const response = await fetch(url, {
+        headers: { 'User-Agent': 'Fim-App-API/1.0 (contact@fim.cl)' }
+      });
+      const data: any = await response.json();
+      const predictions = (data || []).map((item: any) => {
+        const addr = item.address;
+        const street = addr?.road || addr?.pedestrian || addr?.footway || item.display_name.split(',')[0];
+        const number = addr?.house_number ? ` ${addr.house_number}` : '';
+        const comuna = addr?.suburb || addr?.neighbourhood || addr?.city_district || addr?.town || addr?.city || '';
+        const description = `${street}${number}, ${comuna}`.trim().replace(/^,\s*|,\s*$/g, '') || item.display_name;
+        return {
+          id: `osm:${item.place_id}`,
+          description,
+          lat: Number(item.lat),
+          lng: Number(item.lon),
+          isGoogle: false
+        };
+      });
+      return res.json({ predictions });
+    }
+  } catch (err) {
+    console.error('Error in public /autocomplete proxy:', err);
+    return res.status(500).json({ error: 'Error al buscar direcciones' });
+  }
+});
+
 export default router;

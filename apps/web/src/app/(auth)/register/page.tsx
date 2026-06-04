@@ -195,7 +195,52 @@ function RegisterForm() {
     };
   }, [isGoogle, isMobile, router]);
 
-  const handleNativeGoogleSignup = async () => {
+  // Debounced search for address suggestions
+  useEffect(() => {
+    if (address.trim().length < 3) {
+      setAddressSuggestions([]);
+      setShowAddressDropdown(false);
+      return;
+    }
+
+    if (skipAutocomplete) {
+      setSkipAutocomplete(false);
+      return;
+    }
+
+    const delayDebounceFn = setTimeout(async () => {
+      setIsSearchingAddress(true);
+      try {
+        const res = await api.get('/auth/autocomplete', {
+          params: { q: address },
+        });
+        setAddressSuggestions(res.data.predictions || []);
+        setShowAddressDropdown(true);
+      } catch (err) {
+        console.error('Error fetching autocomplete suggestions:', err);
+      } finally {
+        setIsSearchingAddress(false);
+      }
+    }, 500);
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [address, skipAutocomplete]);
+
+  // Click outside to close suggestion dropdown
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (addressContainerRef.current && !addressContainerRef.current.contains(event.target as Node)) {
+        setShowAddressDropdown(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
+  const handleNativeGoogleSignup = async (e?: React.MouseEvent) => {
+    e?.preventDefault();
     setLoading(true);
     setError('');
     try {
@@ -230,6 +275,7 @@ function RegisterForm() {
     } catch (err: any) {
       console.error('Native Google Signup Error:', err);
       const errMsg = err?.message || err?.errorMessage || (typeof err === 'string' ? err : JSON.stringify(err));
+      alert(`Error Google Nativo: ${errMsg}`);
       setError(`Error al registrarse con Google nativo: ${errMsg}`);
     } finally {
       setLoading(false);
@@ -244,12 +290,19 @@ function RegisterForm() {
   // Step 1 - Basic data
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
-  const [phone, setPhone] = useState('');
+  const [phone, setPhone] = useState('+569');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [rut, setRut] = useState('');
   const [birthDate, setBirthDate] = useState('');
   const [address, setAddress] = useState('');
+
+  // Autocomplete address states
+  const [addressSuggestions, setAddressSuggestions] = useState<any[]>([]);
+  const [isSearchingAddress, setIsSearchingAddress] = useState(false);
+  const [showAddressDropdown, setShowAddressDropdown] = useState(false);
+  const [skipAutocomplete, setSkipAutocomplete] = useState(false);
+  const addressContainerRef = useRef<HTMLDivElement>(null);
 
   // Step 2 - Documents
   const [idFront, setIdFront] = useState<FileUpload>(emptyUpload());
@@ -822,16 +875,110 @@ function RegisterForm() {
                 />
               </div>
               <div className="form-group">
-                <label className="form-label">RUT</label>
-                <input className="form-input" placeholder="12345678-9" value={rut} onChange={e => setRut(e.target.value)} />
+                <label className="form-label">RUT (sin puntos y con guión)</label>
+                <input 
+                  className="form-input" 
+                  placeholder="12345678-9" 
+                  value={rut} 
+                  onChange={e => {
+                    const val = e.target.value.replace(/\./g, '').replace(/[^0-9kK-]/g, '');
+                    setRut(val);
+                  }} 
+                />
               </div>
               <div className="form-group">
                 <label className="form-label">Teléfono</label>
-                <input className="form-input" placeholder="+569..." value={phone} onChange={e => setPhone(e.target.value)} />
+                <input 
+                  className="form-input" 
+                  placeholder="+569..." 
+                  value={phone} 
+                  onChange={e => {
+                    const prefix = '+569';
+                    let val = e.target.value;
+                    if (!val.startsWith(prefix)) {
+                      val = prefix;
+                    } else {
+                      const rest = val.slice(prefix.length).replace(/\D/g, '');
+                      val = prefix + rest.slice(0, 8);
+                    }
+                    setPhone(val);
+                  }} 
+                />
               </div>
-              <div className="form-group">
+              <div className="form-group" style={{ position: 'relative' }} ref={addressContainerRef}>
                 <label className="form-label">Dirección</label>
-                <input className="form-input" placeholder="Tu dirección actual" value={address} onChange={e => setAddress(e.target.value)} />
+                <input 
+                  className="form-input" 
+                  placeholder="Tu dirección actual" 
+                  value={address} 
+                  onChange={e => {
+                    setSkipAutocomplete(false);
+                    setAddress(e.target.value);
+                  }} 
+                  onFocus={() => {
+                    if (addressSuggestions.length > 0) {
+                      setShowAddressDropdown(true);
+                    }
+                  }}
+                />
+                {isSearchingAddress && (
+                  <div style={{ position: 'absolute', right: '12px', top: '38px', display: 'flex', alignItems: 'center' }}>
+                    <div className="spinner" style={{ width: '16px', height: '16px', borderWidth: '2px', marginBottom: 0 }} />
+                  </div>
+                )}
+                {showAddressDropdown && addressSuggestions.length > 0 && (
+                  <div style={{
+                    position: 'absolute',
+                    top: 'calc(100% + 4px)',
+                    left: 0,
+                    right: 0,
+                    background: 'var(--bg-secondary)',
+                    border: '1px solid var(--border)',
+                    borderRadius: '12px',
+                    boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.5), 0 4px 6px -2px rgba(0, 0, 0, 0.5)',
+                    zIndex: 100,
+                    maxHeight: '200px',
+                    overflowY: 'auto',
+                    padding: '6px'
+                  }}>
+                    {addressSuggestions.map((suggestion: any) => (
+                      <div
+                        key={suggestion.id}
+                        onClick={() => {
+                          setSkipAutocomplete(true);
+                          setAddress(suggestion.description);
+                          setAddressSuggestions([]);
+                          setShowAddressDropdown(false);
+                        }}
+                        style={{
+                          padding: '10px 12px',
+                          fontSize: '0.85rem',
+                          color: 'var(--text-primary)',
+                          cursor: 'pointer',
+                          borderRadius: '8px',
+                          transition: 'background 0.15s ease',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '10px'
+                        }}
+                        onMouseEnter={e => {
+                          e.currentTarget.style.background = 'rgba(255, 255, 255, 0.06)';
+                        }}
+                        onMouseLeave={e => {
+                          e.currentTarget.style.background = 'transparent';
+                        }}
+                      >
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+                          <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+                          <circle cx="12" cy="10" r="3" />
+                        </svg>
+                        <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          {suggestion.description}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
               <div className="form-group">
                 <label className="form-label">Fecha de Nacimiento</label>
