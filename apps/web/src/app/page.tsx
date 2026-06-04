@@ -736,18 +736,21 @@ export default function Home() {
               <div style={{
                 display: 'flex',
                 justifyContent: 'center',
-                gap: '16px',
-                flexWrap: 'wrap',
-                marginBottom: '40px'
+                gap: '12px',
+                flexWrap: 'nowrap',
+                marginBottom: '40px',
+                maxWidth: '480px',
+                width: '100%',
+                margin: '0 auto 40px'
               }}>
-                {/* PLAN BLACK Button */}
+                {/* BLACK Button */}
                 <button
                   onClick={() => setSelectedPlan('BLACK')}
                   style={{
-                    padding: '12px 28px',
+                    padding: '12px 20px',
                     borderRadius: '50px',
                     fontWeight: 800,
-                    fontSize: '0.95rem',
+                    fontSize: '0.9rem',
                     letterSpacing: '0.05em',
                     cursor: 'pointer',
                     transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
@@ -755,20 +758,23 @@ export default function Home() {
                     background: selectedPlan === 'BLACK' ? '#D4AF37' : 'rgba(212,175,55,0.05)',
                     color: selectedPlan === 'BLACK' ? '#000' : '#D4AF37',
                     boxShadow: selectedPlan === 'BLACK' ? '0 0 24px rgba(212,175,55,0.3)' : 'none',
-                    transform: selectedPlan === 'BLACK' ? 'scale(1.05)' : 'scale(1)'
+                    transform: selectedPlan === 'BLACK' ? 'scale(1.05)' : 'scale(1)',
+                    flex: '1 1 0px',
+                    textAlign: 'center',
+                    whiteSpace: 'nowrap'
                   }}
                 >
-                  PLAN BLACK
+                  BLACK
                 </button>
 
-                {/* PLAN COMFORT Button */}
+                {/* COMFORT Button */}
                 <button
                   onClick={() => setSelectedPlan('COMFORT')}
                   style={{
-                    padding: '12px 28px',
+                    padding: '12px 20px',
                     borderRadius: '50px',
                     fontWeight: 800,
-                    fontSize: '0.95rem',
+                    fontSize: '0.9rem',
                     letterSpacing: '0.05em',
                     cursor: 'pointer',
                     transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
@@ -776,20 +782,23 @@ export default function Home() {
                     background: selectedPlan === 'COMFORT' ? '#3B82F6' : 'rgba(59,130,246,0.05)',
                     color: selectedPlan === 'COMFORT' ? '#fff' : '#3B82F6',
                     boxShadow: selectedPlan === 'COMFORT' ? '0 0 24px rgba(59,130,246,0.3)' : 'none',
-                    transform: selectedPlan === 'COMFORT' ? 'scale(1.05)' : 'scale(1)'
+                    transform: selectedPlan === 'COMFORT' ? 'scale(1.05)' : 'scale(1)',
+                    flex: '1 1 0px',
+                    textAlign: 'center',
+                    whiteSpace: 'nowrap'
                   }}
                 >
-                  PLAN COMFORT
+                  COMFORT
                 </button>
 
-                {/* PLAN FLEX Button */}
+                {/* FLEX Button */}
                 <button
                   onClick={() => setSelectedPlan('FLEX')}
                   style={{
-                    padding: '12px 28px',
+                    padding: '12px 20px',
                     borderRadius: '50px',
                     fontWeight: 800,
-                    fontSize: '0.95rem',
+                    fontSize: '0.9rem',
                     letterSpacing: '0.05em',
                     cursor: 'pointer',
                     transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
@@ -797,10 +806,13 @@ export default function Home() {
                     background: selectedPlan === 'FLEX' ? '#10B981' : 'rgba(16,185,129,0.05)',
                     color: selectedPlan === 'FLEX' ? '#fff' : '#10B981',
                     boxShadow: selectedPlan === 'FLEX' ? '0 0 24px rgba(16,185,129,0.3)' : 'none',
-                    transform: selectedPlan === 'FLEX' ? 'scale(1.05)' : 'scale(1)'
+                    transform: selectedPlan === 'FLEX' ? 'scale(1.05)' : 'scale(1)',
+                    flex: '1 1 0px',
+                    textAlign: 'center',
+                    whiteSpace: 'nowrap'
                   }}
                 >
-                  PLAN FLEX
+                  FLEX
                 </button>
               </div>
 
@@ -1166,26 +1178,26 @@ export default function Home() {
                 </p>
               </div>
 
-              <div style={{ display: 'flex', gap: '32px', flexWrap: 'wrap', alignItems: 'stretch', marginTop: '32px' }}>
-                {/* Left: Interactive steps (Selector) */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', marginTop: '32px' }}>
+                {/* Top: Interactive steps (Selector) - Horizontal row */}
                 <div style={{
                   display: 'flex',
-                  flexDirection: 'column',
-                  gap: '24px',
+                  flexDirection: 'row',
+                  gap: '40px',
                   alignItems: 'center',
                   position: 'relative',
-                  minWidth: '60px',
-                  justifyContent: 'center'
+                  justifyContent: 'center',
+                  padding: '10px 0'
                 }}>
-                  {/* Vertical Line */}
+                  {/* Horizontal Line */}
                   <div style={{
                     position: 'absolute',
                     left: '50%',
-                    top: '20px',
-                    bottom: '20px',
-                    width: '2px',
-                    background: 'linear-gradient(to bottom, var(--accent) 0%, rgba(255,255,255,0.05) 100%)',
-                    transform: 'translateX(-50%)',
+                    top: '50%',
+                    width: '160px',
+                    height: '2px',
+                    background: 'linear-gradient(to right, var(--accent) 0%, rgba(255,255,255,0.15) 100%)',
+                    transform: 'translate(-50%, -50%)',
                     zIndex: 0
                   }} />
 
@@ -1217,8 +1229,8 @@ export default function Home() {
                   ))}
                 </div>
 
-                {/* Right: Steps Details Box */}
-                <div style={{ flex: '1 1 300px' }}>
+                {/* Bottom: Steps Details Box */}
+                <div style={{ width: '100%', maxWidth: '600px', margin: '0 auto' }}>
                   <div className="card" style={{ 
                     padding: '32px', 
                     background: 'var(--bg-secondary)', 
@@ -1261,7 +1273,7 @@ export default function Home() {
                 </div>
               </div>
 
-              {/* Botón de despliegue "¿Cómo funciona FIM pagos?" */}
+              {/* Botón de despliegue "TUTORIAL FIM PAGOS" */}
               <div style={{ textAlign: 'center', marginTop: '48px' }}>
                 <button
                   onClick={() => setShowFimPagos(!showFimPagos)}
@@ -1277,7 +1289,7 @@ export default function Home() {
                     transition: 'all 0.3s ease'
                   }}
                 >
-                  ¿CÓMO FUNCIONA FIM PAGOS?
+                  TUTORIAL FIM PAGOS
                   <svg
                     width="16"
                     height="16"
