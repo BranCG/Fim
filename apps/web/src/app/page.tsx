@@ -634,32 +634,6 @@ export default function Home() {
       {/* AMBIENTE CONDUCTOR */}
       {activeView === 'driver' && (
         <div style={{ animation: 'fadeIn 0.3s ease' }}>
-          {/* Stats Bar */}
-          <div style={{
-            borderTop: '1px solid var(--border)',
-            borderBottom: '1px solid var(--border)',
-            padding: '24px',
-            background: 'var(--bg-secondary)',
-            display: 'grid',
-            gridTemplateColumns: 'repeat(3, 1fr)',
-            gap: '16px',
-            textAlign: 'center'
-          }}>
-            {[
-              { value: '0%', label: 'Comisión por viaje' },
-              { value: 'AL INSTANTE', label: 'Dinero en tu cuenta' },
-              { value: '100% TUYO', label: 'Tus tarifas íntegras' },
-            ].map((stat) => (
-              <div key={stat.label}>
-                <div style={{ fontSize: '1.8rem', fontWeight: 900, color: 'var(--accent)' }}>
-                  {stat.value}
-                </div>
-                <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '4px' }}>
-                  {stat.label}
-                </div>
-              </div>
-            ))}
-          </div>
 
           {/* Línea de Tiempo del Conductor */}
           <section style={{ padding: '80px 24px', background: 'linear-gradient(180deg, var(--bg-primary) 0%, var(--bg-secondary) 100%)' }}>
