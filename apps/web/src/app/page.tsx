@@ -212,6 +212,76 @@ const TypewriterText = ({
   );
 };
 
+const CursiveSegmentTypewriter = ({
+  prefix,
+  typingText,
+  suffix,
+}: {
+  prefix: string;
+  typingText: string;
+  suffix: string;
+}) => {
+  const [displayText, setDisplayText] = useState('');
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [typingSpeed, setTypingSpeed] = useState(100);
+
+  useEffect(() => {
+    let timer: NodeJS.Timeout;
+    const handleType = () => {
+      if (!isDeleting) {
+        setDisplayText(typingText.substring(0, displayText.length + 1));
+        setTypingSpeed(100);
+
+        if (displayText === typingText) {
+          timer = setTimeout(() => setIsDeleting(true), 3000);
+          return;
+        }
+      } else {
+        setDisplayText(typingText.substring(0, displayText.length - 1));
+        setTypingSpeed(55);
+
+        if (displayText === '') {
+          setIsDeleting(false);
+          setTypingSpeed(500);
+        }
+      }
+    };
+
+    timer = setTimeout(handleType, typingSpeed);
+    return () => clearTimeout(timer);
+  }, [displayText, isDeleting, typingText, typingSpeed]);
+
+  return (
+    <h1 style={{ 
+      fontSize: 'clamp(2.3rem, 7vw, 4rem)', 
+      fontWeight: 900, 
+      lineHeight: 1.2,
+      letterSpacing: '-0.02em',
+      marginBottom: '16px',
+      fontFamily: "'Outfit', var(--font-sans)",
+      minHeight: '2.4em'
+    }}>
+      {prefix}
+      <span 
+        className="text-gradient" 
+        style={{ 
+          fontFamily: "'Satisfy', 'Dancing Script', 'Caveat', cursive",
+          fontWeight: 'normal',
+          padding: '0 8px',
+          display: 'inline-block',
+          fontSize: '1.15em',
+          transform: 'rotate(-2deg)',
+          verticalAlign: 'middle'
+        }}
+      >
+        {displayText}
+      </span>
+      <span className="typewriter-cursor" style={{ animation: 'blink 0.8s infinite', color: 'var(--accent)' }}>|</span>
+      {suffix}
+    </h1>
+  );
+};
+
 const IconWalletColor = () => (
   <svg width="36" height="36" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ flexShrink: 0 }}>
     <rect x="2" y="5" width="20" height="14" rx="3" fill="#FFB800" />
@@ -517,16 +587,11 @@ export default function Home() {
               Disponible en Santiago
             </div>
 
-            <h1 style={{ 
-              fontSize: 'clamp(2.3rem, 7vw, 4rem)', 
-              fontWeight: 900, 
-              lineHeight: 1.1,
-              letterSpacing: '-0.02em',
-              marginBottom: '16px',
-              fontFamily: "'Outfit', var(--font-sans)"
-            }}>
-              La red de conductores independientes <span className="text-gradient">más rentable</span> de Chile.
-            </h1>
+            <CursiveSegmentTypewriter 
+              prefix="La red de conductores independientes "
+              typingText="más rentable"
+              suffix=" de Chile."
+            />
 
             <p style={{ 
               fontSize: 'clamp(1rem, 2vw, 1.25rem)', 
