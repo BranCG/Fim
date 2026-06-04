@@ -157,6 +157,11 @@ const CursiveSegmentTypewriter = ({
     return () => clearTimeout(timer);
   }, [displayText, isDeleting, typingText, typingSpeed]);
 
+  const isMultiline = typingText.includes('\n');
+  const containerHeight = isMultiline 
+    ? 'clamp(6.5rem, 20vw, 10.5rem)' 
+    : 'clamp(3.2rem, 10vw, 5.2rem)';
+
   return (
     <div style={{
       display: 'flex',
@@ -182,7 +187,7 @@ const CursiveSegmentTypewriter = ({
       
       {/* Cursive segment container - stable height to avoid shifting */}
       <div style={{
-        height: 'clamp(3.2rem, 10vw, 5.2rem)',
+        height: containerHeight,
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -197,8 +202,8 @@ const CursiveSegmentTypewriter = ({
             fontSize: 'clamp(2.5rem, 8vw, 4.5rem)',
             display: 'inline-block',
             transform: 'rotate(-2deg)',
-            whiteSpace: 'nowrap',
-            lineHeight: 1
+            whiteSpace: 'pre-line',
+            lineHeight: 1.1
           }}
         >
           {displayText || '\u00A0'}
@@ -538,7 +543,7 @@ export default function Home() {
 
             <CursiveSegmentTypewriter 
               prefix="Viaja"
-              typingText="sin comisiones intermedias"
+              typingText={"sin comisiones\nintermedias"}
               suffix="Paga el precio justo."
             />
 
