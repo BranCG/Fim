@@ -393,9 +393,9 @@ export default function DriverPage() {
       const res = await api.post('/uploads/single', formData);
       const url = res.data.url;
       setTaxDocumentUrl(url);
-      
+
       await api.post('/drivers/submit-tax-document', { taxDocumentUrl: url });
-      
+
       if (driver) {
         setDriver({
           ...driver,
@@ -415,20 +415,20 @@ export default function DriverPage() {
 
   const handlePayMembership = async () => {
     if (!driver) return;
-    
+
     // Links estáticos de Mercado Pago provistos por el usuario
     const staticLinks: Record<string, string> = {
       BLACK: 'https://mpago.la/2GQQM65',
       FLEX: 'https://mpago.la/2kxLWNy',
       COMFORT: 'https://mpago.la/1geQas2',
     };
-    
+
     const url = staticLinks[driver.membershipPlan];
     if (url) {
       window.location.href = url;
       return;
     }
-    
+
     setPayingMembership(true);
     try {
       const res = await api.post('/payments/membership/create-preference', {
@@ -459,10 +459,10 @@ export default function DriverPage() {
     try {
       const res = await api.post('/uploads/single', formData);
       const url = res.data.url;
-      
+
       await api.post('/drivers/pay-comfort-daily', { receiptUrl: url });
       showCustomAlert('Comprobante de pago diario subido correctamente. Deuda actualizada.', 'Éxito', 'success');
-      
+
       const meRes = await api.get('/drivers/me');
       setDriver(meRes.data.driver);
     } catch (err: any) {
@@ -492,14 +492,14 @@ export default function DriverPage() {
     const isPickup = tripPhase === 'going_to_passenger' || tripPhase === 'arrived';
     const lat = isPickup ? activeTrip.originLat : activeTrip.destLat;
     const lng = isPickup ? activeTrip.originLng : activeTrip.destLng;
-    
+
     let url = '';
     if (app === 'waze') {
       url = `https://waze.com/ul?ll=${lat},${lng}&navigate=yes`;
     } else {
       url = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}&travelmode=driving`;
     }
-    
+
     window.open(url, '_blank');
     setShowNavModal(false);
   };
@@ -570,7 +570,7 @@ export default function DriverPage() {
 
     // Solicitar permisos de notificación al cargar inicialmente la página en cliente
     import('@/lib/notifications').then(({ requestNotificationPermission }) => {
-      requestNotificationPermission().catch(() => {});
+      requestNotificationPermission().catch(() => { });
     });
 
     return () => {
@@ -768,13 +768,13 @@ export default function DriverPage() {
       sendLocalNotification("Viaje Cancelado", `El pasajero canceló la solicitud: "${data.reason}".`);
 
       if (data.tripId && data.tripId === activeTripId) {
-        setCancellationNotice({ 
+        setCancellationNotice({
           reason: data.reason,
           wasAccepted: true
         });
         resetTrip();
       } else if (data.tripId && data.tripId === requestTripId) {
-        setCancellationNotice({ 
+        setCancellationNotice({
           reason: data.reason,
           wasAccepted: false
         });
@@ -784,7 +784,7 @@ export default function DriverPage() {
           timerRef.current = null;
         }
       } else if (!data.tripId) {
-        setCancellationNotice({ 
+        setCancellationNotice({
           reason: data.reason,
           wasAccepted: !!activeTripRef.current
         });
@@ -1142,7 +1142,7 @@ export default function DriverPage() {
   if (fetchError && !driver) return (
     <div className="status-screen">
       <div style={{ color: 'var(--danger)', marginBottom: '20px' }}>
-        <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" /></svg>
       </div>
       <h2>Error de conexión</h2>
       <p style={{ maxWidth: '300px', margin: '0 auto 20px', fontSize: '0.9rem', color: 'var(--text-muted)' }}>{fetchError}</p>
@@ -1156,7 +1156,7 @@ export default function DriverPage() {
   if (loadingTimeout && !driver) return (
     <div className="status-screen">
       <div style={{ color: 'var(--warning)', marginBottom: '20px' }}>
-        <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" /></svg>
       </div>
       <h2>La carga está tardando mucho</h2>
       <p style={{ maxWidth: '300px', margin: '0 auto 20px', fontSize: '0.9rem', color: 'var(--text-muted)' }}>Parece que la conexión con el servidor se ha demorado más de lo esperado o hay un problema al iniciar la app.</p>
@@ -1207,9 +1207,9 @@ export default function DriverPage() {
                 value={mpLink} onChange={(e) => setMpLink(e.target.value)}
                 style={{ marginBottom: '12px' }}
               />
-              <button 
-                className="btn btn-accent btn-block" 
-                onClick={saveMPLink} 
+              <button
+                className="btn btn-accent btn-block"
+                onClick={saveMPLink}
                 disabled={!mpLink.toLowerCase().includes('mercadopago') && !mpLink.toLowerCase().includes('mpago')}
               >
                 Vincular Cuenta
@@ -1307,7 +1307,7 @@ export default function DriverPage() {
               </span>
             )}
             {driver?.membershipPlan && (
-              <div 
+              <div
                 className={`seal-${driver.membershipPlan.toLowerCase()}`}
                 style={{
                   display: 'inline-flex',
@@ -1348,7 +1348,7 @@ export default function DriverPage() {
               </div>
             )}
             {driver?.isPromoActive && (
-              <div 
+              <div
                 onClick={handleFreePassClick}
                 style={{
                   display: 'inline-flex',
@@ -1424,14 +1424,14 @@ export default function DriverPage() {
       </header>
 
       {/* Botón flotante de GPS de alta prioridad fuera de main-content */}
-      <button 
+      <button
         onClick={() => {
           setCenterTrigger(prev => prev + 1);
         }}
         title="Mi ubicación actual"
         className="gps-button"
       >
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/></svg>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><circle cx="12" cy="12" r="3" /><line x1="12" y1="1" x2="12" y2="3" /><line x1="12" y1="21" x2="12" y2="23" /><line x1="1" y1="12" x2="3" y2="12" /><line x1="21" y1="12" x2="23" y2="12" /></svg>
       </button>
 
       <main className="main-content">
@@ -1449,7 +1449,7 @@ export default function DriverPage() {
             📋 Tu boleta de honorarios está siendo auditada por la administración. Puedes conducir con normalidad.
           </div>
         )}
-        
+
         {/* HUD de GPS para el Conductor */}
         {gpsError && (
           <div style={{
@@ -1472,9 +1472,9 @@ export default function DriverPage() {
             zIndex: 999,
             animation: 'fadeIn 0.3s ease'
           }}>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" /><line x1="12" y1="9" x2="12" y2="13" /><line x1="12" y1="17" x2="12.01" y2="17" /></svg>
             <div style={{ flex: 1 }}>{gpsError}</div>
-            <button 
+            <button
               onClick={() => setGpsError(null)}
               style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.8)', fontSize: '1.1rem', cursor: 'pointer', fontWeight: 'bold' }}
             >
@@ -1565,14 +1565,14 @@ export default function DriverPage() {
           </div>
 
           {driver.isPromoActive && !isOnline && !hasActivatedOnline && (
-            <div style={{ 
-              background: 'rgba(255,239,94,0.08)', 
-              border: '1px solid rgba(255,239,94,0.3)', 
-              borderRadius: '16px', 
-              padding: '16px 20px', 
-              marginBottom: '20px', 
-              display: 'flex', 
-              alignItems: 'flex-start', 
+            <div style={{
+              background: 'rgba(255,239,94,0.08)',
+              border: '1px solid rgba(255,239,94,0.3)',
+              borderRadius: '16px',
+              padding: '16px 20px',
+              marginBottom: '20px',
+              display: 'flex',
+              alignItems: 'flex-start',
               gap: '12px',
               textAlign: 'left'
             }}>
@@ -1618,11 +1618,11 @@ export default function DriverPage() {
           )}
 
           {driver.isPromoActive && !isOnline && !hasActivatedOnline && (
-            <div style={{ 
-              background: 'linear-gradient(135deg, rgba(212,175,55,0.1) 0%, rgba(212,175,55,0.05) 100%)', 
-              border: '1px solid #D4AF37', 
-              borderRadius: '16px', 
-              padding: '16px 20px', 
+            <div style={{
+              background: 'linear-gradient(135deg, rgba(212,175,55,0.1) 0%, rgba(212,175,55,0.05) 100%)',
+              border: '1px solid #D4AF37',
+              borderRadius: '16px',
+              padding: '16px 20px',
               marginBottom: '20px',
               textAlign: 'left',
               boxShadow: '0 8px 32px rgba(212,175,55,0.08)'
@@ -1672,9 +1672,9 @@ export default function DriverPage() {
                   value={mpLink} onChange={(e) => setMpLink(e.target.value)}
                   style={{ marginBottom: '12px' }}
                 />
-                <button 
-                  className="btn btn-accent btn-block" 
-                  onClick={saveMPLink} 
+                <button
+                  className="btn btn-accent btn-block"
+                  onClick={saveMPLink}
                   disabled={!mpLink.toLowerCase().includes('mercadopago') && !mpLink.toLowerCase().includes('mpago')}
                   style={{ marginBottom: '10px' }}
                 >
@@ -1722,7 +1722,7 @@ export default function DriverPage() {
 
           {!driver.isPromoActive && driver.membershipPlan === 'COMFORT' && (() => {
             const lastPaid = driver.comfortLastPaidAt ? new Date(driver.comfortLastPaidAt) : null;
-            const todayStart = new Date(); todayStart.setHours(0,0,0,0);
+            const todayStart = new Date(); todayStart.setHours(0, 0, 0, 0);
             const paidToday = lastPaid && lastPaid >= todayStart;
             return (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '16px' }}>
@@ -1775,14 +1775,14 @@ export default function DriverPage() {
                     >
                       {payingMembership ? <span className="spinner-sm"></span> : 'Pagar Cuota Diaria con Mercado Pago'}
                     </button>
-                    
+
                     <div style={{ borderTop: '1px dashed rgba(255,255,255,0.1)', paddingTop: '10px' }}>
                       <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginBottom: '8px', lineHeight: '1.4' }}>
                         O transfiere a la cuenta de Fim SpA y sube el comprobante:
                         <br /><strong>Banco:</strong> Banco Estado | <strong>Cta Corriente:</strong> 987654321
                         <br /><strong>RUT:</strong> 76.543.210-K | <strong>Email:</strong> pagos@fim.cl
                       </div>
-                      
+
                       <label style={{ display: 'block', background: 'rgba(255,255,255,0.03)', border: '1px dashed var(--border)', borderRadius: '8px', padding: '8px', textAlign: 'center', cursor: 'pointer', transition: 'var(--transition)' }} onMouseEnter={e => e.currentTarget.style.borderColor = 'var(--accent)'} onMouseLeave={e => e.currentTarget.style.borderColor = 'var(--border)'}>
                         <span style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--accent)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
                           {uploadingReceipt ? (
@@ -1845,13 +1845,14 @@ export default function DriverPage() {
                 </button>
               )}
               <div style={{ display: 'flex', gap: '6px', justifyContent: 'center' }}>
-                {['Lun','Mar','Mié','Jue','Vie','Sáb','Dom'].map((d, i) => {
+                {['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'].map((d, i) => {
                   const today = new Date().getDay();
-                  const dayMap = [1,2,3,4,5,6,0];
+                  const dayMap = [1, 2, 3, 4, 5, 6, 0];
                   const isToday = dayMap[i] === today;
                   const isActive = i >= 4;
                   return (
-                    <div key={d} style={{ flex: 1, textAlign: 'center', padding: '6px 2px', borderRadius: '6px', fontSize: '0.62rem', fontWeight: 800,
+                    <div key={d} style={{
+                      flex: 1, textAlign: 'center', padding: '6px 2px', borderRadius: '6px', fontSize: '0.62rem', fontWeight: 800,
                       background: isToday ? (isActive ? 'rgba(16,185,129,0.4)' : 'rgba(239,68,68,0.2)') : (isActive ? 'rgba(16,185,129,0.15)' : 'rgba(255,255,255,0.03)'),
                       color: isToday ? (isActive ? '#34D399' : '#FCA5A5') : (isActive ? '#34D399' : 'rgba(255,255,255,0.2)'),
                       border: `1px solid ${isToday ? (isActive ? 'rgba(16,185,129,0.5)' : 'rgba(239,68,68,0.3)') : 'transparent'}`,
@@ -2266,9 +2267,9 @@ export default function DriverPage() {
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="1" x2="12" y2="23" /><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" /></svg>
                     Solicitar Pago ({activeTrip.paymentMethod === 'card' ? `${formatCLP(activeTrip.estimatedPrice * 1.0319)} MP` : `${formatCLP(activeTrip.estimatedPrice)} Efec.`})
                   </button>
-                  <div style={{ 
-                    marginTop: '12px', 
-                    fontSize: '0.8rem', 
+                  <div style={{
+                    marginTop: '12px',
+                    fontSize: '0.8rem',
                     color: 'var(--text-muted)',
                     background: 'rgba(255,255,255,0.02)',
                     padding: '10px',
@@ -2320,8 +2321,8 @@ export default function DriverPage() {
                           {formatCLP(activeTrip.paymentMethod === 'card' ? activeTrip.estimatedPrice * 1.0319 : activeTrip.estimatedPrice)}
                         </div>
                         <span style={{ fontSize: '0.75rem', opacity: 0.8, color: 'var(--text-muted)' }}>
-                          {activeTrip.paymentMethod === 'card' 
-                            ? '(Incluye 3.19% comisión Mercado Pago)' 
+                          {activeTrip.paymentMethod === 'card'
+                            ? '(Incluye 3.19% comisión Mercado Pago)'
                             : '(Pago en Efectivo)'}
                         </span>
                       </div>
@@ -2338,8 +2339,8 @@ export default function DriverPage() {
                           {formatCLP(activeTrip.paymentMethod === 'card' ? activeTrip.estimatedPrice * 1.0319 : activeTrip.estimatedPrice)}
                         </div>
                         <span style={{ fontSize: '0.75rem', opacity: 0.8, color: 'var(--text-muted)' }}>
-                          {activeTrip.paymentMethod === 'card' 
-                            ? 'Tarjeta (Mercado Pago)' 
+                          {activeTrip.paymentMethod === 'card'
+                            ? 'Tarjeta (Mercado Pago)'
                             : 'Efectivo'}
                         </span>
                       </div>
@@ -2579,11 +2580,11 @@ export default function DriverPage() {
               El pasajero ha decidido cancelar este viaje por el siguiente motivo:
             </p>
 
-            <div style={{ 
-              background: 'rgba(255, 69, 96, 0.05)', 
-              border: '1px solid rgba(255, 69, 96, 0.2)', 
-              padding: '16px', 
-              borderRadius: 'var(--radius)', 
+            <div style={{
+              background: 'rgba(255, 69, 96, 0.05)',
+              border: '1px solid rgba(255, 69, 96, 0.2)',
+              padding: '16px',
+              borderRadius: 'var(--radius)',
               marginBottom: '24px',
               textAlign: 'center'
             }}>
@@ -2632,7 +2633,7 @@ export default function DriverPage() {
             <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--text-muted, #a0aec0)' }}>
               ¿Con qué aplicación deseas seguir la ruta al {tripPhase === 'going_to_passenger' || tripPhase === 'arrived' ? 'punto de recogida' : 'destino'}?
             </p>
-            
+
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '8px' }}>
               <button
                 onClick={() => handleNavigate('google')}
@@ -2701,7 +2702,7 @@ export default function DriverPage() {
                 Waze
               </button>
             </div>
-            
+
             <button
               onClick={() => setShowNavModal(false)}
               className="btn btn-secondary btn-block"
@@ -2727,12 +2728,12 @@ export default function DriverPage() {
           padding: '20px',
           animation: 'fadeIn 0.25s ease'
         }}>
-          <div className="card animate-scale-in" style={{ 
-            width: '100%', 
-            maxWidth: '440px', 
-            maxHeight: '90vh', 
-            overflowY: 'auto', 
-            border: '1px solid var(--border-accent, rgba(0, 229, 160, 0.3))', 
+          <div className="card animate-scale-in" style={{
+            width: '100%',
+            maxWidth: '440px',
+            maxHeight: '90vh',
+            overflowY: 'auto',
+            border: '1px solid var(--border-accent, rgba(0, 229, 160, 0.3))',
             background: '#0D0D15',
             padding: '24px',
             borderRadius: '20px',
@@ -2754,8 +2755,8 @@ export default function DriverPage() {
                 </svg>
                 Pago de Membresía requerido
               </h3>
-              <button 
-                onClick={() => setShowPaymentModal(false)} 
+              <button
+                onClick={() => setShowPaymentModal(false)}
                 style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', fontSize: '1.25rem', fontWeight: 'bold' }}
               >
                 ×
@@ -2778,9 +2779,9 @@ export default function DriverPage() {
                     <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.65rem' }}>/mes</div>
                   </div>
                 </div>
-                <button 
-                  className="btn btn-accent btn-block" 
-                  onClick={handlePayMembership} 
+                <button
+                  className="btn btn-accent btn-block"
+                  onClick={handlePayMembership}
                   disabled={payingMembership}
                   style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
                 >
@@ -2801,9 +2802,9 @@ export default function DriverPage() {
                     <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.65rem' }}>/fin de semana</div>
                   </div>
                 </div>
-                <button 
-                  className="btn btn-accent btn-block" 
-                  onClick={handlePayMembership} 
+                <button
+                  className="btn btn-accent btn-block"
+                  onClick={handlePayMembership}
                   disabled={payingMembership}
                   style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
                 >
@@ -2825,15 +2826,15 @@ export default function DriverPage() {
                   </div>
                 </div>
 
-                <button 
-                  className="btn btn-accent btn-block" 
-                  onClick={handlePayMembership} 
+                <button
+                  className="btn btn-accent btn-block"
+                  onClick={handlePayMembership}
                   disabled={payingMembership}
                   style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
                 >
                   {payingMembership ? <span className="spinner-sm"></span> : 'Pagar con Mercado Pago'}
                 </button>
-                
+
                 <div style={{ borderTop: '1px dashed rgba(255,255,255,0.1)', paddingTop: '12px' }}>
                   <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginBottom: '8px', lineHeight: '1.4' }}>
                     O realiza transferencia bancaria y sube el comprobante:
@@ -2841,7 +2842,7 @@ export default function DriverPage() {
                     <br /><strong>RUT:</strong> 76.543.210-K | <strong>Destinatario:</strong> Fim SpA
                     <br /><strong>Email:</strong> pagos@fim.cl
                   </div>
-                  
+
                   <label style={{ display: 'block', background: 'rgba(255,255,255,0.03)', border: '1px dashed var(--border)', borderRadius: '8px', padding: '10px', textAlign: 'center', cursor: 'pointer', transition: 'var(--transition)' }} onMouseEnter={e => e.currentTarget.style.borderColor = 'var(--accent)'} onMouseLeave={e => e.currentTarget.style.borderColor = 'var(--border)'}>
                     <span style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--accent)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
                       {uploadingReceipt ? (
@@ -2905,7 +2906,7 @@ export default function DriverPage() {
             gap: '20px',
             position: 'relative'
           }}>
-            <button 
+            <button
               onClick={() => setShowProfileModal(false)}
               style={{
                 position: 'absolute',
@@ -2963,18 +2964,17 @@ export default function DriverPage() {
 
             {driver && (
               <div style={{
-                background: driver.membershipPlan === 'BLACK' 
+                background: driver.membershipPlan === 'BLACK'
                   ? 'linear-gradient(135deg, rgba(212,175,55,0.08) 0%, rgba(212,175,55,0.02) 100%)'
                   : driver.membershipPlan === 'COMFORT'
-                  ? 'linear-gradient(135deg, rgba(59,130,246,0.08) 0%, rgba(59,130,246,0.02) 100%)'
-                  : 'linear-gradient(135deg, rgba(16,185,129,0.08) 0%, rgba(16,185,129,0.02) 100%)',
-                border: `1.5px solid ${
-                  driver.membershipPlan === 'BLACK' 
-                    ? 'rgba(212,175,55,0.35)' 
+                    ? 'linear-gradient(135deg, rgba(59,130,246,0.08) 0%, rgba(59,130,246,0.02) 100%)'
+                    : 'linear-gradient(135deg, rgba(16,185,129,0.08) 0%, rgba(16,185,129,0.02) 100%)',
+                border: `1.5px solid ${driver.membershipPlan === 'BLACK'
+                    ? 'rgba(212,175,55,0.35)'
                     : driver.membershipPlan === 'COMFORT'
-                    ? 'rgba(59,130,246,0.35)'
-                    : 'rgba(16,185,129,0.35)'
-                }`,
+                      ? 'rgba(59,130,246,0.35)'
+                      : 'rgba(16,185,129,0.35)'
+                  }`,
                 borderRadius: '12px',
                 padding: '16px',
                 display: 'flex',
@@ -2985,8 +2985,8 @@ export default function DriverPage() {
                 boxShadow: driver.membershipPlan === 'BLACK'
                   ? '0 6px 20px rgba(212,175,55,0.06)'
                   : driver.membershipPlan === 'COMFORT'
-                  ? '0 6px 20px rgba(59,130,246,0.06)'
-                  : '0 6px 20px rgba(16,185,129,0.06)'
+                    ? '0 6px 20px rgba(59,130,246,0.06)'
+                    : '0 6px 20px rgba(16,185,129,0.06)'
               }}>
                 {/* Glow/Light effect */}
                 <div style={{
@@ -2995,23 +2995,22 @@ export default function DriverPage() {
                   right: '-40px',
                   width: '100px',
                   height: '100px',
-                  background: `radial-gradient(circle, ${
-                    driver.membershipPlan === 'BLACK' 
-                      ? 'rgba(212,175,55,0.15)' 
+                  background: `radial-gradient(circle, ${driver.membershipPlan === 'BLACK'
+                      ? 'rgba(212,175,55,0.15)'
                       : driver.membershipPlan === 'COMFORT'
-                      ? 'rgba(59,130,246,0.15)'
-                      : 'rgba(16,185,129,0.15)'
-                  } 0%, transparent 70%)`,
+                        ? 'rgba(59,130,246,0.15)'
+                        : 'rgba(16,185,129,0.15)'
+                    } 0%, transparent 70%)`,
                   pointerEvents: 'none'
                 }} />
 
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <div style={{ 
-                    padding: '4px 10px', 
+                  <div style={{
+                    padding: '4px 10px',
                     background: driver.membershipPlan === 'BLACK' ? '#D4AF37' : driver.membershipPlan === 'COMFORT' ? '#3B82F6' : '#10B981',
-                    borderRadius: '6px', 
-                    fontSize: '0.72rem', 
-                    fontWeight: 900, 
+                    borderRadius: '6px',
+                    fontSize: '0.72rem',
+                    fontWeight: 900,
                     color: driver.membershipPlan === 'BLACK' ? '#000' : '#fff',
                     letterSpacing: '0.05em',
                     display: 'inline-flex',
@@ -3019,15 +3018,15 @@ export default function DriverPage() {
                     gap: '4px'
                   }}>
                     {driver.membershipPlan === 'BLACK' && (
-                      <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                      <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" /></svg>
                     )}
                     PLAN {driver.membershipPlan}
                   </div>
-                  
-                  <div style={{ 
-                    fontSize: '0.9rem', 
-                    fontWeight: 800, 
-                    color: driver.membershipPlan === 'BLACK' ? '#D4AF37' : driver.membershipPlan === 'COMFORT' ? '#60A5FA' : '#34D399' 
+
+                  <div style={{
+                    fontSize: '0.9rem',
+                    fontWeight: 800,
+                    color: driver.membershipPlan === 'BLACK' ? '#D4AF37' : driver.membershipPlan === 'COMFORT' ? '#60A5FA' : '#34D399'
                   }}>
                     {driver.membershipPlan === 'BLACK' && '$150.000 / mes'}
                     {driver.membershipPlan === 'COMFORT' && '$20.000 / día'}
@@ -3036,20 +3035,20 @@ export default function DriverPage() {
                 </div>
 
                 {driver.isPromoActive && (
-                  <div style={{ 
-                    background: 'rgba(212,175,55,0.1)', 
-                    border: '1px solid rgba(212,175,55,0.2)', 
-                    borderRadius: '6px', 
-                    padding: '6px 10px', 
-                    fontSize: '0.72rem', 
-                    color: '#D4AF37', 
+                  <div style={{
+                    background: 'rgba(212,175,55,0.1)',
+                    border: '1px solid rgba(212,175,55,0.2)',
+                    borderRadius: '6px',
+                    padding: '6px 10px',
+                    fontSize: '0.72rem',
+                    color: '#D4AF37',
                     fontWeight: 700,
                     display: 'flex',
                     alignItems: 'center',
                     gap: '6px'
                   }}>
                     <span style={{ fontSize: '0.9rem' }}>✨</span>
-                    <span>FREE PASS Activo (Membresía gratis)</span>
+                    <span>FREE PASS Activo (10 días)</span>
                   </div>
                 )}
 
@@ -3072,9 +3071,9 @@ export default function DriverPage() {
                     'Sin cobros durante la semana'
                   ]).map((advantage, i) => (
                     <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.78rem', color: 'var(--text-secondary)' }}>
-                      <span style={{ 
-                        color: driver.membershipPlan === 'BLACK' ? '#D4AF37' : driver.membershipPlan === 'COMFORT' ? '#60A5FA' : '#34D399', 
-                        fontWeight: 900 
+                      <span style={{
+                        color: driver.membershipPlan === 'BLACK' ? '#D4AF37' : driver.membershipPlan === 'COMFORT' ? '#60A5FA' : '#34D399',
+                        fontWeight: 900
                       }}>✓</span>
                       <span>{advantage}</span>
                     </div>
@@ -3088,10 +3087,10 @@ export default function DriverPage() {
                 <IconShieldLock size={16} />
                 Cambiar Contraseña
               </h4>
-              
-              <input 
-                type="password" 
-                placeholder="Contraseña actual" 
+
+              <input
+                type="password"
+                placeholder="Contraseña actual"
                 value={currentPassword}
                 onChange={e => setCurrentPassword(e.target.value)}
                 style={{
@@ -3103,9 +3102,9 @@ export default function DriverPage() {
                   fontSize: '0.85rem'
                 }}
               />
-              <input 
-                type="password" 
-                placeholder="Nueva contraseña" 
+              <input
+                type="password"
+                placeholder="Nueva contraseña"
                 value={newPassword}
                 onChange={e => setNewPassword(e.target.value)}
                 style={{
@@ -3117,9 +3116,9 @@ export default function DriverPage() {
                   fontSize: '0.85rem'
                 }}
               />
-              <input 
-                type="password" 
-                placeholder="Confirmar nueva contraseña" 
+              <input
+                type="password"
+                placeholder="Confirmar nueva contraseña"
                 value={confirmNewPassword}
                 onChange={e => setConfirmNewPassword(e.target.value)}
                 style={{
@@ -3151,8 +3150,8 @@ export default function DriverPage() {
                 </div>
               )}
 
-              <button 
-                type="submit" 
+              <button
+                type="submit"
                 className="btn btn-primary"
                 disabled={passwordChangeLoading || !currentPassword || !newPassword || !confirmNewPassword}
                 style={{
@@ -3231,11 +3230,11 @@ export default function DriverPage() {
               justifyContent: 'center'
             }}>
               {customDialog.type === 'error' ? (
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" /></svg>
               ) : customDialog.type === 'success' ? (
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
               ) : (
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" /></svg>
               )}
             </div>
             <div>
@@ -3245,8 +3244,8 @@ export default function DriverPage() {
             <div style={{ display: 'flex', gap: '10px', width: '100%', marginTop: '8px' }}>
               {customDialog.isConfirm ? (
                 <>
-                  <button 
-                    className="btn btn-secondary" 
+                  <button
+                    className="btn btn-secondary"
                     onClick={() => {
                       setCustomDialog(prev => ({ ...prev, show: false }));
                       if (customDialog.onCancel) customDialog.onCancel();
@@ -3255,8 +3254,8 @@ export default function DriverPage() {
                   >
                     Cancelar
                   </button>
-                  <button 
-                    className="btn btn-primary" 
+                  <button
+                    className="btn btn-primary"
                     onClick={() => {
                       setCustomDialog(prev => ({ ...prev, show: false }));
                       if (customDialog.onConfirm) customDialog.onConfirm();
@@ -3267,8 +3266,8 @@ export default function DriverPage() {
                   </button>
                 </>
               ) : (
-                <button 
-                  className="btn btn-primary" 
+                <button
+                  className="btn btn-primary"
                   onClick={() => {
                     setCustomDialog(prev => ({ ...prev, show: false }));
                     if (customDialog.onConfirm) customDialog.onConfirm();
