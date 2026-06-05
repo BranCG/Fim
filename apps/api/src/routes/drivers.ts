@@ -24,11 +24,36 @@ router.get('/me', requireAuth, requireRole('driver'), async (req: Request, res: 
         totalRating: true, totalTrips: true,
         adminNotes: true, mercadoPagoLink: true, walletBalance: true,
         taxCompliant: true, taxDocumentUrl: true, taxPendingReview: true,
+        createdAt: true,
       },
     });
 
     if (!driver) return res.status(404).json({ error: 'Conductor no encontrado' });
-    return res.json({ driver });
+
+    let isPromoActive = false;
+    let freePassDays = 0;
+    const configRows = await prisma.systemConfig.findMany({
+      where: { key: { in: ['free_pass_enabled', 'free_pass_start_date', 'free_pass_end_date', 'free_pass_days'] } }
+    });
+    const config = configRows.reduce((acc: any, curr: any) => ({ ...acc, [curr.key]: curr.value }), {});
+
+    if (config.free_pass_enabled === 'true') {
+      const startDate = new Date(config.free_pass_start_date);
+      startDate.setHours(0, 0, 0, 0);
+      const endDate = new Date(config.free_pass_end_date);
+      endDate.setHours(23, 59, 59, 999);
+      freePassDays = parseInt(config.free_pass_days || '0', 10);
+
+      const driverCreatedAt = new Date(driver.createdAt);
+      if (driverCreatedAt >= startDate && driverCreatedAt <= endDate) {
+        const driverAgeDays = (new Date().getTime() - driverCreatedAt.getTime()) / (1000 * 60 * 60 * 24);
+        if (driverAgeDays <= freePassDays) {
+          isPromoActive = true;
+        }
+      }
+    }
+
+    return res.json({ driver: { ...driver, isPromoActive, freePassDays } });
   } catch (err) {
     return res.status(500).json({ error: 'Error interno' });
   }
@@ -63,15 +88,41 @@ router.post('/toggle-online', requireAuth, requireRole('driver'), async (req: Re
     if (isOnline) {
       const now = new Date();
       const plan = driver.membershipPlan;
+      
+      // Lógica de promoción de lanzamiento (Free Pass Dinámico)
+      let isPromoActive = false;
+      const configRows = await prisma.systemConfig.findMany({
+        where: { key: { in: ['free_pass_enabled', 'free_pass_start_date', 'free_pass_end_date', 'free_pass_days'] } }
+      });
+      const config = configRows.reduce((acc: any, curr: any) => ({ ...acc, [curr.key]: curr.value }), {});
+
+      if (config.free_pass_enabled === 'true') {
+        const startDate = new Date(config.free_pass_start_date);
+        startDate.setHours(0, 0, 0, 0);
+        const endDate = new Date(config.free_pass_end_date);
+        endDate.setHours(23, 59, 59, 999);
+        const freeDays = parseInt(config.free_pass_days || '0', 10);
+
+        const driverCreatedAt = new Date(driver.createdAt);
+        
+        if (driverCreatedAt >= startDate && driverCreatedAt <= endDate) {
+          const driverAgeDays = (now.getTime() - driverCreatedAt.getTime()) / (1000 * 60 * 60 * 24);
+          if (driverAgeDays <= freeDays) {
+            isPromoActive = true;
+          }
+        }
+      }
 
       if (plan === 'BLACK') {
-        // Requiere membresía pagada y vigente
-        if (!driver.membershipPaid) {
-          return res.status(403).json({ error: 'Debes pagar tu membresía BLACK ($150.000) para activarte.' });
-        }
-        if (driver.membershipExpiresAt && driver.membershipExpiresAt < now) {
-          await prisma.driver.update({ where: { id: driver.id }, data: { membershipPaid: false } });
-          return res.status(403).json({ error: 'Tu membresía BLACK venció. Renuévala para continuar.' });
+        // Requiere membresía pagada y vigente, a menos que esté en promoción
+        if (!isPromoActive) {
+          if (!driver.membershipPaid) {
+            return res.status(403).json({ error: 'Debes pagar tu membresía BLACK ($150.000) para activarte.' });
+          }
+          if (driver.membershipExpiresAt && driver.membershipExpiresAt < now) {
+            await prisma.driver.update({ where: { id: driver.id }, data: { membershipPaid: false } });
+            return res.status(403).json({ error: 'Tu membresía BLACK venció. Renuévala para continuar.' });
+          }
         }
       }
 
@@ -83,31 +134,34 @@ router.post('/toggle-online', requireAuth, requireRole('driver'), async (req: Re
             error: 'La membresía FLEX solo está activa Viernes, Sábado y Domingo. Hoy no puedes operar.'
           });
         }
-        if (!driver.membershipPaid) {
-          return res.status(403).json({ error: 'Debes pagar tu membresía FLEX ($60.000) para activarte este fin de semana.' });
-        }
-        // Verificar si la membresía FLEX sigue vigente (fin de semana actual)
-        if (driver.membershipExpiresAt && driver.membershipExpiresAt < now) {
-          await prisma.driver.update({ where: { id: driver.id }, data: { membershipPaid: false } });
-          return res.status(403).json({ error: 'Tu membresía FLEX venció. Debes pagar el nuevo fin de semana ($60.000).' });
+        if (!isPromoActive) {
+          if (!driver.membershipPaid) {
+            return res.status(403).json({ error: 'Debes pagar tu membresía FLEX ($60.000) para activarte este fin de semana.' });
+          }
+          // Verificar si la membresía FLEX sigue vigente (fin de semana actual)
+          if (driver.membershipExpiresAt && driver.membershipExpiresAt < now) {
+            await prisma.driver.update({ where: { id: driver.id }, data: { membershipPaid: false } });
+            return res.status(403).json({ error: 'Tu membresía FLEX venció. Debes pagar el nuevo fin de semana ($60.000).' });
+          }
         }
       }
 
       if (plan === 'COMFORT') {
-        // Debe haber pagado la cuota diaria de $20.000
-        // Se verifica si el último pago fue hoy
-        if (driver.comfortLastPaidAt) {
-          const lastPaid = new Date(driver.comfortLastPaidAt);
-          const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-          if (lastPaid < todayStart) {
+        // Debe haber pagado la cuota diaria de $20.000, a menos que esté en promoción
+        if (!isPromoActive) {
+          if (driver.comfortLastPaidAt) {
+            const lastPaid = new Date(driver.comfortLastPaidAt);
+            const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+            if (lastPaid < todayStart) {
+              return res.status(403).json({ 
+                error: `Debes pagar tu cuota diaria COMFORT de $20.000 para trabajar hoy. Deuda acumulada: $${driver.comfortDebt.toLocaleString('es-CL')}`
+              });
+            }
+          } else {
             return res.status(403).json({ 
-              error: `Debes pagar tu cuota diaria COMFORT de $20.000 para trabajar hoy. Deuda acumulada: $${driver.comfortDebt.toLocaleString('es-CL')}`
+              error: 'Debes subir el comprobante de tu primer pago diario COMFORT de $20.000 para activarte.'
             });
           }
-        } else {
-          return res.status(403).json({ 
-            error: 'Debes subir el comprobante de tu primer pago diario COMFORT de $20.000 para activarte.'
-          });
         }
       }
     }

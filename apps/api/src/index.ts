@@ -78,6 +78,8 @@ app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // Serve uploaded files
+import configRoutes from './routes/config';
+
 app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads')));
 
 // ─── Routes ───────────────────────────────────────────────────────────────
@@ -87,6 +89,7 @@ app.use('/api/trips', tripRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/payments', paymentRoutes);
+app.use('/api/config', configRoutes);
 
 // Health check
 app.get('/api/health', (_, res) => {

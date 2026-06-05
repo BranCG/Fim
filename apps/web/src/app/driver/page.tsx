@@ -1475,6 +1475,26 @@ export default function DriverPage() {
             </div>
           </div>
 
+          {driver.isPromoActive && (
+            <div style={{ background: 'linear-gradient(135deg, rgba(212,175,55,0.15), rgba(212,175,55,0.05))', border: '1px solid rgba(212,175,55,0.3)', borderRadius: '12px', padding: '12px 16px', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <div style={{ color: '#D4AF37', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="20 12 20 22 4 22 4 12"></polyline>
+                  <rect x="2" y="7" width="20" height="5" rx="1"></rect>
+                  <line x1="12" y1="22" x2="12" y2="7"></line>
+                  <path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"></path>
+                  <path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"></path>
+                </svg>
+              </div>
+              <div>
+                <div style={{ color: '#D4AF37', fontWeight: 800, fontSize: '0.9rem' }}>¡Promoción FREE PASS Activa!</div>
+                <div style={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.75rem', lineHeight: '1.4', marginTop: '4px' }}>
+                  {driver.membershipPlan === 'FLEX' ? `Disfruta de tus primeros ${driver.freePassDays} días de regalo en la membresía FLEX.` : `Disfruta de tus primeros ${driver.freePassDays} días de membresía gratis.`} Puedes conectarte y recibir viajes sin pagar durante este periodo.
+                </div>
+              </div>
+            </div>
+          )}
+
           {!driver.mercadoPagoLink && (
             <div style={{ background: 'rgba(0,229,160,0.05)', padding: '16px', borderRadius: 'var(--radius)', border: '1px solid var(--accent)', marginBottom: '20px' }}>
               <p style={{ fontSize: '0.85rem', marginBottom: '12px', fontWeight: 600 }}>¡Vincular Mercado Pago Connect!</p>

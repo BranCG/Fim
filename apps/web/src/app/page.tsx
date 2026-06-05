@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Logo from '@/components/Logo';
 import SplashScreen from '@/components/SplashScreen';
-import { getSession } from '@/lib/api';
+import api, { getSession } from '@/lib/api';
 
 const SingleNeutralCircleIcon = ({ width = 24, height = 24, style }: { width?: number | string; height?: number | string; style?: React.CSSProperties }) => (
   <svg 
@@ -336,6 +336,17 @@ export default function Home() {
   const [selectedPlan, setSelectedPlan] = useState<'BLACK' | 'COMFORT' | 'FLEX'>('BLACK');
   const [activeStep, setActiveStep] = useState<number>(1);
   const [showFimPagos, setShowFimPagos] = useState<boolean>(false);
+  const [sysConfig, setSysConfig] = useState<any>({});
+
+  useEffect(() => {
+    api.get('/config/public')
+      .then(res => {
+        if (res.data && res.data.config) {
+          setSysConfig(res.data.config);
+        }
+      })
+      .catch(err => console.error('Error fetching public config:', err));
+  }, []);
 
   useEffect(() => {
     const s = getSession();
@@ -375,7 +386,32 @@ export default function Home() {
     }}>
       <SplashScreen />
       
-
+      <style>{`
+        @keyframes marquee {
+          0% { transform: translateX(100%); }
+          100% { transform: translateX(-100%); }
+        }
+        .marquee-container {
+          overflow: hidden;
+          white-space: nowrap;
+          position: relative;
+          background: linear-gradient(90deg, #D4AF37 0%, #B8960C 100%);
+          color: #000;
+          padding: 8px 0;
+          box-shadow: 0 4px 12px rgba(212,175,55,0.3);
+          z-index: 99;
+          display: flex;
+          align-items: center;
+        }
+        .marquee-text {
+          display: inline-block;
+          font-weight: 900;
+          font-size: 0.95rem;
+          letter-spacing: 0.05em;
+          padding-left: 100%;
+          animation: marquee 15s linear infinite;
+        }
+      `}</style>
 
       {/* Navbar */}
       <nav className="navbar-container" style={{
@@ -396,6 +432,15 @@ export default function Home() {
           <Link href="/register" className="btn btn-primary btn-sm navbar-btn">Registrarse</Link>
         </div>
       </nav>
+
+      {/* Dynamic Marquee Ribbon */}
+      {sysConfig.promo_ribbon_enabled === 'true' && (
+        <div className="marquee-container">
+          <div className="marquee-text">
+            {activeView === 'driver' ? sysConfig.promo_ribbon_text_driver : sysConfig.promo_ribbon_text_passenger}
+          </div>
+        </div>
+      )}
 
       {/* Elegant Mode Switch */}
       <div style={{
@@ -850,7 +895,7 @@ export default function Home() {
                       </div>
 
                       <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.95rem', lineHeight: 1.6, borderLeft: '2px solid rgba(212,175,55,0.4)', paddingLeft: '12px' }}>
-                        Pagas una vez al mes. Acceso ilimitado los 30 días. Sin cobros diarios, sin restricciones de días.
+                        Pagas una vez al mes. Acceso ilimitado los 30 días. <strong style={{color: '#D4AF37'}}>¡Por lanzamiento, los primeros 10 días son gratis!</strong> Luego de eso se te cobrará la membresía para continuar.
                       </p>
 
                       <ul style={{ listStyle: 'none', padding: 0, display: 'flex', flexDirection: 'column', gap: '10px' }}>
@@ -933,7 +978,7 @@ export default function Home() {
                       </div>
 
                       <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.95rem', lineHeight: 1.6, borderLeft: '2px solid rgba(59,130,246,0.5)', paddingLeft: '12px' }}>
-                        <strong>Membresía Crédito:</strong> Te financiamos la membresía de inicio para que empieces sin capital. Pagas $20.000 por día trabajado hasta completar la meta de $180.000. ¡Al cumplir la meta, el resto del mes es 100% gratis!
+                        <strong>Membresía Crédito:</strong> <strong style={{color: '#60A5FA'}}>¡Por lanzamiento, los primeros 10 días son gratis!</strong> Luego de eso pagas $20.000 por día trabajado hasta completar la meta de $180.000 en el mes. ¡Al cumplir la meta, el resto del mes es gratis!
                       </p>
 
                       <div style={{ background: 'rgba(251,191,36,0.08)', border: '1px solid rgba(251,191,36,0.2)', borderRadius: '10px', padding: '14px', fontSize: '0.82rem' }}>
@@ -1022,7 +1067,7 @@ export default function Home() {
                       </div>
 
                       <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.95rem', lineHeight: 1.6, borderLeft: '2px solid rgba(16,185,129,0.4)', paddingLeft: '12px' }}>
-                        Pensado para quienes solo trabajan el fin de semana. Pagas $60.000 y tienes acceso los Viernes, Sábado y Domingo. El resto de la semana la cuenta queda inactiva automáticamente.
+                        Pensado para quienes solo trabajan el fin de semana. <strong style={{color: '#34D399'}}>¡Por lanzamiento, tu primer fin de semana es gratis!</strong> Luego de eso pagas $60.000 por el acceso de Viernes, Sábado y Domingo.
                       </p>
 
                       <div style={{ background: 'rgba(52,211,153,0.06)', border: '1px solid rgba(52,211,153,0.15)', borderRadius: '10px', padding: '14px' }}>

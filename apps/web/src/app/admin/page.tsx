@@ -125,6 +125,12 @@ function Icon({ name, size = 16, color = 'currentColor' }: { name: string; size?
         <path d="M1 10h4M19 10h4M1 14h4M19 14h4" />
       </svg>
     ),
+    settings: (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="12" cy="12" r="3" />
+        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
+      </svg>
+    ),
   };
   return icons[name] || <span />;
 }
@@ -208,7 +214,7 @@ interface Passenger {
   }[];
 }
 
-type View = 'dashboard' | 'pending' | 'drivers' | 'passengers' | 'revenue';
+type View = 'dashboard' | 'pending' | 'drivers' | 'passengers' | 'revenue' | 'system';
 
 export default function AdminDashboardPage() {
   const router = useRouter();
@@ -229,6 +235,9 @@ export default function AdminDashboardPage() {
   // Análisis de Ingresos
   const [revenueData, setRevenueData] = useState<any[]>([]);
   const [revenueDate, setRevenueDate] = useState(new Date().toISOString().split('T')[0]);
+
+  // Configuraciones de Sistema
+  const [systemConfig, setSystemConfig] = useState<any>({});
 
   useEffect(() => {
     const s = getSession();
@@ -288,6 +297,18 @@ export default function AdminDashboardPage() {
     }
   }, [revenueDate]);
 
+  const loadSystemConfig = useCallback(async () => {
+    setLoading(true);
+    try {
+      const r = await api.get('/admin/config');
+      setSystemConfig(r.data.config || {});
+    } catch (err) {
+      setActionMsg('Error al cargar configuraciones del sistema');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
   useEffect(() => { loadStats(); }, [loadStats]);
 
   useEffect(() => {
@@ -295,7 +316,8 @@ export default function AdminDashboardPage() {
     if (view === 'drivers') loadAllDrivers();
     if (view === 'passengers') loadPassengers();
     if (view === 'revenue') loadRevenue();
-  }, [view, loadPending, loadAllDrivers, loadPassengers, loadRevenue]);
+    if (view === 'system') loadSystemConfig();
+  }, [view, loadPending, loadAllDrivers, loadPassengers, loadRevenue, loadSystemConfig]);
 
   async function doDriverAction(driverId: string, action: string, reason?: string) {
     setLoading(true); setActionMsg('');
@@ -401,6 +423,7 @@ export default function AdminDashboardPage() {
     { key: 'drivers', label: 'Conductores', icon: 'car' },
     { key: 'passengers', label: 'Pasajeros', icon: 'users' },
     { key: 'revenue', label: 'Estudios', icon: 'chart' },
+    { key: 'system', label: 'Sistema', icon: 'settings' },
   ];
 
   return (
@@ -1174,6 +1197,136 @@ export default function AdminDashboardPage() {
                 </p>
               )}
             </div>
+          </div>
+        )}
+
+        {/* ── 6. SISTEMA / CONFIGURACIÓN ── */}
+        {view === 'system' && (
+          <div className="animate-in" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            <h2 style={{ fontSize: '1.15rem', fontWeight: 900, display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <Icon name="settings" size={18} color="var(--accent)" />
+              Control Dinámico de la App
+            </h2>
+
+            <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <h3 style={{ fontSize: '1rem', fontWeight: 800, color: 'var(--accent)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                Cinta Promocional (Landing Page)
+              </h3>
+              
+              <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+                <input 
+                  type="checkbox" 
+                  checked={systemConfig.promo_ribbon_enabled === 'true'}
+                  onChange={async (e) => {
+                    const val = e.target.checked ? 'true' : 'false';
+                    setSystemConfig({...systemConfig, promo_ribbon_enabled: val});
+                    await api.post('/admin/config', { key: 'promo_ribbon_enabled', value: val });
+                    setActionMsg('Configuración guardada');
+                  }}
+                  style={{ width: '18px', height: '18px', accentColor: 'var(--accent)' }}
+                />
+                <span style={{ fontWeight: 700 }}>Activar Cinta Promocional</span>
+              </label>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                <label style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Texto para Conductor</label>
+                <input 
+                  type="text"
+                  className="form-input"
+                  value={systemConfig.promo_ribbon_text_driver || ''}
+                  onChange={(e) => setSystemConfig({...systemConfig, promo_ribbon_text_driver: e.target.value})}
+                  onBlur={async () => {
+                    await api.post('/admin/config', { key: 'promo_ribbon_text_driver', value: systemConfig.promo_ribbon_text_driver });
+                    setActionMsg('Texto de conductor guardado');
+                  }}
+                  placeholder="Ej: PRIMEROS DÍAS DE LANZAMIENTO GRATIS"
+                />
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                <label style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Texto para Pasajero</label>
+                <input 
+                  type="text"
+                  className="form-input"
+                  value={systemConfig.promo_ribbon_text_passenger || ''}
+                  onChange={(e) => setSystemConfig({...systemConfig, promo_ribbon_text_passenger: e.target.value})}
+                  onBlur={async () => {
+                    await api.post('/admin/config', { key: 'promo_ribbon_text_passenger', value: systemConfig.promo_ribbon_text_passenger });
+                    setActionMsg('Texto de pasajero guardado');
+                  }}
+                  placeholder="Ej: Viaja sin comisiones intermedias"
+                />
+              </div>
+            </div>
+
+            <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: '12px', border: '1px solid rgba(212,175,55,0.3)' }}>
+              <h3 style={{ fontSize: '1rem', fontWeight: 800, color: '#D4AF37', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                🎁 Días FREE PASS (Regalo de Lanzamiento)
+              </h3>
+              <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', lineHeight: '1.4' }}>
+                Al activar esto, los conductores que se registren en las fechas estipuladas no tendrán que pagar membresía durante los primeros X días definidos.
+              </p>
+
+              <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+                <input 
+                  type="checkbox" 
+                  checked={systemConfig.free_pass_enabled === 'true'}
+                  onChange={async (e) => {
+                    const val = e.target.checked ? 'true' : 'false';
+                    setSystemConfig({...systemConfig, free_pass_enabled: val});
+                    await api.post('/admin/config', { key: 'free_pass_enabled', value: val });
+                    setActionMsg('Configuración guardada');
+                  }}
+                  style={{ width: '18px', height: '18px', accentColor: '#D4AF37' }}
+                />
+                <span style={{ fontWeight: 700 }}>Activar FREE PASS</span>
+              </label>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                  <label style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Fecha Inicio</label>
+                  <input 
+                    type="date"
+                    className="form-input"
+                    value={systemConfig.free_pass_start_date || ''}
+                    onChange={(e) => setSystemConfig({...systemConfig, free_pass_start_date: e.target.value})}
+                    onBlur={async () => {
+                      await api.post('/admin/config', { key: 'free_pass_start_date', value: systemConfig.free_pass_start_date });
+                      setActionMsg('Fecha de inicio guardada');
+                    }}
+                  />
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                  <label style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Fecha Fin</label>
+                  <input 
+                    type="date"
+                    className="form-input"
+                    value={systemConfig.free_pass_end_date || ''}
+                    onChange={(e) => setSystemConfig({...systemConfig, free_pass_end_date: e.target.value})}
+                    onBlur={async () => {
+                      await api.post('/admin/config', { key: 'free_pass_end_date', value: systemConfig.free_pass_end_date });
+                      setActionMsg('Fecha de fin guardada');
+                    }}
+                  />
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                <label style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Cantidad de días a regalar (desde su registro)</label>
+                <input 
+                  type="number"
+                  className="form-input"
+                  value={systemConfig.free_pass_days || ''}
+                  onChange={(e) => setSystemConfig({...systemConfig, free_pass_days: e.target.value})}
+                  onBlur={async () => {
+                    await api.post('/admin/config', { key: 'free_pass_days', value: systemConfig.free_pass_days });
+                    setActionMsg('Días de regalo guardados');
+                  }}
+                  placeholder="Ej: 10"
+                />
+              </div>
+            </div>
+
           </div>
         )}
 

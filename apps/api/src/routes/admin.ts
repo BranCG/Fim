@@ -430,4 +430,35 @@ router.post('/drivers/:id/reject-tax-document', async (req: Request, res: Respon
   }
 });
 
+// ─── SYSTEM CONFIG ────────────────────────────────────────────────────────
+router.get('/config', async (_req: Request, res: Response) => {
+  try {
+    const configs = await prisma.systemConfig.findMany();
+    // Convert to object
+    const configMap = configs.reduce((acc: any, curr: any) => {
+      acc[curr.key] = curr.value;
+      return acc;
+    }, {});
+    return res.json({ config: configMap });
+  } catch (err) {
+    return res.status(500).json({ error: 'Error al obtener configuraciones' });
+  }
+});
+
+router.post('/config', async (req: Request, res: Response) => {
+  try {
+    const { key, value } = req.body;
+    if (!key) return res.status(400).json({ error: 'Key es requerida' });
+
+    const config = await prisma.systemConfig.upsert({
+      where: { key },
+      update: { value },
+      create: { key, value },
+    });
+    return res.json({ message: 'Configuración actualizada', config });
+  } catch (err) {
+    return res.status(500).json({ error: 'Error al actualizar configuración' });
+  }
+});
+
 export default router;
