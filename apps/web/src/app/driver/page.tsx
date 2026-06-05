@@ -1163,7 +1163,7 @@ export default function DriverPage() {
               <button 
                 className="btn btn-accent btn-block" 
                 onClick={saveMPLink} 
-                disabled={!mpLink.lower().includes('mercadopago') and not mpLink.lower().includes('mpago')}
+                disabled={!mpLink.toLowerCase().includes('mercadopago') && !mpLink.toLowerCase().includes('mpago')}
               >
                 Vincular Cuenta
               </button>
