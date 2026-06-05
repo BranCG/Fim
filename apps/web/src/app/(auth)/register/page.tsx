@@ -687,20 +687,22 @@ function RegisterForm() {
       }
     }
     if (step === 2) {
-      if (!selfie.url) { setError('Por favor, sube la foto de tu Selfie con la Cédula.'); return; }
-      if (!idFront.url) { setError('Por favor, sube la foto frontal de tu Cédula.'); return; }
-      if (!idBack.url) { setError('Por favor, sube la foto posterior de tu Cédula.'); return; }
+      if (selfie.loading || idFront.loading || idBack.loading) { setError('Espera a que terminen de subirse todas las fotos.'); return; }
+      if (!selfie.url) { setError(selfie.preview ? 'La foto Selfie con Cédula no pudo subirse. Inténtalo de nuevo.' : 'Por favor, sube la foto de tu Selfie con la Cédula.'); return; }
+      if (!idFront.url) { setError(idFront.preview ? 'La foto frontal de tu Cédula no pudo subirse. Inténtalo de nuevo.' : 'Por favor, sube la foto frontal de tu Cédula.'); return; }
+      if (!idBack.url) { setError(idBack.preview ? 'La foto posterior de tu Cédula no pudo subirse. Inténtalo de nuevo.' : 'Por favor, sube la foto posterior de tu Cédula.'); return; }
     }
     if (step === 3 && role === 'driver') {
+      if (licenseFront.loading || licenseBack.loading || vehiclePhoto.loading) { setError('Espera a que terminen de subirse todas las fotos.'); return; }
       if (!vehiclePlate) { setError('Por favor, ingresa la patente de tu vehículo.'); return; }
       if (!vehicleBrand) { setError('Por favor, ingresa la marca de tu vehículo.'); return; }
       if (!vehicleModel) { setError('Por favor, ingresa el modelo de tu vehículo.'); return; }
       if (!vehicleYear) { setError('Por favor, selecciona el año de tu vehículo.'); return; }
       if (parseInt(vehicleYear) < 2010) { setError('Tu vehículo debe ser del año 2010 o posterior para operar en Fim.'); return; }
       if (!licenseNumber) { setError('Por favor, ingresa el número de tu licencia.'); return; }
-      if (!licenseFront.url) { setError('Por favor, sube la foto frontal de tu licencia de conducir.'); return; }
-      if (!licenseBack.url) { setError('Por favor, sube la foto posterior de tu licencia de conducir.'); return; }
-      if (!vehiclePhoto.url) { setError('Por favor, sube la foto de tu vehículo.'); return; }
+      if (!licenseFront.url) { setError(licenseFront.preview ? 'La foto frontal de la licencia no pudo subirse. Inténtalo de nuevo.' : 'Por favor, sube la foto frontal de tu licencia de conducir.'); return; }
+      if (!licenseBack.url) { setError(licenseBack.preview ? 'La foto posterior de la licencia no pudo subirse. Inténtalo de nuevo.' : 'Por favor, sube la foto posterior de tu licencia de conducir.'); return; }
+      if (!vehiclePhoto.url) { setError(vehiclePhoto.preview ? 'La foto del vehículo no pudo subirse. Inténtalo de nuevo.' : 'Por favor, sube la foto de tu vehículo.'); return; }
     }
     setStep(prev => (prev + 1) as Step);
   }
@@ -1204,9 +1206,16 @@ function RegisterForm() {
             <div style={{ display: 'flex', gap: '12px' }}>
               {step > 1 && <button className="btn btn-secondary" onClick={() => setStep(prev => (prev - 1) as Step)} style={{ flex: 1 }}>Atrás</button>}
               {step < totalSteps ? (
-                <button className="btn btn-primary" onClick={nextStep} style={{ flex: 2, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
-                  Continuar
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12" /><polyline points="12 5 19 12 12 19" /></svg>
+                <button
+                  className="btn btn-primary"
+                  onClick={nextStep}
+                  disabled={[selfie, idFront, idBack, licenseFront, licenseBack, vehiclePhoto].some(u => u.loading)}
+                  style={{ flex: 2, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
+                >
+                  {[selfie, idFront, idBack, licenseFront, licenseBack, vehiclePhoto].some(u => u.loading)
+                    ? <><span className="spinner-sm" /> Subiendo foto...</>
+                    : <>Continuar <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12" /><polyline points="12 5 19 12 12 19" /></svg></>
+                  }
                 </button>
               ) : (
                 <button className="btn btn-primary btn-block ${loading ? 'btn-loading' : ''}" onClick={handleSubmit} disabled={loading} style={{ flex: 2 }}>
