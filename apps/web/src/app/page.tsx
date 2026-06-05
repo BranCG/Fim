@@ -375,26 +375,7 @@ export default function Home() {
     }}>
       <SplashScreen />
       
-      {/* Promo Ribbon */}
-      <div style={{
-        background: activeView === 'passenger' 
-          ? 'linear-gradient(90deg, #FFD700 0%, #FFA500 100%)'
-          : 'linear-gradient(90deg, var(--accent) 0%, #6D28D9 100%)',
-        color: '#000',
-        textAlign: 'center',
-        padding: '8px 24px',
-        fontSize: '0.9rem',
-        fontWeight: 800,
-        position: 'relative',
-        zIndex: 101,
-        boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
-        letterSpacing: '0.05em',
-        transition: 'all 0.3s ease'
-      }}>
-        {activeView === 'passenger' 
-          ? '¡VIAJA SIN COMISIONES INTERMEDIAS! PAGA EL PRECIO JUSTO DIRECTO AL CONDUCTOR'
-          : '¡0% COMISIÓN! CONDUCE BAJO TUS PROPIAS REGLAS Y QUÉDATE CON EL 100%'}
-      </div>
+
 
       {/* Navbar */}
       <nav className="navbar-container" style={{
