@@ -45,50 +45,11 @@ interface DriverInfo {
 const SANTIAGO = { lat: -33.4489, lng: -70.6693 };
 
 // --- ICONOS SVG ---
-const IconClock = ({ size = 24 }: { size?: number }) => (
-  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" id="Time-Clock-Circle--Streamline-Ultimate" height={size} width={size}>
-    <desc>
-      Time Clock Circle Streamline Icon: https://streamlinehq.com
-    </desc>
-    <path fill="#66e1ff" d="M11.9992 22.5426c5.822 0 10.5417 -4.7197 10.5417 -10.5417 0 -5.82201 -4.7197 -10.54167 -10.5417 -10.54167 -5.82201 0 -10.54168 4.71966 -10.54168 10.54167 0 5.822 4.71967 10.5417 10.54168 10.5417Z" strokeWidth="1" />
-    <path fill="#c2f3ff" d="M4.54472 19.4554c-1.97702 -1.977 -3.08769 -4.6585 -3.08769 -7.4544 0 -2.79588 1.11067 -5.47728 3.08769 -7.4543C6.52173 2.56969 9.20313 1.45901 11.999 1.45901c2.796 0 5.4774 1.11068 7.4544 3.08769L4.54472 19.4554Z" strokeWidth="1" />
-    <path stroke="#191919" strokeLinecap="round" strokeLinejoin="round" d="M11.9992 22.5426c5.822 0 10.5417 -4.7197 10.5417 -10.5417 0 -5.82201 -4.7197 -10.54167 -10.5417 -10.54167 -5.82201 0 -10.54168 4.71966 -10.54168 10.54167 0 5.822 4.71967 10.5417 10.54168 10.5417Z" strokeWidth="1" />
-    <path stroke="#191919" strokeLinecap="round" strokeLinejoin="round" d="M12 6.95923v5.04167l5.5 5.0417" strokeWidth="1" />
-  </svg>
-);
+const IconClock = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg>;
 
-const IconLogout = ({ size = 24 }: { size?: number }) => (
-  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" id="Login-1--Streamline-Ultimate" height={size} width={size}>
-    <desc>
-      Login 1 Streamline Icon: https://streamlinehq.com
-    </desc>
-    <path fill="#66e1ff" d="M10.6248 3.29163H4.20817c-0.50626 0 -0.91667 0.41041 -0.91667 0.91666V19.7916c0 0.5063 0.41041 0.9167 0.91667 0.9167h6.41663c0.5063 0 0.9167 -0.4104 0.9167 -0.9167V4.20829c0 -0.50625 -0.4104 -0.91666 -0.9167 -0.91666Z" strokeWidth="1" />
-    <path stroke="#191919" strokeLinecap="round" strokeLinejoin="round" d="M13.3752 5.58337V2.37504c0 -0.24312 -0.0967 -0.47627 -0.2685 -0.64818 -0.1719 -0.17191 -0.4051 -0.26849 -0.6482 -0.26849H2.37516c-0.24312 0 -0.47627 0.09658 -0.64818 0.26849 -0.17191 0.17191 -0.26848 0.40506 -0.26848 0.64818V21.625c0 0.2431 0.09657 0.4763 0.26848 0.6482s0.40506 0.2685 0.64818 0.2685H12.4585c0.2431 0 0.4763 -0.0966 0.6482 -0.2685 0.1718 -0.1719 0.2685 -0.4051 0.2685 -0.6482v-3.2083" strokeWidth="1" />
-    <path stroke="#191919" strokeLinecap="round" strokeLinejoin="round" d="M5.125 12h17.4167" strokeWidth="1" />
-    <path stroke="#191919" strokeLinecap="round" strokeLinejoin="round" d="M9.70833 7.41663 5.125 12l4.58333 4.5833" strokeWidth="1" />
-  </svg>
-);
+const IconLogout = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" /><polyline points="16 17 21 12 16 7" /><line x1="21" y1="12" x2="9" y2="12" /></svg>;
 
-const IconUser = ({ size = 24 }: { size?: number }) => (
-  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" id="Single-Man-Focus--Streamline-Ultimate" height={size} width={size}>
-    <desc>
-      Single Man Focus Streamline Icon: https://streamlinehq.com
-    </desc>
-    <path fill="#c2f3ff" d="M19.652 3.39154H4.3481c-0.52826 0 -0.9565 0.42824 -0.9565 0.9565V19.652c0 0.5283 0.42824 0.9565 0.9565 0.9565H19.652c0.5283 0 0.9565 -0.4282 0.9565 -0.9565V4.34804c0 -0.52826 -0.4282 -0.9565 -0.9565 -0.9565Z" strokeWidth="1" />
-    <path stroke="#191919" strokeLinecap="round" strokeLinejoin="round" d="M7.69548 22.9997H1.9565c-0.25369 0 -0.49697 -0.1008 -0.67635 -0.2802C1.10077 22.5402 1 22.2969 1 22.0432v-5.739" strokeWidth="1" />
-    <path stroke="#191919" strokeLinecap="round" strokeLinejoin="round" d="M7.69548 1.00031H1.9565c-0.25369 0 -0.49697 0.10077 -0.67635 0.28015C1.10077 1.45983 1 1.70312 1 1.9568v5.73898" strokeWidth="1" />
-    <path stroke="#191919" strokeLinecap="round" strokeLinejoin="round" d="M16.3047 22.9997h5.739c0.2536 0 0.497 -0.1008 0.6763 -0.2802 0.1794 -0.1793 0.2802 -0.4226 0.2802 -0.6763v-5.739" strokeWidth="1" />
-    <path stroke="#191919" strokeLinecap="round" strokeLinejoin="round" d="M16.3047 1.00031h5.739c0.2536 0 0.497 0.10077 0.6763 0.28015 0.1794 0.17937 0.2802 0.42266 0.2802 0.67634v5.73898" strokeWidth="1" />
-    <path fill="#e3e3e3" d="M17.2607 18.2172c0 -1.3952 -0.5543 -2.7333 -1.5408 -3.7199 -0.9866 -0.9865 -2.3247 -1.5408 -3.7199 -1.5408 -1.3953 0 -2.73333 0.5543 -3.71991 1.5408 -0.98658 0.9866 -1.54083 2.3247 -1.54083 3.7199H17.2607Z" strokeWidth="1" />
-    <path fill="#c77f67" d="M15.0142 7.99235c-0.64 0.27769 -1.3302 0.42094 -2.0278 0.42085 -0.6945 0.00112 -1.3821 -0.1381 -2.0215 -0.4093 -0.6394 -0.27121 -1.21736 -0.6688 -1.69928 -1.16892 0.32693 -0.55636 0.81918 -0.99691 1.40838 -1.2603 0.5891 -0.26339 1.2456 -0.33649 1.8782 -0.20912 0.6327 0.12735 1.2098 0.44884 1.6511 0.91968 0.4413 0.47083 0.7247 1.06757 0.8109 1.70711Z" strokeWidth="1" />
-    <path fill="#ffffff" d="M12.0048 14.4869c1.1276 -0.0004 2.2255 0.3621 3.1312 1.0339 0.9057 0.6718 1.5712 1.6172 1.898 2.6964h0.2267c0 -1.3952 -0.5543 -2.7333 -1.5408 -3.7199 -0.9866 -0.9865 -2.3247 -1.5408 -3.7199 -1.5408 -1.3953 0 -2.73333 0.5543 -3.71991 1.5408 -0.98658 0.9866 -1.54083 2.3247 -1.54083 3.7199h0.22764c0.32839 -1.08 0.99545 -2.0258 1.90265 -2.6975s2.00635 -1.0338 3.13525 -1.0328Z" strokeWidth="1" />
-    <path fill="#e3bfb3" d="M11.9438 6.83501c0.502 0.00044 0.9963 0.12364 1.4397 0.35888 0.4435 0.23523 0.8227 0.57536 1.1046 0.99074 0.1785 -0.0549 0.354 -0.11875 0.5261 -0.1913 -0.086 -0.63959 -0.3693 -1.23644 -0.8106 -1.7074 -0.4412 -0.47097 -1.0183 -0.79259 -1.651 -0.92007 -0.6326 -0.12747 -1.2892 -0.05445 -1.8784 0.20888 -0.5892 0.26335 -1.0816 0.70389 -1.40858 1.26027 0.23368 0.24194 0.4899 0.46102 0.76518 0.65425 0.5464 -0.42625 1.22 -0.65666 1.913 -0.65425Z" strokeWidth="1" />
-    <path stroke="#191919" strokeLinecap="round" strokeLinejoin="round" d="M17.2607 18.2172c0 -1.3952 -0.5543 -2.7333 -1.5408 -3.7199 -0.9866 -0.9865 -2.3247 -1.5408 -3.7199 -1.5408 -1.3953 0 -2.73333 0.5543 -3.71991 1.5408 -0.98658 0.9866 -1.54083 2.3247 -1.54083 3.7199H17.2607Z" strokeWidth="1" />
-    <path stroke="#191919" strokeLinecap="round" strokeLinejoin="round" d="M15.0223 7.99231h-0.0096" strokeWidth="1" />
-    <path stroke="#191919" strokeLinecap="round" strokeLinejoin="round" d="M15.0142 7.99235c-0.64 0.27769 -1.3302 0.42094 -2.0278 0.42085 -0.6945 0.00112 -1.3821 -0.1381 -2.0215 -0.4093 -0.6394 -0.27121 -1.21736 -0.6688 -1.69928 -1.16892 0.32693 -0.55636 0.81918 -0.99691 1.40838 -1.2603 0.5891 -0.26339 1.2456 -0.33649 1.8782 -0.20912 0.6327 0.12735 1.2098 0.44884 1.6511 0.91968 0.4413 0.47083 0.7247 1.06757 0.8109 1.70711Z" strokeWidth="1" />
-    <path fill="#ffdda1" stroke="#191919" strokeLinecap="round" strokeLinejoin="round" d="M15.0512 8.41321c0 0.82445 -0.3275 1.61519 -0.9105 2.19809 -0.583 0.583 -1.3736 0.9105 -2.1981 0.9105 -0.8245 0 -1.6151 -0.3275 -2.19812 -0.9105 -0.58298 -0.5829 -0.9105 -1.37364 -0.9105 -2.19809 0.00297 -0.55466 0.15139 -1.09885 0.43043 -1.57822 0.48191 0.50012 1.05989 0.89771 1.69929 1.16892 0.6393 0.2712 1.327 0.41042 2.0215 0.4093 0.6976 0.00009 1.3878 -0.14316 2.0278 -0.42086 0.0273 0.13857 0.0401 0.27963 0.0382 0.42086Z" strokeWidth="1" />
-  </svg>
-);
+const IconUser = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>;
 
 const IconShieldLock = ({ size = 24 }: { size?: number }) => (
   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" id="Shield-Lock--Streamline-Ultimate" height={size} width={size}>

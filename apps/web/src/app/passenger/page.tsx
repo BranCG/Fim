@@ -48,16 +48,7 @@ interface Driver {
 const SANTIAGO_CENTER = { lat: -33.4489, lng: -70.6693 };
 
 // --- ICONOS SVG ---
-const IconClock = ({ size = 24 }: { size?: number }) => (
-  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" id="Time-Clock-Circle--Streamline-Ultimate" height={size} width={size}>
-    <desc>
-      Time Clock Circle Streamline Icon: https://streamlinehq.com
-    </desc>
-    <path fill="#c2f3ff" d="M12 21a9 9 0 1 0 0 -18 9 9 0 0 0 0 18Z" strokeWidth="1" />
-    <path stroke="#191919" strokeLinecap="round" strokeLinejoin="round" d="M12 21a9 9 0 1 0 0 -18 9 9 0 0 0 0 18Z" strokeWidth="1" />
-    <path stroke="#191919" strokeLinecap="round" strokeLinejoin="round" d="M12 6.5v6.2c0 0.16 0.08 0.31 0.22 0.39l4.28 2.51" strokeWidth="1" />
-  </svg>
-);
+const IconClock = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg>;
 const IconX = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>;
 const IconCar = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="1" y="13" width="22" height="8" rx="2"/><path d="M17 13l-1.5-6h-7L7 13"/><circle cx="7" cy="17" r="2"/><circle cx="17" cy="17" r="2"/></svg>;
 const IconPin = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>;
@@ -69,32 +60,9 @@ const IconAlert = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="no
 const IconCash = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2"/><path d="M6 12h.01M18 12h.01"/></svg>;
 const IconCard = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>;
 const IconParty = () => <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 4.5l9 9 3.5-4.5-9-9-3.5 4.5z"/><path d="M13 13.5l2 2.5 5-5-2-2.5-5 5z"/><path d="M15 15.5l4.5 4.5.5-1.5 1.5.5-4.5-4.5-.5 1.5-1.5-.5z"/><path d="M21 21l-9-9"/><path d="M18 11l.5.5"/><path d="M19 10l.5.5"/></svg>;
-const IconLogout = ({ size = 24 }: { size?: number }) => (
-  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" id="Login-1--Streamline-Ultimate" height={size} width={size}>
-    <desc>
-      Login 1 Streamline Icon: https://streamlinehq.com
-    </desc>
-    <path fill="#ffbfc5" d="M10.6248 3.29163H4.20817c-0.50626 0 -0.91667 0.41041 -0.91667 0.91666V19.7916c0 0.5063 0.41041 0.9167 0.91667 0.9167h6.41663c0.5063 0 0.9167 -0.4104 0.9167 -0.9167V4.20829c0 -0.50625 -0.4104 -0.91666 -0.9167 -0.91666Z" strokeWidth={1} />
-    <path stroke="#191919" strokeLinecap="round" strokeLinejoin="round" d="M13.3752 5.58337V2.37504c0 -0.24312 -0.0967 -0.47627 -0.2685 -0.64818 -0.1719 -0.17191 -0.4051 -0.26849 -0.6482 -0.26849H2.37516c-0.24312 0 -0.47627 0.09658 -0.64818 0.26849 -0.17191 0.17191 -0.26848 0.40506 -0.26848 0.64818V21.625c0 0.2431 0.09657 0.4763 0.26848 0.6482s0.40506 0.2685 0.64818 0.2685H12.4585c0.2431 0 0.4763 -0.0966 0.6482 -0.2685 0.1718 -0.1719 0.2685 -0.4051 0.2685 -0.6482v-3.2083" strokeWidth={1} />
-    <path stroke="#191919" strokeLinecap="round" strokeLinejoin="round" d="M5.125 12h17.4167" strokeWidth={1} />
-    <path stroke="#191919" strokeLinecap="round" strokeLinejoin="round" d="M9.70833 7.41663 5.125 12l4.58333 4.5833" strokeWidth={1} />
-  </svg>
-);
+const IconLogout = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" /><polyline points="16 17 21 12 16 7" /><line x1="21" y1="12" x2="9" y2="12" /></svg>;
 
-const IconUser = ({ size = 24 }: { size?: number }) => (
-  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" id="Single-Man-Focus--Streamline-Ultimate" height={size} width={size}>
-    <desc>
-      Single Man Focus Streamline Icon: https://streamlinehq.com
-    </desc>
-    <path fill="#c2f3ff" d="M19.652 3.39154H4.3481c-0.52826 0 -0.9565 0.42824 -0.9565 0.9565V19.652c0 0.5283 0.42824 0.9565 0.9565 0.9565H19.652c0.5283 0 0.9565 -0.4282 0.9565 -0.9565V4.34804c0 -0.52826 -0.4282 -0.9565 -0.9565 -0.9565Z" strokeWidth="1" />
-    <path stroke="#191919" strokeLinecap="round" strokeLinejoin="round" d="M7.69548 22.9997H1.9565c-0.25369 0 -0.49697 -0.1008 -0.67635 -0.2802C1.10077 22.5402 1 22.2969 1 22.0432v-5.739" strokeWidth="1" />
-    <path stroke="#191919" strokeLinecap="round" strokeLinejoin="round" d="M7.69548 1.00031H1.9565c-0.25369 0 -0.49697 0.10077 -0.67635 0.28015C1.10077 1.45983 1 1.70312 1 1.9568v5.73898" strokeWidth="1" />
-    <path stroke="#191919" strokeLinecap="round" strokeLinejoin="round" d="M16.3047 22.9997h5.739c0.2536 0 0.497 -0.1008 0.6763 -0.2802 0.1794 -0.1793 0.2802 -0.4226 0.2802 -0.6763v-5.739" strokeWidth="1" />
-    <path stroke="#191919" strokeLinecap="round" strokeLinejoin="round" d="M16.3047 1.00031h5.739c0.2536 0 0.497 0.10077 0.6763 0.28015C22.8994 1.45983 23 1.70312 23 1.9568v5.73898" strokeWidth="1" />
-    <path stroke="#191919" strokeLinecap="round" strokeLinejoin="round" d="M12 12a3.5 3.5 0 1 0 0 -7 3.5 3.5 0 0 0 0 7Z" strokeWidth="1" />
-    <path stroke="#191919" strokeLinecap="round" strokeLinejoin="round" d="M5.3042 19.1738a7.1739 7.1739 0 0 1 13.3916 0" strokeWidth="1" />
-  </svg>
-);
+const IconUser = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>;
 
 const IconShieldLock = ({ size = 24 }: { size?: number }) => (
   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" id="Shield-Lock--Streamline-Ultimate" height={size} width={size}>
