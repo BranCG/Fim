@@ -8,12 +8,12 @@ import SplashScreen from '@/components/SplashScreen';
 import api, { getSession } from '@/lib/api';
 
 const SingleNeutralCircleIcon = ({ width = 24, height = 24, style }: { width?: number | string; height?: number | string; style?: React.CSSProperties }) => (
-  <svg 
-    xmlns="http://www.w3.org/2000/svg" 
-    fill="none" 
-    viewBox="0 0 24 24" 
-    id="Single-Neutral-Circle--Streamline-Ultimate" 
-    height={height} 
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    fill="none"
+    viewBox="0 0 24 24"
+    id="Single-Neutral-Circle--Streamline-Ultimate"
+    height={height}
     width={width}
     style={style}
   >
@@ -158,8 +158,8 @@ const CursiveSegmentTypewriter = ({
   }, [displayText, isDeleting, typingText, typingSpeed]);
 
   const isMultiline = typingText.includes('\n');
-  const containerHeight = isMultiline 
-    ? 'clamp(6.5rem, 20vw, 10.5rem)' 
+  const containerHeight = isMultiline
+    ? 'clamp(6.5rem, 20vw, 10.5rem)'
     : 'clamp(3.2rem, 10vw, 5.2rem)';
 
   return (
@@ -175,16 +175,16 @@ const CursiveSegmentTypewriter = ({
       marginBottom: '20px'
     }}>
       {/* Prefix */}
-      <h1 style={{ 
-        fontSize: 'clamp(2.3rem, 7vw, 4rem)', 
-        fontWeight: 900, 
+      <h1 style={{
+        fontSize: 'clamp(2.3rem, 7vw, 4rem)',
+        fontWeight: 900,
         lineHeight: 1.1,
         letterSpacing: '-0.02em',
         margin: 0
       }}>
         {prefix}
       </h1>
-      
+
       {/* Cursive segment container - stable height to avoid shifting */}
       <div style={{
         height: containerHeight,
@@ -194,9 +194,9 @@ const CursiveSegmentTypewriter = ({
         overflow: 'visible',
         margin: '4px 0'
       }}>
-        <span 
-          className="text-gradient" 
-          style={{ 
+        <span
+          className="text-gradient"
+          style={{
             fontFamily: "'Satisfy', 'Dancing Script', 'Caveat', cursive",
             fontWeight: 'normal',
             fontSize: 'clamp(2.5rem, 8vw, 4.5rem)',
@@ -211,9 +211,9 @@ const CursiveSegmentTypewriter = ({
       </div>
 
       {/* Suffix */}
-      <h1 style={{ 
-        fontSize: 'clamp(2.3rem, 7vw, 4rem)', 
-        fontWeight: 900, 
+      <h1 style={{
+        fontSize: 'clamp(2.3rem, 7vw, 4rem)',
+        fontWeight: 900,
         lineHeight: 1.1,
         letterSpacing: '-0.02em',
         margin: 0
@@ -226,12 +226,12 @@ const CursiveSegmentTypewriter = ({
 
 
 const IconWalletColor = () => (
-  <svg 
-    xmlns="http://www.w3.org/2000/svg" 
-    fill="none" 
-    viewBox="0 0 24 24" 
-    id="Credit-Card-1--Streamline-Ultimate" 
-    height="36" 
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    fill="none"
+    viewBox="0 0 24 24"
+    id="Credit-Card-1--Streamline-Ultimate"
+    height="36"
     width="36"
     style={{ flexShrink: 0 }}
   >
@@ -249,12 +249,12 @@ const IconWalletColor = () => (
 );
 
 const IconLinkColor = () => (
-  <svg 
-    xmlns="http://www.w3.org/2000/svg" 
-    fill="none" 
-    viewBox="0 0 24 24" 
-    id="Link-Broken-1--Streamline-Ultimate" 
-    height="36" 
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    fill="none"
+    viewBox="0 0 24 24"
+    id="Link-Broken-1--Streamline-Ultimate"
+    height="36"
     width="36"
     style={{ flexShrink: 0 }}
   >
@@ -277,12 +277,12 @@ const IconLinkColor = () => (
 );
 
 const IconProfileColor = () => (
-  <svg 
-    xmlns="http://www.w3.org/2000/svg" 
-    fill="none" 
-    viewBox="0 0 24 24" 
-    id="Single-Neutral-Folder-Box--Streamline-Ultimate" 
-    height="36" 
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    fill="none"
+    viewBox="0 0 24 24"
+    id="Single-Neutral-Folder-Box--Streamline-Ultimate"
+    height="36"
     width="36"
     style={{ flexShrink: 0 }}
   >
@@ -301,12 +301,12 @@ const IconProfileColor = () => (
 );
 
 const IconCheckColor = () => (
-  <svg 
-    xmlns="http://www.w3.org/2000/svg" 
-    fill="none" 
-    viewBox="0 0 24 24" 
-    id="Cash-Payment-Bills-1--Streamline-Ultimate" 
-    height="36" 
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    fill="none"
+    viewBox="0 0 24 24"
+    id="Cash-Payment-Bills-1--Streamline-Ultimate"
+    height="36"
     width="36"
     style={{ flexShrink: 0 }}
   >
@@ -372,8 +372,8 @@ export default function Home() {
   };
 
   return (
-    <main style={{ 
-      minHeight: '100vh', 
+    <main style={{
+      minHeight: '100vh',
       background: 'var(--bg-primary)',
       ...(activeView === 'driver' ? {
         '--accent': '#8B5CF6',
@@ -385,7 +385,7 @@ export default function Home() {
       } as React.CSSProperties : {})
     }}>
       <SplashScreen />
-      
+
       <style>{`
         @keyframes marquee {
           0% { transform: translateX(0); }
@@ -486,7 +486,7 @@ export default function Home() {
             transition: 'all 0.35s cubic-bezier(0.4, 0, 0.2, 1)',
             zIndex: 1
           }} />
-          
+
           {/* Labels */}
           <div style={{
             width: '50%',
@@ -543,7 +543,7 @@ export default function Home() {
           background: 'radial-gradient(circle, var(--accent-light) 0%, transparent 70%)',
           pointerEvents: 'none',
         }} />
-        
+
         {activeView === 'passenger' ? (
           /* PASAJERO HERO */
           <div key="passenger-hero" style={{
@@ -576,16 +576,16 @@ export default function Home() {
               Viajes Económicos y Directos
             </div>
 
-            <CursiveSegmentTypewriter 
+            <CursiveSegmentTypewriter
               prefix="Viaja"
               typingText={"sin comisiones\nintermedias"}
               suffix="Paga el precio justo."
             />
 
-            <p style={{ 
-              fontSize: 'clamp(1rem, 2vw, 1.25rem)', 
-              maxWidth: '750px', 
-              lineHeight: 1.6, 
+            <p style={{
+              fontSize: 'clamp(1rem, 2vw, 1.25rem)',
+              maxWidth: '750px',
+              lineHeight: 1.6,
               color: 'var(--text-secondary)',
               marginBottom: '32px'
             }}>
@@ -633,16 +633,16 @@ export default function Home() {
               Disponible en Santiago
             </div>
 
-            <CursiveSegmentTypewriter 
+            <CursiveSegmentTypewriter
               prefix="La red de conductores independientes"
               typingText="más rentable"
               suffix="de Chile."
             />
 
-            <p style={{ 
-              fontSize: 'clamp(1rem, 2vw, 1.25rem)', 
-              maxWidth: '750px', 
-              lineHeight: 1.6, 
+            <p style={{
+              fontSize: 'clamp(1rem, 2vw, 1.25rem)',
+              maxWidth: '750px',
+              lineHeight: 1.6,
               color: 'var(--text-secondary)',
               marginBottom: '32px'
             }}>
@@ -665,8 +665,8 @@ export default function Home() {
       {activeView === 'passenger' && (
         <div style={{ animation: 'fadeIn 0.3s ease' }}>
           {/* Beneficio Pasajero Section */}
-          <section style={{ 
-            padding: '60px 24px', 
+          <section style={{
+            padding: '60px 24px',
             background: 'linear-gradient(135deg, rgba(0,229,160,0.08) 0%, rgba(9,9,15,1) 100%)',
             borderTop: '1px solid var(--border)',
             borderBottom: '1px solid var(--border)',
@@ -876,16 +876,16 @@ export default function Home() {
                     }}>
                       {/* Badge MÁS POPULAR */}
                       <div style={{ position: 'absolute', top: '-1px', left: '50%', transform: 'translateX(-50%)', background: 'linear-gradient(135deg, #D4AF37, #B8960C)', padding: '6px 20px', borderRadius: '0 0 10px 10px', fontSize: '0.72rem', fontWeight: 900, color: '#000', letterSpacing: '0.1em', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" /></svg>
                         MÁS POPULAR
                       </div>
 
                       {/* Glow efecto */}
                       <div style={{ position: 'absolute', top: '-60px', right: '-60px', width: '200px', height: '200px', background: 'radial-gradient(circle, rgba(212,175,55,0.15) 0%, transparent 70%)', pointerEvents: 'none' }} />
-                      
+
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginTop: '12px' }}>
                         <div style={{ padding: '8px 14px', background: 'linear-gradient(135deg, #D4AF37, #B8960C)', borderRadius: '8px', fontSize: '0.75rem', fontWeight: 900, color: '#000', letterSpacing: '0.1em', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-                          <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" /></svg>
                           PLAN BLACK
                         </div>
                         <div style={{ padding: '4px 12px', background: 'rgba(212,175,55,0.15)', border: '1px solid rgba(212,175,55,0.3)', borderRadius: '20px', fontSize: '0.7rem', color: '#D4AF37', fontWeight: 800 }}>
@@ -901,7 +901,7 @@ export default function Home() {
                       </div>
 
                       <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.95rem', lineHeight: 1.6, borderLeft: '2px solid rgba(212,175,55,0.4)', paddingLeft: '12px' }}>
-                        Pagas una vez al mes. Acceso ilimitado los 30 días. <strong style={{color: '#D4AF37'}}>¡Por lanzamiento, los primeros 10 días son gratis!</strong> Luego de eso se te cobrará la membresía para continuar.
+                        Pagas una vez al mes. Acceso ilimitado los 30 días. <strong style={{ color: '#D4AF37' }}>¡Por lanzamiento, los primeros 10 días son gratis!</strong> Luego de eso se te cobrará la membresía para continuar.
                       </p>
 
                       <ul style={{ listStyle: 'none', padding: 0, display: 'flex', flexDirection: 'column', gap: '10px' }}>
@@ -962,7 +962,7 @@ export default function Home() {
                     }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                         <div style={{ padding: '8px 14px', background: 'linear-gradient(135deg, #3B82F6, #1D4ED8)', borderRadius: '8px', fontSize: '0.75rem', fontWeight: 900, color: '#fff', letterSpacing: '0.1em', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-                          <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10"/></svg>
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10" /></svg>
                           PLAN COMFORT
                         </div>
                         <div style={{ padding: '4px 12px', background: 'rgba(59,130,246,0.15)', border: '1px solid rgba(59,130,246,0.4)', borderRadius: '20px', fontSize: '0.7rem', color: '#60A5FA', fontWeight: 800 }}>
@@ -984,12 +984,12 @@ export default function Home() {
                       </div>
 
                       <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.95rem', lineHeight: 1.6, borderLeft: '2px solid rgba(59,130,246,0.5)', paddingLeft: '12px' }}>
-                        <strong>Membresía Crédito:</strong> <strong style={{color: '#60A5FA'}}>¡Por lanzamiento, los primeros 10 días son gratis!</strong> Luego de eso pagas $20.000 por día trabajado hasta completar la meta de $180.000 en el mes. ¡Al cumplir la meta, el resto del mes es gratis!
+                        <strong>Membresía Crédito:</strong> <strong style={{ color: '#60A5FA' }}>¡Por lanzamiento, los primeros 10 días son gratis!</strong> Luego de eso pagas $20.000 por día trabajado hasta completar la meta de $180.000 en el mes. ¡Al cumplir la meta, el resto del mes es gratis!
                       </p>
 
                       <div style={{ background: 'rgba(251,191,36,0.08)', border: '1px solid rgba(251,191,36,0.2)', borderRadius: '10px', padding: '14px', fontSize: '0.82rem' }}>
                         <div style={{ color: '#FBBF24', fontWeight: 800, marginBottom: '6px', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg>
                           ¿Cómo funciona?
                         </div>
                         <div style={{ color: 'rgba(255,255,255,0.65)', lineHeight: 1.6 }}>
@@ -1057,7 +1057,7 @@ export default function Home() {
 
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                         <div style={{ padding: '8px 14px', background: 'linear-gradient(135deg, #10B981, #059669)', borderRadius: '8px', fontSize: '0.75rem', fontWeight: 900, color: '#fff', letterSpacing: '0.1em', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-                          <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 2 22 22 22"/></svg>
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 2 22 22 22" /></svg>
                           PLAN FLEX
                         </div>
                         <div style={{ padding: '4px 12px', background: 'rgba(16,185,129,0.15)', border: '1px solid rgba(16,185,129,0.3)', borderRadius: '20px', fontSize: '0.7rem', color: '#34D399', fontWeight: 800 }}>
@@ -1073,7 +1073,7 @@ export default function Home() {
                       </div>
 
                       <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.95rem', lineHeight: 1.6, borderLeft: '2px solid rgba(16,185,129,0.4)', paddingLeft: '12px' }}>
-                        Pensado para quienes solo trabajan el fin de semana. <strong style={{color: '#34D399'}}>¡Por lanzamiento, tu primer fin de semana es gratis!</strong> Luego de eso pagas $60.000 por el acceso de Viernes, Sábado y Domingo.
+                        Pensado para quienes solo trabajan el fin de semana. <strong style={{ color: '#34D399' }}>¡Por lanzamiento, tu primer fin de semana es gratis!</strong> Luego de eso pagas $60.000 por el acceso de Viernes, Sábado y Domingo.
                       </p>
 
                       <div style={{ background: 'rgba(52,211,153,0.06)', border: '1px solid rgba(52,211,153,0.15)', borderRadius: '10px', padding: '14px' }}>
@@ -1152,10 +1152,10 @@ export default function Home() {
                     <label className="form-label" style={{ display: 'flex', justifyContent: 'space-between' }}>
                       Viajes por semana <span style={{ color: 'var(--accent)', fontWeight: 800 }}>{tripsPerWeek}</span>
                     </label>
-                    <input 
-                      type="range" 
-                      min="10" 
-                      max="150" 
+                    <input
+                      type="range"
+                      min="10"
+                      max="150"
                       value={tripsPerWeek}
                       onChange={(e) => setTripsPerWeek(parseInt(e.target.value))}
                       style={{ width: '100%', accentColor: 'var(--accent)' }}
@@ -1163,28 +1163,28 @@ export default function Home() {
                   </div>
                   <div className="form-group">
                     <label className="form-label">Valor promedio por viaje ($)</label>
-                    <input 
-                      type="number" 
+                    <input
+                      type="number"
                       value={avgPrice}
                       onChange={(e) => setAvgPrice(parseInt(e.target.value) || 0)}
-                      className="form-input" 
+                      className="form-input"
                       style={{ fontSize: '1.2rem', padding: '12px' }}
                     />
                   </div>
                 </div>
               </div>
 
-              <div className="calc-card" style={{ 
-                background: 'var(--bg-primary)', 
-                padding: '36px', 
-                borderRadius: 'var(--radius-lg)', 
+              <div className="calc-card" style={{
+                background: 'var(--bg-primary)',
+                padding: '36px',
+                borderRadius: 'var(--radius-lg)',
                 border: '2px solid var(--border)',
                 textAlign: 'center',
                 boxShadow: '0 30px 60px rgba(0,0,0,0.4)',
                 position: 'relative',
                 overflow: 'hidden'
               }}>
-                <div style={{ 
+                <div style={{
                   position: 'absolute', top: 0, left: 0, width: '100%', height: '4px', background: '#ff4757'
                 }} />
                 <div style={{ fontSize: '0.9rem', color: '#ff4757', fontWeight: 800, textTransform: 'uppercase', marginBottom: '8px', letterSpacing: '0.1em' }}>Pérdida semanal estimada</div>
@@ -1263,9 +1263,9 @@ export default function Home() {
 
                 {/* Bottom: Steps Details Box */}
                 <div style={{ width: '100%', maxWidth: '600px', margin: '0 auto' }}>
-                  <div className="card" style={{ 
-                    padding: '32px', 
-                    background: 'var(--bg-secondary)', 
+                  <div className="card" style={{
+                    padding: '32px',
+                    background: 'var(--bg-secondary)',
                     border: '1px solid var(--border)',
                     boxShadow: '0 20px 40px rgba(0,0,0,0.3)',
                     borderRadius: 'var(--radius-lg)',
@@ -1279,7 +1279,7 @@ export default function Home() {
                         <span style={{ fontSize: '0.8rem', color: 'var(--accent)', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.15em' }}>Paso 1</span>
                         <h3 style={{ fontSize: '1.3rem', fontWeight: 800, marginTop: '8px', marginBottom: '12px', color: 'white' }}>Registro y Validación Biométrica</h3>
                         <p style={{ fontSize: '0.95rem', color: 'var(--text-secondary)', lineHeight: '1.6', margin: 0 }}>
-                          Regístrate como Conductor en Fim. Sube tu licencia de conducir profesional y pasa la verificación de identidad para garantizar la seguridad de la comunidad.
+                          Regístrate como Conductor en Fim. Sube tu licencia de conducir y pasa la verificación de identidad para garantizar la seguridad de la comunidad.
                         </p>
                       </div>
                     )}

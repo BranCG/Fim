@@ -10,20 +10,20 @@ import Logo from '@/components/Logo';
 
 const IconCrown = () => (
   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-    <path d="m2 4 3 12h14l3-12-6 7-4-7-4 7-6-7z"/>
-    <path d="M5 20h14"/>
+    <path d="m2 4 3 12h14l3-12-6 7-4-7-4 7-6-7z" />
+    <path d="M5 20h14" />
   </svg>
 );
 
 const IconShield = () => (
   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
   </svg>
 );
 
 const IconZap = () => (
   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-    <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+    <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
   </svg>
 );
 
@@ -44,21 +44,21 @@ const emptyUpload = (): FileUpload => ({ file: null, preview: null, url: null, l
 function validateRut(rut: string) {
   const cleanRut = rut.replace(/\./g, '').replace(/-/g, '').toUpperCase();
   if (!/^[0-9]{7,8}[0-9K]$/.test(cleanRut)) return false;
-  
+
   const body = cleanRut.slice(0, -1);
   const dv = cleanRut.slice(-1);
-  
+
   let suma = 0;
   let multiplo = 2;
-  
+
   for (let i = body.length - 1; i >= 0; i--) {
     suma += parseInt(body[i]) * multiplo;
     multiplo = multiplo === 7 ? 2 : multiplo + 1;
   }
-  
+
   const dvEsperado = 11 - (suma % 11);
   const dvFinal = dvEsperado === 11 ? '0' : dvEsperado === 10 ? 'K' : dvEsperado.toString();
-  
+
   return dv === dvFinal;
 }
 
@@ -142,8 +142,8 @@ function RegisterForm() {
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      const isMobileApp = (window as any).Capacitor || 
-        window.location.origin.includes('capacitor://') || 
+      const isMobileApp = (window as any).Capacitor ||
+        window.location.origin.includes('capacitor://') ||
         ((window.location.hostname === 'localhost' || window.location.hostname === '') && window.location.port === '');
       setIsMobile(!!isMobileApp);
     }
@@ -317,8 +317,8 @@ function RegisterForm() {
       console.error('Native Google Signup Error:', err);
       const errMsg = err?.message || err?.errorMessage || (typeof err === 'string' ? err : JSON.stringify(err)) || '';
       const isCancel = errMsg.toLowerCase().includes('cancel') ||
-                       errMsg.toLowerCase().includes('12501') ||
-                       errMsg.toLowerCase().includes('user finished');
+        errMsg.toLowerCase().includes('12501') ||
+        errMsg.toLowerCase().includes('user finished');
       if (!isCancel) {
         setError(`Error al registrarse con Google: ${errMsg}`);
       }
@@ -326,7 +326,7 @@ function RegisterForm() {
       setLoading(false);
     }
   };
-  
+
 
   const totalSteps = role === 'driver' ? 4 : 2;
 
@@ -339,7 +339,7 @@ function RegisterForm() {
     if (!file) return;
 
     const preview = URL.createObjectURL(file);
-    
+
     // Validar duplicados
     const currentUploads = [idFront, idBack, selfie, licenseFront, licenseBack, vehiclePhoto];
     const isDuplicate = currentUploads.some(u => u.file && u.file.name === file.name && u.file.size === file.size);
@@ -367,10 +367,10 @@ function RegisterForm() {
         );
 
         // Omitir OCR en dispositivos móviles (Capacitor) para prevenir bloqueos por Web Workers/CDN
-        const isMobile = typeof window !== 'undefined' && 
-          ((window as any).Capacitor || 
-           window.location.origin.includes('capacitor://') || 
-           ((window.location.hostname === 'localhost' || window.location.hostname === '') && window.location.port === ''));
+        const isMobile = typeof window !== 'undefined' &&
+          ((window as any).Capacitor ||
+            window.location.origin.includes('capacitor://') ||
+            ((window.location.hostname === 'localhost' || window.location.hostname === '') && window.location.port === ''));
 
         if (!isMobile) {
           ocrText = await Promise.race([ocrPromise, timeoutPromise]);
@@ -431,7 +431,7 @@ function RegisterForm() {
                 <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.5)' }}>
                   <div className="spinner" style={{ marginBottom: '8px' }} />
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" /></svg>
                     <span style={{ fontSize: '0.8rem', fontWeight: 600 }}>ESCANEANDO...</span>
                   </div>
                 </div>
@@ -440,7 +440,7 @@ function RegisterForm() {
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
               <div style={{ marginBottom: '8px', color: 'var(--text-muted)' }}>
-                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" /><circle cx="12" cy="13" r="4" /></svg>
               </div>
               <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>Toca para capturar</p>
               {hint && <p style={{ color: 'var(--text-muted)', fontSize: '0.78rem', marginTop: '4px' }}>{hint}</p>}
@@ -587,13 +587,13 @@ function RegisterForm() {
               display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '8px 0'
             }}>
               <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
-                <polyline points="22,6 12,13 2,6"/>
+                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
+                <polyline points="22,6 12,13 2,6" />
               </svg>
             </div>
             <h2 style={{ color: 'var(--text-primary)', fontWeight: 800, fontSize: '1.4rem' }}>Verifica tu correo</h2>
             <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', lineHeight: 1.5 }}>
-              Hemos enviado un código de 6 dígitos a <br/>
+              Hemos enviado un código de 6 dígitos a <br />
               <strong style={{ color: 'var(--text-primary)' }}>{verificationEmail}</strong>
             </p>
           </div>
@@ -695,7 +695,8 @@ function RegisterForm() {
       if (!vehiclePlate) { setError('Por favor, ingresa la patente de tu vehículo.'); return; }
       if (!vehicleBrand) { setError('Por favor, ingresa la marca de tu vehículo.'); return; }
       if (!vehicleModel) { setError('Por favor, ingresa el modelo de tu vehículo.'); return; }
-      if (!vehicleYear) { setError('Por favor, ingresa el año de tu vehículo.'); return; }
+      if (!vehicleYear) { setError('Por favor, selecciona el año de tu vehículo.'); return; }
+      if (parseInt(vehicleYear) < 2010) { setError('Tu vehículo debe ser del año 2010 o posterior para operar en Fim.'); return; }
       if (!licenseNumber) { setError('Por favor, ingresa el número de tu licencia.'); return; }
       if (!licenseFront.url) { setError('Por favor, sube la foto frontal de tu licencia de conducir.'); return; }
       if (!licenseBack.url) { setError('Por favor, sube la foto posterior de tu licencia de conducir.'); return; }
@@ -708,7 +709,7 @@ function RegisterForm() {
 
   return (
     <div className="app-container" style={{ background: 'var(--bg-primary)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', padding: '24px' }}>
-      
+
       <div style={{ position: 'absolute', top: '24px', left: '24px' }}>
         <Link href="/" style={{ color: 'var(--text-muted)', fontSize: '0.85rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '8px' }}>
           ← REGRESAR AL INICIO
@@ -716,20 +717,20 @@ function RegisterForm() {
       </div>
 
       <div className="card" style={{ width: '100%', maxWidth: '480px', padding: '40px 32px', boxShadow: 'var(--shadow-lg)', border: '1px solid var(--border)' }}>
-        
+
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px', marginBottom: '32px' }}>
           <Logo width="160" height="60" />
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
             {steps.map((s, i) => (
               <div key={s} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <div style={{ 
-                  width: '24px', height: '24px', borderRadius: '50%', 
+                <div style={{
+                  width: '24px', height: '24px', borderRadius: '50%',
                   background: step > i + 1 ? 'var(--accent)' : step === i + 1 ? 'var(--accent)' : 'var(--bg-secondary)',
                   color: step >= i + 1 ? '#09090F' : 'var(--text-muted)',
                   display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.7rem', fontWeight: 800
                 }}>
                   {step > i + 1 ? (
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
                   ) : i + 1}
                 </div>
                 {i < steps.length - 1 && <div style={{ width: '12px', height: '1px', background: 'var(--border)' }} />}
@@ -742,9 +743,9 @@ function RegisterForm() {
           {(['passenger', 'driver'] as Role[]).map(r => (
             <button key={r} onClick={() => { setRole(r); setStep(1); }} style={{ padding: '10px', border: 'none', borderRadius: 'calc(var(--radius) - 4px)', fontWeight: 600, fontSize: '0.8rem', background: role === r ? 'var(--accent)' : 'transparent', color: role === r ? '#09090F' : 'var(--text-muted)', cursor: 'pointer', transition: 'var(--transition)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
               {r === 'passenger' ? (
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2"/><circle cx="7" cy="17" r="2"/><path d="M9 17h6"/><circle cx="17" cy="17" r="2"/><path d="M12 10V6"/><path d="M9 6h6"/></svg>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2" /><circle cx="7" cy="17" r="2" /><path d="M9 17h6" /><circle cx="17" cy="17" r="2" /><path d="M12 10V6" /><path d="M9 6h6" /></svg>
               ) : (
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2"/><circle cx="7" cy="17" r="2"/><path d="M9 17h6"/><circle cx="17" cy="17" r="2"/></svg>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2" /><circle cx="7" cy="17" r="2" /><path d="M9 17h6" /><circle cx="17" cy="17" r="2" /></svg>
               )}
               {r === 'passenger' ? 'Pasajero' : 'Conductor'}
             </button>
@@ -787,15 +788,15 @@ function RegisterForm() {
                 alignItems: 'center',
                 justifyContent: 'center'
               }}>
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" /></svg>
               </div>
               <div>
                 <h3 style={{ color: 'var(--text-primary)', fontWeight: 800, fontSize: '1.1rem', marginBottom: '8px' }}>Atención</h3>
                 <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', lineHeight: 1.5 }}>{error}</p>
               </div>
-              <button 
-                className="btn btn-primary" 
-                onClick={() => setError('')} 
+              <button
+                className="btn btn-primary"
+                onClick={() => setError('')}
                 style={{ width: '100%', marginTop: '8px' }}
               >
                 Entendido
@@ -834,10 +835,10 @@ function RegisterForm() {
                         }}
                       >
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                          <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
-                          <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
-                          <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" fill="#FBBC05"/>
-                          <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+                          <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" />
+                          <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853" />
+                          <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" fill="#FBBC05" />
+                          <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335" />
                         </svg>
                         Registrarse con Google
                       </button>
@@ -853,50 +854,50 @@ function RegisterForm() {
               )}
               {isGoogle && (
                 <div style={{ background: 'rgba(212,175,55,0.06)', border: '1px solid rgba(212,175,55,0.2)', borderRadius: '10px', padding: '12px', fontSize: '0.85rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" /><polyline points="22 4 12 14.01 9 11.01" /></svg>
                   <span>Registro vinculado con cuenta de Google</span>
                 </div>
               )}
               <div className="form-group">
                 <label className="form-label">Nombre completo</label>
-                <input 
-                  className="form-input" 
-                  placeholder="Ej: Juan Pérez" 
-                  value={name} 
-                  onChange={e => setName(e.target.value)} 
+                <input
+                  className="form-input"
+                  placeholder="Ej: Juan Pérez"
+                  value={name}
+                  onChange={e => setName(e.target.value)}
                   readOnly={isGoogle}
                   style={isGoogle ? { opacity: 0.7, background: 'var(--bg-secondary)' } : {}}
                 />
               </div>
               <div className="form-group">
                 <label className="form-label">Email</label>
-                <input 
-                  className="form-input" 
-                  placeholder="tu@email.com" 
-                  value={email} 
-                  onChange={e => setEmail(e.target.value)} 
+                <input
+                  className="form-input"
+                  placeholder="tu@email.com"
+                  value={email}
+                  onChange={e => setEmail(e.target.value)}
                   readOnly={isGoogle}
                   style={isGoogle ? { opacity: 0.7, background: 'var(--bg-secondary)' } : {}}
                 />
               </div>
               <div className="form-group">
                 <label className="form-label">RUT (sin puntos y con guión)</label>
-                <input 
-                  className="form-input" 
-                  placeholder="12345678-9" 
-                  value={rut} 
+                <input
+                  className="form-input"
+                  placeholder="12345678-9"
+                  value={rut}
                   onChange={e => {
                     const val = e.target.value.replace(/\./g, '').replace(/[^0-9kK-]/g, '');
                     setRut(val);
-                  }} 
+                  }}
                 />
               </div>
               <div className="form-group">
                 <label className="form-label">Teléfono</label>
-                <input 
-                  className="form-input" 
-                  placeholder="+569..." 
-                  value={phone} 
+                <input
+                  className="form-input"
+                  placeholder="+569..."
+                  value={phone}
                   onChange={e => {
                     const prefix = '+569';
                     let val = e.target.value;
@@ -907,19 +908,19 @@ function RegisterForm() {
                       val = prefix + rest.slice(0, 8);
                     }
                     setPhone(val);
-                  }} 
+                  }}
                 />
               </div>
               <div className="form-group" style={{ position: 'relative' }} ref={addressContainerRef}>
                 <label className="form-label">Dirección</label>
-                <input 
-                  className="form-input" 
-                  placeholder="Tu dirección actual" 
-                  value={address} 
+                <input
+                  className="form-input"
+                  placeholder="Tu dirección actual"
+                  value={address}
                   onChange={e => {
                     ignoreNextAutocompleteRef.current = false;
                     setAddress(e.target.value);
-                  }} 
+                  }}
                   onFocus={() => {
                     if (addressSuggestions.length > 0) {
                       setShowAddressDropdown(true);
@@ -1015,6 +1016,62 @@ function RegisterForm() {
 
           {step === 3 && role === 'driver' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+
+              {/* ── Tarjeta de requisitos del vehículo ── */}
+              <div style={{
+                background: 'rgba(255, 184, 0, 0.07)',
+                border: '1px solid rgba(255, 184, 0, 0.35)',
+                borderRadius: '14px',
+                padding: '16px',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '12px',
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <div style={{
+                    width: '36px', height: '36px', borderRadius: '50%',
+                    background: 'rgba(255, 184, 0, 0.15)',
+                    border: '1.5px solid rgba(255, 184, 0, 0.4)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    flexShrink: 0,
+                    color: 'var(--warning)',
+                  }}>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+                      <line x1="12" y1="9" x2="12" y2="13" />
+                      <line x1="12" y1="17" x2="12.01" y2="17" />
+                    </svg>
+                  </div>
+                  <div>
+                    <div style={{ fontSize: '0.82rem', fontWeight: 900, color: 'var(--warning)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                      Requisitos del Vehículo
+                    </div>
+                    <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '2px' }}>
+                      Solo se aceptan vehículos que cumplan <strong>todos</strong> los siguientes requisitos:
+                    </div>
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', paddingLeft: '4px' }}>
+                  {[
+                    { icon: '📅', text: 'Año de fabricación 2010 o posterior' },
+                    { icon: '🔧', text: 'Revisión técnica vigente y al día' },
+                    { icon: '❄️', text: 'Aire acondicionado operativo' },
+                    { icon: '🚗', text: '4 puertas (no coupé ni utilitarios)' },
+                    { icon: '📄', text: 'Toda la documentación del vehículo al día' },
+                  ].map(({ icon, text }) => (
+                    <div key={text} style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '0.82rem', color: 'var(--text-secondary)' }}>
+                      <span style={{ fontSize: '1rem', flexShrink: 0 }}>{icon}</span>
+                      <span>{text}</span>
+                    </div>
+                  ))}
+                </div>
+
+                <div style={{ fontSize: '0.72rem', color: 'rgba(255, 184, 0, 0.75)', borderTop: '1px solid rgba(255, 184, 0, 0.2)', paddingTop: '10px', fontStyle: 'italic' }}>
+                  Los vehículos son verificados por el equipo de Fim antes de la activación de la cuenta.
+                </div>
+              </div>
+
               <div className="form-group">
                 <label className="form-label">Patente</label>
                 <input className="form-input" placeholder="ABCD 12" value={vehiclePlate} onChange={e => setVehiclePlate(e.target.value)} />
@@ -1031,17 +1088,28 @@ function RegisterForm() {
               </div>
               <div className="form-group">
                 <label className="form-label">Año</label>
-                <input className="form-input" placeholder="2024" value={vehicleYear} onChange={e => setVehicleYear(e.target.value)} />
+                <select
+                  className="form-input"
+                  value={vehicleYear}
+                  onChange={e => setVehicleYear(e.target.value)}
+                  style={{ cursor: 'pointer' }}
+                >
+                  <option value="">Selecciona el año...</option>
+                  {Array.from({ length: 2026 - 2010 + 1 }, (_, i) => 2026 - i).map(year => (
+                    <option key={year} value={String(year)}>{year}</option>
+                  ))}
+                </select>
               </div>
               <div className="form-group">
                 <label className="form-label">Número de Licencia</label>
-                <input className="form-input" placeholder="Ej: 12.345.678-9" value={licenseNumber} onChange={e => setLicenseNumber(e.target.value)} />
+                <input className="form-input" placeholder="Ej: 123456789" value={licenseNumber} onChange={e => setLicenseNumber(e.target.value)} />
               </div>
               {renderUploadArea('Licencia de Conducir (Frontal)', licenseFront, setLicenseFront, 'license-front')}
               {renderUploadArea('Licencia de Conducir (Posterior)', licenseBack, setLicenseBack, 'license-back')}
               {renderUploadArea('Foto del Vehículo', vehiclePhoto, setVehiclePhoto, 'vehicle-photo')}
             </div>
           )}
+
 
           {step === 4 && role === 'driver' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
@@ -1052,7 +1120,7 @@ function RegisterForm() {
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px', marginBottom: '12px', flexWrap: 'wrap' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap', flex: 1, minWidth: '180px' }}>
                     <div style={{ width: '24px', height: '24px', borderRadius: '50%', border: `2px solid #D4AF37`, display: 'flex', alignItems: 'center', justifyContent: 'center', background: membershipPlan === 'BLACK' ? '#D4AF37' : 'transparent', flexShrink: 0 }}>
-                      {membershipPlan === 'BLACK' && <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#000" strokeWidth="4"><polyline points="20 6 9 17 4 12"/></svg>}
+                      {membershipPlan === 'BLACK' && <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#000" strokeWidth="4"><polyline points="20 6 9 17 4 12" /></svg>}
                     </div>
                     <span style={{ color: '#D4AF37', fontWeight: 900, fontSize: '0.9rem', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
                       <IconCrown /> PLAN BLACK
@@ -1064,7 +1132,7 @@ function RegisterForm() {
                     <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.72rem' }}>/mes</div>
                   </div>
                 </div>
-                <p style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.6)', lineHeight: 1.5 }}>Pago único mensual. Acceso ilimitado 30 días. Pago automático vía <strong style={{color:'#D4AF37'}}>Mercado Pago</strong>.</p>
+                <p style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.6)', lineHeight: 1.5 }}>Pago único mensual. Acceso ilimitado 30 días. Pago automático vía <strong style={{ color: '#D4AF37' }}>Mercado Pago</strong>.</p>
               </div>
 
               {/* PLAN COMFORT */}
@@ -1072,7 +1140,7 @@ function RegisterForm() {
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px', marginBottom: '12px', flexWrap: 'wrap' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap', flex: 1, minWidth: '180px' }}>
                     <div style={{ width: '24px', height: '24px', borderRadius: '50%', border: `2px solid #3B82F6`, display: 'flex', alignItems: 'center', justifyContent: 'center', background: membershipPlan === 'COMFORT' ? '#3B82F6' : 'transparent', flexShrink: 0 }}>
-                      {membershipPlan === 'COMFORT' && <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="4"><polyline points="20 6 9 17 4 12"/></svg>}
+                      {membershipPlan === 'COMFORT' && <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="4"><polyline points="20 6 9 17 4 12" /></svg>}
                     </div>
                     <span style={{ color: '#60A5FA', fontWeight: 900, fontSize: '0.9rem', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
                       <IconShield /> PLAN COMFORT
@@ -1094,7 +1162,7 @@ function RegisterForm() {
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px', marginBottom: '12px', flexWrap: 'wrap' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap', flex: 1, minWidth: '180px' }}>
                     <div style={{ width: '24px', height: '24px', borderRadius: '50%', border: `2px solid #10B981`, display: 'flex', alignItems: 'center', justifyContent: 'center', background: membershipPlan === 'FLEX' ? '#10B981' : 'transparent', flexShrink: 0 }}>
-                      {membershipPlan === 'FLEX' && <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="4"><polyline points="20 6 9 17 4 12"/></svg>}
+                      {membershipPlan === 'FLEX' && <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="4"><polyline points="20 6 9 17 4 12" /></svg>}
                     </div>
                     <span style={{ color: '#34D399', fontWeight: 900, fontSize: '0.9rem', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
                       <IconZap /> PLAN FLEX
@@ -1105,7 +1173,7 @@ function RegisterForm() {
                     <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.72rem' }}>/fin de semana</div>
                   </div>
                 </div>
-                <p style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.6)', lineHeight: 1.5 }}>Activo solo Viernes, Sábado y Domingo. Pago vía <strong style={{color:'#34D399'}}>Mercado Pago</strong>. El resto de la semana la cuenta queda inactiva.</p>
+                <p style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.6)', lineHeight: 1.5 }}>Activo solo Viernes, Sábado y Domingo. Pago vía <strong style={{ color: '#34D399' }}>Mercado Pago</strong>. El resto de la semana la cuenta queda inactiva.</p>
               </div>
 
               {/* Resumen del plan elegido */}
@@ -1138,7 +1206,7 @@ function RegisterForm() {
               {step < totalSteps ? (
                 <button className="btn btn-primary" onClick={nextStep} style={{ flex: 2, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
                   Continuar
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12" /><polyline points="12 5 19 12 12 19" /></svg>
                 </button>
               ) : (
                 <button className="btn btn-primary btn-block ${loading ? 'btn-loading' : ''}" onClick={handleSubmit} disabled={loading} style={{ flex: 2 }}>
@@ -1175,13 +1243,13 @@ function RegisterFormWithPendingWrapper() {
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      const isMobileApp = (window as any).Capacitor || 
-        window.location.origin.includes('capacitor://') || 
+      const isMobileApp = (window as any).Capacitor ||
+        window.location.origin.includes('capacitor://') ||
         ((window.location.hostname === 'localhost' || window.location.hostname === '') && window.location.port === '');
       setIsMobile(!!isMobileApp);
     }
   }, []);
-  
+
   return (
     <>
       <RegisterForm />
