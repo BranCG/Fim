@@ -388,28 +388,30 @@ export default function Home() {
       
       <style>{`
         @keyframes marquee {
-          0% { transform: translateX(100%); }
-          100% { transform: translateX(-100%); }
+          0% { transform: translateX(0); }
+          100% { transform: translateX(-50%); }
         }
         .marquee-container {
           overflow: hidden;
           white-space: nowrap;
-          position: relative;
           background: linear-gradient(90deg, #D4AF37 0%, #B8960C 100%);
           color: #000;
           padding: 8px 0;
           box-shadow: 0 4px 12px rgba(212,175,55,0.3);
           z-index: 99;
           display: flex;
-          align-items: center;
+        }
+        .marquee-text-wrapper {
+          display: inline-block;
+          white-space: nowrap;
+          animation: marquee 40s linear infinite;
         }
         .marquee-text {
           display: inline-block;
           font-weight: 900;
           font-size: 0.95rem;
           letter-spacing: 0.05em;
-          padding-left: 100%;
-          animation: marquee 15s linear infinite;
+          padding-right: 50px;
         }
       `}</style>
 
@@ -436,8 +438,12 @@ export default function Home() {
       {/* Dynamic Marquee Ribbon */}
       {sysConfig.promo_ribbon_enabled === 'true' && (
         <div className="marquee-container">
-          <div className="marquee-text">
-            {activeView === 'driver' ? sysConfig.promo_ribbon_text_driver : sysConfig.promo_ribbon_text_passenger}
+          <div className="marquee-text-wrapper">
+            {[...Array(40)].map((_, i) => (
+              <div key={i} className="marquee-text">
+                {activeView === 'driver' ? sysConfig.promo_ribbon_text_driver : sysConfig.promo_ribbon_text_passenger}
+              </div>
+            ))}
           </div>
         </div>
       )}
