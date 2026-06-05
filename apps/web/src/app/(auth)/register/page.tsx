@@ -62,6 +62,25 @@ function validateRut(rut: string) {
   return dv === dvFinal;
 }
 
+// Formatea un RUT chileno con puntos y guión mientras el usuario escribe
+// Ej: "12345678k" → "12.345.678-K"
+function formatRut(raw: string): string {
+  // Eliminar todo excepto dígitos y K/k
+  const clean = raw.replace(/[^0-9kK]/g, '').toUpperCase();
+  if (clean.length === 0) return '';
+
+  // Separar cuerpo y dígito verificador
+  const dv = clean.slice(-1);
+  const body = clean.slice(0, -1);
+
+  if (body.length === 0) return dv;
+
+  // Agregar puntos al cuerpo (de derecha a izquierda cada 3 dígitos)
+  const bodyFormatted = body.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+
+  return `${bodyFormatted}-${dv}`;
+}
+
 function validateEmail(email: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
@@ -883,15 +902,15 @@ function RegisterForm() {
                 />
               </div>
               <div className="form-group">
-                <label className="form-label">RUT (sin puntos y con guión)</label>
+                <label className="form-label">RUT</label>
                 <input
                   className="form-input"
-                  placeholder="12345678-9"
+                  placeholder="12.345.678-9"
                   value={rut}
                   onChange={e => {
-                    const val = e.target.value.replace(/\./g, '').replace(/[^0-9kK-]/g, '');
-                    setRut(val);
+                    setRut(formatRut(e.target.value));
                   }}
+                  maxLength={12}
                 />
               </div>
               <div className="form-group">
