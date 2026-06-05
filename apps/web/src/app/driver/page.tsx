@@ -1035,6 +1035,14 @@ export default function DriverPage() {
     return diffDays > 0 ? diffDays : 0;
   };
 
+  const handleFreePassClick = () => {
+    showCustomAlert(
+      `Bienvenido a FIM, la app que une a pasajeros y conductores más rentable del país. Nuestra app es 0% comisión.\n\n¡Aprovecha al máximo este FREE PASS!\n\n¡Saludos Jefe, conduzca con precaución! 🚗`,
+      '¡Felicitaciones! FREE PASS Activo',
+      'success'
+    );
+  };
+
   const saveMPLink = async () => {
     try {
       await api.post('/drivers/payment-link', { mercadoPagoLink: mpLink });
@@ -1339,22 +1347,36 @@ export default function DriverPage() {
               </div>
             )}
             {driver?.isPromoActive && (
-              <div style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '4px',
-                background: 'rgba(212, 175, 55, 0.12)',
-                border: '1px solid rgba(212, 175, 55, 0.3)',
-                padding: '3px 6px',
-                borderRadius: '4px',
-                fontSize: '0.55rem',
-                fontWeight: 800,
-                color: '#D4AF37',
-                whiteSpace: 'nowrap',
-                marginTop: '2px',
-                boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
-              }}>
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" id="Gift-Box-1--Streamline-Ultimate" height="11" width="11" style={{ flexShrink: 0 }}>
+              <div 
+                onClick={handleFreePassClick}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  background: 'rgba(212, 175, 55, 0.15)',
+                  border: '1px solid rgba(212, 175, 55, 0.4)',
+                  padding: '4px 8px',
+                  borderRadius: '6px',
+                  fontSize: '0.65rem',
+                  fontWeight: 800,
+                  color: '#D4AF37',
+                  whiteSpace: 'nowrap',
+                  marginTop: '4px',
+                  boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
+                  cursor: 'pointer',
+                  userSelect: 'none',
+                  transition: 'all 0.2s ease'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = 'rgba(212, 175, 55, 0.25)';
+                  e.currentTarget.style.transform = 'scale(1.03)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = 'rgba(212, 175, 55, 0.15)';
+                  e.currentTarget.style.transform = 'scale(1)';
+                }}
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" id="Gift-Box-1--Streamline-Ultimate" height="15" width="15" style={{ flexShrink: 0 }}>
                   <path fill="#78eb7b" d="M17.2609 11.0435H6.73967c-0.25367 0 -0.49695 0.1008 -0.67632 0.2802 -0.17938 0.1793 -0.28015 0.4226 -0.28015 0.6763v0.9565c0 0.2536 0.10077 0.4969 0.28015 0.6763 0.17937 0.1794 0.42265 0.2801 0.67632 0.2801h0.47824l0.41511 5.8068c0.0172 0.2417 0.12552 0.4679 0.30306 0.6328 0.17755 0.1649 0.41108 0.2563 0.65341 0.2557h6.82731c0.2423 0.0006 0.4759 -0.0908 0.6534 -0.2557s0.2859 -0.3911 0.3031 -0.6328l0.4093 -5.8068h0.4783c0.2536 0 0.4969 -0.1007 0.6763 -0.2801s0.2801 -0.4227 0.2801 -0.6763V12c0 -0.2537 -0.1007 -0.497 -0.2801 -0.6763 -0.1794 -0.1794 -0.4227 -0.2802 -0.6763 -0.2802Z" strokeWidth={1}></path>
                   <path fill="#ff808c" d="M13.4348 11.0435h-2.8694v9.5647h2.8694v-9.5647Z" strokeWidth={1}></path>
                   <path stroke="#191919" strokeLinecap="round" strokeLinejoin="round" d="M10.5656 13.9129H6.73967c-0.25367 0 -0.49695 -0.1007 -0.67632 -0.2801 -0.17938 -0.1794 -0.28015 -0.4227 -0.28015 -0.6763V12c0 -0.2537 0.10077 -0.497 0.28015 -0.6763 0.17937 -0.1794 0.42265 -0.2802 0.67632 -0.2802H17.2609c0.2536 0 0.4969 0.1008 0.6763 0.2802 0.1794 0.1793 0.2801 0.4226 0.2801 0.6763v0.9565c0 0.2536 -0.1007 0.4969 -0.2801 0.6763s-0.4227 0.2801 -0.6763 0.2801H13.435" strokeWidth={1}></path>
@@ -1369,7 +1391,7 @@ export default function DriverPage() {
                   <path stroke="#191919" strokeLinecap="round" strokeLinejoin="round" d="M5.2365 7.628 4.22168 6.61414" strokeWidth={1}></path>
                   <path stroke="#191919" strokeLinecap="round" strokeLinejoin="round" d="M2.43471 13.913H1" strokeWidth={1}></path>
                 </svg>
-                <span style={{ fontSize: '0.58rem', letterSpacing: '0.01em' }}>
+                <span style={{ fontSize: '0.68rem', letterSpacing: '0.01em' }}>
                   FREE PASS quedan {getRemainingFreePassDays()} días
                 </span>
               </div>
