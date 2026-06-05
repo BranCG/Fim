@@ -192,6 +192,7 @@ export default function DriverPage() {
   const router = useRouter();
   const [session, setSession] = useState<any>(null);
   const [centerTrigger, setCenterTrigger] = useState(0);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const formatDuration = (min: number) => {
     if (min < 60) return `${min} min aprox.`;
@@ -2895,6 +2896,8 @@ export default function DriverPage() {
             borderRadius: 'var(--radius-lg)',
             width: '100%',
             maxWidth: '460px',
+            maxHeight: '90vh',
+            overflowY: 'auto',
             padding: '28px',
             boxShadow: 'var(--shadow-lg)',
             display: 'flex',
