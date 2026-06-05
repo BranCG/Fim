@@ -2885,10 +2885,11 @@ export default function DriverPage() {
           background: 'rgba(9, 9, 15, 0.85)',
           backdropFilter: 'blur(8px)',
           display: 'flex',
-          alignItems: 'center',
+          alignItems: 'flex-start',
           justifyContent: 'center',
           zIndex: 9999,
           padding: '20px',
+          overflowY: 'auto',
           animation: 'fadeIn 0.2s ease'
         }}>
           <div style={{
@@ -2897,15 +2898,15 @@ export default function DriverPage() {
             borderRadius: 'var(--radius-lg)',
             width: '100%',
             maxWidth: '460px',
-            maxHeight: '90vh',
-            overflowY: 'auto',
             padding: '28px',
             boxShadow: 'var(--shadow-lg)',
             display: 'flex',
             flexDirection: 'column',
             gap: '20px',
-            position: 'relative'
+            position: 'relative',
+            margin: 'auto'
           }}>
+
             <button
               onClick={() => setShowProfileModal(false)}
               style={{
