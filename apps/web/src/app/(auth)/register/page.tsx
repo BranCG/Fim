@@ -62,7 +62,7 @@ function validateRut(rut: string) {
   return dv === dvFinal;
 }
 
-// Formatea un RUT chileno con puntos y guión mientras el usuario escribe
+// Formatea un RUT asdchileno con puntos y guión mientras el usuario escribe
 // Ej: "12345678k" → "12.345.678-K"
 function formatRut(raw: string): string {
   // Eliminar todo excepto dígitos y K/k
