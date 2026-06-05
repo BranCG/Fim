@@ -202,6 +202,23 @@ export default function DriverPage() {
 
   const [driver, setDriver] = useState<DriverInfo | null>(null);
   const [isOnline, setIsOnline] = useState(false);
+  const [hasActivatedOnline, setHasActivatedOnline] = useState(false);
+
+  useEffect(() => {
+    if (driver?.id) {
+      const val = localStorage.getItem(`fim_driver_has_activated_online_${driver.id}`);
+      if (val === 'true') {
+        setHasActivatedOnline(true);
+      }
+    }
+  }, [driver]);
+
+  useEffect(() => {
+    if (isOnline && driver?.id) {
+      localStorage.setItem(`fim_driver_has_activated_online_${driver.id}`, 'true');
+      setHasActivatedOnline(true);
+    }
+  }, [isOnline, driver]);
   const [pos, setPos] = useState(SANTIAGO);
   const [tripRequest, setTripRequest] = useState<TripRequest | null>(null);
   const [activeTrip, setActiveTrip] = useState<TripRequest | null>(null);
@@ -1008,6 +1025,16 @@ export default function DriverPage() {
     return expDate.toLocaleDateString('es-CL', { day: 'numeric', month: 'long', year: 'numeric' });
   };
 
+  const getRemainingFreePassDays = () => {
+    if (!driver) return 0;
+    const createdAt = new Date(driver.createdAt);
+    const freeDays = driver.freePassDays || 0;
+    const expDate = new Date(createdAt.getTime() + freeDays * 24 * 60 * 60 * 1000);
+    const diffMs = expDate.getTime() - new Date().getTime();
+    const diffDays = Math.ceil(diffMs / (24 * 60 * 60 * 1000));
+    return diffDays > 0 ? diffDays : 0;
+  };
+
   const saveMPLink = async () => {
     try {
       await api.post('/drivers/payment-link', { mercadoPagoLink: mpLink });
@@ -1311,6 +1338,42 @@ export default function DriverPage() {
                 )}
               </div>
             )}
+            {driver?.isPromoActive && (
+              <div style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '4px',
+                background: 'rgba(212, 175, 55, 0.12)',
+                border: '1px solid rgba(212, 175, 55, 0.3)',
+                padding: '3px 6px',
+                borderRadius: '4px',
+                fontSize: '0.55rem',
+                fontWeight: 800,
+                color: '#D4AF37',
+                whiteSpace: 'nowrap',
+                marginTop: '2px',
+                boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+              }}>
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" id="Gift-Box-1--Streamline-Ultimate" height="11" width="11" style={{ flexShrink: 0 }}>
+                  <path fill="#78eb7b" d="M17.2609 11.0435H6.73967c-0.25367 0 -0.49695 0.1008 -0.67632 0.2802 -0.17938 0.1793 -0.28015 0.4226 -0.28015 0.6763v0.9565c0 0.2536 0.10077 0.4969 0.28015 0.6763 0.17937 0.1794 0.42265 0.2801 0.67632 0.2801h0.47824l0.41511 5.8068c0.0172 0.2417 0.12552 0.4679 0.30306 0.6328 0.17755 0.1649 0.41108 0.2563 0.65341 0.2557h6.82731c0.2423 0.0006 0.4759 -0.0908 0.6534 -0.2557s0.2859 -0.3911 0.3031 -0.6328l0.4093 -5.8068h0.4783c0.2536 0 0.4969 -0.1007 0.6763 -0.2801s0.2801 -0.4227 0.2801 -0.6763V12c0 -0.2537 -0.1007 -0.497 -0.2801 -0.6763 -0.1794 -0.1794 -0.4227 -0.2802 -0.6763 -0.2802Z" strokeWidth={1}></path>
+                  <path fill="#ff808c" d="M13.4348 11.0435h-2.8694v9.5647h2.8694v-9.5647Z" strokeWidth={1}></path>
+                  <path stroke="#191919" strokeLinecap="round" strokeLinejoin="round" d="M10.5656 13.9129H6.73967c-0.25367 0 -0.49695 -0.1007 -0.67632 -0.2801 -0.17938 -0.1794 -0.28015 -0.4227 -0.28015 -0.6763V12c0 -0.2537 0.10077 -0.497 0.28015 -0.6763 0.17937 -0.1794 0.42265 -0.2802 0.67632 -0.2802H17.2609c0.2536 0 0.4969 0.1008 0.6763 0.2802 0.1794 0.1793 0.2801 0.4226 0.2801 0.6763v0.9565c0 0.2536 -0.1007 0.4969 -0.2801 0.6763s-0.4227 0.2801 -0.6763 0.2801H13.435" strokeWidth={1}></path>
+                  <path stroke="#191919" strokeLinecap="round" strokeLinejoin="round" d="M13.4348 13.913h3.3477l-0.4151 5.8067c-0.0172 0.2417 -0.1255 0.4679 -0.3031 0.6328 -0.1775 0.165 -0.4111 0.2564 -0.6534 0.2558H8.58648c-0.24233 0.0006 -0.47586 -0.0908 -0.6534 -0.2558 -0.17755 -0.1649 -0.28586 -0.3911 -0.30307 -0.6328l-0.41224 -5.8067h3.34763" strokeWidth={1}></path>
+                  <path stroke="#191919" strokeLinecap="round" strokeLinejoin="round" d="M10.5654 11.0435v9.5647" strokeWidth={1}></path>
+                  <path stroke="#191919" strokeLinecap="round" strokeLinejoin="round" d="M13.4346 20.6082v-9.5647" strokeWidth={1}></path>
+                  <path stroke="#191919" strokeLinecap="round" strokeLinejoin="round" d="M8.65217 9.78864c0.57389 0.57766 3.34763 1.25486 3.34763 1.25486s-0.6781 -2.77374 -1.2549 -3.34762c-0.2775 -0.27752 -0.6539 -0.43343 -1.04635 -0.43343 -0.39246 0 -0.76886 0.15591 -1.04638 0.43343 -0.27751 0.27751 -0.43342 0.65391 -0.43342 1.04638 0 0.39246 0.15591 0.76886 0.43342 1.04638Z" strokeWidth={1}></path>
+                  <path stroke="#191919" strokeLinecap="round" strokeLinejoin="round" d="M15.3477 9.78869C14.7738 10.3664 12 11.0436 12 11.0436s0.6781 -2.77379 1.2549 -3.34767c0.2805 -0.26251 0.6521 -0.40571 1.0362 -0.39934 0.3841 0.00637 0.7508 0.1618 1.0224 0.43346 0.2717 0.27166 0.4271 0.63828 0.4335 1.02242 0.0064 0.38413 -0.1368 0.7557 -0.3993 1.03622Z" strokeWidth={1}></path>
+                  <path stroke="#191919" strokeLinecap="round" strokeLinejoin="round" d="M12 4.82649V3.39178" strokeWidth={1}></path>
+                  <path stroke="#191919" strokeLinecap="round" strokeLinejoin="round" d="m18.7627 7.628 1.0148 -1.01386" strokeWidth={1}></path>
+                  <path stroke="#191919" strokeLinecap="round" strokeLinejoin="round" d="M21.5654 13.913h1.4347" strokeWidth={1}></path>
+                  <path stroke="#191919" strokeLinecap="round" strokeLinejoin="round" d="M5.2365 7.628 4.22168 6.61414" strokeWidth={1}></path>
+                  <path stroke="#191919" strokeLinecap="round" strokeLinejoin="round" d="M2.43471 13.913H1" strokeWidth={1}></path>
+                </svg>
+                <span style={{ fontSize: '0.58rem', letterSpacing: '0.01em' }}>
+                  FREE PASS quedan {getRemainingFreePassDays()} días
+                </span>
+              </div>
+            )}
           </div>
         </div>
         <div className="header-actions" style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
@@ -1478,20 +1541,21 @@ export default function DriverPage() {
             </div>
           </div>
 
-          {driver.isPromoActive && !isOnline && (
+          {driver.isPromoActive && !isOnline && !hasActivatedOnline && (
             <div style={{ 
-              background: 'rgba(0, 229, 160, 0.05)', 
-              border: '1px solid var(--accent)', 
+              background: 'rgba(255,239,94,0.08)', 
+              border: '1px solid rgba(255,239,94,0.3)', 
               borderRadius: '16px', 
-              padding: '16px', 
-              marginBottom: '16px',
-              display: 'flex',
-              alignItems: 'flex-start',
-              gap: '12px'
+              padding: '16px 20px', 
+              marginBottom: '20px', 
+              display: 'flex', 
+              alignItems: 'flex-start', 
+              gap: '12px',
+              textAlign: 'left'
             }}>
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" id="Party-Confetti--Streamline-Ultimate" height="24" width="24" style={{ flexShrink: 0, marginTop: '2px' }}>
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" id="Party-Popper-1--Streamline-Ultimate" height="24" width="24" style={{ flexShrink: 0 }}>
                 <desc>
-                  Party Confetti Streamline Icon: https://streamlinehq.com
+                  Party Popper 1 Streamline Icon: https://streamlinehq.com
                 </desc>
                 <path fill="#ffbfc5" d="M8.1735 7.69558c1.32067 0 2.3913 -1.07061 2.3913 -2.39128 0 -1.32066 -1.07063 -2.39128 -2.3913 -2.39128 -1.32066 0 -2.39127 1.07062 -2.39127 2.39128 0 1.32067 1.07061 2.39128 2.39127 2.39128Z" strokeWidth={1}></path>
                 <path fill="#c2f3ff" d="M19.6518 6.26081c1.0566 0 1.913 -0.85649 1.913 -1.91302s-0.8564 -1.91302 -1.913 -1.91302 -1.913 0.85649 -1.913 1.91302 0.8564 1.91302 1.913 1.91302Z" strokeWidth={1}></path>
@@ -1530,7 +1594,7 @@ export default function DriverPage() {
             </div>
           )}
 
-          {driver.isPromoActive && (
+          {driver.isPromoActive && !isOnline && !hasActivatedOnline && (
             <div style={{ 
               background: 'linear-gradient(135deg, rgba(212,175,55,0.1) 0%, rgba(212,175,55,0.05) 100%)', 
               border: '1px solid #D4AF37', 
@@ -1560,13 +1624,11 @@ export default function DriverPage() {
                   <path stroke="#191919" strokeLinecap="round" strokeLinejoin="round" d="M2.43471 13.913H1" strokeWidth={1}></path>
                 </svg>
                 <span style={{ color: '#D4AF37', fontWeight: 900, fontSize: '1.05rem' }}>
-                  {isOnline ? 'En línea — FREE PASS Activo' : 'FREE PASS Activo'}
+                  FREE PASS Activo
                 </span>
               </div>
               <p style={{ fontSize: '0.85rem', color: '#fff', margin: '0 0 8px 0', lineHeight: '1.4' }}>
-                {isOnline 
-                  ? `Recibiendo viajes en el plan ${driver.membershipPlan}.` 
-                  : `Tienes pase libre para recibir viajes en el plan ${driver.membershipPlan}.`}
+                Tienes pase libre para recibir viajes en el plan {driver.membershipPlan}.
               </p>
               <div style={{ fontSize: '0.78rem', color: 'rgba(255,255,255,0.6)' }}>
                 Vence el: <strong style={{ color: '#fff' }}>{getFreePassExpirationDate()}</strong>
