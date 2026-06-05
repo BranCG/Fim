@@ -2970,13 +2970,15 @@ export default function DriverPage() {
                     ? 'linear-gradient(135deg, rgba(59,130,246,0.08) 0%, rgba(59,130,246,0.02) 100%)'
                     : 'linear-gradient(135deg, rgba(16,185,129,0.08) 0%, rgba(16,185,129,0.02) 100%)',
                 border: `1.5px solid ${driver.membershipPlan === 'BLACK'
-                    ? 'rgba(212,175,55,0.35)'
-                    : driver.membershipPlan === 'COMFORT'
-                      ? 'rgba(59,130,246,0.35)'
-                      : 'rgba(16,185,129,0.35)'
+                  ? 'rgba(212,175,55,0.35)'
+                  : driver.membershipPlan === 'COMFORT'
+                    ? 'rgba(59,130,246,0.35)'
+                    : 'rgba(16,185,129,0.35)'
                   }`,
                 borderRadius: '12px',
                 padding: '16px',
+                width: '100%',
+                boxSizing: 'border-box',
                 display: 'flex',
                 flexDirection: 'column',
                 gap: '12px',
@@ -2988,6 +2990,7 @@ export default function DriverPage() {
                     ? '0 6px 20px rgba(59,130,246,0.06)'
                     : '0 6px 20px rgba(16,185,129,0.06)'
               }}>
+
                 {/* Glow/Light effect */}
                 <div style={{
                   position: 'absolute',
@@ -2996,10 +2999,10 @@ export default function DriverPage() {
                   width: '100px',
                   height: '100px',
                   background: `radial-gradient(circle, ${driver.membershipPlan === 'BLACK'
-                      ? 'rgba(212,175,55,0.15)'
-                      : driver.membershipPlan === 'COMFORT'
-                        ? 'rgba(59,130,246,0.15)'
-                        : 'rgba(16,185,129,0.15)'
+                    ? 'rgba(212,175,55,0.15)'
+                    : driver.membershipPlan === 'COMFORT'
+                      ? 'rgba(59,130,246,0.15)'
+                      : 'rgba(16,185,129,0.15)'
                     } 0%, transparent 70%)`,
                   pointerEvents: 'none'
                 }} />
@@ -3184,7 +3187,7 @@ export default function DriverPage() {
                 onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255, 69, 96, 0.15)'; e.currentTarget.style.borderColor = 'var(--danger)'; }}
                 onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255, 69, 96, 0.1)'; e.currentTarget.style.borderColor = 'rgba(255, 69, 96, 0.2)'; }}
               >
-                ✕ Borrar mi cuenta
+                Quiero Borrar mi cuenta
               </button>
             </div>
           </div>
