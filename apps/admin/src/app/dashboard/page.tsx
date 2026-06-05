@@ -237,11 +237,11 @@ export default function DashboardPage() {
   function logout() { localStorage.removeItem('fim_admin_token'); router.push('/'); }
 
   const navItems = [
-    { key: 'dashboard', icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>, label: 'Dashboard' },
-    { key: 'pending', icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>, label: 'Pendientes', badge: (stats?.pendingDrivers || 0) + (stats?.pendingPassengers || 0) },
-    { key: 'all_drivers', icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2"/><circle cx="7" cy="17" r="2"/><path d="M9 17h6"/><circle cx="17" cy="17" r="2"/></svg>, label: 'Conductores' },
-    { key: 'passengers', icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>, label: 'Pasajeros' },
-    { key: 'revenue_analysis', icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/></svg>, label: 'Estudios de Mercado' },
+    { key: 'dashboard', icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2" /><line x1="3" y1="9" x2="21" y2="9" /><line x1="9" y1="21" x2="9" y2="9" /></svg>, label: 'Dashboard' },
+    { key: 'pending', icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg>, label: 'Pendientes', badge: (stats?.pendingDrivers || 0) + (stats?.pendingPassengers || 0) },
+    { key: 'all_drivers', icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2" /><circle cx="7" cy="17" r="2" /><path d="M9 17h6" /><circle cx="17" cy="17" r="2" /></svg>, label: 'Conductores' },
+    { key: 'passengers', icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M23 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" /></svg>, label: 'Pasajeros' },
+    { key: 'revenue_analysis', icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="20" x2="12" y2="10" /><line x1="18" y1="20" x2="18" y2="4" /><line x1="6" y1="20" x2="6" y2="16" /></svg>, label: 'Estudios de Mercado' },
   ];
 
   return (
@@ -278,7 +278,7 @@ export default function DashboardPage() {
 
         <div style={{ padding: '12px 8px', borderTop: '1px solid var(--border)' }}>
           <button onClick={logout} className="btn btn-secondary btn-sm" style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" /><polyline points="16 17 21 12 16 7" /><line x1="21" y1="12" x2="9" y2="12" /></svg>
             Cerrar sesión
           </button>
         </div>
@@ -288,18 +288,18 @@ export default function DashboardPage() {
       <main style={{ marginLeft: '220px', flex: 1, padding: '28px', minHeight: '100vh' }}>
 
         {actionMsg && (
-          <div style={{ 
-            position: 'fixed', 
-            top: '24px', 
-            left: '50%', 
-            transform: 'translateX(-50%)', 
-            background: 'var(--bg-card)', 
+          <div style={{
+            position: 'fixed',
+            top: '24px',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            background: 'var(--bg-card)',
             color: '#fff',
             border: '1px solid var(--gold)',
-            borderRadius: 'var(--radius)', 
-            padding: '12px 24px', 
-            fontWeight: 800, 
-            zIndex: 10000, 
+            borderRadius: 'var(--radius)',
+            padding: '12px 24px',
+            fontWeight: 800,
+            zIndex: 10000,
             boxShadow: '0 20px 40px rgba(0,0,0,0.6)',
             display: 'flex',
             alignItems: 'center',
@@ -308,7 +308,7 @@ export default function DashboardPage() {
             animation: 'slideDown 0.3s ease-out'
           }}>
             <div style={{ color: actionMsg.includes('Error') ? 'var(--danger)' : 'var(--gold)' }}>
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
             </div>
             {actionMsg.replace(/[✅❌]/g, '')}
           </div>
@@ -327,7 +327,7 @@ export default function DashboardPage() {
           <div className="animate-in">
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '32px' }}>
               <div style={{ color: 'var(--gold)' }}>
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2" /><line x1="3" y1="9" x2="21" y2="9" /><line x1="9" y1="21" x2="9" y2="9" /></svg>
               </div>
               <h1 style={{ fontSize: '1.75rem', fontWeight: 900, margin: 0, letterSpacing: '-0.02em' }}>Dashboard Global</h1>
             </div>
@@ -336,14 +336,14 @@ export default function DashboardPage() {
               <>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px', marginBottom: '32px' }}>
                   {[
-                    { label: 'Conductores totales', value: stats.totalDrivers, icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2"/><circle cx="7" cy="17" r="2"/><path d="M9 17h6"/><circle cx="17" cy="17" r="2"/></svg>, color: 'var(--gold)' },
-                    { label: 'Pendientes revisión', value: stats.pendingDrivers, icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>, color: 'var(--warning)' },
-                    { label: 'Conductores activos', value: stats.activeDrivers, icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>, color: 'var(--success)' },
-                    { label: 'Pasajeros totales', value: stats.totalPassengers, icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>, color: 'var(--info)' },
-                    { label: 'Viajes totales', value: stats.totalTrips, icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 22V4c0-.5.2-1 .6-1.4C5 2.2 5.5 2 6 2h12c.5 0 1 .2 1.4.6.4.4.6.9.6 1.4v18"/><path d="M10 22v-4a2 2 0 0 1 2-2v0a2 2 0 0 1 2 2v4"/></svg>, color: 'var(--gold)' },
-                    { label: 'Viajes completados', value: stats.completedTrips, icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>, color: 'var(--success)' },
-                    { label: 'Membresías cobradas', value: stats.membershipsPaid, icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>, color: 'var(--warning)' },
-                    { label: 'Ingresos membresías', value: formatCLP(stats.membershipRevenue), icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>, color: 'var(--gold)' },
+                    { label: 'Conductores totales', value: stats.totalDrivers, icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2" /><circle cx="7" cy="17" r="2" /><path d="M9 17h6" /><circle cx="17" cy="17" r="2" /></svg>, color: 'var(--gold)' },
+                    { label: 'Pendientes revisión', value: stats.pendingDrivers, icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg>, color: 'var(--warning)' },
+                    { label: 'Conductores activos', value: stats.activeDrivers, icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" /><polyline points="22 4 12 14.01 9 11.01" /></svg>, color: 'var(--success)' },
+                    { label: 'Pasajeros totales', value: stats.totalPassengers, icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M23 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" /></svg>, color: 'var(--info)' },
+                    { label: 'Viajes totales', value: stats.totalTrips, icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 22V4c0-.5.2-1 .6-1.4C5 2.2 5.5 2 6 2h12c.5 0 1 .2 1.4.6.4.4.6.9.6 1.4v18" /><path d="M10 22v-4a2 2 0 0 1 2-2v0a2 2 0 0 1 2 2v4" /></svg>, color: 'var(--gold)' },
+                    { label: 'Viajes completados', value: stats.completedTrips, icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" /><polyline points="22 4 12 14.01 9 11.01" /></svg>, color: 'var(--success)' },
+                    { label: 'Membresías cobradas', value: stats.membershipsPaid, icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2" /><line x1="1" y1="10" x2="23" y2="10" /></svg>, color: 'var(--warning)' },
+                    { label: 'Ingresos membresías', value: formatCLP(stats.membershipRevenue), icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="1" x2="12" y2="23" /><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" /></svg>, color: 'var(--gold)' },
                   ].map(stat => (
                     <div key={stat.label} className="card" style={{ border: '1px solid rgba(212, 175, 55, 0.1)', background: 'linear-gradient(135deg, var(--bg-card) 0%, rgba(20,20,30,1) 100%)', boxShadow: '0 10px 30px rgba(0,0,0,0.3)' }}>
                       <div style={{ color: stat.color, marginBottom: '12px', opacity: 0.8 }}>{stat.icon}</div>
@@ -357,7 +357,7 @@ export default function DashboardPage() {
                   <div style={{ background: 'rgba(255,184,0,0.05)', border: '1px solid rgba(255,184,0,0.15)', borderRadius: 'var(--radius)', padding: '16px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '32px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                       <div style={{ color: 'var(--warning)' }}>
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg>
                       </div>
                       <span style={{ color: 'var(--warning)', fontWeight: 700, fontSize: '0.9rem' }}>
                         Hay {stats.pendingDrivers} conductor(es) esperando validación de seguridad
@@ -516,10 +516,10 @@ export default function DashboardPage() {
                   </tr>
                 </thead>
                 <tbody>
-                    {allDrivers.filter(d => d.membershipPlan === driverPlanTab).map(d => (
+                  {allDrivers.filter(d => d.membershipPlan === driverPlanTab).map(d => (
                     <tr key={d.id}>
                       <td>
-                        <div 
+                        <div
                           style={{ fontWeight: 700, color: driverPlanTab === 'BLACK' ? '#D4AF37' : driverPlanTab === 'COMFORT' ? '#60A5FA' : '#34D399', cursor: 'pointer', textDecoration: 'underline' }}
                           onClick={() => openDriverDetail(d.id)}
                         >
@@ -595,10 +595,10 @@ export default function DashboardPage() {
                 <h1 style={{ fontSize: '1.5rem', marginBottom: '4px' }}>📈 Análisis de Ingresos</h1>
                 <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>Seguimiento diario de la rentabilidad del mercado.</p>
               </div>
-              <input 
-                type="date" 
-                className="form-input" 
-                value={revenueFilter.date} 
+              <input
+                type="date"
+                className="form-input"
+                value={revenueFilter.date}
                 onChange={e => setRevenueFilter({ date: e.target.value })}
                 style={{ width: '200px' }}
               />
@@ -689,10 +689,10 @@ export default function DashboardPage() {
                   ['Marca/Modelo', `${selectedDriver.vehicleBrand} ${selectedDriver.vehicleModel}`],
                   ['Año', selectedDriver.vehicleYear], ['Patente', selectedDriver.vehiclePlate],
                   ['TAG', selectedDriver.tagNumber], ['Licencia N°', selectedDriver.licenseNumber],
-                  ['Plan', 
-                    selectedDriver.membershipPlan === 'BLACK' ? '🖤 BLACK — $150.000/mes' : 
-                    selectedDriver.membershipPlan === 'COMFORT' ? '🟡 COMFORT — $20.000/día' : 
-                    '🟢 FLEX — $60.000/fin de semana'],
+                  ['Plan',
+                    selectedDriver.membershipPlan === 'BLACK' ? '🖤 BLACK — $150.000/mes' :
+                      selectedDriver.membershipPlan === 'COMFORT' ? '🟡 COMFORT — $20.000/día' :
+                        '🟢 FLEX — $60.000/fin de semana'],
                   ['Membresía', selectedDriver.membershipPaid ? '✅ Pagada' : '❌ Sin pagar'],
                   ['Rating', selectedDriver.totalRating > 0 ? `⭐ ${selectedDriver.totalRating.toFixed(1)}` : 'Nuevo'],
                   ['Viajes', selectedDriver.totalTrips],
@@ -771,19 +771,19 @@ export default function DashboardPage() {
             <div className="card" style={{ marginBottom: '20px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap', gap: '12px' }}>
                 <h3 style={{ fontSize: '1rem', color: 'var(--text-muted)' }}>HISTORIAL DE VIAJES</h3>
-                
+
                 <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                     <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Pago:</span>
-                    <select 
-                      className="form-input" 
+                    <select
+                      className="form-input"
                       style={{ width: '120px', padding: '6px 10px', fontSize: '0.8rem' }}
                       value={historyPayment}
                       onChange={e => setHistoryPayment(e.target.value)}
                     >
                       <option value="all">Todos</option>
-                      <option value="cash">💵 Efectivo</option>
-                      <option value="card">💳 Tarjeta</option>
+                      <option value="cash"> Efectivo</option>
+                      <option value="card"> Tarjeta</option>
                     </select>
                   </div>
                 </div>
@@ -816,9 +816,9 @@ export default function DashboardPage() {
                         <td>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                             {trip.paymentMethod === 'card' ? (
-                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2" /><line x1="1" y1="10" x2="23" y2="10" /></svg>
                             ) : (
-                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="1" x2="12" y2="23" /><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" /></svg>
                             )}
                             {trip.paymentMethod === 'card' ? 'Tarjeta' : 'Efectivo'}
                           </div>
@@ -873,7 +873,7 @@ export default function DashboardPage() {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
               <h1 style={{ fontSize: '1.5rem', margin: 0 }}>👥 Pasajeros Registrados ({passengers.length})</h1>
             </div>
-            
+
             <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
               <table>
                 <thead>
@@ -890,7 +890,7 @@ export default function DashboardPage() {
                   {passengers.map(p => (
                     <tr key={p.id}>
                       <td>
-                        <div 
+                        <div
                           style={{ fontWeight: 700, color: 'var(--accent)', cursor: 'pointer', textDecoration: 'underline' }}
                           onClick={() => openPassengerDetail(p.id)}
                         >
@@ -994,11 +994,11 @@ export default function DashboardPage() {
                   { label: 'Selfie de Seguridad', url: selectedPassenger.selfieUrl },
                 ].map(doc => (
                   doc.url ? (
-                    <button 
-                      key={doc.label} 
-                      onClick={() => setImgModal(getImageUrl(doc.url) || null)} 
-                      style={{ border: '2px solid var(--border)', borderRadius: '10px', overflow: 'hidden', cursor: 'pointer', background: 'var(--bg-card)', transition: 'var(--transition)' }} 
-                      onMouseEnter={e => (e.currentTarget.style.borderColor = 'var(--accent)')} 
+                    <button
+                      key={doc.label}
+                      onClick={() => setImgModal(getImageUrl(doc.url) || null)}
+                      style={{ border: '2px solid var(--border)', borderRadius: '10px', overflow: 'hidden', cursor: 'pointer', background: 'var(--bg-card)', transition: 'var(--transition)' }}
+                      onMouseEnter={e => (e.currentTarget.style.borderColor = 'var(--accent)')}
                       onMouseLeave={e => (e.currentTarget.style.borderColor = 'var(--border)')}
                     >
                       {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -1044,21 +1044,21 @@ export default function DashboardPage() {
                           <div style={{ whiteSpace: 'normal', wordBreak: 'break-word', color: 'var(--text-secondary)' }}>
                             {trip.originAddress}
                           </div>
-                          <div style={{ 
-                            marginTop: '6px', 
-                            display: 'inline-flex', 
-                            alignItems: 'center', 
-                            gap: '4px', 
-                            background: 'rgba(0, 229, 160, 0.08)', 
-                            border: '1px solid rgba(0, 229, 160, 0.2)', 
-                            padding: '2px 8px', 
-                            borderRadius: '4px', 
-                            fontSize: '0.7rem', 
-                            fontFamily: 'monospace', 
-                            color: 'var(--success)' 
+                          <div style={{
+                            marginTop: '6px',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '4px',
+                            background: 'rgba(0, 229, 160, 0.08)',
+                            border: '1px solid rgba(0, 229, 160, 0.2)',
+                            padding: '2px 8px',
+                            borderRadius: '4px',
+                            fontSize: '0.7rem',
+                            fontFamily: 'monospace',
+                            color: 'var(--success)'
                           }}>
                             <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-                              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/></svg>
+                              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><circle cx="12" cy="12" r="3" /></svg>
                               Subida:
                             </span>
                             <strong style={{ letterSpacing: '0.5px' }}>{trip.otpCode || '----'}</strong>
@@ -1068,21 +1068,21 @@ export default function DashboardPage() {
                           <div style={{ whiteSpace: 'normal', wordBreak: 'break-word', color: 'var(--text-secondary)' }}>
                             {trip.destAddress}
                           </div>
-                          <div style={{ 
-                            marginTop: '6px', 
-                            display: 'inline-flex', 
-                            alignItems: 'center', 
-                            gap: '4px', 
-                            background: 'rgba(79, 195, 247, 0.08)', 
-                            border: '1px solid rgba(79, 195, 247, 0.2)', 
-                            padding: '2px 8px', 
-                            borderRadius: '4px', 
-                            fontSize: '0.7rem', 
-                            fontFamily: 'monospace', 
-                            color: 'var(--info)' 
+                          <div style={{
+                            marginTop: '6px',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '4px',
+                            background: 'rgba(79, 195, 247, 0.08)',
+                            border: '1px solid rgba(79, 195, 247, 0.2)',
+                            padding: '2px 8px',
+                            borderRadius: '4px',
+                            fontSize: '0.7rem',
+                            fontFamily: 'monospace',
+                            color: 'var(--info)'
                           }}>
                             <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-                              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" /><circle cx="12" cy="10" r="3" /></svg>
                               Bajada:
                             </span>
                             <strong style={{ letterSpacing: '0.5px' }}>{trip.dropoffOtpCode || '----'}</strong>
@@ -1091,12 +1091,12 @@ export default function DashboardPage() {
                         <td>
                           {trip.paymentMethod === 'card' ? (
                             <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" /><line x1="1" y1="10" x2="23" y2="10" /></svg>
                               Tarjeta
                             </span>
                           ) : (
                             <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2"/><path d="M6 12h.01M18 12h.01"/></svg>
+                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="6" width="20" height="12" rx="2" /><circle cx="12" cy="12" r="2" /><path d="M6 12h.01M18 12h.01" /></svg>
                               Efectivo
                             </span>
                           )}

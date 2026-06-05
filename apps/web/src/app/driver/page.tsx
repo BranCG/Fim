@@ -1253,7 +1253,7 @@ export default function DriverPage() {
   );
 
   return (
-    <div className="app-container">
+    <div className={`app-container${isMenuOpen ? ' menu-open' : ''}`}>
       <header className="app-header" style={{ alignItems: 'flex-start' }}>
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '4px' }}>
           <div
@@ -1400,28 +1400,99 @@ export default function DriverPage() {
           </div>
         </div>
         <div className="header-actions" style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-          <button className="header-nav-btn" onClick={openProfileModal}>
-            <div className="icon-circle">
-              <IconUser />
-            </div>
-            <span className="btn-label">Usuario</span>
-          </button>
+          <div style={{ position: 'relative' }}>
+            {/* Hamburger button */}
+            <button
+              onClick={() => setIsMenuOpen(prev => !prev)}
+              style={{
+                background: isMenuOpen ? 'rgba(0, 229, 160, 0.1)' : 'rgba(255, 255, 255, 0.04)',
+                border: `1.5px solid ${isMenuOpen ? 'var(--accent)' : 'var(--border)'}`,
+                borderRadius: '50%',
+                width: '40px',
+                height: '40px',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '5px',
+                cursor: 'pointer',
+                transition: 'all 0.25s ease',
+                color: isMenuOpen ? 'var(--accent)' : 'var(--text-primary)',
+                outline: 'none',
+                padding: '0',
+                flexShrink: 0,
+              }}
+            >
+              {/* Hamburger → X animation */}
+              <span style={{
+                display: 'block',
+                width: '16px',
+                height: '2px',
+                background: 'currentColor',
+                borderRadius: '2px',
+                transition: 'transform 0.25s ease, opacity 0.25s ease',
+                transform: isMenuOpen ? 'translateY(7px) rotate(45deg)' : 'none',
+              }} />
+              <span style={{
+                display: 'block',
+                width: '16px',
+                height: '2px',
+                background: 'currentColor',
+                borderRadius: '2px',
+                transition: 'opacity 0.25s ease',
+                opacity: isMenuOpen ? 0 : 1,
+              }} />
+              <span style={{
+                display: 'block',
+                width: '16px',
+                height: '2px',
+                background: 'currentColor',
+                borderRadius: '2px',
+                transition: 'transform 0.25s ease, opacity 0.25s ease',
+                transform: isMenuOpen ? 'translateY(-7px) rotate(-45deg)' : 'none',
+              }} />
+            </button>
 
-          <button className="header-nav-btn" onClick={() => router.push('/driver/history')}>
-            <div className="icon-circle">
-              <IconClock />
-            </div>
-            <span className="btn-label">Historial</span>
-          </button>
+            {/* Dropdown menu */}
+            {isMenuOpen && (
+              <div className="header-menu-dropdown">
+                <button className="header-nav-btn" onClick={() => { openProfileModal(); setIsMenuOpen(false); }}>
+                  <div className="icon-circle">
+                    <IconUser />
+                  </div>
+                  <span className="btn-label">Usuario</span>
+                </button>
 
-          <button className="header-nav-btn" onClick={handleLogout}>
-            <div className="icon-circle">
-              <IconLogout />
-            </div>
-            <span className="btn-label">Salir</span>
-          </button>
+                <button className="header-nav-btn" onClick={() => { router.push('/driver/history'); setIsMenuOpen(false); }}>
+                  <div className="icon-circle">
+                    <IconClock />
+                  </div>
+                  <span className="btn-label">Historial</span>
+                </button>
+
+                <button className="header-nav-btn" onClick={() => { setIsMenuOpen(false); handleLogout(); }}>
+                  <div className="icon-circle">
+                    <IconLogout />
+                  </div>
+                  <span className="btn-label">Salir</span>
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </header>
+
+      {/* Backdrop para cerrar menú hamburguesa al tocar afuera */}
+      {isMenuOpen && (
+        <div
+          onClick={() => setIsMenuOpen(false)}
+          style={{
+            position: 'fixed',
+            inset: 0,
+            zIndex: 99,
+          }}
+        />
+      )}
 
       {/* Botón flotante de GPS de alta prioridad fuera de main-content */}
       <button

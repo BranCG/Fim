@@ -863,7 +863,7 @@ a:hover { opacity: 0.85; }
   border-radius: var(--radius-lg);
   padding: 20px 16px;
   box-shadow: var(--shadow-lg);
-  z-index: 1000;
+  z-index: 200;
   margin-top: 12px;
   transform-origin: top right;
   animation: slideDownMenu 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
