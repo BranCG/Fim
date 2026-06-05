@@ -2958,6 +2958,128 @@ export default function DriverPage() {
               </div>
             </div>
 
+            {driver && (
+              <div style={{
+                background: driver.membershipPlan === 'BLACK' 
+                  ? 'linear-gradient(135deg, rgba(212,175,55,0.08) 0%, rgba(212,175,55,0.02) 100%)'
+                  : driver.membershipPlan === 'COMFORT'
+                  ? 'linear-gradient(135deg, rgba(59,130,246,0.08) 0%, rgba(59,130,246,0.02) 100%)'
+                  : 'linear-gradient(135deg, rgba(16,185,129,0.08) 0%, rgba(16,185,129,0.02) 100%)',
+                border: `1.5px solid ${
+                  driver.membershipPlan === 'BLACK' 
+                    ? 'rgba(212,175,55,0.35)' 
+                    : driver.membershipPlan === 'COMFORT'
+                    ? 'rgba(59,130,246,0.35)'
+                    : 'rgba(16,185,129,0.35)'
+                }`,
+                borderRadius: '12px',
+                padding: '16px',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '12px',
+                position: 'relative',
+                overflow: 'hidden',
+                boxShadow: driver.membershipPlan === 'BLACK'
+                  ? '0 6px 20px rgba(212,175,55,0.06)'
+                  : driver.membershipPlan === 'COMFORT'
+                  ? '0 6px 20px rgba(59,130,246,0.06)'
+                  : '0 6px 20px rgba(16,185,129,0.06)'
+              }}>
+                {/* Glow/Light effect */}
+                <div style={{
+                  position: 'absolute',
+                  top: '-40px',
+                  right: '-40px',
+                  width: '100px',
+                  height: '100px',
+                  background: `radial-gradient(circle, ${
+                    driver.membershipPlan === 'BLACK' 
+                      ? 'rgba(212,175,55,0.15)' 
+                      : driver.membershipPlan === 'COMFORT'
+                      ? 'rgba(59,130,246,0.15)'
+                      : 'rgba(16,185,129,0.15)'
+                  } 0%, transparent 70%)`,
+                  pointerEvents: 'none'
+                }} />
+
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div style={{ 
+                    padding: '4px 10px', 
+                    background: driver.membershipPlan === 'BLACK' ? '#D4AF37' : driver.membershipPlan === 'COMFORT' ? '#3B82F6' : '#10B981',
+                    borderRadius: '6px', 
+                    fontSize: '0.72rem', 
+                    fontWeight: 900, 
+                    color: driver.membershipPlan === 'BLACK' ? '#000' : '#fff',
+                    letterSpacing: '0.05em',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '4px'
+                  }}>
+                    {driver.membershipPlan === 'BLACK' && (
+                      <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                    )}
+                    PLAN {driver.membershipPlan}
+                  </div>
+                  
+                  <div style={{ 
+                    fontSize: '0.9rem', 
+                    fontWeight: 800, 
+                    color: driver.membershipPlan === 'BLACK' ? '#D4AF37' : driver.membershipPlan === 'COMFORT' ? '#60A5FA' : '#34D399' 
+                  }}>
+                    {driver.membershipPlan === 'BLACK' && '$150.000 / mes'}
+                    {driver.membershipPlan === 'COMFORT' && '$20.000 / día'}
+                    {driver.membershipPlan === 'FLEX' && '$60.000 / finde'}
+                  </div>
+                </div>
+
+                {driver.isPromoActive && (
+                  <div style={{ 
+                    background: 'rgba(212,175,55,0.1)', 
+                    border: '1px solid rgba(212,175,55,0.2)', 
+                    borderRadius: '6px', 
+                    padding: '6px 10px', 
+                    fontSize: '0.72rem', 
+                    color: '#D4AF37', 
+                    fontWeight: 700,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px'
+                  }}>
+                    <span style={{ fontSize: '0.9rem' }}>✨</span>
+                    <span>FREE PASS Activo (Membresía gratis)</span>
+                  </div>
+                )}
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginTop: '2px' }}>
+                  {/* Advantages list */}
+                  {(driver.membershipPlan === 'BLACK' ? [
+                    'Acceso ilimitado 30 días seguidos',
+                    'Sin cobros diarios ni interrupciones',
+                    'Conserva el 100% de tus tarifas',
+                    'Renovación mensual automática'
+                  ] : driver.membershipPlan === 'COMFORT' ? [
+                    'Financiado: inicia sin capital',
+                    'Paga $20.000 solo los días operados',
+                    'Gratis al completar la meta mensual ($180k)',
+                    'Conserva el 100% de tus tarifas'
+                  ] : [
+                    'Activo Viernes, Sábado y Domingo',
+                    'Ideal para complementar tus ingresos',
+                    'Conserva el 100% de tus tarifas',
+                    'Sin cobros durante la semana'
+                  ]).map((advantage, i) => (
+                    <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.78rem', color: 'var(--text-secondary)' }}>
+                      <span style={{ 
+                        color: driver.membershipPlan === 'BLACK' ? '#D4AF37' : driver.membershipPlan === 'COMFORT' ? '#60A5FA' : '#34D399', 
+                        fontWeight: 900 
+                      }}>✓</span>
+                      <span>{advantage}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
             <form onSubmit={handlePasswordChange} style={{ display: 'flex', flexDirection: 'column', gap: '12px', borderTop: '1px solid var(--border)', paddingTop: '20px' }}>
               <h4 style={{ margin: '0 0 4px 0', fontSize: '0.95rem', fontWeight: 700, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '6px' }}>
                 <IconShieldLock size={16} />
