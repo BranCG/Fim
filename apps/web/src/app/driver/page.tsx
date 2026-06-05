@@ -1004,9 +1004,7 @@ export default function DriverPage() {
     if (!driver) return '';
     const createdAt = new Date(driver.createdAt);
     const freeDays = driver.freePassDays || 0;
-    // La membresía vence 30 días después de los días de Free PASS
-    const totalDays = freeDays + 30;
-    const expDate = new Date(createdAt.getTime() + totalDays * 24 * 60 * 60 * 1000);
+    const expDate = new Date(createdAt.getTime() + freeDays * 24 * 60 * 60 * 1000);
     return expDate.toLocaleDateString('es-CL', { day: 'numeric', month: 'long', year: 'numeric' });
   };
 
@@ -1491,7 +1489,38 @@ export default function DriverPage() {
               alignItems: 'flex-start',
               gap: '12px'
             }}>
-              <span style={{ fontSize: '1.8rem', marginTop: '-2px' }}>🎉</span>
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" id="Party-Confetti--Streamline-Ultimate" height="24" width="24" style={{ flexShrink: 0, marginTop: '2px' }}>
+                <desc>
+                  Party Confetti Streamline Icon: https://streamlinehq.com
+                </desc>
+                <path fill="#ffbfc5" d="M8.1735 7.69558c1.32067 0 2.3913 -1.07061 2.3913 -2.39128 0 -1.32066 -1.07063 -2.39128 -2.3913 -2.39128 -1.32066 0 -2.39127 1.07062 -2.39127 2.39128 0 1.32067 1.07061 2.39128 2.39127 2.39128Z" strokeWidth={1}></path>
+                <path fill="#c2f3ff" d="M19.6518 6.26081c1.0566 0 1.913 -0.85649 1.913 -1.91302s-0.8564 -1.91302 -1.913 -1.91302 -1.913 0.85649 -1.913 1.91302 0.8564 1.91302 1.913 1.91302Z" strokeWidth={1}></path>
+                <path fill="#c9f7ca" d="M19.1733 15.8259c1.0565 0 1.913 -0.8564 1.913 -1.913s-0.8565 -1.913 -1.913 -1.913c-1.0566 0 -1.913 0.8564 -1.913 1.913s0.8564 1.913 1.913 1.913Z" strokeWidth={1}></path>
+                <path stroke="#191919" strokeLinecap="round" strokeLinejoin="round" d="M16.2876 12.2065c0.8907 -0.8888 2.0976 -1.388 3.3559 -1.388 1.2583 0 2.4652 0.4992 3.3559 1.388" strokeWidth={1}></path>
+                <path stroke="#191919" strokeLinecap="round" strokeLinejoin="round" d="M11.7778 7.71279c0.441 -0.44067 0.7908 -0.96391 1.0294 -1.53982 0.2387 -0.57589 0.3615 -1.19318 0.3615 -1.81657 0 -0.6234 -0.1228 -1.24068 -0.3615 -1.81658 -0.2386 -0.57591 -0.5884 -1.09915 -1.0294 -1.53982" strokeWidth={1}></path>
+                <path stroke="#191919" strokeLinecap="round" strokeLinejoin="round" d="m17.8105 8.41199 3.3564 -1.11721" strokeWidth={1}></path>
+                <path stroke="#191919" strokeLinecap="round" strokeLinejoin="round" d="m15.5732 6.17664 1.1192 -3.35735" strokeWidth={1}></path>
+                <path stroke="#191919" strokeLinecap="round" strokeLinejoin="round" d="M8.14014 5.08525c0.06341 0 0.12424 0.0252 0.16909 0.07004 0.04484 0.04484 0.07003 0.10566 0.07003 0.16909" strokeWidth={1}></path>
+                <path stroke="#191919" strokeLinecap="round" strokeLinejoin="round" d="M7.90088 5.32438c0 -0.06343 0.02519 -0.12425 0.07003 -0.16909 0.04486 -0.04484 0.10568 -0.07004 0.1691 -0.07004" strokeWidth={1}></path>
+                <path stroke="#191919" strokeLinecap="round" strokeLinejoin="round" d="M8.14001 5.56351c-0.06342 0 -0.12424 -0.02519 -0.1691 -0.07004 -0.04484 -0.04484 -0.07 -0.10567 -0.07 -0.16908" strokeWidth={1}></path>
+                <path stroke="#191919" strokeLinecap="round" strokeLinejoin="round" d="M8.37926 5.32439c0 0.06341 -0.02519 0.12424 -0.07003 0.16908 -0.04485 0.04485 -0.10568 0.07004 -0.16909 0.07004" strokeWidth={1}></path>
+                <path stroke="#191919" strokeLinecap="round" strokeLinejoin="round" d="M15.314 7.95479c0.0634 0 0.1242 0.02519 0.1691 0.07003 0.0448 0.04485 0.07 0.10567 0.07 0.1691" strokeWidth={1}></path>
+                <path stroke="#191919" strokeLinecap="round" strokeLinejoin="round" d="M15.0747 8.19392c0 -0.06343 0.0252 -0.12425 0.07 -0.1691 0.0449 -0.04484 0.1057 -0.07003 0.1691 -0.07003" strokeWidth={1}></path>
+                <path stroke="#191919" strokeLinecap="round" strokeLinejoin="round" d="M15.3138 8.43304c-0.0634 0 -0.1242 -0.0252 -0.1691 -0.07005 -0.0448 -0.04484 -0.07 -0.10566 -0.07 -0.16908" strokeWidth={1}></path>
+                <path stroke="#191919" strokeLinecap="round" strokeLinejoin="round" d="M15.5531 8.19391c0 0.06342 -0.0252 0.12424 -0.07 0.16908 -0.0449 0.04485 -0.1057 0.07005 -0.1691 0.07005" strokeWidth={1}></path>
+                <path stroke="#191919" strokeLinecap="round" strokeLinejoin="round" d="M19.1396 13.6938c0.0635 0 0.1243 0.0252 0.1692 0.0701 0.0448 0.0448 0.07 0.1057 0.07 0.1691" strokeWidth={1}></path>
+                <path stroke="#191919" strokeLinecap="round" strokeLinejoin="round" d="M18.9009 13.933c0 -0.0634 0.0251 -0.1243 0.07 -0.1691 0.0449 -0.0449 0.1057 -0.0701 0.1691 -0.0701" strokeWidth={1}></path>
+                <path stroke="#191919" strokeLinecap="round" strokeLinejoin="round" d="M19.14 14.1721c-0.0634 0 -0.1242 -0.0251 -0.1691 -0.07 -0.0449 -0.0449 -0.07 -0.10567 -0.07 -0.1691" strokeWidth={1}></path>
+                <path stroke="#191919" strokeLinecap="round" strokeLinejoin="round" d="M19.3788 13.933c0 0.0634 -0.0252 0.1242 -0.07 0.1691 -0.0449 0.0449 -0.1057 0.07 -0.1692 0.07" strokeWidth={1}></path>
+                <path stroke="#191919" strokeLinecap="round" strokeLinejoin="round" d="M19.6182 4.12874c0.0634 0 0.1242 0.02519 0.1691 0.07003 0.0448 0.04485 0.07 0.10567 0.07 0.1691" strokeWidth={1}></path>
+                <path stroke="#191919" strokeLinecap="round" strokeLinejoin="round" d="M19.3789 4.36787c0 -0.06343 0.0252 -0.12425 0.07 -0.1691 0.0449 -0.04484 0.1057 -0.07003 0.1691 -0.07003" strokeWidth={1}></path>
+                <path stroke="#191919" strokeLinecap="round" strokeLinejoin="round" d="M19.618 4.607c-0.0634 0 -0.1242 -0.02519 -0.1691 -0.07004 -0.0448 -0.04484 -0.07 -0.10567 -0.07 -0.16909" strokeWidth={1}></path>
+                <path stroke="#191919" strokeLinecap="round" strokeLinejoin="round" d="M19.8573 4.36787c0 0.06342 -0.0252 0.12425 -0.07 0.16909 -0.0449 0.04485 -0.1057 0.07004 -0.1691 0.07004" strokeWidth={1}></path>
+                <path fill="#ffef5e" d="M15.0082 16.3759 2.89783 22.8477c-0.24402 0.1304 -0.52354 0.1789 -0.79724 0.1384 -0.27371 -0.0407 -0.5271 -0.1683 -0.7227 -0.364 -0.19561 -0.1957 -0.32306 -0.4492 -0.36354 -0.7229 -0.040465 -0.2738 0.0082 -0.5533 0.1388 -0.7972l6.4708 -12.11035 7.38425 7.38425Z" strokeWidth={1}></path>
+                <path fill="#fff9bf" d="M11.316 12.6838 7.62386 8.99165 1.15306 21.102c-0.13042 0.2443 -0.178524 0.5242 -0.13717 0.798 0.04136 0.2739 0.16998 0.5271 0.36674 0.7219l9.93337 -9.9381Z" strokeWidth={1}></path>
+                <path stroke="#191919" strokeLinecap="round" strokeLinejoin="round" d="M15.0082 16.3759 2.89783 22.8477c-0.24402 0.1304 -0.52354 0.1789 -0.79724 0.1384 -0.27371 -0.0407 -0.5271 -0.1683 -0.7227 -0.364 -0.19561 -0.1957 -0.32306 -0.4492 -0.36354 -0.7229 -0.040465 -0.2738 0.0082 -0.5533 0.1388 -0.7972l6.4708 -12.11035" strokeWidth={1}></path>
+                <path fill="#ffbc44" stroke="#191919" strokeLinecap="round" strokeLinejoin="round" d="M15.2422 16.1965c0.9339 -0.934 0.0254 -3.3564 -2.0291 -5.4109S8.73618 7.82266 7.80233 8.75651c-0.93387 0.93386 -0.02542 3.35639 2.02906 5.41079 2.05451 2.0545 4.47691 2.963 5.41081 2.0292Z" strokeWidth={1}></path>
+              </svg>
               <div style={{ textAlign: 'left' }}>
                 <h4 style={{ margin: '0 0 4px 0', fontSize: '0.95rem', fontWeight: 800, color: 'var(--accent)' }}>¡Felicitaciones!</h4>
                 <p style={{ margin: 0, fontSize: '0.8rem', color: '#fff', lineHeight: '1.4' }}>
@@ -1512,7 +1541,24 @@ export default function DriverPage() {
               boxShadow: '0 8px 32px rgba(212,175,55,0.08)'
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
-                <span style={{ fontSize: '1.25rem' }}>✨</span>
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" id="Gift-Box-1--Streamline-Ultimate" height="24" width="24" style={{ flexShrink: 0 }}>
+                  <desc>
+                    Gift Box 1 Streamline Icon: https://streamlinehq.com
+                  </desc>
+                  <path fill="#78eb7b" d="M17.2609 11.0435H6.73967c-0.25367 0 -0.49695 0.1008 -0.67632 0.2802 -0.17938 0.1793 -0.28015 0.4226 -0.28015 0.6763v0.9565c0 0.2536 0.10077 0.4969 0.28015 0.6763 0.17937 0.1794 0.42265 0.2801 0.67632 0.2801h0.47824l0.41511 5.8068c0.0172 0.2417 0.12552 0.4679 0.30306 0.6328 0.17755 0.1649 0.41108 0.2563 0.65341 0.2557h6.82731c0.2423 0.0006 0.4759 -0.0908 0.6534 -0.2557s0.2859 -0.3911 0.3031 -0.6328l0.4093 -5.8068h0.4783c0.2536 0 0.4969 -0.1007 0.6763 -0.2801s0.2801 -0.4227 0.2801 -0.6763V12c0 -0.2537 -0.1007 -0.497 -0.2801 -0.6763 -0.1794 -0.1794 -0.4227 -0.2802 -0.6763 -0.2802Z" strokeWidth={1}></path>
+                  <path fill="#ff808c" d="M13.4348 11.0435h-2.8694v9.5647h2.8694v-9.5647Z" strokeWidth={1}></path>
+                  <path stroke="#191919" strokeLinecap="round" strokeLinejoin="round" d="M10.5656 13.9129H6.73967c-0.25367 0 -0.49695 -0.1007 -0.67632 -0.2801 -0.17938 -0.1794 -0.28015 -0.4227 -0.28015 -0.6763V12c0 -0.2537 0.10077 -0.497 0.28015 -0.6763 0.17937 -0.1794 0.42265 -0.2802 0.67632 -0.2802H17.2609c0.2536 0 0.4969 0.1008 0.6763 0.2802 0.1794 0.1793 0.2801 0.4226 0.2801 0.6763v0.9565c0 0.2536 -0.1007 0.4969 -0.2801 0.6763s-0.4227 0.2801 -0.6763 0.2801H13.435" strokeWidth={1}></path>
+                  <path stroke="#191919" strokeLinecap="round" strokeLinejoin="round" d="M13.4348 13.913h3.3477l-0.4151 5.8067c-0.0172 0.2417 -0.1255 0.4679 -0.3031 0.6328 -0.1775 0.165 -0.4111 0.2564 -0.6534 0.2558H8.58648c-0.24233 0.0006 -0.47586 -0.0908 -0.6534 -0.2558 -0.17755 -0.1649 -0.28586 -0.3911 -0.30307 -0.6328l-0.41224 -5.8067h3.34763" strokeWidth={1}></path>
+                  <path stroke="#191919" strokeLinecap="round" strokeLinejoin="round" d="M10.5654 11.0435v9.5647" strokeWidth={1}></path>
+                  <path stroke="#191919" strokeLinecap="round" strokeLinejoin="round" d="M13.4346 20.6082v-9.5647" strokeWidth={1}></path>
+                  <path stroke="#191919" strokeLinecap="round" strokeLinejoin="round" d="M8.65217 9.78864c0.57389 0.57766 3.34763 1.25486 3.34763 1.25486s-0.6781 -2.77374 -1.2549 -3.34762c-0.2775 -0.27752 -0.6539 -0.43343 -1.04635 -0.43343 -0.39246 0 -0.76886 0.15591 -1.04638 0.43343 -0.27751 0.27751 -0.43342 0.65391 -0.43342 1.04638 0 0.39246 0.15591 0.76886 0.43342 1.04638Z" strokeWidth={1}></path>
+                  <path stroke="#191919" strokeLinecap="round" strokeLinejoin="round" d="M15.3477 9.78869C14.7738 10.3664 12 11.0436 12 11.0436s0.6781 -2.77379 1.2549 -3.34767c0.2805 -0.26251 0.6521 -0.40571 1.0362 -0.39934 0.3841 0.00637 0.7508 0.1618 1.0224 0.43346 0.2717 0.27166 0.4271 0.63828 0.4335 1.02242 0.0064 0.38413 -0.1368 0.7557 -0.3993 1.03622Z" strokeWidth={1}></path>
+                  <path stroke="#191919" strokeLinecap="round" strokeLinejoin="round" d="M12 4.82649V3.39178" strokeWidth={1}></path>
+                  <path stroke="#191919" strokeLinecap="round" strokeLinejoin="round" d="m18.7627 7.628 1.0148 -1.01386" strokeWidth={1}></path>
+                  <path stroke="#191919" strokeLinecap="round" strokeLinejoin="round" d="M21.5654 13.913h1.4347" strokeWidth={1}></path>
+                  <path stroke="#191919" strokeLinecap="round" strokeLinejoin="round" d="M5.2365 7.628 4.22168 6.61414" strokeWidth={1}></path>
+                  <path stroke="#191919" strokeLinecap="round" strokeLinejoin="round" d="M2.43471 13.913H1" strokeWidth={1}></path>
+                </svg>
                 <span style={{ color: '#D4AF37', fontWeight: 900, fontSize: '1.05rem' }}>
                   {isOnline ? 'En línea — FREE PASS Activo' : 'FREE PASS Activo'}
                 </span>
@@ -1524,9 +1570,13 @@ export default function DriverPage() {
               </p>
               <div style={{ fontSize: '0.78rem', color: 'rgba(255,255,255,0.6)' }}>
                 Vence el: <strong style={{ color: '#fff' }}>{getFreePassExpirationDate()}</strong>
+                <div style={{ marginTop: '8px', fontSize: '0.72rem', color: '#D4AF37', lineHeight: '1.45' }}>
+                  * Una vez finalizado tu periodo de FREE PASS de 10 días, podrás pagar y renovar tu membresía directamente en este panel.
+                </div>
               </div>
             </div>
           )}
+
 
           {!isOnline && !driver.mercadoPagoLink && (
             <>
