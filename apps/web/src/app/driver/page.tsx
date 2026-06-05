@@ -40,6 +40,9 @@ interface DriverInfo {
   taxCompliant: boolean;
   taxDocumentUrl: string | null;
   taxPendingReview: boolean;
+  isPromoActive?: boolean;
+  freePassDays?: number;
+  createdAt: string;
 }
 
 const SANTIAGO = { lat: -33.4489, lng: -70.6693 };
@@ -997,6 +1000,16 @@ export default function DriverPage() {
     if (driver?.mercadoPagoLink) setMpLink(driver.mercadoPagoLink);
   }, [driver]);
 
+  const getFreePassExpirationDate = () => {
+    if (!driver) return '';
+    const createdAt = new Date(driver.createdAt);
+    const freeDays = driver.freePassDays || 0;
+    // La membresía vence 30 días después de los días de Free PASS
+    const totalDays = freeDays + 30;
+    const expDate = new Date(createdAt.getTime() + totalDays * 24 * 60 * 60 * 1000);
+    return expDate.toLocaleDateString('es-CL', { day: 'numeric', month: 'long', year: 'numeric' });
+  };
+
   const saveMPLink = async () => {
     try {
       await api.post('/drivers/payment-link', { mercadoPagoLink: mpLink });
@@ -1175,8 +1188,9 @@ export default function DriverPage() {
               </p>
             </div>
           )}
-          
-          <PaymentLinkTutorial showMpTutorial={showMpTutorial} setShowMpTutorial={setShowMpTutorial} />
+          {!driver.mercadoPagoLink && (
+            <PaymentLinkTutorial showMpTutorial={showMpTutorial} setShowMpTutorial={setShowMpTutorial} />
+          )}
         </div>
       </div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', width: '100%', maxWidth: '440px' }}>
@@ -1466,100 +1480,78 @@ export default function DriverPage() {
             </div>
           </div>
 
+          {driver.isPromoActive && !isOnline && (
+            <div style={{ 
+              background: 'rgba(0, 229, 160, 0.05)', 
+              border: '1px solid var(--accent)', 
+              borderRadius: '16px', 
+              padding: '16px', 
+              marginBottom: '16px',
+              display: 'flex',
+              alignItems: 'flex-start',
+              gap: '12px'
+            }}>
+              <span style={{ fontSize: '1.8rem', marginTop: '-2px' }}>🎉</span>
+              <div style={{ textAlign: 'left' }}>
+                <h4 style={{ margin: '0 0 4px 0', fontSize: '0.95rem', fontWeight: 800, color: 'var(--accent)' }}>¡Felicitaciones!</h4>
+                <p style={{ margin: 0, fontSize: '0.8rem', color: '#fff', lineHeight: '1.4' }}>
+                  Bienvenido a FIM, la app que une a pasajeros y conductores más rentable del país. Nuestra app es <strong>0% comisión</strong>, ¡A disfrutar jefe!
+                </p>
+              </div>
+            </div>
+          )}
+
           {driver.isPromoActive && (
             <div style={{ 
               background: 'linear-gradient(135deg, rgba(212,175,55,0.1) 0%, rgba(212,175,55,0.05) 100%)', 
               border: '1px solid #D4AF37', 
               borderRadius: '16px', 
-              padding: '24px', 
+              padding: '16px 20px', 
               marginBottom: '20px',
-              textAlign: 'center',
-              boxShadow: '0 8px 32px rgba(212,175,55,0.1)'
+              textAlign: 'left',
+              boxShadow: '0 8px 32px rgba(212,175,55,0.08)'
             }}>
-              <div style={{ marginBottom: '16px' }}>
-                <span style={{ fontSize: '3rem' }}>🎉</span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
+                <span style={{ fontSize: '1.25rem' }}>✨</span>
+                <span style={{ color: '#D4AF37', fontWeight: 900, fontSize: '1.05rem' }}>
+                  {isOnline ? 'En línea — FREE PASS Activo' : 'FREE PASS Activo'}
+                </span>
               </div>
-              <h2 style={{ fontSize: '1.5rem', fontWeight: 800, color: '#D4AF37', margin: '0 0 12px 0' }}>¡Felicitaciones!</h2>
-              <p style={{ fontSize: '0.95rem', color: '#fff', lineHeight: '1.5', margin: '0 0 16px 0', fontWeight: 600 }}>
-                Bienvenido a FIM, la app que une a pasajeros y conductores más rentable del país.
+              <p style={{ fontSize: '0.85rem', color: '#fff', margin: '0 0 8px 0', lineHeight: '1.4' }}>
+                {isOnline 
+                  ? `Recibiendo viajes en el plan ${driver.membershipPlan}.` 
+                  : `Tienes pase libre para recibir viajes en el plan ${driver.membershipPlan}.`}
               </p>
-              <div style={{ background: 'rgba(0,0,0,0.3)', padding: '16px', borderRadius: '12px', marginBottom: '16px' }}>
-                <div style={{ color: 'var(--accent)', fontSize: '1.25rem', fontWeight: 900, marginBottom: '4px' }}>Free PASS Activo</div>
-                <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Te quedan <strong style={{ color: '#fff' }}>{driver.freePassDays} días</strong></div>
+              <div style={{ fontSize: '0.78rem', color: 'rgba(255,255,255,0.6)' }}>
+                Vence el: <strong style={{ color: '#fff' }}>{getFreePassExpirationDate()}</strong>
               </div>
-              <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', lineHeight: '1.5', margin: 0 }}>
-                Nuestra app es <strong>0% comisión</strong>, ¡A disfrutar jefe!
-              </p>
             </div>
           )}
 
-          {!driver.mercadoPagoLink && (
-            <div style={{ background: 'rgba(0,229,160,0.05)', padding: '16px', borderRadius: 'var(--radius)', border: '1px solid var(--accent)', marginBottom: '20px' }}>
-              <p style={{ fontSize: '0.85rem', marginBottom: '12px', fontWeight: 600 }}>¡Vincular Mercado Pago Connect!</p>
-              <input
-                type="text" className="form-input" placeholder="Pega tu link aquí..."
-                value={mpLink} onChange={(e) => setMpLink(e.target.value)}
-                style={{ marginBottom: '12px' }}
-              />
-              <button 
-                className="btn btn-accent btn-block" 
-                onClick={saveMPLink} 
-                disabled={!mpLink.toLowerCase().includes('mercadopago') && !mpLink.toLowerCase().includes('mpago')}
-                style={{ marginBottom: '10px' }}
-              >
-                Vincular Cuenta
-              </button>
-
-              {/* Collapsible Mini Tutorial */}
-              <button
-                type="button"
-                onClick={() => setShowMpTutorial(!showMpTutorial)}
-                style={{
-                  background: 'none',
-                  border: 'none',
-                  color: 'var(--accent)',
-                  fontSize: '0.75rem',
-                  fontWeight: 700,
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '4px',
-                  padding: '4px 0',
-                  outline: 'none',
-                  margin: '4px auto 0'
-                }}
-              >
-                {showMpTutorial ? 'Cerrar ayuda' : '¿Cómo obtener este link?'}
-              </button>
-
-              {showMpTutorial && (
-                <div style={{
-                  marginTop: '12px',
-                  padding: '12px',
-                  background: 'rgba(255, 255, 255, 0.03)',
-                  border: '1px solid rgba(255, 255, 255, 0.08)',
-                  borderRadius: '10px',
-                  fontSize: '0.75rem',
-                  color: 'var(--text-muted)',
-                  lineHeight: '1.45',
-                  textAlign: 'left',
-                  animation: 'fadeIn 0.25s ease'
-                }}>
-                  <div style={{ fontWeight: 800, color: '#fff', marginBottom: '6px' }}>Pasos para obtener tu link de cobro:</div>
-                  <ol style={{ paddingLeft: '14px', margin: 0, display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                    <li>Abre la app de <strong>Mercado Pago</strong> o inicia sesión en su sitio web.</li>
-                    <li>Busca la opción <strong>"Link de pago"</strong> (o "Cobrar con link") en el menú principal.</li>
-                    <li>Crea un link nuevo. Puedes asignarle un título (ej: <em>"Viajes Fim"</em>) y dejar el monto en blanco (para que el pasajero ingrese el valor exacto del viaje).</li>
-                    <li>Copia el enlace generado (ej: <code>https://mpago.li/...</code> o <code>https://www.mercadopago.cl/...</code>).</li>
-                    <li>Pégalo en el campo superior y presiona <strong>Vincular Cuenta</strong>.</li>
-                  </ol>
-                </div>
-              )}
-            </div>
+          {!isOnline && !driver.mercadoPagoLink && (
+            <>
+              <div style={{ background: 'rgba(0,229,160,0.05)', padding: '16px', borderRadius: 'var(--radius)', border: '1px solid var(--accent)', marginBottom: '20px' }}>
+                <p style={{ fontSize: '0.85rem', marginBottom: '12px', fontWeight: 600 }}>¡Vincular Mercado Pago Connect!</p>
+                <input
+                  type="text" className="form-input" placeholder="Pega tu link aquí..."
+                  value={mpLink} onChange={(e) => setMpLink(e.target.value)}
+                  style={{ marginBottom: '12px' }}
+                />
+                <button 
+                  className="btn btn-accent btn-block" 
+                  onClick={saveMPLink} 
+                  disabled={!mpLink.toLowerCase().includes('mercadopago') && !mpLink.toLowerCase().includes('mpago')}
+                  style={{ marginBottom: '10px' }}
+                >
+                  Vincular Cuenta
+                </button>
+              </div>
+              <PaymentLinkTutorial showMpTutorial={showMpTutorial} setShowMpTutorial={setShowMpTutorial} />
+            </>
           )}
 
           {/* ─── PANEL DE MEMBRESÍA POR PLAN ─────────────────────────────── */}
-          {driver.membershipPlan === 'BLACK' && (
+          {!driver.isPromoActive && driver.membershipPlan === 'BLACK' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '16px' }}>
               <div style={{ background: 'linear-gradient(135deg, rgba(212,175,55,0.08), rgba(212,175,55,0.03))', border: '1px solid rgba(212,175,55,0.25)', borderRadius: '12px', padding: '14px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
@@ -1593,7 +1585,7 @@ export default function DriverPage() {
             </div>
           )}
 
-          {driver.membershipPlan === 'COMFORT' && (() => {
+          {!driver.isPromoActive && driver.membershipPlan === 'COMFORT' && (() => {
             const lastPaid = driver.comfortLastPaidAt ? new Date(driver.comfortLastPaidAt) : null;
             const todayStart = new Date(); todayStart.setHours(0,0,0,0);
             const paidToday = lastPaid && lastPaid >= todayStart;
@@ -1686,7 +1678,7 @@ export default function DriverPage() {
             );
           })()}
 
-          {driver.membershipPlan === 'FLEX' && (
+          {!driver.isPromoActive && driver.membershipPlan === 'FLEX' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '16px' }}>
               <div style={{ background: 'linear-gradient(135deg, rgba(16,185,129,0.08), rgba(16,185,129,0.03))', border: '1px solid rgba(16,185,129,0.25)', borderRadius: '12px', padding: '14px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
@@ -1736,27 +1728,6 @@ export default function DriverPage() {
               </div>
             </div>
           )}
-
-          {!driver.mercadoPagoLink && (
-            <div style={{ background: 'rgba(0,229,160,0.05)', padding: '16px', borderRadius: 'var(--radius)', border: '1px solid var(--accent)', marginBottom: '20px' }}>
-              <p style={{ fontSize: '0.85rem', marginBottom: '12px', fontWeight: 600 }}>¡Vincular Mercado Pago Connect!</p>
-              <input
-                type="text" className="form-input" placeholder="Pega tu link aquí..."
-                value={mpLink} onChange={(e) => setMpLink(e.target.value)}
-                style={{ marginBottom: '12px' }}
-              />
-              <button 
-                className="btn btn-accent btn-block" 
-                onClick={saveMPLink} 
-                disabled={!mpLink.toLowerCase().includes('mercadopago') && !mpLink.toLowerCase().includes('mpago')}
-                style={{ marginBottom: '10px' }}
-              >
-                Vincular Cuenta
-              </button>
-            </div>
-          )}
-
-          <PaymentLinkTutorial showMpTutorial={showMpTutorial} setShowMpTutorial={setShowMpTutorial} />
 
           <button
             className={`btn btn-block btn-lg ${isOnline ? 'btn-danger' : 'btn-primary'}`}
