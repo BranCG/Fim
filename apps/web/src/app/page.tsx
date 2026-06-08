@@ -630,7 +630,7 @@ export default function Home() {
               fontSize: '0.85rem',
               fontWeight: 600,
             }}>
-              Disponible en Santiago
+              Viajes sin comisiones
             </div>
 
             <CursiveSegmentTypewriter
@@ -710,7 +710,7 @@ export default function Home() {
                     <WirelessPaymentIcon width={36} height={36} />
                   ),
                   title: '3. Pago Directo',
-                  desc: 'Paga con tarjeta mediante el enlace de Mercado Pago del conductor o en efectivo. Sin cargos extra de intermediación.'
+                  desc: 'Paga con tarjeta mediante Mercado Pago o en efectivo. (Te recomendamos tener activada la app de Mercado Pago para pagar más rápido.)'
                 },
                 {
                   icon: (
