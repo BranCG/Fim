@@ -18,6 +18,7 @@ model User {
   address       String?
   idFrontUrl    String?
   idBackUrl     String?
+  backgroundDocUrl String?
   isVerified    Boolean   @default(false)
   emailVerified Boolean   @default(true)
   emailCode     String?
@@ -45,6 +46,7 @@ model Driver {
   address             String
   idFrontUrl          String
   idBackUrl           String
+  backgroundDocUrl    String?
   selfieUrl           String?
   licenseNumber       String
   licenseUrl          String

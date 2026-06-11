@@ -18,6 +18,7 @@ interface Driver {
   vehiclePlate: string; vehiclePhotoUrl: string; tagNumber: string;
   totalRating: number; totalTrips: number; createdAt: string; adminNotes?: string;
   selfieUrl?: string;
+  backgroundDocUrl?: string;
   membershipPlan: 'BLACK' | 'COMFORT' | 'FLEX';
   membershipProgress: number;
   membershipGoal: number;
@@ -86,6 +87,7 @@ export default function DashboardPage() {
     idFrontUrl: string | null;
     idBackUrl: string | null;
     selfieUrl: string | null;
+    backgroundDocUrl: string | null;
     trips?: any[];
   }
 
@@ -420,6 +422,7 @@ export default function DashboardPage() {
                           { label: 'Cédula Frontal', url: driver.idFrontUrl },
                           { label: 'Cédula Posterior', url: driver.idBackUrl },
                           { label: 'Selfie Seguridad', url: driver.selfieUrl },
+                          { label: 'Antecedentes', url: driver.backgroundDocUrl },
                           { label: 'Licencia Frente', url: driver.licenseUrl },
                           { label: 'Licencia Dorso', url: driver.licenseBackUrl },
                           { label: 'Foto Vehículo', url: driver.vehiclePhotoUrl },
@@ -736,6 +739,7 @@ export default function DashboardPage() {
                   { label: 'Cédula Frontal', url: selectedDriver.idFrontUrl },
                   { label: 'Cédula Posterior', url: selectedDriver.idBackUrl },
                   { label: 'Selfie Seguridad', url: selectedDriver.selfieUrl },
+                  { label: 'Antecedentes', url: selectedDriver.backgroundDocUrl },
                   { label: 'Licencia Frente', url: selectedDriver.licenseUrl },
                   { label: 'Licencia Dorso', url: selectedDriver.licenseBackUrl },
                   { label: 'Foto Vehículo', url: selectedDriver.vehiclePhotoUrl },
@@ -751,7 +755,7 @@ export default function DashboardPage() {
                 ))}
               </div>
               {(() => {
-                const urls = [selectedDriver.idFrontUrl, selectedDriver.idBackUrl, selectedDriver.selfieUrl, selectedDriver.licenseUrl, selectedDriver.licenseBackUrl, selectedDriver.vehiclePhotoUrl].filter(Boolean);
+                const urls = [selectedDriver.idFrontUrl, selectedDriver.idBackUrl, selectedDriver.selfieUrl, selectedDriver.backgroundDocUrl, selectedDriver.licenseUrl, selectedDriver.licenseBackUrl, selectedDriver.vehiclePhotoUrl].filter(Boolean);
                 const hasDuplicates = new Set(urls).size !== urls.length;
                 if (hasDuplicates) {
                   return (
@@ -992,6 +996,7 @@ export default function DashboardPage() {
                   { label: 'Cédula Frontal', url: selectedPassenger.idFrontUrl },
                   { label: 'Cédula Posterior', url: selectedPassenger.idBackUrl },
                   { label: 'Selfie de Seguridad', url: selectedPassenger.selfieUrl },
+                  { label: 'Antecedentes', url: selectedPassenger.backgroundDocUrl },
                 ].map(doc => (
                   doc.url ? (
                     <button

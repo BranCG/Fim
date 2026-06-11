@@ -58,7 +58,7 @@ router.get('/drivers/pending', async (_req: Request, res: Response) => {
       select: {
         id: true, name: true, email: true, phone: true,
         rut: true, birthDate: true, address: true,
-        idFrontUrl: true, idBackUrl: true, selfieUrl: true,
+        idFrontUrl: true, idBackUrl: true, selfieUrl: true, backgroundDocUrl: true,
         licenseNumber: true, licenseUrl: true, licenseBackUrl: true,
         vehicleBrand: true, vehicleModel: true, vehicleYear: true,
         vehiclePlate: true, vehiclePhotoUrl: true, tagNumber: true,
@@ -236,7 +236,7 @@ router.get('/passengers', async (_req: Request, res: Response) => {
       select: {
         id: true, name: true, email: true, phone: true,
         rut: true, isVerified: true, createdAt: true,
-        idFrontUrl: true, idBackUrl: true, selfieUrl: true,
+        idFrontUrl: true, idBackUrl: true, selfieUrl: true, backgroundDocUrl: true,
       },
     });
     return res.json({ passengers });

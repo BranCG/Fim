@@ -144,6 +144,7 @@ function RegisterForm() {
   const [idFront, setIdFront] = useState<FileUpload>(emptyUpload());
   const [idBack, setIdBack] = useState<FileUpload>(emptyUpload());
   const [selfie, setSelfie] = useState<FileUpload>(emptyUpload());
+  const [backgroundDoc, setBackgroundDoc] = useState<FileUpload>(emptyUpload());
 
   // Step 3 - Driver vehicle (solo conductores)
   const [licenseNumber, setLicenseNumber] = useState('');
@@ -360,7 +361,7 @@ function RegisterForm() {
     const preview = URL.createObjectURL(file);
 
     // Validar duplicados
-    const currentUploads = [idFront, idBack, selfie, licenseFront, licenseBack, vehiclePhoto];
+    const currentUploads = [idFront, idBack, selfie, backgroundDoc, licenseFront, licenseBack, vehiclePhoto];
     const isDuplicate = currentUploads.some(u => u.file && u.file.name === file.name && u.file.size === file.size);
     if (isDuplicate) {
       setError('Ya has subido esta misma foto para otro documento.');
@@ -536,12 +537,13 @@ function RegisterForm() {
             role: 'passenger',
             idFrontUrl: idFront.url,
             idBackUrl: idBack.url,
-            selfieUrl: selfie.url
+            selfieUrl: selfie.url,
+            backgroundDocUrl: backgroundDoc.url
           });
           saveSession(res.data.accessToken, { ...res.data.user, role: 'passenger' });
           router.push('/passenger');
         } else {
-          const res = await api.post('/auth/passenger/register', { name, email, phone, password, rut, birthDate, address, idFrontUrl: idFront.url, idBackUrl: idBack.url, selfieUrl: selfie.url });
+          const res = await api.post('/auth/passenger/register', { name, email, phone, password, rut, birthDate, address, idFrontUrl: idFront.url, idBackUrl: idBack.url, selfieUrl: selfie.url, backgroundDocUrl: backgroundDoc.url });
           if (res.data.status === 'verification_pending') {
             setVerificationEmail(email);
             setVerificationPending(true);
@@ -563,6 +565,7 @@ function RegisterForm() {
             idFrontUrl: idFront.url,
             idBackUrl: idBack.url,
             selfieUrl: selfie.url,
+            backgroundDocUrl: backgroundDoc.url,
             licenseNumber,
             licenseUrl: licenseFront.url,
             licenseBackUrl: licenseBack.url,
@@ -577,7 +580,7 @@ function RegisterForm() {
           saveSession(res.data.accessToken, { ...res.data.driver, role: 'driver' });
           router.push('/driver');
         } else {
-          const res = await api.post('/auth/driver/register', { name, email, phone, password, rut, birthDate, address, idFrontUrl: idFront.url, idBackUrl: idBack.url, selfieUrl: selfie.url, licenseNumber, licenseUrl: licenseFront.url, licenseBackUrl: licenseBack.url, vehicleBrand, vehicleModel, vehicleYear, vehiclePlate, tagNumber, vehiclePhotoUrl: vehiclePhoto.url, membershipPlan });
+          const res = await api.post('/auth/driver/register', { name, email, phone, password, rut, birthDate, address, idFrontUrl: idFront.url, idBackUrl: idBack.url, selfieUrl: selfie.url, backgroundDocUrl: backgroundDoc.url, licenseNumber, licenseUrl: licenseFront.url, licenseBackUrl: licenseBack.url, vehicleBrand, vehicleModel, vehicleYear, vehiclePlate, tagNumber, vehiclePhotoUrl: vehiclePhoto.url, membershipPlan });
           if (res.data.status === 'verification_pending') {
             setVerificationEmail(email);
             setVerificationPending(true);
@@ -706,10 +709,11 @@ function RegisterForm() {
       }
     }
     if (step === 2) {
-      if (selfie.loading || idFront.loading || idBack.loading) { setError('Espera a que terminen de subirse todas las fotos.'); return; }
+      if (selfie.loading || idFront.loading || idBack.loading || backgroundDoc.loading) { setError('Espera a que terminen de subirse todos los documentos.'); return; }
       if (!selfie.url) { setError(selfie.preview ? 'La foto Selfie con Cédula no pudo subirse. Inténtalo de nuevo.' : 'Por favor, sube la foto de tu Selfie con la Cédula.'); return; }
       if (!idFront.url) { setError(idFront.preview ? 'La foto frontal de tu Cédula no pudo subirse. Inténtalo de nuevo.' : 'Por favor, sube la foto frontal de tu Cédula.'); return; }
       if (!idBack.url) { setError(idBack.preview ? 'La foto posterior de tu Cédula no pudo subirse. Inténtalo de nuevo.' : 'Por favor, sube la foto posterior de tu Cédula.'); return; }
+      if (!backgroundDoc.url) { setError(backgroundDoc.preview ? 'El Certificado de Antecedentes no pudo subirse. Inténtalo de nuevo.' : 'Por favor, sube tu Certificado de Antecedentes.'); return; }
     }
     if (step === 3 && role === 'driver') {
       if (licenseFront.loading || licenseBack.loading || vehiclePhoto.loading) { setError('Espera a que terminen de subirse todas las fotos.'); return; }
@@ -1028,10 +1032,31 @@ function RegisterForm() {
 
           {step === 2 && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', textAlign: 'center', marginBottom: '8px' }}>Necesitamos validar tu identidad para continuar.</p>
+              <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', textAlign: 'center', marginBottom: '8px' }}>Necesitamos validar tu identidad y antecedentes para continuar.</p>
               {renderUploadArea('Selfie con Cédula', selfie, setSelfie, 'selfie-file')}
               {renderUploadArea('Cédula (Frontal)', idFront, setIdFront, 'id-front')}
               {renderUploadArea('Cédula (Posterior)', idBack, setIdBack, 'id-back')}
+              {renderUploadArea('Certificado de Antecedentes', backgroundDoc, setBackgroundDoc, 'background-doc')}
+              <div style={{
+                background: 'rgba(255, 255, 255, 0.03)',
+                border: '1px solid var(--border)',
+                borderRadius: '12px',
+                padding: '14px',
+                fontSize: '0.82rem',
+                color: 'var(--text-muted)',
+                lineHeight: '1.4'
+              }}>
+                <span style={{ color: 'var(--accent)', fontWeight: 600, display: 'block', marginBottom: '4px' }}>💡 ¿Cómo obtener tu Certificado de Antecedentes?</span>
+                Puedes obtener tu Certificado de Antecedentes para Fines Particulares de forma **100% gratuita** en el sitio web del **Registro Civil** utilizando tu ClaveÚnica.
+                <a
+                  href="https://www.registrocivil.cl/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{ color: 'var(--accent)', textDecoration: 'underline', fontWeight: 600, display: 'block', marginTop: '6px' }}
+                >
+                  Ir al sitio del Registro Civil →
+                </a>
+              </div>
             </div>
           )}
 
@@ -1228,10 +1253,10 @@ function RegisterForm() {
                 <button
                   className="btn btn-primary"
                   onClick={nextStep}
-                  disabled={[selfie, idFront, idBack, licenseFront, licenseBack, vehiclePhoto].some(u => u.loading)}
+                  disabled={[selfie, idFront, idBack, backgroundDoc, licenseFront, licenseBack, vehiclePhoto].some(u => u.loading)}
                   style={{ flex: 2, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
                 >
-                  {[selfie, idFront, idBack, licenseFront, licenseBack, vehiclePhoto].some(u => u.loading)
+                  {[selfie, idFront, idBack, backgroundDoc, licenseFront, licenseBack, vehiclePhoto].some(u => u.loading)
                     ? <><span className="spinner-sm" /> Subiendo foto...</>
                     : <>Continuar <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12" /><polyline points="12 5 19 12 12 19" /></svg></>
                   }

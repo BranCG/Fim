@@ -36,6 +36,7 @@ async function main() {
       rut: '12.345.678-9',
       birthDate: new Date('1990-05-15'),
       address: 'Av. Providencia 1000, Santiago',
+      backgroundDocUrl: 'https://via.placeholder.com/400x250?text=Antecedentes',
       isVerified: true,
     },
   });
@@ -56,6 +57,7 @@ async function main() {
       address: 'Av. Las Condes 5000, Santiago',
       idFrontUrl: 'https://via.placeholder.com/400x250?text=Cedula+Frente',
       idBackUrl: 'https://via.placeholder.com/400x250?text=Cedula+Dorso',
+      backgroundDocUrl: 'https://via.placeholder.com/400x250?text=Antecedentes',
       licenseNumber: 'A1234567',
       licenseUrl: 'https://via.placeholder.com/400x250?text=Licencia',
       vehicleBrand: 'Toyota',
@@ -88,6 +90,7 @@ async function main() {
       address: 'Av. Grecia 2500, Santiago',
       idFrontUrl: 'https://via.placeholder.com/400x250?text=Cedula+Frente',
       idBackUrl: 'https://via.placeholder.com/400x250?text=Cedula+Dorso',
+      backgroundDocUrl: 'https://via.placeholder.com/400x250?text=Antecedentes',
       licenseNumber: 'B9876543',
       licenseUrl: 'https://via.placeholder.com/400x250?text=Licencia',
       vehicleBrand: 'Hyundai',

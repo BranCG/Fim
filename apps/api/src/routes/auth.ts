@@ -24,7 +24,7 @@ async function verifyGoogleToken(idToken: string) {
 // ─── REGISTRO PASAJERO ────────────────────────────────────────────────────
 router.post('/passenger/register', async (req: Request, res: Response) => {
   try {
-    const { email, phone, name, password, rut, birthDate, address, idFrontUrl, idBackUrl, selfieUrl } = req.body;
+    const { email, phone, name, password, rut, birthDate, address, idFrontUrl, idBackUrl, selfieUrl, backgroundDocUrl } = req.body;
 
     if (!email || !phone || !name || !password) {
       return res.status(400).json({ error: 'Faltan campos obligatorios' });
@@ -59,6 +59,7 @@ router.post('/passenger/register', async (req: Request, res: Response) => {
         idFrontUrl,
         idBackUrl,
         selfieUrl,
+        backgroundDocUrl,
         role: 'passenger',
         emailVerified: false,
         emailCode: code,
@@ -129,11 +130,13 @@ router.post('/driver/register', async (req: Request, res: Response) => {
       idFrontUrl, idBackUrl, selfieUrl, licenseUrl, licenseBackUrl, vehiclePhotoUrl,
       membershipPlan,
       bankName, bankAccountType, bankAccountNumber, bankAccountName, bankAccountRut, bankAccountEmail,
+      backgroundDocUrl,
     } = req.body;
 
     const required = [email, phone, name, password, rut, birthDate, address,
       licenseNumber, vehicleBrand, vehicleModel, vehicleYear, vehiclePlate,
-      idFrontUrl, idBackUrl, selfieUrl, licenseUrl, licenseBackUrl, vehiclePhotoUrl, membershipPlan];
+      idFrontUrl, idBackUrl, selfieUrl, licenseUrl, licenseBackUrl, vehiclePhotoUrl, membershipPlan,
+      backgroundDocUrl];
 
     if (required.some(v => !v)) {
       return res.status(400).json({ error: 'Todos los campos son obligatorios' });
@@ -162,7 +165,7 @@ router.post('/driver/register', async (req: Request, res: Response) => {
       data: {
         email, phone, name, passwordHash,
         rut, birthDate: new Date(birthDate), address,
-        idFrontUrl, idBackUrl, selfieUrl,
+        idFrontUrl, idBackUrl, selfieUrl, backgroundDocUrl,
         licenseNumber, licenseUrl, licenseBackUrl,
         vehicleBrand, vehicleModel,
         vehicleYear: Number(vehicleYear),
@@ -563,7 +566,7 @@ router.post('/google/register', async (req: Request, res: Response) => {
   try {
     const {
       credential, phone, name, rut, birthDate, address, role,
-      idFrontUrl, idBackUrl, selfieUrl,
+      idFrontUrl, idBackUrl, selfieUrl, backgroundDocUrl,
       // Conductor specific
       licenseNumber, licenseUrl, licenseBackUrl,
       vehicleBrand, vehicleModel, vehicleYear, vehiclePlate, tagNumber, vehiclePhotoUrl,
@@ -584,7 +587,7 @@ router.post('/google/register', async (req: Request, res: Response) => {
     const dummyPasswordHash = await bcrypt.hash('GOOGLE_OAUTH_DUMMY_PASSWORD_' + Math.random(), 12);
 
     if (role === 'driver') {
-      const required = [rut, birthDate, address, licenseNumber, vehicleBrand, vehicleModel, vehicleYear, vehiclePlate, idFrontUrl, idBackUrl, selfieUrl, licenseUrl, licenseBackUrl, vehiclePhotoUrl, membershipPlan];
+      const required = [rut, birthDate, address, licenseNumber, vehicleBrand, vehicleModel, vehicleYear, vehiclePlate, idFrontUrl, idBackUrl, selfieUrl, backgroundDocUrl, licenseUrl, licenseBackUrl, vehiclePhotoUrl, membershipPlan];
       if (required.some(v => !v)) {
         return res.status(400).json({ error: 'Faltan campos obligatorios para el conductor' });
       }
@@ -600,7 +603,7 @@ router.post('/google/register', async (req: Request, res: Response) => {
         data: {
           email, phone, name, passwordHash: dummyPasswordHash,
           rut, birthDate: new Date(birthDate), address,
-          idFrontUrl, idBackUrl, selfieUrl,
+          idFrontUrl, idBackUrl, selfieUrl, backgroundDocUrl,
           licenseNumber, licenseUrl, licenseBackUrl,
           vehicleBrand, vehicleModel, vehicleYear: Number(vehicleYear),
           vehiclePlate, vehiclePhotoUrl, tagNumber: tagNumber || "",
@@ -619,7 +622,7 @@ router.post('/google/register', async (req: Request, res: Response) => {
         ...tokens
       });
     } else {
-      const required = [rut, birthDate, address, idFrontUrl, idBackUrl, selfieUrl];
+      const required = [rut, birthDate, address, idFrontUrl, idBackUrl, selfieUrl, backgroundDocUrl];
       if (required.some(v => !v)) {
         return res.status(400).json({ error: 'Faltan campos de verificación obligatorios' });
       }

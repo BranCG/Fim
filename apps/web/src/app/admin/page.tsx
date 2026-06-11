@@ -173,6 +173,7 @@ interface Driver {
   createdAt: string;
   adminNotes?: string;
   selfieUrl?: string;
+  backgroundDocUrl?: string;
   membershipPlan: 'BLACK' | 'COMFORT' | 'FLEX';
   membershipProgress: number;
   membershipGoal: number;
@@ -196,6 +197,7 @@ interface Passenger {
   idFrontUrl: string | null;
   idBackUrl: string | null;
   selfieUrl: string | null;
+  backgroundDocUrl: string | null;
   trips?: {
     id: string;
     status: string;
@@ -720,6 +722,7 @@ export default function AdminDashboardPage() {
                   { label: 'Cédula Frente', url: selectedDriver.idFrontUrl },
                   { label: 'Cédula Dorso', url: selectedDriver.idBackUrl },
                   { label: 'Selfie', url: selectedDriver.selfieUrl },
+                  { label: 'Antecedentes', url: selectedDriver.backgroundDocUrl },
                   { label: 'Licencia Frente', url: selectedDriver.licenseUrl },
                   { label: 'Licencia Dorso', url: selectedDriver.licenseBackUrl },
                   { label: 'Vehículo', url: selectedDriver.vehiclePhotoUrl },
@@ -860,6 +863,7 @@ export default function AdminDashboardPage() {
                       { label: 'Cédula F.', url: p.idFrontUrl },
                       { label: 'Cédula D.', url: p.idBackUrl },
                       { label: 'Selfie', url: p.selfieUrl },
+                      { label: 'Antecedentes', url: p.backgroundDocUrl },
                     ].map(doc => doc.url ? (
                       <div
                         key={doc.label}
@@ -953,6 +957,7 @@ export default function AdminDashboardPage() {
                   { label: 'Cédula Frente', url: selectedPassenger.idFrontUrl },
                   { label: 'Cédula Dorso', url: selectedPassenger.idBackUrl },
                   { label: 'Selfie', url: selectedPassenger.selfieUrl },
+                  { label: 'Antecedentes', url: selectedPassenger.backgroundDocUrl },
                 ].map(d => d.url ? (
                   <div
                     key={d.label}
