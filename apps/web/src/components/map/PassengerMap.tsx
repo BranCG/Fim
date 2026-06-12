@@ -10,6 +10,7 @@ interface Props {
   nearbyDrivers?: Array<{ id: string; lat: number; lng: number }>;
   isSelectingLocation?: 'origin' | 'dest' | null;
   onMapCenterChange?: (coords: { lat: number; lng: number }) => void;
+  tripStatus?: string | null;
 }
 
 const getDistanceMeters = (lat1: number, lng1: number, lat2: number, lng2: number) => {
@@ -25,7 +26,8 @@ export default function PassengerMap({
   centerTrigger = 0,
   nearbyDrivers = [],
   isSelectingLocation = null,
-  onMapCenterChange
+  onMapCenterChange,
+  tripStatus = null
 }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -43,6 +45,7 @@ export default function PassengerMap({
   const driverMarkerRef = useRef<any>(null);
   const routeLineRef = useRef<any>(null);
   const currentRouteEndpoints = useRef<string>('');
+  const hasFittedBounds = useRef<string>('');
   const currentAngleRef = useRef<number>(0);
   const nearbyMarkersRef = useRef<Map<string, any>>(new Map());
   const nearbyAnglesRef = useRef<Map<string, number>>(new Map());
@@ -198,7 +201,10 @@ export default function PassengerMap({
     };
 
     // ── 1. Origen ──────────────────────────────────────────────────────────
-    if (origin && isSelectingLocation !== 'origin') {
+    const isTripActive = ['driver_assigned', 'driver_arrived', 'in_progress'].includes(tripStatus || '');
+    const showOrigin = origin && isSelectingLocation !== 'origin' && (!isTripActive || tripStatus === 'driver_assigned' || tripStatus === 'driver_arrived');
+
+    if (showOrigin && origin) {
       if (!originMarkerRef.current) {
         const originIcon = L.divIcon({
           className: 'transparent-icon',
@@ -221,7 +227,9 @@ export default function PassengerMap({
     }
 
     // ── 2. Destino ─────────────────────────────────────────────────────────
-    if (dest && isSelectingLocation !== 'dest') {
+    const showDest = dest && isSelectingLocation !== 'dest' && (!isTripActive || tripStatus === 'in_progress');
+
+    if (showDest && dest) {
       if (!destMarkerRef.current) {
         const destIcon = L.divIcon({
           className: 'transparent-icon',
@@ -245,10 +253,70 @@ export default function PassengerMap({
     }
 
     // ── 3. Ruta OSRM ───────────────────────────────────────────────────────
-    if (origin && dest) {
+    const activeRouteTarget = isTripActive
+      ? ((tripStatus === 'driver_assigned' || tripStatus === 'driver_arrived') ? origin : dest)
+      : null;
+
+    if (isTripActive && driverPos && activeRouteTarget) {
+      const latRounded = Math.round(driverPos.lat * 1000) / 1000;
+      const lngRounded = Math.round(driverPos.lng * 1000) / 1000;
+      const endpointsKey = `${latRounded},${lngRounded}->${activeRouteTarget.lat},${activeRouteTarget.lng}`;
+      const targetPhase = tripStatus || '';
+
+      if (currentRouteEndpoints.current !== endpointsKey) {
+        currentRouteEndpoints.current = endpointsKey;
+
+        if (routeLineRef.current) {
+          routeLineRef.current.remove();
+          routeLineRef.current = null;
+        }
+
+        const fetchRoute = async () => {
+          const color = (tripStatus === 'driver_assigned' || tripStatus === 'driver_arrived') ? '#00E5A0' : '#FF4560'; // Verde para buscar al pasajero, rojo para ir al destino
+          try {
+            const res = await fetch(`https://router.project-osrm.org/route/v1/driving/${driverPos.lng},${driverPos.lat};${activeRouteTarget.lng},${activeRouteTarget.lat}?overview=full&geometries=geojson`);
+            const data = await res.json();
+            
+            if (!mapRef.current) return;
+            if (routeLineRef.current) { routeLineRef.current.remove(); }
+
+            if (data.routes && data.routes[0]) {
+              const route = L.geoJSON(data.routes[0].geometry, {
+                style: { color: color, weight: 5, opacity: 0.85, lineCap: 'round', lineJoin: 'round' }
+              }).addTo(map);
+              routeLineRef.current = route;
+            } else {
+              throw new Error('Sin ruta');
+            }
+          } catch (e) {
+            if (!mapRef.current) return;
+            const route = L.polyline(
+              [[driverPos.lat, driverPos.lng], [activeRouteTarget.lat, activeRouteTarget.lng]],
+              { color: color, weight: 4, opacity: 0.85, dashArray: '10 6', lineCap: 'round' }
+            ).addTo(map);
+            routeLineRef.current = route;
+          }
+
+          // Ajustar vista del mapa una sola vez por fase
+          if (hasFittedBounds.current !== targetPhase) {
+            hasFittedBounds.current = targetPhase;
+            const bounds = L.latLngBounds([[driverPos.lat, driverPos.lng], [activeRouteTarget.lat, activeRouteTarget.lng]]);
+            map.fitBounds(bounds, { padding: [100, 100], maxZoom: 15 });
+          }
+        };
+        fetchRoute();
+      }
+
+      // Si la ruta ya se ajustó inicialmente, auto-desplazar de forma fluida para mantener el coche centrado
+      if (hasFittedBounds.current === targetPhase) {
+        map.panTo([driverPos.lat - 0.0004, driverPos.lng], { animate: true, duration: 1.2 });
+      }
+
+    } else if (!isTripActive && origin && dest) {
       const endpointsKey = `${origin.lat},${origin.lng}->${dest.lat},${dest.lng}`;
       if (currentRouteEndpoints.current !== endpointsKey) {
         currentRouteEndpoints.current = endpointsKey;
+        hasFittedBounds.current = '';
         
         if (routeLineRef.current) {
           routeLineRef.current.remove();
@@ -288,6 +356,7 @@ export default function PassengerMap({
       }
     } else {
       currentRouteEndpoints.current = '';
+      hasFittedBounds.current = '';
       if (routeLineRef.current) {
         routeLineRef.current.remove();
         routeLineRef.current = null;
@@ -303,8 +372,7 @@ export default function PassengerMap({
       } else {
         // Si ya existe, animar suavemente a la nueva ubicación
         const prevPos = driverMarkerRef.current.getLatLng();
-        const dist = getDistanceMeters(prevPos.lat, prevPos.lng, driverPos.lat, driverPos.lng);
-        if (dist > 5) {
+        if (prevPos.lat !== driverPos.lat || prevPos.lng !== driverPos.lng) {
           animateMarker(driverMarkerRef.current, prevPos, driverPos, undefined, 1200);
         }
       }
@@ -336,8 +404,7 @@ export default function PassengerMap({
         nearbyMarkersRef.current.set(driver.id, marker);
       } else {
         const prevPos = prevMarker.getLatLng();
-        const dist = getDistanceMeters(prevPos.lat, prevPos.lng, driver.lat, driver.lng);
-        if (dist > 5) {
+        if (prevPos.lat !== driver.lat || prevPos.lng !== driver.lng) {
           animateMarker(prevMarker, prevPos, { lat: driver.lat, lng: driver.lng }, driver.id, 1200);
         }
       }
@@ -345,7 +412,7 @@ export default function PassengerMap({
 
     map.invalidateSize(true);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [origin, dest, driverPos, mapLoaded, nearbyDrivers]);
+  }, [origin, dest, driverPos, mapLoaded, nearbyDrivers, tripStatus]);
 
   // Escuchar el movimiento del mapa para reportar el centro en selección manual
   useEffect(() => {

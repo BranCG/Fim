@@ -1323,6 +1323,7 @@ export default function PassengerPage() {
           nearbyDrivers={nearbyDrivers}
           isSelectingLocation={isSelectingLocation}
           onMapCenterChange={handleMapCenterChange}
+          tripStatus={status}
         />
 
         {/* HUD de GPS y Controles Flotantes del Mapa */}
