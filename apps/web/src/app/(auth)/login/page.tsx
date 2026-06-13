@@ -293,9 +293,6 @@ export default function LoginPage() {
           <div className="form-group">
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
               <label className="form-label" style={{ margin: 0 }}>Contraseña</label>
-              <Link href="/forgot-password" style={{ color: 'var(--accent)', fontSize: '0.8rem', fontWeight: 600 }}>
-                ¿Olvidaste tu contraseña?
-              </Link>
             </div>
             <input
               id="login-password"
@@ -306,6 +303,9 @@ export default function LoginPage() {
               onChange={e => setPassword(e.target.value)}
               required
             />
+            <Link href="/forgot-password" style={{ color: 'var(--accent)', fontSize: '0.8rem', fontWeight: 600 }}>
+              ¿Olvidaste tu contraseña?
+            </Link>
           </div>
           <button
             id="login-submit"
