@@ -4,6 +4,8 @@ import prisma from '../utils/prisma';
 import { generateTokens, requireAuth } from '../middleware/auth';
 import { sendVerificationEmail, sendPasswordResetEmail } from '../utils/mailer';
 import { OAuth2Client } from 'google-auth-library';
+import axios from 'axios';
+import { compareFaces } from '../utils/rekognition';
 
 const router = Router();
 
@@ -314,6 +316,71 @@ router.get('/me', requireAuth, async (req: Request, res: Response) => {
   } catch (err) {
     console.error(err);
     return res.status(500).json({ error: 'Error interno del servidor' });
+  }
+});
+
+// ─── VERIFICACIÓN BIOMÉTRICA (FACE MATCH) ──────────────────────────────────
+router.post('/biometric-verify', requireAuth, async (req: Request, res: Response) => {
+  try {
+    const { selfieBase64 } = req.body;
+    if (!selfieBase64) {
+      return res.status(400).json({ error: 'Selfie en formato Base64 es requerida' });
+    }
+
+    const userId = req.user!.id;
+    const role = req.user!.role;
+
+    let selfieUrl: string | null = null;
+
+    if (role === 'driver') {
+      const driver = await prisma.driver.findUnique({
+        where: { id: userId },
+        select: { selfieUrl: true }
+      });
+      selfieUrl = driver?.selfieUrl || null;
+    } else {
+      const user = await prisma.user.findUnique({
+        where: { id: userId },
+        select: { selfieUrl: true }
+      });
+      selfieUrl = user?.selfieUrl || null;
+    }
+
+    // Verificar si la cuenta tiene un selfieUrl nulo, vacío o que es un placeholder de prueba
+    if (!selfieUrl || selfieUrl.trim() === '' || selfieUrl.includes('placehold.co') || selfieUrl.includes('placeholder')) {
+      console.log(`ℹ️ [Biometría] Bypass automático para cuenta de prueba (ID: ${userId}, SelfieUrl: ${selfieUrl})`);
+      return res.json({ success: true, bypassed: true, message: 'Bypass de verificación biométrica para cuenta de prueba' });
+    }
+
+    // Convertir la selfie recibida (Base64) a Buffer
+    const base64Data = selfieBase64.replace(/^data:image\/\w+;base64,/, "");
+    const targetBuffer = Buffer.from(base64Data, 'base64');
+
+    // Descargar la foto oficial (selfieUrl) y convertirla a Buffer
+    let sourceBuffer: Buffer;
+    try {
+      const response = await axios.get(selfieUrl, { responseType: 'arraybuffer' });
+      sourceBuffer = Buffer.from(response.data);
+    } catch (downloadErr) {
+      console.error(`❌ [Biometría] Error al descargar foto de referencia desde ${selfieUrl}:`, downloadErr);
+      return res.status(400).json({ error: 'No se pudo descargar la foto de referencia registrada en el perfil para realizar la verificación.' });
+    }
+
+    // Ejecutar comparación facial en AWS Rekognition o Mock
+    const similarity = await compareFaces(sourceBuffer, targetBuffer);
+    console.log(`ℹ️ [Biometría] Similitud obtenida: ${similarity.toFixed(2)}% para usuario ID: ${userId}`);
+
+    if (similarity >= 92) {
+      return res.json({ success: true, similarity, message: 'Verificación biométrica exitosa.' });
+    } else {
+      return res.status(400).json({ 
+        error: `La selfie no coincide con la foto registrada en el perfil (Similitud: ${similarity.toFixed(1)}%). Por favor, tómate la foto con mejor iluminación o de frente.`, 
+        similarity 
+      });
+    }
+  } catch (err: any) {
+    console.error('❌ [Biometría] Error en el flujo de verificación biométrica:', err);
+    return res.status(500).json({ error: 'Error interno en el servidor al realizar la verificación biométrica.' });
   }
 });
 

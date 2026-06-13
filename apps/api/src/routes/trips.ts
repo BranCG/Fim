@@ -43,6 +43,9 @@ router.post('/request', requireAuth, requireRole('passenger'), async (req: Reque
       estimatedPrice += 1500;
     }
 
+    // Ajustar el precio base al precio de la tarjeta (aplicar recargo del 3.19% de forma general)
+    estimatedPrice = roundCLP(estimatedPrice * 1.0319);
+
     const finalDestAddress = isTagApplied ? `${destAddress} (Incluye TAG)` : destAddress;
 
     const trip = await prisma.trip.create({
@@ -89,6 +92,9 @@ router.post('/estimate', requireAuth, async (req: Request, res: Response) => {
     if (isTagApplied) {
       estimatedPrice += 1500;
     }
+
+    // Ajustar el precio base al precio de la tarjeta (aplicar recargo del 3.19% de forma general)
+    estimatedPrice = roundCLP(estimatedPrice * 1.0319);
 
     return res.json({ distanceKm, durationMin, estimatedPrice, isDiscounted });
   } catch (err) {

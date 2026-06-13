@@ -8,6 +8,7 @@ import { connectSocket, forceReconnectSocket } from '@/lib/socket';
 import { sendLocalNotification, initializePushNotifications } from '@/lib/notifications';
 
 const DriverMap = dynamic(() => import('@/components/map/DriverMap'), { ssr: false });
+import BiometricModal from '@/components/BiometricModal';
 
 type DriverStatus = 'pending' | 'approved' | 'active' | 'rejected' | 'suspended';
 
@@ -227,6 +228,7 @@ export default function DriverPage() {
   const [timer, setTimer] = useState(30);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [showBiometricModal, setShowBiometricModal] = useState(false);
   const [otp, setOtp] = useState('');
   const [completionOtp, setCompletionOtp] = useState('');
   const [completionOtpVerified, setCompletionOtpVerified] = useState(false);
@@ -743,7 +745,7 @@ export default function DriverPage() {
       if (!data.tripId || (activeTripRef.current && data.tripId === activeTripRef.current.id)) {
         setPassengerConfirmed(true);
         if (data.receiptUrl) setReceiptUrl(data.receiptUrl);
-        const amountVal = activeTripRef.current ? (activeTripRef.current.paymentMethod === 'card' ? activeTripRef.current.estimatedPrice * 1.0319 : activeTripRef.current.estimatedPrice) : 0;
+        const amountVal = activeTripRef.current ? activeTripRef.current.estimatedPrice : 0;
         const amountStr = amountVal ? formatCLP(amountVal) : '';
         sendLocalNotification("Pago Recibido", `El pasajero ha confirmado el pago del viaje${amountStr ? ' por ' + amountStr : ''}.`);
       }
@@ -826,11 +828,32 @@ export default function DriverPage() {
     };
   }, [driver?.id, driver?.status, driver?.membershipPaid, driver?.membershipPlan, isOnline, session?.user?.id, activeTrip?.id, checkActiveTrip]);
 
-  const acceptTrip = () => {
+  const executeAcceptTrip = useCallback(() => {
     if (!tripRequest) return;
     const socket = connectSocket();
     socket.emit('driver:accept', { tripId: tripRequest.id, driverId: session?.user?.id });
     if (timerRef.current) clearInterval(timerRef.current);
+  }, [tripRequest, session]);
+
+  const acceptTrip = () => {
+    if (!tripRequest) return;
+
+    // Verificar caché biométrica de 12 horas
+    const lastVerified = localStorage.getItem('driver_biometric_last_verified');
+    const isVerifiedRecent = lastVerified && (Date.now() - Number(lastVerified)) < 12 * 60 * 60 * 1000;
+    const isPlaceholder = 
+      !driver?.selfieUrl || 
+      driver.selfieUrl.trim() === '' || 
+      driver.selfieUrl.includes('placehold.co') || 
+      driver.selfieUrl.includes('placeholder');
+
+    if (!isVerifiedRecent && !isPlaceholder) {
+      if (timerRef.current) clearInterval(timerRef.current);
+      setShowBiometricModal(true);
+      return;
+    }
+
+    executeAcceptTrip();
   };
 
   const rejectTrip = () => {
@@ -2040,7 +2063,7 @@ export default function DriverPage() {
               </div>
               {tripRequest.paymentMethod === 'card' ? (
                 <div style={{ fontSize: '0.78rem', color: 'var(--accent)', fontWeight: 700, marginTop: '4px' }}>
-                  💳 Tarjeta (Pasajero paga bruto {formatCLP(tripRequest.estimatedPrice * 1.0319)} para cubrir comisión de Mercado Pago)
+                  💳 Tarjeta (Pasajero paga {formatCLP(tripRequest.estimatedPrice)})
                 </div>
               ) : (
                 <div style={{ fontSize: '0.78rem', color: '#63B3ED', fontWeight: 700, marginTop: '4px' }}>
@@ -2336,7 +2359,7 @@ export default function DriverPage() {
                     onClick={handleRequestPayment}
                   >
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="1" x2="12" y2="23" /><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" /></svg>
-                    Solicitar Pago ({activeTrip.paymentMethod === 'card' ? `${formatCLP(activeTrip.estimatedPrice * 1.0319)} MP` : `${formatCLP(activeTrip.estimatedPrice)} Efec.`})
+                    Solicitar Pago ({activeTrip.paymentMethod === 'card' ? `${formatCLP(activeTrip.estimatedPrice)} MP` : `${formatCLP(activeTrip.estimatedPrice)} Efec.`})
                   </button>
                   <div style={{
                     marginTop: '12px',
@@ -2348,19 +2371,9 @@ export default function DriverPage() {
                     textAlign: 'left',
                     border: '1px solid var(--border)'
                   }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
-                      <span>Tarifa base del viaje (100% líquida):</span>
-                      <span style={{ fontWeight: 700, color: 'white' }}>{formatCLP(activeTrip.estimatedPrice)}</span>
-                    </div>
-                    {activeTrip.paymentMethod === 'card' && (
-                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px', color: 'var(--accent)' }}>
-                        <span>Recargo Comisión Mercado Pago (+3.19%):</span>
-                        <span>+{formatCLP(activeTrip.estimatedPrice * 0.0319)}</span>
-                      </div>
-                    )}
-                    <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 800, marginTop: '4px', color: 'var(--accent)', borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '4px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 800, color: 'var(--accent)' }}>
                       <span>Total Pasajero a Pagar:</span>
-                      <span>{formatCLP(activeTrip.paymentMethod === 'card' ? activeTrip.estimatedPrice * 1.0319 : activeTrip.estimatedPrice)}</span>
+                      <span>{formatCLP(activeTrip.estimatedPrice)}</span>
                     </div>
                   </div>
                 </div>
@@ -2389,11 +2402,11 @@ export default function DriverPage() {
                       <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginTop: '6px', borderTop: '1px solid rgba(255,184,0,0.2)', paddingTop: '8px' }}>
                         Monto a cobrar al pasajero:
                         <div style={{ fontSize: '1.4rem', fontWeight: 900, color: 'var(--warning)', marginTop: '4px' }}>
-                          {formatCLP(activeTrip.paymentMethod === 'card' ? activeTrip.estimatedPrice * 1.0319 : activeTrip.estimatedPrice)}
+                          {formatCLP(activeTrip.estimatedPrice)}
                         </div>
                         <span style={{ fontSize: '0.75rem', opacity: 0.8, color: 'var(--text-muted)' }}>
                           {activeTrip.paymentMethod === 'card'
-                            ? '(Incluye 3.19% comisión Mercado Pago)'
+                            ? '(Pago con Tarjeta)'
                             : '(Pago en Efectivo)'}
                         </span>
                       </div>
@@ -2407,7 +2420,7 @@ export default function DriverPage() {
                       <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginTop: '8px', borderTop: '1px solid rgba(0,229,160,0.2)', paddingTop: '8px' }}>
                         Monto del Pago realizado:
                         <div style={{ fontSize: '1.4rem', fontWeight: 900, color: 'var(--accent)', marginTop: '4px' }}>
-                          {formatCLP(activeTrip.paymentMethod === 'card' ? activeTrip.estimatedPrice * 1.0319 : activeTrip.estimatedPrice)}
+                          {formatCLP(activeTrip.estimatedPrice)}
                         </div>
                         <span style={{ fontSize: '0.75rem', opacity: 0.8, color: 'var(--text-muted)' }}>
                           {activeTrip.paymentMethod === 'card'
@@ -3356,6 +3369,19 @@ export default function DriverPage() {
           </div>
         </div>
       )}
+      <BiometricModal
+        isOpen={showBiometricModal}
+        onClose={() => {
+          setShowBiometricModal(false);
+          rejectTrip();
+        }}
+        onSuccess={() => {
+          localStorage.setItem('driver_biometric_last_verified', String(Date.now()));
+          setShowBiometricModal(false);
+          executeAcceptTrip();
+        }}
+        selfieUrl={driver?.selfieUrl}
+      />
     </div>
   );
 }

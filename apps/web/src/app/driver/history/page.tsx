@@ -163,11 +163,6 @@ export default function DriverHistoryPage() {
                   <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '2px' }}>
                     {trip.paymentMethod === 'cash' ? '💵 Efectivo' : '💳 Mercado Pago'}
                   </div>
-                  {trip.paymentMethod === 'card' && (
-                    <div style={{ fontSize: '0.65rem', color: 'var(--accent)', fontWeight: 600 }}>
-                      MP: {formatCLP(trip.estimatedPrice * 1.0319)} bruto
-                    </div>
-                  )}
                 </div>
               </div>
 

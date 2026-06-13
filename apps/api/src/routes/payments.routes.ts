@@ -290,11 +290,7 @@ router.post('/trip/:id/pay', async (req, res) => {
     }
 
     let price = trip.finalPrice || trip.estimatedPrice;
-    if (trip.paymentMethod === 'card') {
-      price = roundCLP(price * 1.0319);
-    } else {
-      price = roundCLP(price);
-    }
+    price = roundCLP(price);
 
     // Crear la preferencia en Mercado Pago
     const response = await preference.create({

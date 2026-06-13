@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import api, { formatCLP, calculatePrice, clearSession, getSession, roundCLP } from '@/lib/api';
 import { connectSocket, getSocket, forceReconnectSocket } from '@/lib/socket';
+import BiometricModal from '@/components/BiometricModal';
 import { sendLocalNotification, initializePushNotifications } from '@/lib/notifications';
 import {
   getFavoriteLocations,
@@ -219,6 +220,7 @@ export default function PassengerPage() {
   const [passwordChangeMsg, setPasswordChangeMsg] = useState('');
   const [passwordChangeLoading, setPasswordChangeLoading] = useState(false);
   const [passwordChangeStatus, setPasswordChangeStatus] = useState<'success' | 'error' | ''>('');
+  const [showBiometricModal, setShowBiometricModal] = useState(false);
 
   const [status, setStatus] = useState<TripStatus>('idle');
   const [origin, setOrigin] = useState<Location | null>(null);
@@ -945,7 +947,7 @@ export default function PassengerPage() {
     };
   }, [currentTrip?.id, checkActiveTrip]);
 
-  const handleRequestTrip = useCallback(async () => {
+  const executeRequestTrip = useCallback(async () => {
     if (!origin || !dest) return;
     setStatus('searching');
     setError('');
@@ -974,6 +976,23 @@ export default function PassengerPage() {
       setStatus('confirm');
     }
   }, [origin, dest, paymentMethod, session]);
+
+  const handleRequestTrip = useCallback(async () => {
+    // Verificar si requiere autenticación biométrica
+    const isVerifiedThisSession = sessionStorage.getItem('passenger_biometric_verified') === 'true';
+    const isPlaceholder = 
+      !session?.user?.selfieUrl || 
+      session.user.selfieUrl.trim() === '' || 
+      session.user.selfieUrl.includes('placehold.co') || 
+      session.user.selfieUrl.includes('placeholder');
+
+    if (!isVerifiedThisSession && !isPlaceholder) {
+      setShowBiometricModal(true);
+      return;
+    }
+
+    await executeRequestTrip();
+  }, [session, executeRequestTrip]);
 
   const executeCancel = useCallback(async (reason: string) => {
     if (currentTrip) {
@@ -1735,13 +1754,8 @@ export default function PassengerPage() {
             </div>
             <div style={{ textAlign: 'right' }}>
               <div className="price-display">
-                {formatCLP(paymentMethod === 'card' ? estimatedPrice * 1.0319 : estimatedPrice)}
+                {formatCLP(estimatedPrice)}
               </div>
-              {paymentMethod === 'card' && (
-                <div style={{ fontSize: '0.75rem', color: 'var(--accent)', marginTop: '-4px', fontWeight: 600 }}>
-                  Incluye comisión Mercado Pago (+3.19%)
-                </div>
-              )}
             </div>
           </div>
 
@@ -2029,23 +2043,9 @@ export default function PassengerPage() {
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
                     <h3 style={{ fontWeight: 900 }}>Monto a pagar</h3>
                     <div style={{ fontSize: '1.5rem', fontWeight: 900, color: 'var(--accent)' }}>
-                      {formatCLP(paymentMethod === 'card' ? (currentTrip?.estimatedPrice || estimatedPrice) * 1.0319 : (currentTrip?.estimatedPrice || estimatedPrice))}
+                      {formatCLP(currentTrip?.estimatedPrice || estimatedPrice)}
                     </div>
                   </div>
-                  {paymentMethod === 'card' && (
-                    <div style={{ 
-                      background: 'rgba(0, 229, 160, 0.08)', 
-                      border: '1px solid rgba(0, 229, 160, 0.15)',
-                      borderRadius: 'var(--radius)', 
-                      padding: '10px 14px', 
-                      fontSize: '0.78rem', 
-                      color: 'var(--accent)', 
-                      marginBottom: '16px',
-                      lineHeight: '1.4'
-                    }}>
-                      <strong>Nota Importante:</strong> El pago con tarjeta incluye un recargo de 3.19% por la comisión del procesador (Mercado Pago). Por favor, <strong>transfiere exactamente</strong> el monto indicado arriba.
-                    </div>
-                  )}
 
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '20px' }}>
                     <button 
@@ -2831,6 +2831,16 @@ export default function PassengerPage() {
           </div>
         </div>
       )}
+      <BiometricModal
+        isOpen={showBiometricModal}
+        onClose={() => setShowBiometricModal(false)}
+        onSuccess={() => {
+          sessionStorage.setItem('passenger_biometric_verified', 'true');
+          setShowBiometricModal(false);
+          executeRequestTrip();
+        }}
+        selfieUrl={session?.user?.selfieUrl}
+      />
     </div>
   );
 }
