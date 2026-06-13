@@ -1041,20 +1041,74 @@ function RegisterForm() {
                 background: 'rgba(255, 255, 255, 0.03)',
                 border: '1px solid var(--border)',
                 borderRadius: '12px',
-                padding: '14px',
+                padding: '16px',
                 fontSize: '0.82rem',
                 color: 'var(--text-muted)',
-                lineHeight: '1.4'
+                lineHeight: '1.5',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '12px'
               }}>
-                <span style={{ color: 'var(--accent)', fontWeight: 600, display: 'block', marginBottom: '4px' }}>💡 ¿Cómo obtener tu Certificado de Antecedentes?</span>
-                Puedes obtener tu Certificado de Antecedentes para Fines Particulares de forma **100% gratuita** en el sitio web del **Registro Civil** utilizando tu ClaveÚnica.
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="12" y1="16" x2="12" y2="12"></line>
+                    <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                  </svg>
+                  <span style={{ color: 'var(--text-primary)', fontWeight: 700, fontSize: '0.88rem' }}>Guía: Cómo obtener tu Certificado de Antecedentes</span>
+                </div>
+                
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', paddingLeft: '4px' }}>
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    <span style={{ color: 'var(--accent)', fontWeight: 700 }}>1.</span>
+                    <span>Entra a la web oficial del <strong>Registro Civil</strong>.</span>
+                  </div>
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    <span style={{ color: 'var(--accent)', fontWeight: 700 }}>2.</span>
+                    <span>Selecciona la pestaña <strong>"Certificados en línea"</strong> y luego la categoría <strong>"Antecedentes"</strong>.</span>
+                  </div>
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    <span style={{ color: 'var(--accent)', fontWeight: 700 }}>3.</span>
+                    <span>Elige <strong>"Certificado Antecedentes Fines Particulares"</strong> (es 100% gratuito).</span>
+                  </div>
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    <span style={{ color: 'var(--accent)', fontWeight: 700 }}>4.</span>
+                    <span>Ingresa tu RUN y accede de forma segura usando tu <strong>ClaveÚnica</strong>.</span>
+                  </div>
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    <span style={{ color: 'var(--accent)', fontWeight: 700 }}>5.</span>
+                    <span>El certificado PDF llegará a tu correo. Toma una foto nítida o sube el archivo PDF en este recuadro.</span>
+                  </div>
+                </div>
+
                 <a
                   href="https://www.registrocivil.cl/"
                   target="_blank"
                   rel="noopener noreferrer"
-                  style={{ color: 'var(--accent)', textDecoration: 'underline', fontWeight: 600, display: 'block', marginTop: '6px' }}
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '6px',
+                    color: '#09090F',
+                    background: 'var(--accent)',
+                    textDecoration: 'none',
+                    fontWeight: 700,
+                    fontSize: '0.78rem',
+                    padding: '8px 12px',
+                    borderRadius: '8px',
+                    marginTop: '4px',
+                    transition: 'opacity 0.2s',
+                    width: 'fit-content'
+                  }}
+                  onMouseEnter={e => e.currentTarget.style.opacity = '0.9'}
+                  onMouseLeave={e => e.currentTarget.style.opacity = '1'}
                 >
-                  Ir al sitio del Registro Civil →
+                  Ir al Registro Civil Chileno
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                    <polyline points="12 5 19 12 12 19"></polyline>
+                  </svg>
                 </a>
               </div>
             </div>

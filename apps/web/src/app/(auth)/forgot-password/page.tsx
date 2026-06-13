@@ -182,7 +182,18 @@ export default function ForgotPasswordPage() {
               type="submit"
               className={`btn btn-primary btn-lg btn-block ${loading ? 'btn-loading' : ''}`}
               disabled={loading}
-              style={{ marginTop: '12px' }}
+              style={{
+                marginTop: '12px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '0.88rem',
+                lineHeight: '1.2',
+                padding: '10px 16px',
+                height: 'auto',
+                minHeight: '44px',
+                textAlign: 'center'
+              }}
             >
               {loading ? '' : 'Enviar código de recuperación →'}
             </button>
@@ -245,7 +256,18 @@ export default function ForgotPasswordPage() {
               type="submit"
               className={`btn btn-primary btn-lg btn-block ${loading ? 'btn-loading' : ''}`}
               disabled={loading}
-              style={{ marginTop: '12px' }}
+              style={{
+                marginTop: '12px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '0.88rem',
+                lineHeight: '1.2',
+                padding: '10px 16px',
+                height: 'auto',
+                minHeight: '44px',
+                textAlign: 'center'
+              }}
             >
               {loading ? '' : 'Restablecer contraseña →'}
             </button>
