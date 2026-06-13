@@ -734,7 +734,7 @@ export default function AdminDashboardPage() {
                     style={{ flexShrink: 0, width: '100px', cursor: 'pointer', border: '1px solid var(--border)', borderRadius: '8px', overflow: 'hidden' }}
                   >
                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={d.url} alt={d.label} style={{ width: '100px', height: '70px', objectFit: 'cover' }} />
+                    <img src={d.url} alt={d.label} loading="lazy" style={{ width: '100px', height: '70px', objectFit: 'cover' }} />
                     <div style={{ fontSize: '0.6rem', textAlign: 'center', padding: '4px 2px', background: 'var(--bg-secondary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{d.label}</div>
                   </div>
                 ) : null)}
@@ -857,31 +857,31 @@ export default function AdminDashboardPage() {
                     </div>
                   </div>
 
-                  {/* Thumbnails rápidos de documentos */}
-                  <div style={{ display: 'flex', gap: '6px' }}>
+                  {/* Indicadores de documentos rápidos */}
+                  <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
                     {[
-                      { label: 'Cédula F.', url: p.idFrontUrl },
-                      { label: 'Cédula D.', url: p.idBackUrl },
+                      { label: 'Cédula Frente', url: p.idFrontUrl },
+                      { label: 'Cédula Dorso', url: p.idBackUrl },
                       { label: 'Selfie', url: p.selfieUrl },
                       { label: 'Antecedentes', url: p.backgroundDocUrl },
-                    ].map(doc => doc.url ? (
-                      <div
+                    ].map(doc => (
+                      <span
                         key={doc.label}
-                        onClick={() => setImgModal(doc.url!)}
-                        style={{ cursor: 'pointer', border: '1px solid var(--border)', borderRadius: '6px', overflow: 'hidden', width: '56px' }}
+                        style={{
+                          fontSize: '0.68rem',
+                          fontWeight: 600,
+                          padding: '3px 8px',
+                          borderRadius: '4px',
+                          background: doc.url ? 'rgba(0, 229, 160, 0.1)' : 'rgba(255, 255, 255, 0.03)',
+                          color: doc.url ? 'var(--accent)' : 'var(--text-muted)',
+                          border: doc.url ? '1px solid rgba(0, 229, 160, 0.2)' : '1px dashed var(--border)',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '4px'
+                        }}
                       >
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img src={doc.url} alt={doc.label} style={{ width: '56px', height: '40px', objectFit: 'cover', display: 'block' }} />
-                        <div style={{ fontSize: '0.52rem', textAlign: 'center', padding: '2px', background: 'var(--bg-secondary)', color: 'var(--text-muted)' }}>{doc.label}</div>
-                      </div>
-                    ) : (
-                      <div
-                        key={doc.label}
-                        style={{ width: '56px', height: '58px', border: '1px dashed var(--border)', borderRadius: '6px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '2px' }}
-                      >
-                        <Icon name="image" size={12} color="var(--text-muted)" />
-                        <div style={{ fontSize: '0.5rem', color: 'var(--text-muted)', textAlign: 'center' }}>{doc.label}</div>
-                      </div>
+                        {doc.url ? '✓' : '✗'} {doc.label}
+                      </span>
                     ))}
                   </div>
 
@@ -965,7 +965,7 @@ export default function AdminDashboardPage() {
                     style={{ flex: 1, cursor: 'pointer', border: '1px solid var(--border)', borderRadius: '8px', overflow: 'hidden' }}
                   >
                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={d.url} alt={d.label} style={{ width: '100%', height: '90px', objectFit: 'cover' }} />
+                    <img src={d.url} alt={d.label} loading="lazy" style={{ width: '100%', height: '90px', objectFit: 'cover' }} />
                     <div style={{ fontSize: '0.62rem', textAlign: 'center', padding: '5px 2px', background: 'var(--bg-secondary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{d.label}</div>
                   </div>
                 ) : (

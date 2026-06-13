@@ -18,6 +18,14 @@ export default function LoginPage() {
   const [error, setError] = useState('');
   const [isMobile, setIsMobile] = useState(false);
 
+  // Email verification states
+  const [verificationPending, setVerificationPending] = useState(false);
+  const [verificationEmail, setVerificationEmail] = useState('');
+  const [verificationCode, setVerificationCode] = useState('');
+  const [verifying, setVerifying] = useState(false);
+  const [resending, setResending] = useState(false);
+  const [verificationSuccess, setVerificationSuccess] = useState(false);
+
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const isMobileApp = (window as any).Capacitor ||
@@ -64,6 +72,7 @@ export default function LoginPage() {
             email: res.data.email || '',
             name: res.data.name || '',
             credential: response.credential,
+            role: role,
           });
           router.push(`/register?${params.toString()}`);
         }
@@ -117,7 +126,7 @@ export default function LoginPage() {
       clearInterval(interval);
       clearTimeout(timeout);
     };
-  }, [isMobile, router]);
+  }, [isMobile, router, role]);
 
   const handleNativeGoogleLogin = async (e?: React.MouseEvent) => {
     e?.preventDefault();
@@ -149,6 +158,7 @@ export default function LoginPage() {
             email: res.data.email || '',
             name: res.data.name || '',
             credential: user.authentication.idToken,
+            role: role,
           });
           router.push(`/register?${params.toString()}`);
         }
@@ -189,6 +199,14 @@ export default function LoginPage() {
         : '/auth/passenger/login';
 
       const res = await api.post(endpoint, { email, password });
+
+      if (res.data.status === 'verification_pending') {
+        setVerificationEmail(email);
+        setVerificationPending(true);
+        setLoading(false);
+        return;
+      }
+
       const userData = res.data.user || res.data.driver;
 
       if (userData && userData.role === 'admin') {
@@ -227,6 +245,142 @@ export default function LoginPage() {
         else router.push('/passenger');
       }
     }
+  }
+
+  async function handleVerifyCode(e: React.FormEvent) {
+    e.preventDefault();
+    if (verificationCode.length !== 6) {
+      setError('El código debe tener 6 dígitos');
+      return;
+    }
+    setVerifying(true);
+    setError('');
+    try {
+      const res = await api.post('/auth/verify-email', {
+        email: verificationEmail,
+        role,
+        code: verificationCode
+      });
+      const userData = res.data.user;
+      saveSession(res.data.accessToken, { ...userData, role });
+      setVerificationSuccess(true);
+      setTimeout(() => {
+        if (role === 'driver') router.push('/driver');
+        else router.push('/passenger');
+      }, 1500);
+    } catch (err: any) {
+      setError(err.response?.data?.error || 'Código incorrecto o expirado');
+    } finally {
+      setVerifying(false);
+    }
+  }
+
+  async function handleResendCode() {
+    setResending(true);
+    setError('');
+    try {
+      await api.post('/auth/resend-code', {
+        email: verificationEmail,
+        role
+      });
+      alert('Código reenviado con éxito. Revisa tu correo.');
+    } catch (err: any) {
+      setError(err.response?.data?.error || 'Error al reenviar código');
+    } finally {
+      setResending(false);
+    }
+  }
+
+  if (verificationPending) {
+    return (
+      <div className="app-container" style={{ background: 'var(--bg-primary)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', padding: '24px' }}>
+        <div className="card" style={{ width: '100%', maxWidth: '420px', padding: '40px 32px', boxShadow: 'var(--shadow-lg)', border: '1px solid var(--border)', textAlign: 'center' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px', marginBottom: '32px' }}>
+            <Logo width="160" height="60" />
+            <div style={{
+              width: '56px', height: '56px', borderRadius: '50%',
+              background: 'rgba(212,175,55,0.1)', color: 'var(--accent)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '8px 0'
+            }}>
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
+                <polyline points="22,6 12,13 2,6" />
+              </svg>
+            </div>
+            <h2 style={{ color: 'var(--text-primary)', fontWeight: 800, fontSize: '1.4rem' }}>Verifica tu correo</h2>
+            <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', lineHeight: 1.5 }}>
+              Hemos enviado un código de 6 dígitos a <br />
+              <strong style={{ color: 'var(--text-primary)' }}>{verificationEmail}</strong>
+            </p>
+          </div>
+
+          {verificationSuccess ? (
+            <div style={{ background: 'rgba(16,185,129,0.06)', border: '1px solid rgba(16,185,129,0.2)', padding: '20px', borderRadius: '12px' }}>
+              <div style={{ color: '#10B981', fontSize: '1.2rem', fontWeight: 700, marginBottom: '4px' }}>¡Verificado con éxito!</div>
+              <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>Redirigiendo a tu panel...</p>
+            </div>
+          ) : (
+            <form onSubmit={handleVerifyCode} style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+              <div className="form-group">
+                <label className="form-label" style={{ textAlign: 'center', display: 'block', marginBottom: '12px' }}>Código de 6 dígitos</label>
+                <input
+                  className="form-input text-center"
+                  type="text"
+                  maxLength={6}
+                  placeholder="000000"
+                  value={verificationCode}
+                  onChange={e => setVerificationCode(e.target.value.replace(/\D/g, ''))}
+                  style={{
+                    fontSize: '1.8rem',
+                    letterSpacing: '8px',
+                    textAlign: 'center',
+                    fontWeight: 700,
+                    padding: '12px',
+                    background: 'var(--bg-secondary)',
+                    borderRadius: '12px',
+                    border: '2px solid var(--border)'
+                  }}
+                  required
+                />
+              </div>
+
+              {error && (
+                <div style={{ background: 'rgba(239, 68, 68, 0.06)', border: '1px solid rgba(239, 68, 68, 0.2)', padding: '12px', borderRadius: '8px', fontSize: '0.85rem', color: '#ef4444' }}>
+                  ⚠️ {error}
+                </div>
+              )}
+
+              <button
+                type="submit"
+                className={`btn btn-primary btn-lg btn-block ${verifying ? 'btn-loading' : ''}`}
+                disabled={verifying || verificationCode.length !== 6}
+              >
+                {verifying ? '' : 'Verificar código →'}
+              </button>
+
+              <div style={{ marginTop: '12px' }}>
+                <button
+                  type="button"
+                  onClick={handleResendCode}
+                  disabled={resending}
+                  style={{
+                    background: 'transparent',
+                    border: 'none',
+                    color: 'var(--accent)',
+                    fontWeight: 600,
+                    fontSize: '0.85rem',
+                    cursor: 'pointer',
+                    opacity: resending ? 0.5 : 1
+                  }}
+                >
+                  {resending ? 'Reenviando...' : 'Reenviar código por correo'}
+                </button>
+              </div>
+            </form>
+          )}
+        </div>
+      </div>
+    );
   }
 
   return (

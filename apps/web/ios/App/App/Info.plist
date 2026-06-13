@@ -58,5 +58,7 @@
 	<string>Fim necesita acceder a tu ubicación en segundo plano para el seguimiento en tiempo real del viaje.</string>
 	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
 	<string>Fim necesita acceder a tu ubicación en segundo plano para el seguimiento en tiempo real del viaje.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>Fim necesita acceder a la cámara para realizar la validación biométrica facial del usuario.</string>
 </dict>
 </plist>

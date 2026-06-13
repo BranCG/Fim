@@ -46,6 +46,11 @@ export default function BiometricModal({ isOpen, onClose, onSuccess, selfieUrl }
     try {
       setStatus('init');
       setErrorMessage('');
+      
+      if (typeof navigator === 'undefined' || !navigator.mediaDevices) {
+        throw new Error('SECURE_CONTEXT_REQUIRED');
+      }
+
       const mediaStream = await navigator.mediaDevices.getUserMedia({
         video: { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 } },
         audio: false
@@ -55,10 +60,14 @@ export default function BiometricModal({ isOpen, onClose, onSuccess, selfieUrl }
         videoRef.current.srcObject = mediaStream;
       }
       setStatus('camera_active');
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error al acceder a la cámara:', err);
       setStatus('error');
-      setErrorMessage('No se pudo acceder a la cámara. Por favor, concede permisos de cámara para continuar con la verificación.');
+      if (err.message === 'SECURE_CONTEXT_REQUIRED' || (typeof window !== 'undefined' && !window.isSecureContext)) {
+        setErrorMessage('Acceso denegado: El navegador requiere una conexión segura (HTTPS o localhost) para permitir el uso de la cámara. Por favor accede mediante HTTPS o desde la misma máquina local.');
+      } else {
+        setErrorMessage('No se pudo acceder a la cámara. Por favor, concede permisos de cámara para continuar con la verificación.');
+      }
     }
   };
 
