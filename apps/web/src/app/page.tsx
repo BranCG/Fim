@@ -404,7 +404,7 @@ export default function Home() {
         .marquee-text-wrapper {
           display: inline-block;
           white-space: nowrap;
-          animation: marquee 40s linear infinite;
+          animation: marquee 100s linear infinite;
         }
         .marquee-text {
           display: inline-block;
