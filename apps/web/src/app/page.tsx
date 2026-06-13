@@ -363,7 +363,7 @@ export default function Home() {
 
   useEffect(() => {
     // Calculamos pérdida semanal asumiendo 25% de comisión
-    const calculatedLoss = Math.round(tripsPerWeek * avgPrice * 0.25);
+    const calculatedLoss = Math.round(tripsPerWeek * avgPrice * 0.30);
     setLoss(calculatedLoss);
   }, [tripsPerWeek, avgPrice]);
 
@@ -1145,7 +1145,7 @@ export default function Home() {
                   ¿Cuánto dinero <span style={{ color: '#ff4757' }}>estás perdiendo</span> en comisiones?
                 </h2>
                 <p style={{ color: 'var(--text-muted)', fontSize: '1.1rem', marginBottom: '32px' }}>
-                  En otras aplicaciones, el 25% o más de tu trabajo se lo quedan ellos. Calcula cuánto queda en tu bolsillo con Fim.
+                  En otras aplicaciones, el 30% o más de tu trabajo se lo quedan ellos. Calcula cuánto queda en tu bolsillo con Fim.
                 </p>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
                   <div className="form-group">
