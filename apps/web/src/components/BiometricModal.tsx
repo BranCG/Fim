@@ -119,10 +119,16 @@ export default function BiometricModal({ isOpen, onClose, onSuccess, selfieUrl }
     } catch (err: any) {
       console.error('Error durante la comparación biométrica:', err);
       setStatus('error');
-      setErrorMessage(
-        err.response?.data?.error || 
-        'Error de comunicación con el servidor al realizar la verificación biométrica.'
-      );
+      
+      let msg = 'Error de comunicación con el servidor al realizar la verificación biométrica.';
+      if (err.response) {
+        msg = err.response.data?.error || `Error del servidor: Código ${err.response.status} (${err.response.statusText || 'Sin descripción'})`;
+      } else if (err.request) {
+        msg = `No se recibió respuesta del servidor. Verifica que el backend esté accesible. URL intentada: ${api.defaults.baseURL || ''}/auth/biometric-verify. Detalles: ${err.message}`;
+      } else {
+        msg = `Error de configuración: ${err.message}`;
+      }
+      setErrorMessage(msg);
     }
   };
 
