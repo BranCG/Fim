@@ -2,7 +2,7 @@ import { Router, Request, Response } from 'express';
 import bcrypt from 'bcryptjs';
 import prisma from '../utils/prisma';
 import { generateTokens, requireAuth } from '../middleware/auth';
-import { sendVerificationEmail } from '../utils/mailer';
+import { sendVerificationEmail, sendPasswordResetEmail } from '../utils/mailer';
 import { OAuth2Client } from 'google-auth-library';
 
 const router = Router();
@@ -708,6 +708,115 @@ router.get('/autocomplete', async (req: Request, res: Response) => {
   } catch (err) {
     console.error('Error in public /autocomplete proxy:', err);
     return res.status(500).json({ error: 'Error al buscar direcciones' });
+  }
+});
+
+// ─── SOLICITAR RECUPERACIÓN DE CONTRASEÑA ──────────────────────────────────
+router.post('/forgot-password', async (req: Request, res: Response) => {
+  try {
+    const { email, role } = req.body;
+    if (!email || !role) {
+      return res.status(400).json({ error: 'Email y rol son obligatorios' });
+    }
+
+    const normalizedEmail = email.toLowerCase().trim();
+    const code = Math.floor(100000 + Math.random() * 900000).toString();
+    const expiresAt = new Date(Date.now() + 15 * 60 * 1000); // 15 minutos
+
+    if (role === 'driver') {
+      const driver = await prisma.driver.findFirst({
+        where: { email: { equals: normalizedEmail, mode: 'insensitive' } }
+      });
+      if (driver) {
+        await prisma.driver.update({
+          where: { id: driver.id },
+          data: {
+            resetCode: code,
+            resetCodeExpires: expiresAt
+          }
+        });
+        await sendPasswordResetEmail(driver.email, code);
+      }
+    } else {
+      const user = await prisma.user.findFirst({
+        where: { email: { equals: normalizedEmail, mode: 'insensitive' } }
+      });
+      if (user) {
+        await prisma.user.update({
+          where: { id: user.id },
+          data: {
+            resetCode: code,
+            resetCodeExpires: expiresAt
+          }
+        });
+        await sendPasswordResetEmail(user.email, code);
+      }
+    }
+
+    // Respuesta genérica para evitar enumeración de usuarios (Cumplimiento ISO 27001)
+    return res.json({
+      message: 'Si el correo electrónico está registrado, recibirás un código de recuperación.'
+    });
+  } catch (err) {
+    console.error('Error en /forgot-password:', err);
+    return res.status(500).json({ error: 'Error interno del servidor' });
+  }
+});
+
+// ─── RESTABLECER CONTRASEÑA CON CÓDIGO ──────────────────────────────────────
+router.post('/reset-password', async (req: Request, res: Response) => {
+  try {
+    const { email, role, code, newPassword } = req.body;
+    if (!email || !role || !code || !newPassword) {
+      return res.status(400).json({ error: 'Todos los campos son obligatorios' });
+    }
+
+    if (newPassword.length < 6) {
+      return res.status(400).json({ error: 'La nueva contraseña debe tener al menos 6 caracteres' });
+    }
+
+    const normalizedEmail = email.toLowerCase().trim();
+
+    if (role === 'driver') {
+      const driver = await prisma.driver.findFirst({
+        where: { email: { equals: normalizedEmail, mode: 'insensitive' } }
+      });
+      if (!driver || !driver.resetCode || driver.resetCode !== code || !driver.resetCodeExpires || driver.resetCodeExpires < new Date()) {
+        return res.status(400).json({ error: 'El código de recuperación es inválido o ha expirado' });
+      }
+
+      const passwordHash = await bcrypt.hash(newPassword, 12);
+      await prisma.driver.update({
+        where: { id: driver.id },
+        data: {
+          passwordHash,
+          resetCode: null,
+          resetCodeExpires: null
+        }
+      });
+    } else {
+      const user = await prisma.user.findFirst({
+        where: { email: { equals: normalizedEmail, mode: 'insensitive' } }
+      });
+      if (!user || !user.resetCode || user.resetCode !== code || !user.resetCodeExpires || user.resetCodeExpires < new Date()) {
+        return res.status(400).json({ error: 'El código de recuperación es inválido o ha expirado' });
+      }
+
+      const passwordHash = await bcrypt.hash(newPassword, 12);
+      await prisma.user.update({
+        where: { id: user.id },
+        data: {
+          passwordHash,
+          resetCode: null,
+          resetCodeExpires: null
+        }
+      });
+    }
+
+    return res.json({ message: 'Contraseña restablecida con éxito' });
+  } catch (err) {
+    console.error('Error en /reset-password:', err);
+    return res.status(500).json({ error: 'Error interno del servidor' });
   }
 });
 
