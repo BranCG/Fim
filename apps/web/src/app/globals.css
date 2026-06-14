@@ -35,7 +35,7 @@
   --info:           #4FC3F7;
 
   /* Typography */
-  --font-sans:      'Inter', system-ui, -apple-system, sans-serif;
+  --font-sans:      'Outfit', 'Inter', system-ui, -apple-system, sans-serif;
 
   /* Spacing */
   --radius-sm:      8px;
