@@ -1001,10 +1001,10 @@ export default function PassengerPage() {
   }, [currentTrip, origin, dest]);
 
   const handleCancel = useCallback(async () => {
-    if (status === 'searching' || status === 'driver_assigned' || status === 'driver_arrived') {
+    if (status === 'driver_assigned' || status === 'driver_arrived') {
       setShowCancelModal(true);
     } else {
-      await executeCancel('Cancelado por el pasajero');
+      await executeCancel('Cancelado por el pasajero (búsqueda cancelada)');
     }
   }, [status, executeCancel]);
 
