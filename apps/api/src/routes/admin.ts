@@ -461,4 +461,61 @@ router.post('/config', async (req: Request, res: Response) => {
   }
 });
 
+// ─── REPORTES DE SEGURIDAD ────────────────────────────────────────────────
+router.get('/safety-reports', async (_req: Request, res: Response) => {
+  try {
+    const reports = await prisma.safetyReport.findMany({
+      orderBy: { createdAt: 'desc' },
+      include: {
+        trip: {
+          include: {
+            passenger: {
+              select: { id: true, name: true, phone: true }
+            },
+            driver: {
+              select: { id: true, name: true, phone: true, vehiclePlate: true }
+            }
+          }
+        }
+      }
+    });
+    return res.json({ reports });
+  } catch (err) {
+    console.error('Error al obtener reportes de seguridad:', err);
+    return res.status(500).json({ error: 'Error al obtener reportes de seguridad' });
+  }
+});
+
+router.post('/safety-reports/:id/resolve', async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { adminNotes } = req.body;
+
+    const report = await prisma.safetyReport.update({
+      where: { id },
+      data: {
+        resolved: true,
+        adminNotes: adminNotes || 'Resuelto por el administrador.',
+      },
+      include: {
+        trip: {
+          include: {
+            passenger: {
+              select: { id: true, name: true, phone: true }
+            },
+            driver: {
+              select: { id: true, name: true, phone: true, vehiclePlate: true }
+            }
+          }
+        }
+      }
+    });
+    return res.json({ message: 'Alerta de seguridad resuelta', report });
+  } catch (err) {
+    console.error('Error al resolver reporte de seguridad:', err);
+    return res.status(500).json({ error: 'Error al resolver reporte de seguridad' });
+  }
+});
+
 export default router;
+

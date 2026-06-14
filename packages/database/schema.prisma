@@ -140,6 +140,7 @@ model Trip {
   rating          Rating?
   driver          Driver?   @relation("DriverTrips", fields: [driverId], references: [id])
   passenger       User      @relation("PassengerTrips", fields: [passengerId], references: [id])
+  safetyReports   SafetyReport[]
 
   @@map("trips")
 }
@@ -189,4 +190,23 @@ model SystemConfig {
   updatedAt DateTime @updatedAt
 
   @@map("system_configs")
+}
+
+model SafetyReport {
+  id             String   @id @default(cuid())
+  tripId         String
+  reporterId     String
+  reporterRole   String   // "passenger" | "driver"
+  reportedUserId String
+  reason         String
+  description    String?
+  lat            Float?
+  lng            Float?
+  resolved       Boolean  @default(false)
+  adminNotes     String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  trip           Trip     @relation(fields: [tripId], references: [id])
+
+  @@map("safety_reports")
 }

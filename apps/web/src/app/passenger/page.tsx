@@ -277,6 +277,14 @@ export default function PassengerPage() {
   const [receiptUploading, setReceiptUploading] = useState(false);
   const [receiptUrl, setReceiptUrl] = useState<string | null>(null);
 
+  // SOS Safety Report States
+  const [showSafetyModal, setShowSafetyModal] = useState(false);
+  const [safetyCountdown, setSafetyCountdown] = useState(3);
+  const [safetyReason, setSafetyReason] = useState('Incidente de seguridad / Amenaza');
+  const [safetyDescription, setSafetyDescription] = useState('');
+  const [safetySending, setSafetySending] = useState(false);
+  const [safetySent, setSafetySent] = useState(false);
+
   // Reset minimize state when status changes
   useEffect(() => {
     setIsMinimized(false);
@@ -948,6 +956,59 @@ export default function PassengerPage() {
     };
   }, [currentTrip?.id, checkActiveTrip]);
 
+  const getSosButtonBottom = () => {
+    const gpsBottom = getGpsButtonBottom();
+    const parsed = parseInt(gpsBottom, 10);
+    return `${parsed + 60}px`;
+  };
+
+  useEffect(() => {
+    let timer: NodeJS.Timeout;
+    if (showSafetyModal && safetyCountdown > 0 && !safetySent) {
+      timer = setTimeout(() => {
+        setSafetyCountdown(prev => prev - 1);
+      }, 1000);
+    } else if (showSafetyModal && safetyCountdown === 0 && !safetySent && !safetySending) {
+      triggerSafetyReport();
+    }
+    return () => clearTimeout(timer);
+  }, [showSafetyModal, safetyCountdown, safetySent, safetySending]);
+
+  const triggerSafetyReport = async () => {
+    if (!currentTrip || !session?.user?.id || !driver) return;
+    setSafetySending(true);
+    try {
+      const socket = connectSocket();
+      
+      let lat = origin?.lat || null;
+      let lng = origin?.lng || null;
+      try {
+        const { getCurrentPosition } = await import('@/lib/geolocation');
+        const pos = await getCurrentPosition();
+        lat = pos.lat;
+        lng = pos.lng;
+      } catch (e) {
+        console.warn('No se pudo obtener GPS en SOS, usando origen:', e);
+      }
+
+      socket.emit('safety:report', {
+        tripId: currentTrip.id,
+        reporterId: session.user.id,
+        reporterRole: 'passenger',
+        reportedUserId: driver.id,
+        reason: safetyReason,
+        description: safetyDescription || 'Reporte de pánico activado por el pasajero.',
+        lat,
+        lng,
+      });
+      setSafetySent(true);
+    } catch (err) {
+      console.error('Error al enviar SOS:', err);
+    } finally {
+      setSafetySending(false);
+    }
+  };
+
   const executeRequestTrip = useCallback(async () => {
     if (!origin || !dest) return;
     setStatus('searching');
@@ -1322,6 +1383,39 @@ export default function PassengerPage() {
       >
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/></svg>
       </button>
+
+      {/* Botón flotante de SOS en viaje activo */}
+      {(status === 'driver_assigned' || status === 'driver_arrived' || status === 'in_progress') && (
+        <button 
+          onClick={() => {
+            setShowSafetyModal(true);
+            setSafetyCountdown(3);
+          }}
+          title="SOS Emergencia"
+          className="sos-button"
+          style={{
+            position: 'fixed',
+            right: '16px',
+            bottom: getSosButtonBottom(),
+            width: '48px',
+            height: '48px',
+            borderRadius: '50%',
+            background: 'var(--danger)',
+            color: 'white',
+            border: 'none',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            boxShadow: '0 4px 12px rgba(255, 69, 96, 0.4)',
+            cursor: 'pointer',
+            zIndex: 9999,
+            fontWeight: 'bold',
+            fontSize: '0.82rem',
+          }}
+        >
+          🚨 SOS
+        </button>
+      )}
 
       <main className="main-content">
         <PassengerMap
@@ -2519,6 +2613,189 @@ export default function PassengerPage() {
                 Confirmar
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL DE SOS / EMERGENCIA */}
+      {showSafetyModal && (
+        <div style={{
+          position: 'fixed',
+          inset: 0,
+          background: 'rgba(9, 9, 15, 0.95)',
+          backdropFilter: 'blur(10px)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 10000,
+          padding: '20px',
+          animation: 'fadeIn 0.2s ease'
+        }}>
+          <div style={{
+            background: 'var(--bg-secondary)',
+            border: '2px solid var(--danger)',
+            borderRadius: 'var(--radius-lg)',
+            width: '100%',
+            maxWidth: '440px',
+            padding: '28px',
+            boxShadow: '0px 0px 30px rgba(255, 69, 96, 0.3)',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '20px',
+            textAlign: 'center',
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'center', color: 'var(--danger)', animation: 'pulseSOS 1.5s infinite' }}>
+              <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+                <line x1="12" y1="9" x2="12" y2="13" /><line x1="12" y1="17" x2="12.01" y2="17" />
+              </svg>
+            </div>
+
+            <div>
+              <h2 style={{ margin: 0, fontWeight: 900, fontSize: '1.6rem', color: 'var(--danger)' }}>ALERTA DE SEGURIDAD</h2>
+              <p style={{ margin: '8px 0 0 0', fontSize: '0.9rem', color: 'var(--text-muted)' }}>
+                Se reportará una emergencia silenciosa al equipo de soporte de FIM y se registrará tu ubicación GPS.
+              </p>
+            </div>
+
+            {!safetySent ? (
+              <>
+                <div style={{
+                  background: 'rgba(255, 69, 96, 0.08)',
+                  border: '1px solid rgba(255, 69, 96, 0.2)',
+                  borderRadius: '12px',
+                  padding: '16px',
+                  fontSize: '1.1rem',
+                  fontWeight: 900,
+                  color: 'white'
+                }}>
+                  {safetyCountdown > 0 ? (
+                    <span>Enviando reporte automático en <strong style={{ color: 'var(--danger)', fontSize: '1.3rem' }}>{safetyCountdown}</strong> segundos...</span>
+                  ) : (
+                    <span>Enviando reporte silencioso...</span>
+                  )}
+                </div>
+
+                <div className="form-group" style={{ textAlign: 'left' }}>
+                  <label className="form-label" style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Tipo de Incidente</label>
+                  <select
+                    className="form-input"
+                    value={safetyReason}
+                    onChange={(e) => setSafetyReason(e.target.value)}
+                    style={{ background: '#1A1A28', color: 'white', border: '1px solid var(--border)' }}
+                  >
+                    <option value="Incidente de seguridad / Amenaza">Incidente de seguridad / Amenaza</option>
+                    <option value="Accidente de tránsito / Colisión">Accidente de tránsito / Colisión</option>
+                    <option value="Desvío sospechoso de ruta">Desvío sospechoso de ruta</option>
+                    <option value="Agresión física o verbal">Agresión física o verbal</option>
+                    <option value="Otro motivo urgente">Otro motivo urgente</option>
+                  </select>
+                </div>
+
+                <div className="form-group" style={{ textAlign: 'left' }}>
+                  <label className="form-label" style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Detalles adicionales (opcional)</label>
+                  <input
+                    type="text"
+                    className="form-input"
+                    placeholder="Ej: El conductor está discutiendo..."
+                    value={safetyDescription}
+                    onChange={(e) => setSafetyDescription(e.target.value)}
+                    style={{ background: '#1A1A28', color: 'white', border: '1px solid var(--border)' }}
+                  />
+                </div>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                  <a
+                    href="tel:133"
+                    className="btn btn-danger btn-block"
+                    style={{
+                      background: '#FF3B30',
+                      color: 'white',
+                      fontWeight: 900,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '8px',
+                      textDecoration: 'none',
+                      padding: '12px',
+                      borderRadius: 'var(--radius)',
+                    }}
+                  >
+                    📞 LLAMAR A CARABINEROS (133)
+                  </a>
+
+                  <button
+                    type="button"
+                    className="btn btn-accent btn-block"
+                    disabled={safetySending}
+                    onClick={triggerSafetyReport}
+                  >
+                    {safetySending ? 'Enviando...' : 'Confirmar Reporte Silencioso Ahora'}
+                  </button>
+
+                  <button
+                    type="button"
+                    className="btn btn-ghost btn-block"
+                    style={{ color: 'var(--text-muted)' }}
+                    onClick={() => {
+                      setShowSafetyModal(false);
+                      setSafetySent(false);
+                    }}
+                  >
+                    Cancelar y volver al viaje
+                  </button>
+                </div>
+              </>
+            ) : (
+              <>
+                <div style={{
+                  background: 'rgba(0, 229, 160, 0.08)',
+                  border: '1px solid rgba(0, 229, 160, 0.2)',
+                  borderRadius: '12px',
+                  padding: '20px',
+                  fontSize: '1rem',
+                  fontWeight: 700,
+                  color: 'var(--accent)'
+                }}>
+                  ✓ Reporte Silencioso Recibido por FIM.
+                  <p style={{ margin: '8px 0 0 0', fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 'normal' }}>
+                    Hemos registrado tus coordenadas y el historial de viaje. Nuestro equipo de soporte está auditando el caso.
+                  </p>
+                </div>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                  <a
+                    href="tel:133"
+                    className="btn btn-danger btn-block"
+                    style={{
+                      background: '#FF3B30',
+                      color: 'white',
+                      fontWeight: 900,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '8px',
+                      textDecoration: 'none',
+                      padding: '12px',
+                      borderRadius: 'var(--radius)',
+                    }}
+                  >
+                    📞 LLAMAR A CARABINEROS (133)
+                  </a>
+
+                  <button
+                    type="button"
+                    className="btn btn-primary btn-block"
+                    onClick={() => {
+                      setShowSafetyModal(false);
+                      setSafetySent(false);
+                    }}
+                  >
+                    Volver al viaje
+                  </button>
+                </div>
+              </>
+            )}
           </div>
         </div>
       )}

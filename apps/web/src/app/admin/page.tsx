@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import api, { clearSession, getSession, formatCLP } from '@/lib/api';
+import { getSocket, connectSocket, disconnectSocket } from '@/lib/socket';
 
 /* ── Inline SVG icon set ── */
 function Icon({ name, size = 16, color = 'currentColor' }: { name: string; size?: number; color?: string }) {
@@ -216,7 +217,7 @@ interface Passenger {
   }[];
 }
 
-type View = 'dashboard' | 'pending' | 'drivers' | 'passengers' | 'revenue' | 'system';
+type View = 'dashboard' | 'pending' | 'drivers' | 'passengers' | 'revenue' | 'system' | 'safety';
 
 export default function AdminDashboardPage() {
   const router = useRouter();
@@ -238,6 +239,14 @@ export default function AdminDashboardPage() {
   const [revenueData, setRevenueData] = useState<any[]>([]);
   const [revenueDate, setRevenueDate] = useState(new Date().toISOString().split('T')[0]);
 
+  // SOS Safety Report States
+  const [safetyReports, setSafetyReports] = useState<any[]>([]);
+  const [activeAlertsCount, setActiveAlertsCount] = useState(0);
+  const [selectedReport, setSelectedReport] = useState<any>(null);
+  const [adminNotes, setAdminNotes] = useState('');
+  const [safetyActionLoading, setSafetyActionLoading] = useState(false);
+  const [activeEmergencyAlert, setActiveEmergencyAlert] = useState<any>(null);
+
   // Configuraciones de Sistema
   const [systemConfig, setSystemConfig] = useState<any>({});
 
@@ -249,6 +258,46 @@ export default function AdminDashboardPage() {
       return;
     }
     setSession(s);
+
+    // Conectar socket y unirse a la sala admin
+    const socket = connectSocket();
+    socket.emit('admin:join');
+
+    socket.on('admin:safety-report-alert', (report: any) => {
+      console.warn('Realtime safety alert:', report);
+      setActiveEmergencyAlert(report);
+      setSafetyReports(prev => [report, ...prev]);
+      setActiveAlertsCount(prev => prev + 1);
+
+      try {
+        const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
+        let t = 0;
+        const interval = setInterval(() => {
+          if (t > 5) {
+            clearInterval(interval);
+            return;
+          }
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          osc.type = 'sawtooth';
+          osc.frequency.setValueAtTime(t % 2 === 0 ? 880 : 660, audioCtx.currentTime);
+          gain.gain.setValueAtTime(0.08, audioCtx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.4);
+          osc.connect(gain);
+          gain.connect(audioCtx.destination);
+          osc.start();
+          osc.stop(audioCtx.currentTime + 0.5);
+          t++;
+        }, 300);
+      } catch (err) {
+        console.error('AudioContext error:', err);
+      }
+    });
+
+    return () => {
+      socket.off('admin:safety-report-alert');
+      disconnectSocket();
+    };
   }, [router]);
 
   const loadStats = useCallback(async () => {
@@ -311,7 +360,37 @@ export default function AdminDashboardPage() {
     }
   }, []);
 
-  useEffect(() => { loadStats(); }, [loadStats]);
+  const loadSafetyReports = useCallback(async () => {
+    try {
+      const r = await api.get('/admin/safety-reports');
+      setSafetyReports(r.data.reports || []);
+      const active = (r.data.reports || []).filter((rep: any) => !rep.resolved).length;
+      setActiveAlertsCount(active);
+    } catch (err) {
+      console.error('Error loading safety reports:', err);
+    }
+  }, []);
+
+  const resolveSafetyReport = async (reportId: string) => {
+    setSafetyActionLoading(true);
+    try {
+      const r = await api.post(`/admin/safety-reports/${reportId}/resolve`, { adminNotes });
+      setActionMsg('Alerta marcada como resuelta.');
+      setAdminNotes('');
+      setSelectedReport(r.data.report);
+      loadSafetyReports();
+    } catch (err) {
+      setActionMsg('Error al resolver la alerta de seguridad');
+    } finally {
+      setSafetyActionLoading(false);
+      setTimeout(() => setActionMsg(''), 3000);
+    }
+  };
+
+  useEffect(() => { 
+    loadStats(); 
+    loadSafetyReports();
+  }, [loadStats, loadSafetyReports]);
 
   useEffect(() => {
     if (view === 'pending') loadPending();
@@ -319,7 +398,8 @@ export default function AdminDashboardPage() {
     if (view === 'passengers') loadPassengers();
     if (view === 'revenue') loadRevenue();
     if (view === 'system') loadSystemConfig();
-  }, [view, loadPending, loadAllDrivers, loadPassengers, loadRevenue, loadSystemConfig]);
+    if (view === 'safety') loadSafetyReports();
+  }, [view, loadPending, loadAllDrivers, loadPassengers, loadRevenue, loadSystemConfig, loadSafetyReports]);
 
   async function doDriverAction(driverId: string, action: string, reason?: string) {
     setLoading(true); setActionMsg('');
@@ -425,6 +505,7 @@ export default function AdminDashboardPage() {
     { key: 'drivers', label: 'Conductores', icon: 'car' },
     { key: 'passengers', label: 'Pasajeros', icon: 'users' },
     { key: 'revenue', label: 'Estudios', icon: 'chart' },
+    { key: 'safety', label: 'Seguridad', icon: 'alert', badge: activeAlertsCount > 0 ? activeAlertsCount : null },
     { key: 'system', label: 'Sistema', icon: 'settings' },
   ];
 
@@ -1335,6 +1416,212 @@ export default function AdminDashboardPage() {
           </div>
         )}
 
+        {/* ── 8. REPORTES DE SEGURIDAD ── */}
+        {view === 'safety' && !selectedReport && (
+          <div className="animate-in" style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            <h2 style={{ fontSize: '1.15rem', fontWeight: 900, marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--danger)' }}>
+              <Icon name="alert" size={18} color="var(--danger)" />
+              Reportes de Seguridad y SOS
+            </h2>
+            
+            {safetyReports.length === 0 ? (
+              <div className="card" style={{ textAlign: 'center', padding: '36px 24px', color: 'var(--text-muted)' }}>
+                <p style={{ fontSize: '0.85rem' }}>No hay alertas de seguridad registradas.</p>
+              </div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                {safetyReports.map((report) => (
+                  <div 
+                    key={report.id} 
+                    className="card animate-in" 
+                    onClick={() => {
+                      setSelectedReport(report);
+                      setAdminNotes(report.adminNotes || '');
+                    }}
+                    style={{ 
+                      cursor: 'pointer',
+                      border: report.resolved ? '1px solid var(--border)' : '2px solid rgba(255, 69, 96, 0.4)',
+                      background: report.resolved ? 'var(--bg-card)' : 'rgba(255, 69, 96, 0.04)',
+                      transition: 'transform 0.2s ease',
+                    }}
+                    onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.01)'}
+                    onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
+                  >
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                      <div>
+                        <span style={{
+                          fontSize: '0.65rem',
+                          fontWeight: 900,
+                          padding: '2px 8px',
+                          borderRadius: '50px',
+                          background: report.resolved ? 'rgba(0, 229, 160, 0.15)' : 'var(--danger)',
+                          color: report.resolved ? 'var(--accent)' : 'white',
+                          textTransform: 'uppercase',
+                        }}>
+                          {report.resolved ? 'Resuelto' : '🚨 ACTIVO / SOS'}
+                        </span>
+                        
+                        <h3 style={{ fontSize: '0.95rem', fontWeight: 800, marginTop: '8px', margin: '8px 0 4px' }}>
+                          {report.reason}
+                        </h3>
+                        
+                        <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', margin: 0 }}>
+                          Reportado por: <strong>{report.reporterRole === 'passenger' ? 'Pasajero' : 'Conductor'}</strong> · {new Date(report.createdAt).toLocaleString('es-CL')}
+                        </p>
+                      </div>
+                      
+                      <div style={{ textAlign: 'right', fontSize: '0.72rem', color: 'var(--text-muted)' }}>
+                        ID Viaje: {report.tripId.substring(0, 8)}...
+                      </div>
+                    </div>
+                    
+                    {report.description && (
+                      <div style={{
+                        marginTop: '10px',
+                        padding: '10px',
+                        borderRadius: '8px',
+                        background: 'rgba(255, 255, 255, 0.02)',
+                        fontSize: '0.82rem',
+                        fontStyle: 'italic',
+                        color: 'white',
+                      }}>
+                        "{report.description}"
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ── DETALLE DEL REPORTE DE SEGURIDAD ── */}
+        {view === 'safety' && selectedReport && (
+          <div className="animate-in" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            <button
+              onClick={() => setSelectedReport(null)}
+              className="btn btn-ghost btn-sm"
+              style={{ alignSelf: 'flex-start', display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--accent)', fontWeight: 700 }}
+            >
+              <Icon name="arrow_left" size={14} color="var(--accent)" />
+              Volver al listado
+            </button>
+
+            <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: '16px', border: selectedReport.resolved ? '1px solid var(--border)' : '2px solid var(--danger)' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{
+                  fontSize: '0.7rem',
+                  fontWeight: 900,
+                  padding: '4px 12px',
+                  borderRadius: '50px',
+                  background: selectedReport.resolved ? 'rgba(0, 229, 160, 0.15)' : 'var(--danger)',
+                  color: selectedReport.resolved ? 'var(--accent)' : 'white',
+                  textTransform: 'uppercase',
+                }}>
+                  {selectedReport.resolved ? 'Resuelto' : 'Alerta SOS Activa'}
+                </span>
+                
+                <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
+                  {new Date(selectedReport.createdAt).toLocaleString('es-CL')}
+                </span>
+              </div>
+
+              <div>
+                <h3 style={{ fontSize: '1.25rem', fontWeight: 900, color: 'white', margin: 0 }}>
+                  {selectedReport.reason}
+                </h3>
+                {selectedReport.description && (
+                  <p style={{ fontSize: '0.9rem', fontStyle: 'italic', color: 'var(--text-muted)', background: 'rgba(255,255,255,0.02)', padding: '12px', borderRadius: '8px', marginTop: '10px' }}>
+                    "{selectedReport.description}"
+                  </p>
+                )}
+              </div>
+
+              {/* Detalles del Viaje e Involucrados */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', borderTop: '1px solid var(--border)', paddingTop: '16px' }}>
+                <div>
+                  <h4 style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.05em', margin: '0 0 6px' }}>Pasajero</h4>
+                  <div style={{ fontSize: '0.85rem', fontWeight: 800 }}>{selectedReport.trip.passenger.name}</div>
+                  <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '2px' }}>📞 {selectedReport.trip.passenger.phone}</div>
+                </div>
+                
+                <div>
+                  <h4 style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.05em', margin: '0 0 6px' }}>Conductor</h4>
+                  <div style={{ fontSize: '0.85rem', fontWeight: 800 }}>{selectedReport.trip.driver?.name || 'No asignado'}</div>
+                  <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '2px' }}>📞 {selectedReport.trip.driver?.phone || 'N/A'}</div>
+                  <div style={{ fontSize: '0.78rem', color: 'var(--accent)', fontWeight: 700, marginTop: '2px' }}>🚗 Patente: {selectedReport.trip.driver?.vehiclePlate || 'N/A'}</div>
+                </div>
+              </div>
+
+              {/* Detalles de la Ruta */}
+              <div style={{ borderTop: '1px solid var(--border)', paddingTop: '16px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                <div>
+                  <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: 800, textTransform: 'uppercase' }}>Origen:</span>
+                  <div style={{ fontSize: '0.82rem', color: 'white', marginTop: '2px' }}>{selectedReport.trip.originAddress}</div>
+                </div>
+                <div>
+                  <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: 800, textTransform: 'uppercase' }}>Destino:</span>
+                  <div style={{ fontSize: '0.82rem', color: 'white', marginTop: '2px' }}>{selectedReport.trip.destAddress}</div>
+                </div>
+              </div>
+
+              {/* Coordenadas SOS */}
+              {(selectedReport.lat && selectedReport.lng) && (
+                <div style={{ borderTop: '1px solid var(--border)', paddingTop: '16px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                  <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: 800, textTransform: 'uppercase' }}>Ubicación GPS al Reportar</span>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'rgba(255,255,255,0.01)', padding: '10px 14px', borderRadius: '8px', border: '1px dashed var(--border)' }}>
+                    <span style={{ fontSize: '0.8rem', color: 'white' }}>Lat: {selectedReport.lat} | Lng: {selectedReport.lng}</span>
+                    <a
+                      href={`https://www.google.com/maps/search/?api=1&query=${selectedReport.lat},${selectedReport.lng}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="btn btn-accent btn-sm"
+                      style={{ padding: '6px 12px', fontSize: '0.75rem', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '4px' }}
+                    >
+                      📍 Ver en Google Maps ↗
+                    </a>
+                  </div>
+                </div>
+              )}
+
+              {/* Resolución del Reporte */}
+              <div style={{ borderTop: '1px solid var(--border)', paddingTop: '16px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: 800, textTransform: 'uppercase' }}>Resolución y Notas Administrativas</span>
+                
+                {selectedReport.resolved ? (
+                  <div style={{
+                    padding: '14px',
+                    borderRadius: '8px',
+                    background: 'rgba(0, 229, 160, 0.05)',
+                    border: '1px solid rgba(0, 229, 160, 0.1)',
+                    fontSize: '0.85rem',
+                    color: 'white',
+                  }}>
+                    <strong>Notas:</strong> {selectedReport.adminNotes || 'Ninguna nota ingresada.'}
+                  </div>
+                ) : (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                    <textarea
+                      className="form-input"
+                      placeholder="Ingresa notas de resolución (ej. Se contactó a pasajero y conductor, falsa alarma...)"
+                      value={adminNotes}
+                      onChange={(e) => setAdminNotes(e.target.value)}
+                      style={{ minHeight: '80px', background: '#1A1A28', color: 'white', border: '1px solid var(--border)', borderRadius: 'var(--radius)', outline: 'none', padding: '10px' }}
+                    />
+                    <button
+                      className="btn btn-accent btn-block"
+                      disabled={safetyActionLoading}
+                      onClick={() => resolveSafetyReport(selectedReport.id)}
+                    >
+                      {safetyActionLoading ? 'Procesando...' : 'Marcar como Resuelto ✓'}
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
       </main>
 
       {/* IMAGE MODAL (ZOOM) */}
@@ -1358,6 +1645,109 @@ export default function AdminDashboardPage() {
           <img src={imgModal} alt="Documento Zoom" style={{ maxWidth: '100%', maxHeight: '80vh', borderRadius: '12px', objectFit: 'contain', boxShadow: '0 24px 60px rgba(0,0,0,0.8)' }} />
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--text-muted)', fontSize: '0.8rem', fontWeight: 600 }}>
             <Icon name="x" size={13} color="var(--text-muted)" /> Toca para cerrar
+          </div>
+        </div>
+      )}
+
+      {/* EMERGENCY MODAL OVERLAY (🚨 ALERTA SOS EN VIVO) */}
+      {activeEmergencyAlert && (
+        <div style={{
+          position: 'fixed',
+          inset: 0,
+          background: 'rgba(255, 0, 0, 0.45)',
+          backdropFilter: 'blur(10px)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 10000,
+          padding: '20px',
+        }}>
+          <div style={{
+            background: '#09090F',
+            border: '4px solid var(--danger)',
+            borderRadius: 'var(--radius-lg)',
+            width: '100%',
+            maxWidth: '500px',
+            padding: '32px',
+            boxShadow: '0 0 50px rgba(255, 69, 96, 0.8)',
+            textAlign: 'center',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '24px',
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'center', color: 'var(--danger)', animation: 'pulseSOS 1.5s infinite' }}>
+              <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+                <line x1="12" y1="9" x2="12" y2="13" /><line x1="12" y1="17" x2="12.01" y2="17" />
+              </svg>
+            </div>
+
+            <div>
+              <h2 style={{ margin: 0, fontWeight: 900, fontSize: '1.8rem', color: 'var(--danger)', letterSpacing: '-0.02em' }}>🚨 SOS EN TIEMPO REAL</h2>
+              <p style={{ margin: '8px 0 0 0', fontSize: '0.95rem', color: 'var(--text-muted)', fontWeight: 600 }}>
+                Un usuario ha activado el botón de pánico durante un viaje activo.
+              </p>
+            </div>
+
+            <div style={{
+              background: 'rgba(255, 255, 255, 0.02)',
+              border: '1px solid var(--border)',
+              borderRadius: '12px',
+              padding: '16px',
+              textAlign: 'left',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '8px',
+            }}>
+              <div>
+                <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: 800, textTransform: 'uppercase' }}>Tipo de incidente:</span>
+                <div style={{ fontSize: '1rem', fontWeight: 900, color: 'white', marginTop: '2px' }}>{activeEmergencyAlert.reason}</div>
+              </div>
+              
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginTop: '8px', borderTop: '1px solid var(--border)', paddingTop: '8px' }}>
+                <div>
+                  <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: 800, textTransform: 'uppercase' }}>Reportero:</span>
+                  <div style={{ fontSize: '0.85rem', fontWeight: 800, color: 'white', marginTop: '2px' }}>
+                    {activeEmergencyAlert.reporterRole === 'passenger' ? '👨‍✈️ Pasajero' : '🚗 Conductor'}
+                  </div>
+                  <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                    {activeEmergencyAlert.reporterRole === 'passenger' ? activeEmergencyAlert.trip.passenger.name : activeEmergencyAlert.trip.driver?.name}
+                  </div>
+                </div>
+                <div>
+                  <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: 800, textTransform: 'uppercase' }}>Vehículo:</span>
+                  <div style={{ fontSize: '0.85rem', fontWeight: 800, color: 'var(--accent)', marginTop: '2px' }}>
+                    Patente: {activeEmergencyAlert.trip.driver?.vehiclePlate || 'N/A'}
+                  </div>
+                  <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                    {activeEmergencyAlert.trip.driver?.name || 'N/A'}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', gap: '12px' }}>
+              <button
+                className="btn btn-secondary"
+                style={{ flex: 1 }}
+                onClick={() => {
+                  setActiveEmergencyAlert(null);
+                }}
+              >
+                Silenciar Alerta
+              </button>
+              <button
+                className="btn btn-danger"
+                style={{ flex: 1, fontWeight: 900 }}
+                onClick={() => {
+                  setSelectedReport(activeEmergencyAlert);
+                  setView('safety');
+                  setActiveEmergencyAlert(null);
+                }}
+              >
+                Ir a Resolver 🚨
+              </button>
+            </div>
           </div>
         </div>
       )}

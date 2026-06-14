@@ -31,25 +31,11 @@ export default function PrivacyPage() {
                 <em>Justificación:</em> Requerida exclusivamente para el registro y la validación de seguridad de pasajeros y conductores (ej. fotografías de licencia de conducir, cédula de identidad y validación biométrica facial para prevenir suplantaciones de identidad).
               </li>
               <li>
-                <strong>Micrófono:</strong> 
+                <strong>Notificaciones y Alertas en Tiempo Real:</strong> 
                 <br />
-                <em>Uso:</em> Acceso a la entrada de audio del dispositivo.
+                <em>Uso:</em> Envío de alertas visuales y sonoras en la interfaz de la aplicación.
                 <br />
-                <em>Justificación:</em> Utilizado únicamente para permitir llamadas de voz seguras integradas en la app entre pasajero y conductor, facilitando la coordinación sin necesidad de exponer los números telefónicos privados de las partes.
-              </li>
-              <li>
-                <strong>Contactos:</strong> 
-                <br />
-                <em>Uso:</em> Acceso a la libreta de contactos del teléfono.
-                <br />
-                <em>Justificación:</em> Utilizado para la función de seguridad "Contactos de Emergencia". Permite al usuario seleccionar un contacto de confianza directamente desde su libreta para compartir los datos del trayecto en tiempo real y emitir alertas automáticas en caso de incidentes.
-              </li>
-              <li>
-                <strong>Notificaciones Push:</strong> 
-                <br />
-                <em>Uso:</em> Envío de alertas visuales y sonoras en el sistema operativo.
-                <br />
-                <em>Justificación:</em> Se envían notificaciones estrictamente <strong>funcionales y operativas</strong> para alertar al pasajero cuando el conductor va en camino, cuando ha llegado al punto de recogida, o al recibir mensajes en el chat interno. Para los conductores, se utiliza para alertar sobre solicitudes de viaje disponibles. FIM no realiza envíos de notificaciones promocionales o publicitarias sin el consentimiento explícito del usuario.
+                <em>Justificación:</em> Se envían notificaciones y alertas estrictamente <strong>funcionales y operativas en tiempo real</strong> para alertar al pasajero cuando el conductor va en camino, cuando ha llegado al punto de recogida, o al recibir mensajes en el chat interno. Para los conductores, se utiliza para alertar sobre solicitudes de viaje disponibles.
               </li>
             </ul>
           </div>
@@ -68,17 +54,15 @@ export default function PrivacyPage() {
           </div>
 
           <div>
-            <h2 style={{ color: 'var(--accent)', marginBottom: '12px', fontSize: '1.4rem' }}>3. Almacenamiento de Transacciones (Auditoría y SII)</h2>
+            <h2 style={{ color: 'var(--accent)', marginBottom: '12px', fontSize: '1.4rem' }}>3. Almacenamiento de Transacciones (Auditoría Interna)</h2>
             <p>
-              Aunque FIM es un intermediario tecnológico y no retiene comisiones por los viajes, nuestra base de datos almacena el registro exacto de cada transacción comercial para efectos fiscales, cumplimiento tributario ante el Servicio de Impuestos Internos (SII) de Chile y auditorías internas:
+              Aunque FIM es un intermediario tecnológico y no retiene comisiones por los viajes, nuestra base de datos almacena el registro de cada trayecto y suscripción para efectos de auditoría interna, control de calidad y resolución de disputas. Cada conductor independiente es responsable exclusivo de declarar sus ingresos y cumplir con sus obligaciones tributarias correspondientes ante el Servicio de Impuestos Internos (SII) de Chile:
             </p>
             <ul style={{ paddingLeft: '20px', margin: '12px 0', display: 'flex', flexDirection: 'column', gap: '8px', listStyleType: 'disc' }}>
-              <li>ID único de pago/Transacción.</li>
-              <li>Fecha y hora exactas de inicio y fin de los trayectos.</li>
-              <li>Identificación del conductor independiente y del pasajero.</li>
-              <li>Monto total cobrado por el viaje o la membresía SaaS.</li>
-              <li>Cálculo de impuestos estimados asociados a los servicios de transporte independientes.</li>
-              <li>Folio de boleta de servicio correspondiente ante el SII.</li>
+              <li>ID único de viaje/Transacción.</li>
+              <li>Fecha y hora de inicio y fin de los trayectos.</li>
+              <li>Identificación de las partes (conductor independiente y pasajero).</li>
+              <li>Monto total estimado y acordado para el viaje, o el pago de la membresía SaaS de FIM.</li>
             </ul>
           </div>
 

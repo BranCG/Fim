@@ -103,6 +103,12 @@ export function setupSocketHandlers(io: Server) {
   io.on('connection', (socket: Socket) => {
     console.log(`[Socket] Conectado: ${socket.id}`);
 
+    // ─── ADMIN: se une a la sala de administración ─────────────────────────
+    socket.on('admin:join', () => {
+      socket.join('admin');
+      console.log(`[Socket] Admin ${socket.id} se unió a la sala 'admin'`);
+    });
+
     // ─── CONDUCTOR: se conecta y anuncia su posición ───────────────────────
     socket.on('driver:online', async ({ driverId, lat, lng }: { driverId: string; lat: number; lng: number }) => {
       onlineDrivers.set(driverId, { socketId: socket.id, lat, lng });
@@ -492,13 +498,46 @@ export function setupSocketHandlers(io: Server) {
 
 
     // ─── REPORTE DE SEGURIDAD ─────────────────────────────────────────────
-    socket.on('safety:report', async (data: { tripId: string, reporterId: string, reportedUserId: string, reason: string, description: string }) => {
+    socket.on('safety:report', async (data: { tripId: string, reporterId: string, reportedUserId: string, reason: string, description: string, lat?: number, lng?: number, reporterRole?: string }) => {
       try {
         console.warn(`🚨 [REPORTE DE SEGURIDAD] Viaje: ${data.tripId} | Reportado por: ${data.reporterId} | Hacia: ${data.reportedUserId} | Razón: ${data.reason} | Descripción: ${data.description}`);
-        console.log(`[Socket] REPORTE DE SEGURIDAD RECIBIDO para viaje ${data.tripId}`);
+        
+        // Guardar reporte en base de datos
+        const report = await prisma.safetyReport.create({
+          data: {
+            tripId: data.tripId,
+            reporterId: data.reporterId,
+            reporterRole: data.reporterRole || 'passenger',
+            reportedUserId: data.reportedUserId,
+            reason: data.reason,
+            description: data.description,
+            lat: data.lat || null,
+            lng: data.lng || null,
+          },
+          include: {
+            trip: {
+              include: {
+                passenger: {
+                  select: { id: true, name: true, phone: true }
+                },
+                driver: {
+                  select: { id: true, name: true, phone: true, vehiclePlate: true }
+                }
+              }
+            }
+          }
+        });
+
+        // Retransmitir alerta en tiempo real a los administradores
+        if (ioInstance) {
+          ioInstance.to('admin').emit('admin:safety-report-alert', report);
+        }
+
+        console.log(`[Socket] REPORTE DE SEGURIDAD RECIBIDO y guardado: ${report.id}`);
         socket.emit('safety:report-received', { success: true });
       } catch (err) {
         console.error('[Socket] Error al guardar reporte:', err);
+        socket.emit('safety:report-received', { success: false, error: 'Internal database error' });
       }
     });
 
