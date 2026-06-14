@@ -837,22 +837,7 @@ export default function DriverPage() {
 
   const acceptTrip = () => {
     if (!tripRequest) return;
-
-    // Verificar caché biométrica de 12 horas
-    const lastVerified = localStorage.getItem('driver_biometric_last_verified');
-    const isVerifiedRecent = lastVerified && (Date.now() - Number(lastVerified)) < 12 * 60 * 60 * 1000;
-    const isPlaceholder = 
-      !driver?.selfieUrl || 
-      driver.selfieUrl.trim() === '' || 
-      driver.selfieUrl.includes('placehold.co') || 
-      driver.selfieUrl.includes('placeholder');
-
-    if (!isVerifiedRecent && !isPlaceholder) {
-      if (timerRef.current) clearInterval(timerRef.current);
-      setShowBiometricModal(true);
-      return;
-    }
-
+    // Verificación biométrica desactivada temporalmente (bypass de cámara)
     executeAcceptTrip();
   };
 

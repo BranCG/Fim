@@ -978,21 +978,9 @@ export default function PassengerPage() {
   }, [origin, dest, paymentMethod, session]);
 
   const handleRequestTrip = useCallback(async () => {
-    // Verificar si requiere autenticación biométrica
-    const isVerifiedThisSession = sessionStorage.getItem('passenger_biometric_verified') === 'true';
-    const isPlaceholder = 
-      !session?.user?.selfieUrl || 
-      session.user.selfieUrl.trim() === '' || 
-      session.user.selfieUrl.includes('placehold.co') || 
-      session.user.selfieUrl.includes('placeholder');
-
-    if (!isVerifiedThisSession && !isPlaceholder) {
-      setShowBiometricModal(true);
-      return;
-    }
-
+    // Verificación biométrica desactivada temporalmente (bypass de cámara)
     await executeRequestTrip();
-  }, [session, executeRequestTrip]);
+  }, [executeRequestTrip]);
 
   const executeCancel = useCallback(async (reason: string) => {
     if (currentTrip) {
