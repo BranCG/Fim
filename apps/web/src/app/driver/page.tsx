@@ -20,6 +20,7 @@ interface TripRequest {
   paymentMethod: string;
   passenger: { id: string; name: string; phone: string };
   driverDistance: number;
+  passengerCount?: number;
 }
 
 interface DriverInfo {
@@ -2084,6 +2085,9 @@ export default function DriverPage() {
               <div style={{ background: 'rgba(255, 255, 255, 0.06)', color: '#E2E8F0', padding: '5px 12px', borderRadius: '100px', fontSize: '0.78rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '4px' }}>
                 <span style={{ color: '#ECC94B' }}>★</span> {(4.7 + (tripRequest.passenger.name.charCodeAt(0) % 4) * 0.1).toFixed(2).replace('.', ',')}
               </div>
+              <div style={{ background: 'rgba(255, 255, 255, 0.06)', color: '#E2E8F0', padding: '5px 12px', borderRadius: '100px', fontSize: '0.78rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <span>👥</span> {tripRequest.passengerCount || 1} {(tripRequest.passengerCount || 1) === 1 ? 'persona' : 'personas'}
+              </div>
               <div style={{ background: 'rgba(255, 255, 255, 0.06)', color: '#E2E8F0', padding: '5px 12px', borderRadius: '100px', fontSize: '0.78rem', fontWeight: 600 }}>
                 {tripRequest.passenger.name}
               </div>
@@ -2213,7 +2217,9 @@ export default function DriverPage() {
               <div className="driver-avatar">{activeTrip.passenger.name[0]}</div>
               <div>
                 <div style={{ fontWeight: 800 }}>{activeTrip.passenger.name}</div>
-                <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Pasajero</div>
+                <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  <span>Pasajero</span> · <span>👥 {activeTrip.passengerCount || 1} {(activeTrip.passengerCount || 1) === 1 ? 'persona' : 'personas'}</span>
+                </div>
               </div>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>

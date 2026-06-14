@@ -22,7 +22,13 @@ router.post('/request', requireAuth, requireRole('passenger'), async (req: Reque
       originLat, originLng, originAddress,
       destLat, destLng, destAddress,
       paymentMethod,
+      passengerCount,
     } = req.body;
+
+    const count = Number(passengerCount) || 1;
+    if (count < 1 || count > 4) {
+      return res.status(400).json({ error: 'El número de pasajeros debe estar entre 1 y 4.' });
+    }
 
     const distanceKm = calculateDistance(originLat, originLng, destLat, destLng) * 1.3;
     const durationMin = estimateDuration(distanceKm);
@@ -59,6 +65,7 @@ router.post('/request', requireAuth, requireRole('passenger'), async (req: Reque
         isDiscounted,
         paymentMethod: paymentMethod || 'cash',
         status: 'searching',
+        passengerCount: count,
       },
       include: { passenger: { select: { id: true, name: true, phone: true } } },
     });

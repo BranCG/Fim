@@ -126,6 +126,7 @@ model Trip {
   dropoffOtpCode  String?   // Código que el pasajero da al conductor al bajarse
   mpPaymentId     String?
   status          String    @default("searching")
+  passengerCount  Int       @default(1)
   cancelledBy     String?
   cancelReason    String?
   requestedAt     DateTime  @default(now())

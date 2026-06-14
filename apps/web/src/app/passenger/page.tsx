@@ -253,6 +253,7 @@ export default function PassengerPage() {
   const [isSearching, setIsSearching] = useState(false);
   const [currentCommune, setCurrentCommune] = useState<string>('');
   const [paymentMethod, setPaymentMethod] = useState<'cash' | 'card'>('cash');
+  const [passengerCount, setPassengerCount] = useState(1);
   const [currentTrip, setCurrentTrip] = useState<Trip | null>(null);
   const [driver, setDriver] = useState<Driver | null>(null);
   const [driverPos, setDriverPos] = useState<{ lat: number; lng: number } | null>(null);
@@ -957,6 +958,7 @@ export default function PassengerPage() {
         originLat: origin.lat, originLng: origin.lng, originAddress: origin.address,
         destLat: dest.lat, destLng: dest.lng, destAddress: dest.address,
         paymentMethod,
+        passengerCount,
       });
 
       const trip = res.data.trip;
@@ -975,7 +977,7 @@ export default function PassengerPage() {
       setError(e.response?.data?.error || 'Error al solicitar el viaje');
       setStatus('confirm');
     }
-  }, [origin, dest, paymentMethod, session]);
+  }, [origin, dest, paymentMethod, passengerCount, session]);
 
   const handleRequestTrip = useCallback(async () => {
     // Verificación biométrica desactivada temporalmente (bypass de cámara)
@@ -1771,6 +1773,74 @@ export default function PassengerPage() {
               >
                 <IconCard /> Tarjeta
               </button>
+            </div>
+          </div>
+
+          <div style={{ marginBottom: '24px' }}>
+            <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '8px' }}>Pasajeros que abordarán (Máx. 4):</p>
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              background: 'rgba(255, 255, 255, 0.02)',
+              border: '1px solid var(--border)',
+              borderRadius: 'var(--radius)',
+              padding: '12px 16px',
+            }}>
+              <span style={{ fontSize: '0.9rem', fontWeight: 600, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span style={{ color: 'var(--accent)', fontSize: '1.1rem' }}>👥</span> Cantidad de personas
+              </span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                <button
+                  type="button"
+                  onClick={() => setPassengerCount(prev => Math.max(1, prev - 1))}
+                  disabled={passengerCount <= 1}
+                  style={{
+                    width: '32px',
+                    height: '32px',
+                    borderRadius: '50%',
+                    border: '1px solid var(--border)',
+                    background: passengerCount <= 1 ? 'rgba(255, 255, 255, 0.02)' : 'rgba(255, 255, 255, 0.05)',
+                    color: passengerCount <= 1 ? 'var(--text-muted)' : 'var(--text-primary)',
+                    fontSize: '1.2rem',
+                    fontWeight: 'bold',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    cursor: passengerCount <= 1 ? 'not-allowed' : 'pointer',
+                    transition: 'all 0.2s',
+                    padding: 0
+                  }}
+                >
+                  -
+                </button>
+                <span style={{ fontSize: '1.1rem', fontWeight: 900, minWidth: '16px', textAlign: 'center', color: 'var(--accent)' }}>
+                  {passengerCount}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setPassengerCount(prev => Math.min(4, prev + 1))}
+                  disabled={passengerCount >= 4}
+                  style={{
+                    width: '32px',
+                    height: '32px',
+                    borderRadius: '50%',
+                    border: '1px solid var(--border)',
+                    background: passengerCount >= 4 ? 'rgba(255, 255, 255, 0.02)' : 'rgba(255, 255, 255, 0.05)',
+                    color: passengerCount >= 4 ? 'var(--text-muted)' : 'var(--text-primary)',
+                    fontSize: '1.2rem',
+                    fontWeight: 'bold',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    cursor: passengerCount >= 4 ? 'not-allowed' : 'pointer',
+                    transition: 'all 0.2s',
+                    padding: 0
+                  }}
+                >
+                  +
+                </button>
+              </div>
             </div>
           </div>
 
