@@ -131,7 +131,6 @@ router.post('/driver/register', async (req: Request, res: Response) => {
       licenseNumber, vehicleBrand, vehicleModel, vehicleYear, vehiclePlate, tagNumber, vehicleColor,
       idFrontUrl, idBackUrl, selfieUrl, licenseUrl, licenseBackUrl, vehiclePhotoUrl,
       membershipPlan,
-      bankName, bankAccountType, bankAccountNumber, bankAccountName, bankAccountRut, bankAccountEmail,
       backgroundDocUrl,
     } = req.body;
 
@@ -175,7 +174,6 @@ router.post('/driver/register', async (req: Request, res: Response) => {
         vehicleColor: vehicleColor || "",
         membershipPlan,
         membershipGoal: membershipPlan === 'PROGRESSIVE' ? 120000 : 100000,
-        bankName, bankAccountType, bankAccountNumber, bankAccountName, bankAccountRut, bankAccountEmail,
         status: 'pending',
         emailVerified: false,
         emailCode: code,
@@ -470,7 +468,6 @@ router.post('/delete-account', requireAuth, async (req: Request, res: Response) 
     if (role === 'driver') {
       await prisma.$transaction([
         prisma.rating.deleteMany({ where: { OR: [{ driverId: userId }, { trip: { driverId: userId } }] } }),
-        prisma.payout.deleteMany({ where: { driverId: userId } }),
         prisma.trip.deleteMany({ where: { driverId: userId } }),
         prisma.refreshToken.deleteMany({ where: { driverId: userId } }),
         prisma.driver.delete({ where: { id: userId } }),
@@ -638,8 +635,7 @@ router.post('/google/register', async (req: Request, res: Response) => {
       // Conductor specific
       licenseNumber, licenseUrl, licenseBackUrl,
       vehicleBrand, vehicleModel, vehicleYear, vehiclePlate, tagNumber, vehiclePhotoUrl, vehicleColor,
-      membershipPlan,
-      bankName, bankAccountType, bankAccountNumber, bankAccountName, bankAccountRut, bankAccountEmail
+      membershipPlan
     } = req.body;
 
     if (!credential || !phone || !name || !role) {
@@ -678,7 +674,6 @@ router.post('/google/register', async (req: Request, res: Response) => {
           vehicleColor: vehicleColor || "",
           membershipPlan,
           membershipGoal: membershipPlan === 'PROGRESSIVE' ? 120000 : 100000,
-          bankName, bankAccountType, bankAccountNumber, bankAccountName, bankAccountRut, bankAccountEmail,
           status: 'pending',
           emailVerified: true, // Google ya está verificado
         }

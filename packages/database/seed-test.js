@@ -4,8 +4,6 @@ const prisma = new PrismaClient();
 const bcrypt = require('bcryptjs');
 
 async function main() {
-  console.log('Cleaning database...');
-  await prisma.payout.deleteMany({});
   await prisma.rating.deleteMany({});
   await prisma.trip.deleteMany({});
   await prisma.refreshToken.deleteMany({});

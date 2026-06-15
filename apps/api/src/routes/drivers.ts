@@ -23,7 +23,6 @@ router.get('/me', requireAuth, requireRole('driver'), async (req: Request, res: 
         vehiclePlate: true, vehiclePhotoUrl: true, tagNumber: true,
         totalRating: true, totalTrips: true,
         adminNotes: true, mercadoPagoLink: true, walletBalance: true,
-        taxCompliant: true, taxDocumentUrl: true, taxPendingReview: true,
         createdAt: true,
       },
     });
@@ -213,26 +212,6 @@ router.post('/payment-link', requireAuth, requireRole('driver'), async (req: Req
   }
 });
 
-// ─── CARGAR DOCUMENTO TRIBUTARIO (SII) ──────────────────────────────────
-router.post('/submit-tax-document', requireAuth, requireRole('driver'), async (req: Request, res: Response) => {
-  try {
-    const { taxDocumentUrl } = req.body;
-    if (!taxDocumentUrl) return res.status(400).json({ error: 'La URL del documento es obligatoria' });
-
-    await prisma.driver.update({
-      where: { id: req.user!.id },
-      data: {
-        taxDocumentUrl,
-        taxCompliant: true, // Reactivamos de inmediato para no perjudicar al conductor
-        taxPendingReview: true, // Queda en revisión del admin para validar
-      },
-    });
-
-    return res.json({ ok: true, message: 'Documento tributario cargado y cuenta reactivada con éxito.' });
-  } catch (err) {
-    return res.status(500).json({ error: 'Error al subir documento tributario' });
-  }
-});
 
 
 // ─── PAGO DIARIO COMFORT ─────────────────────────────────────────────────

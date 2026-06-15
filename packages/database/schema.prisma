@@ -8,206 +8,183 @@ datasource db {
 }
 
 model User {
-  id            String    @id @default(cuid())
-  email         String    @unique
-  phone         String    @unique
-  name          String
-  passwordHash  String
-  rut           String?   @unique
-  birthDate     DateTime?
-  address       String?
-  idFrontUrl    String?
-  idBackUrl     String?
-  backgroundDocUrl String?
-  isVerified    Boolean   @default(false)
-  emailVerified Boolean   @default(true)
-  emailCode        String?
-  resetCode        String?
-  resetCodeExpires DateTime?
-  paymentMethod String?
-  mpCardToken   String?
-  role          String    @default("passenger")
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  selfieUrl     String?
-  ratings       Rating[]  @relation("PassengerRatings")
-  trips         Trip[]    @relation("PassengerTrips")
-  fcmToken      String?
+  id               String    @id @default(cuid()) @map("id")
+  email            String    @unique @map("correo")
+  phone            String    @unique @map("telefono")
+  name             String    @map("nombre")
+  passwordHash     String    @map("contrasena_hash")
+  rut              String?   @unique @map("rut")
+  birthDate        DateTime? @map("fecha_nacimiento")
+  address          String?   @map("direccion")
+  idFrontUrl       String?   @map("url_carnet_frente")
+  idBackUrl        String?   @map("url_carnet_dorso")
+  backgroundDocUrl String?   @map("url_certificado_antecedentes")
+  isVerified       Boolean   @default(false) @map("esta_verificado")
+  emailVerified    Boolean   @default(true) @map("correo_verificado")
+  emailCode        String?   @map("codigo_correo")
+  resetCode        String?   @map("codigo_restablecer")
+  resetCodeExpires DateTime? @map("expiracion_codigo_restablecer")
+  paymentMethod    String?   @map("metodo_pago")
+  mpCardToken      String?   @map("token_tarjeta_mp")
+  role             String    @default("passenger") @map("rol")
+  createdAt        DateTime  @default(now()) @map("fecha_creacion")
+  updatedAt        DateTime  @updatedAt @map("fecha_actualizacion")
+  selfieUrl        String?   @map("url_selfie")
+  ratings          Rating[]  @relation("PassengerRatings")
+  trips            Trip[]    @relation("PassengerTrips")
+  fcmToken         String?   @map("token_fcm")
 
-  @@map("users")
+  @@map("usuarios")
 }
 
 model Driver {
-  id                  String    @id @default(cuid())
-  email               String    @unique
-  phone               String    @unique
-  name                String
-  passwordHash        String
-  rut                 String    @unique
-  birthDate           DateTime
-  address             String
-  idFrontUrl          String
-  idBackUrl           String
-  backgroundDocUrl    String?
-  selfieUrl           String?
-  licenseNumber       String
-  licenseUrl          String
-  licenseBackUrl      String    @default("")
-  vehicleBrand        String
-  vehicleModel        String
-  vehicleYear         Int
-  vehiclePlate        String    @unique
-  vehicleColor        String    @default("")
-  vehiclePhotoUrl     String
-  tagNumber           String
-  status              String    @default("pending")
-  membershipPaid      Boolean   @default(false)
-  membershipPlan      String    @default("BLACK")
-  membershipProgress  Int       @default(0)
-  membershipGoal      Int       @default(150000)
-  dailyCashTripsCount Int       @default(0)
-  comfortDebt         Int       @default(0)
-  comfortLastPaidAt   DateTime?
-  membershipWeekStart DateTime?
-  membershipDate      DateTime?
-  mpSubscriptionId    String?
-  membershipExpiresAt DateTime?
-  comfortReceiptUrl   String?
-  walletBalance       Int       @default(0)
-  adminNotes          String?
-  mercadoPagoLink     String?   // Link de pago directo (mpago.li/...)
-  isOnline            Boolean   @default(false)
-  lastLat             Float?
-  lastLng             Float?
-  lastSeen            DateTime?
-  totalRating         Float     @default(0)
-  totalTrips          Int       @default(0)
-  bankName            String?
-  bankAccountType     String?
-  bankAccountNumber   String?
-  bankAccountName     String?
-  bankAccountRut      String?
-  bankAccountEmail    String?
-  taxCompliant        Boolean   @default(true)
-  taxDocumentUrl      String?
-  taxPendingReview    Boolean   @default(false)
-  emailVerified       Boolean   @default(true)
-  emailCode           String?
-  resetCode           String?
-  resetCodeExpires    DateTime?
-  createdAt           DateTime  @default(now())
-  updatedAt           DateTime  @updatedAt
-  payouts             Payout[]
+  id                  String    @id @default(cuid()) @map("id")
+  email               String    @unique @map("correo")
+  phone               String    @unique @map("telefono")
+  name                String    @map("nombre")
+  passwordHash        String    @map("contrasena_hash")
+  rut                 String    @unique @map("rut")
+  birthDate           DateTime  @map("fecha_nacimiento")
+  address             String    @map("direccion")
+  idFrontUrl          String    @map("url_carnet_frente")
+  idBackUrl           String    @map("url_carnet_dorso")
+  backgroundDocUrl    String?   @map("url_certificado_antecedentes")
+  selfieUrl           String?   @map("url_selfie")
+  licenseNumber       String    @map("numero_licencia")
+  licenseUrl          String    @map("url_licencia_frente")
+  licenseBackUrl      String    @default("") @map("url_licencia_dorso")
+  vehicleBrand        String    @map("marca_vehiculo")
+  vehicleModel        String    @map("modelo_vehiculo")
+  vehicleYear         Int       @map("anio_vehiculo")
+  vehiclePlate        String    @unique @map("patente_vehiculo")
+  vehicleColor        String    @default("") @map("color_vehiculo")
+  vehiclePhotoUrl     String    @map("url_foto_vehiculo")
+  tagNumber           String    @map("numero_tag")
+  status              String    @default("pending") @map("estado")
+  membershipPaid      Boolean   @default(false) @map("membresia_pagada")
+  membershipPlan      String    @default("BLACK") @map("plan_membresia")
+  membershipProgress  Int       @default(0) @map("progreso_membresia")
+  membershipGoal      Int       @default(150000) @map("meta_membresia")
+  dailyCashTripsCount Int       @default(0) @map("viajes_efectivo_diarios")
+  comfortDebt         Int       @default(0) @map("deuda_comfort")
+  comfortLastPaidAt   DateTime? @map("ultimo_pago_comfort")
+  membershipWeekStart DateTime? @map("inicio_semana_membresia")
+  membershipDate      DateTime? @map("fecha_membresia")
+  mpSubscriptionId    String?   @map("id_suscripcion_mp")
+  membershipExpiresAt DateTime? @map("expiracion_membresia")
+  comfortReceiptUrl   String?   @map("url_comprobante_comfort")
+  walletBalance       Int       @default(0) @map("saldo_billetera")
+  adminNotes          String?   @map("notas_administrador")
+  mercadoPagoLink     String?   @map("enlace_mercado_pago") // Link de pago directo (mpago.li/...)
+  isOnline            Boolean   @default(false) @map("esta_en_linea")
+  lastLat             Float?    @map("ultima_latitud")
+  lastLng             Float?    @map("ultima_longitud")
+  lastSeen            DateTime? @map("ultima_conexion")
+  totalRating         Float     @default(0) @map("calificacion_total")
+  totalTrips          Int       @default(0) @map("viajes_totales")
+  emailVerified       Boolean   @default(true) @map("correo_verificado")
+  emailCode           String?   @map("codigo_correo")
+  resetCode           String?   @map("codigo_restablecer")
+  resetCodeExpires    DateTime? @map("expiracion_codigo_restablecer")
+  createdAt           DateTime  @default(now()) @map("fecha_creacion")
+  updatedAt           DateTime  @updatedAt @map("fecha_actualizacion")
   ratings             Rating[]  @relation("DriverRatings")
   trips               Trip[]    @relation("DriverTrips")
-  fcmToken            String?
+  fcmToken            String?   @map("token_fcm")
 
-  @@map("drivers")
+  @@map("conductores")
 }
 
 model Trip {
-  id              String    @id @default(cuid())
-  passengerId     String
-  driverId        String?
-  originLat       Float
-  originLng       Float
-  originAddress   String
-  destLat         Float
-  destLng         Float
-  destAddress     String
-  distanceKm      Float
-  durationMin     Int
-  estimatedPrice  Int
-  finalPrice      Int?
-  isDiscounted    Boolean   @default(false)
-  paymentMethod   String
-  isPaid          Boolean   @default(false)
-  paymentStatus   String    @default("pending")
-  otpCode         String?
-  dropoffOtpCode  String?   // Código que el pasajero da al conductor al bajarse
-  mpPaymentId     String?
-  status          String    @default("searching")
-  passengerCount  Int       @default(1)
-  cancelledBy     String?
-  cancelReason    String?
-  requestedAt     DateTime  @default(now())
-  acceptedAt      DateTime?
-  driverArrivedAt DateTime?
-  startedAt       DateTime?
-  completedAt     DateTime?
-  cancelledAt     DateTime?
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
+  id              String         @id @default(cuid()) @map("id")
+  passengerId     String         @map("id_pasajero")
+  driverId        String?        @map("id_conductor")
+  originLat       Float          @map("latitud_origen")
+  originLng       Float          @map("longitud_origen")
+  originAddress   String         @map("direccion_origen")
+  destLat         Float          @map("latitud_destino")
+  destLng         Float          @map("longitud_destino")
+  destAddress     String         @map("direccion_destino")
+  distanceKm      Float          @map("distancia_km")
+  durationMin     Int            @map("duracion_min")
+  estimatedPrice  Int            @map("precio_estimado")
+  finalPrice      Int?           @map("precio_final")
+  isDiscounted    Boolean        @default(false) @map("tiene_descuento")
+  paymentMethod   String         @map("metodo_pago")
+  isPaid          Boolean        @default(false) @map("esta_pagado")
+  paymentStatus   String         @default("pending") @map("estado_pago")
+  otpCode         String?        @map("codigo_otp")
+  dropoffOtpCode  String?        @map("codigo_otp_destino") // Código que el pasajero da al conductor al bajarse
+  mpPaymentId     String?        @map("id_pago_mp")
+  status          String         @default("searching") @map("estado")
+  passengerCount  Int            @default(1) @map("cantidad_pasajeros")
+  cancelledBy     String?        @map("cancelado_por")
+  cancelReason    String?        @map("motivo_cancelacion")
+  requestedAt     DateTime       @default(now()) @map("fecha_solicitud")
+  acceptedAt      DateTime?      @map("fecha_aceptacion")
+  driverArrivedAt DateTime?      @map("fecha_llegada_conductor")
+  startedAt       DateTime?      @map("fecha_inicio")
+  completedAt     DateTime?      @map("fecha_fin")
+  cancelledAt     DateTime?      @map("fecha_cancelacion")
+  createdAt       DateTime       @default(now()) @map("fecha_creacion")
+  updatedAt       DateTime       @updatedAt @map("fecha_actualizacion")
   rating          Rating?
-  driver          Driver?   @relation("DriverTrips", fields: [driverId], references: [id])
-  passenger       User      @relation("PassengerTrips", fields: [passengerId], references: [id])
+  driver          Driver?        @relation("DriverTrips", fields: [driverId], references: [id])
+  passenger       User           @relation("PassengerTrips", fields: [passengerId], references: [id])
   safetyReports   SafetyReport[]
 
-  @@map("trips")
+  @@map("viajes")
 }
 
 model Rating {
-  id            String   @id @default(cuid())
-  tripId        String   @unique
-  passengerId   String
-  driverId      String
-  driverScore   Int
-  driverComment String?
-  createdAt     DateTime @default(now())
+  id            String   @id @default(cuid()) @map("id")
+  tripId        String   @unique @map("id_viaje")
+  passengerId   String   @map("id_pasajero")
+  driverId      String   @map("id_conductor")
+  driverScore   Int      @map("puntaje_conductor")
+  driverComment String?  @map("comentario_conductor")
+  createdAt     DateTime @default(now()) @map("fecha_creacion")
   driver        Driver   @relation("DriverRatings", fields: [driverId], references: [id])
   passenger     User     @relation("PassengerRatings", fields: [passengerId], references: [id])
   trip          Trip     @relation(fields: [tripId], references: [id])
 
-  @@map("ratings")
+  @@map("calificaciones")
 }
 
 model RefreshToken {
-  id        String   @id @default(cuid())
-  token     String   @unique
-  userId    String?
-  driverId  String?
-  expiresAt DateTime
-  createdAt DateTime @default(now())
+  id        String   @id @default(cuid()) @map("id")
+  token     String   @unique @map("token")
+  userId    String?  @map("id_usuario")
+  driverId  String?  @map("id_conductor")
+  expiresAt DateTime @map("fecha_expiracion")
+  createdAt DateTime @default(now()) @map("fecha_creacion")
 
-  @@map("refresh_tokens")
-}
-
-model Payout {
-  id         String   @id @default(cuid())
-  driverId   String
-  amount     Int
-  status     String   @default("pending")
-  receiptUrl String?
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
-  driver     Driver   @relation(fields: [driverId], references: [id])
-
-  @@map("payouts")
+  @@map("tokens_refresco")
 }
 
 model SystemConfig {
-  key       String   @id
-  value     String
-  updatedAt DateTime @updatedAt
+  key       String   @id @map("clave")
+  value     String   @map("valor")
+  updatedAt DateTime @updatedAt @map("fecha_actualizacion")
 
-  @@map("system_configs")
+  @@map("configuraciones_sistema")
 }
 
 model SafetyReport {
-  id             String   @id @default(cuid())
-  tripId         String
-  reporterId     String
-  reporterRole   String   // "passenger" | "driver"
-  reportedUserId String
-  reason         String
-  description    String?
-  lat            Float?
-  lng            Float?
-  resolved       Boolean  @default(false)
-  adminNotes     String?
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  id             String   @id @default(cuid()) @map("id")
+  tripId         String   @map("id_viaje")
+  reporterId     String   @map("id_reportador")
+  reporterRole   String   @map("rol_reportador") // "passenger" | "driver"
+  reportedUserId String   @map("id_reportado")
+  reason         String   @map("motivo")
+  description    String?  @map("descripcion")
+  lat            Float?   @map("latitud")
+  lng            Float?   @map("longitud")
+  resolved       Boolean  @default(false) @map("esta_resuelto")
+  adminNotes     String?  @map("notas_administrador")
+  createdAt      DateTime @default(now()) @map("fecha_creacion")
+  updatedAt      DateTime @updatedAt @map("fecha_actualizacion")
   trip           Trip     @relation(fields: [tripId], references: [id])
 
-  @@map("safety_reports")
+  @@map("reportes_seguridad")
 }

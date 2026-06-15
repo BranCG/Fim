@@ -215,7 +215,6 @@ router.delete('/drivers/:id', async (req: Request, res: Response) => {
 
     await prisma.$transaction([
       prisma.rating.deleteMany({ where: { OR: [{ driverId }, { trip: { driverId } }] } }),
-      prisma.payout.deleteMany({ where: { driverId } }),
       prisma.trip.deleteMany({ where: { driverId } }),
       prisma.refreshToken.deleteMany({ where: { driverId } }),
       prisma.driver.delete({ where: { id: driverId } }),
@@ -376,58 +375,6 @@ router.get('/revenue-report', async (req: Request, res: Response) => {
     return res.json({ report: Object.values(stats) });
   } catch (err) {
     return res.status(500).json({ error: 'Error al generar reporte' });
-  }
-});
-
-// ─── MARCAR/CAMBIAR CUMPLIMIENTO TRIBUTARIO DEL CONDUCTOR ────────────────
-router.post('/drivers/:id/toggle-tax-compliance', async (req: Request, res: Response) => {
-  try {
-    const { taxCompliant } = req.body;
-    const driver = await prisma.driver.update({
-      where: { id: req.params.id },
-      data: {
-        taxCompliant,
-        // Si lo marcamos como no complaciente, también apagamos su estado en línea
-        isOnline: taxCompliant ? undefined : false,
-      },
-    });
-    return res.json({ message: `Estado tributario del conductor actualizado. Cumplimiento: ${taxCompliant}`, driver });
-  } catch (err) {
-    return res.status(500).json({ error: 'Error interno' });
-  }
-});
-
-// ─── APROBAR DOCUMENTO TRIBUTARIO ─────────────────────────────────────────
-router.post('/drivers/:id/approve-tax-document', async (req: Request, res: Response) => {
-  try {
-    const driver = await prisma.driver.update({
-      where: { id: req.params.id },
-      data: {
-        taxCompliant: true,
-        taxPendingReview: false,
-      },
-    });
-    return res.json({ message: 'Documento tributario aprobado con éxito.', driver });
-  } catch (err) {
-    return res.status(500).json({ error: 'Error interno' });
-  }
-});
-
-// ─── RECHAZAR DOCUMENTO TRIBUTARIO ────────────────────────────────────────
-router.post('/drivers/:id/reject-tax-document', async (req: Request, res: Response) => {
-  try {
-    const { reason } = req.body;
-    const driver = await prisma.driver.update({
-      where: { id: req.params.id },
-      data: {
-        taxCompliant: false,
-        taxPendingReview: false,
-        adminNotes: reason || 'Documento tributario inválido o rechazado.',
-      },
-    });
-    return res.json({ message: 'Documento tributario rechazado.', driver });
-  } catch (err) {
-    return res.status(500).json({ error: 'Error interno' });
   }
 });
 

@@ -58,7 +58,7 @@ async function resetAll() {
   const blackExpires = new Date(); blackExpires.setMonth(blackExpires.getMonth() + 1);
   const d1 = await prisma.driver.upsert({
     where: { email: 'conductor1@fim.cl' },
-    update: { passwordHash: commonHash, status: 'active', membershipPaid: true, membershipPlan: 'BLACK', membershipExpiresAt: blackExpires, taxCompliant: true },
+    update: { passwordHash: commonHash, status: 'active', membershipPaid: true, membershipPlan: 'BLACK', membershipExpiresAt: blackExpires },
     create: {
       email: 'conductor1@fim.cl',
       phone: '+56933333333',
@@ -83,7 +83,6 @@ async function resetAll() {
       membershipPlan: 'BLACK',
       membershipGoal: 150000,
       membershipExpiresAt: blackExpires,
-      taxCompliant: true,
     }
   });
   console.log(`✅ Conductor BLACK listo: ${d1.email} / Clave: 123456`);
@@ -92,7 +91,7 @@ async function resetAll() {
   const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   const d2 = await prisma.driver.upsert({
     where: { email: 'conductor2@fim.cl' },
-    update: { passwordHash: commonHash, status: 'active', membershipPaid: false, membershipPlan: 'COMFORT', comfortDebt: 0, comfortLastPaidAt: new Date(), taxCompliant: true },
+    update: { passwordHash: commonHash, status: 'active', membershipPaid: false, membershipPlan: 'COMFORT', comfortDebt: 0, comfortLastPaidAt: new Date() },
     create: {
       email: 'conductor2@fim.cl',
       phone: '+56944444444',
@@ -118,7 +117,6 @@ async function resetAll() {
       membershipGoal: 180000,
       comfortDebt: 0,
       comfortLastPaidAt: new Date(), // Pagó hoy
-      taxCompliant: true,
     }
   });
   console.log(`✅ Conductor COMFORT listo: ${d2.email} / Clave: 123456`);
@@ -128,7 +126,7 @@ async function resetAll() {
   flexExpires.setDate(flexExpires.getDate() + daysUntilMonday);
   const d3 = await prisma.driver.upsert({
     where: { email: 'conductor3@fim.cl' },
-    update: { passwordHash: commonHash, status: 'active', membershipPaid: true, membershipPlan: 'FLEX', membershipExpiresAt: flexExpires, taxCompliant: true },
+    update: { passwordHash: commonHash, status: 'active', membershipPaid: true, membershipPlan: 'FLEX', membershipExpiresAt: flexExpires },
     create: {
       email: 'conductor3@fim.cl',
       phone: '+56955555555',
@@ -153,7 +151,6 @@ async function resetAll() {
       membershipPlan: 'FLEX',
       membershipGoal: 60000,
       membershipExpiresAt: flexExpires,
-      taxCompliant: true,
     }
   });
   console.log(`✅ Conductor FLEX listo: ${d3.email} / Clave: 123456`);

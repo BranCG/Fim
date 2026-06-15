@@ -39,9 +39,6 @@ interface DriverInfo {
   email: string;
   walletBalance: number;
   adminNotes: string | null;
-  taxCompliant: boolean;
-  taxDocumentUrl: string | null;
-  taxPendingReview: boolean;
   isPromoActive?: boolean;
   freePassDays?: number;
   createdAt: string;
@@ -389,40 +386,6 @@ export default function DriverPage() {
   const [fetchError, setFetchError] = useState<string | null>(null);
   const [loadingTimeout, setLoadingTimeout] = useState(false);
 
-  const [taxUploading, setTaxUploading] = useState(false);
-  const [taxDocumentUrl, setTaxDocumentUrl] = useState<string | null>(null);
-
-  const handleUploadTaxDocument = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    setTaxUploading(true);
-    const formData = new FormData();
-    formData.append('file', file);
-
-    try {
-      const res = await api.post('/uploads/single', formData);
-      const url = res.data.url;
-      setTaxDocumentUrl(url);
-
-      await api.post('/drivers/submit-tax-document', { taxDocumentUrl: url });
-
-      if (driver) {
-        setDriver({
-          ...driver,
-          taxCompliant: true,
-          taxPendingReview: true,
-          taxDocumentUrl: url
-        });
-      }
-      showCustomAlert('Documento tributario cargado y cuenta reactivada con éxito. Nuestro equipo auditará la boleta en las próximas 24 horas.', 'Éxito', 'success');
-    } catch (err) {
-      console.error(err);
-      showCustomAlert('Error al subir el documento tributario', 'Error', 'error');
-    } finally {
-      setTaxUploading(false);
-    }
-  };
 
   const handlePayMembership = async () => {
     if (!driver) return;
@@ -1603,20 +1566,6 @@ export default function DriverPage() {
       </button>
 
       <main className="main-content">
-        {driver && driver.taxPendingReview && (
-          <div style={{
-            background: 'rgba(0, 229, 160, 0.1)',
-            borderBottom: '1px solid var(--accent)',
-            padding: '10px 16px',
-            fontSize: '0.78rem',
-            textAlign: 'center',
-            color: 'var(--accent)',
-            fontWeight: 600,
-            zIndex: 10
-          }}>
-            📋 Tu boleta de honorarios está siendo auditada por la administración. Puedes conducir con normalidad.
-          </div>
-        )}
 
         {/* HUD de GPS para el Conductor */}
         {gpsError && (
