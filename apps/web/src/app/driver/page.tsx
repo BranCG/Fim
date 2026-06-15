@@ -247,7 +247,7 @@ export default function DriverPage() {
 
   // SOS Safety Report States
   const [showSafetyModal, setShowSafetyModal] = useState(false);
-  const [safetyCountdown, setSafetyCountdown] = useState(3);
+  const [safetyCountdown, setSafetyCountdown] = useState(8);
   const [safetyReason, setSafetyReason] = useState('Incidente de seguridad / Amenaza');
   const [safetyDescription, setSafetyDescription] = useState('');
   const [safetySending, setSafetySending] = useState(false);
@@ -1563,7 +1563,7 @@ export default function DriverPage() {
         <button 
           onClick={() => {
             setShowSafetyModal(true);
-            setSafetyCountdown(3);
+            setSafetyCountdown(8);
           }}
           title="SOS Emergencia"
           className="sos-button"

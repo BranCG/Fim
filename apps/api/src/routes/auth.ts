@@ -128,7 +128,7 @@ router.post('/driver/register', async (req: Request, res: Response) => {
   try {
     const {
       email, phone, name, password, rut, birthDate, address,
-      licenseNumber, vehicleBrand, vehicleModel, vehicleYear, vehiclePlate, tagNumber,
+      licenseNumber, vehicleBrand, vehicleModel, vehicleYear, vehiclePlate, tagNumber, vehicleColor,
       idFrontUrl, idBackUrl, selfieUrl, licenseUrl, licenseBackUrl, vehiclePhotoUrl,
       membershipPlan,
       bankName, bankAccountType, bankAccountNumber, bankAccountName, bankAccountRut, bankAccountEmail,
@@ -172,6 +172,7 @@ router.post('/driver/register', async (req: Request, res: Response) => {
         vehicleBrand, vehicleModel,
         vehicleYear: Number(vehicleYear),
         vehiclePlate, vehiclePhotoUrl, tagNumber: tagNumber || "",
+        vehicleColor: vehicleColor || "",
         membershipPlan,
         membershipGoal: membershipPlan === 'PROGRESSIVE' ? 120000 : 100000,
         bankName, bankAccountType, bankAccountNumber, bankAccountName, bankAccountRut, bankAccountEmail,
@@ -636,7 +637,7 @@ router.post('/google/register', async (req: Request, res: Response) => {
       idFrontUrl, idBackUrl, selfieUrl, backgroundDocUrl,
       // Conductor specific
       licenseNumber, licenseUrl, licenseBackUrl,
-      vehicleBrand, vehicleModel, vehicleYear, vehiclePlate, tagNumber, vehiclePhotoUrl,
+      vehicleBrand, vehicleModel, vehicleYear, vehiclePlate, tagNumber, vehiclePhotoUrl, vehicleColor,
       membershipPlan,
       bankName, bankAccountType, bankAccountNumber, bankAccountName, bankAccountRut, bankAccountEmail
     } = req.body;
@@ -674,6 +675,7 @@ router.post('/google/register', async (req: Request, res: Response) => {
           licenseNumber, licenseUrl, licenseBackUrl,
           vehicleBrand, vehicleModel, vehicleYear: Number(vehicleYear),
           vehiclePlate, vehiclePhotoUrl, tagNumber: tagNumber || "",
+          vehicleColor: vehicleColor || "",
           membershipPlan,
           membershipGoal: membershipPlan === 'PROGRESSIVE' ? 120000 : 100000,
           bankName, bankAccountType, bankAccountNumber, bankAccountName, bankAccountRut, bankAccountEmail,

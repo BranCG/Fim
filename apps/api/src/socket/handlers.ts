@@ -521,7 +521,7 @@ export function setupSocketHandlers(io: Server) {
                   select: { id: true, name: true, phone: true }
                 },
                 driver: {
-                  select: { id: true, name: true, phone: true, vehiclePlate: true }
+                  select: { id: true, name: true, phone: true, vehiclePlate: true, vehicleBrand: true, vehicleModel: true, vehicleColor: true }
                 }
               }
             }

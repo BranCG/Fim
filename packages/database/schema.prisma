@@ -57,6 +57,7 @@ model Driver {
   vehicleModel        String
   vehicleYear         Int
   vehiclePlate        String    @unique
+  vehicleColor        String    @default("")
   vehiclePhotoUrl     String
   tagNumber           String
   status              String    @default("pending")

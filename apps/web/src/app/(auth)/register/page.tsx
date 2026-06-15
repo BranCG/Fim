@@ -154,6 +154,7 @@ function RegisterForm() {
   const [vehicleModel, setVehicleModel] = useState('');
   const [vehicleYear, setVehicleYear] = useState('');
   const [vehiclePlate, setVehiclePlate] = useState('');
+  const [vehicleColor, setVehicleColor] = useState('');
   const [tagNumber, setTagNumber] = useState('');
   const [vehiclePhoto, setVehiclePhoto] = useState<FileUpload>(emptyUpload());
 
@@ -575,12 +576,13 @@ function RegisterForm() {
             vehiclePlate,
             tagNumber,
             vehiclePhotoUrl: vehiclePhoto.url,
-            membershipPlan
+            membershipPlan,
+            vehicleColor
           });
           saveSession(res.data.accessToken, { ...res.data.driver, role: 'driver' });
           router.push('/driver');
         } else {
-          const res = await api.post('/auth/driver/register', { name, email, phone, password, rut, birthDate, address, idFrontUrl: idFront.url, idBackUrl: idBack.url, selfieUrl: selfie.url, backgroundDocUrl: backgroundDoc.url, licenseNumber, licenseUrl: licenseFront.url, licenseBackUrl: licenseBack.url, vehicleBrand, vehicleModel, vehicleYear, vehiclePlate, tagNumber, vehiclePhotoUrl: vehiclePhoto.url, membershipPlan });
+          const res = await api.post('/auth/driver/register', { name, email, phone, password, rut, birthDate, address, idFrontUrl: idFront.url, idBackUrl: idBack.url, selfieUrl: selfie.url, backgroundDocUrl: backgroundDoc.url, licenseNumber, licenseUrl: licenseFront.url, licenseBackUrl: licenseBack.url, vehicleBrand, vehicleModel, vehicleYear, vehiclePlate, tagNumber, vehiclePhotoUrl: vehiclePhoto.url, membershipPlan, vehicleColor });
           if (res.data.status === 'verification_pending') {
             setVerificationEmail(email);
             setVerificationPending(true);
@@ -720,6 +722,7 @@ function RegisterForm() {
       if (!vehiclePlate) { setError('Por favor, ingresa la patente de tu vehículo.'); return; }
       if (!vehicleBrand) { setError('Por favor, ingresa la marca de tu vehículo.'); return; }
       if (!vehicleModel) { setError('Por favor, ingresa el modelo de tu vehículo.'); return; }
+      if (!vehicleColor) { setError('Por favor, ingresa el color de tu vehículo.'); return; }
       if (!vehicleYear) { setError('Por favor, selecciona el año de tu vehículo.'); return; }
       if (parseInt(vehicleYear) < 2010) { setError('Tu vehículo debe ser del año 2010 o posterior para operar en Fim.'); return; }
       if (!licenseNumber) { setError('Por favor, ingresa el número de tu licencia.'); return; }
@@ -1186,19 +1189,25 @@ function RegisterForm() {
                   <input className="form-input" placeholder="Ej: Corolla" value={vehicleModel} onChange={e => setVehicleModel(e.target.value)} />
                 </div>
               </div>
-              <div className="form-group">
-                <label className="form-label">Año</label>
-                <select
-                  className="form-input"
-                  value={vehicleYear}
-                  onChange={e => setVehicleYear(e.target.value)}
-                  style={{ cursor: 'pointer' }}
-                >
-                  <option value="">Selecciona el año...</option>
-                  {Array.from({ length: 2026 - 2010 + 1 }, (_, i) => 2026 - i).map(year => (
-                    <option key={year} value={String(year)}>{year}</option>
-                  ))}
-                </select>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                <div className="form-group">
+                  <label className="form-label">Año</label>
+                  <select
+                    className="form-input"
+                    value={vehicleYear}
+                    onChange={e => setVehicleYear(e.target.value)}
+                    style={{ cursor: 'pointer' }}
+                  >
+                    <option value="">Selecciona...</option>
+                    {Array.from({ length: 2026 - 2010 + 1 }, (_, i) => 2026 - i).map(year => (
+                      <option key={year} value={String(year)}>{year}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Color</label>
+                  <input className="form-input" placeholder="Ej: Blanco" value={vehicleColor} onChange={e => setVehicleColor(e.target.value)} />
+                </div>
               </div>
               <div className="form-group">
                 <label className="form-label">Número de Licencia</label>

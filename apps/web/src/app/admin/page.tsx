@@ -167,6 +167,7 @@ interface Driver {
   vehicleModel: string;
   vehicleYear: number;
   vehiclePlate: string;
+  vehicleColor?: string;
   vehiclePhotoUrl: string;
   tagNumber: string;
   totalRating: number;
@@ -261,7 +262,14 @@ export default function AdminDashboardPage() {
 
     // Conectar socket y unirse a la sala admin
     const socket = connectSocket();
-    socket.emit('admin:join');
+    const handleJoinAdmin = () => {
+      console.log('[Socket] Admin connected, joining room');
+      socket.emit('admin:join');
+    };
+    if (socket.connected) {
+      handleJoinAdmin();
+    }
+    socket.on('connect', handleJoinAdmin);
 
     socket.on('admin:safety-report-alert', (report: any) => {
       console.warn('Realtime safety alert:', report);
@@ -295,6 +303,7 @@ export default function AdminDashboardPage() {
     });
 
     return () => {
+      socket.off('connect', handleJoinAdmin);
       socket.off('admin:safety-report-alert');
       disconnectSocket();
     };
@@ -1549,7 +1558,9 @@ export default function AdminDashboardPage() {
                   <h4 style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.05em', margin: '0 0 6px' }}>Conductor</h4>
                   <div style={{ fontSize: '0.85rem', fontWeight: 800 }}>{selectedReport.trip.driver?.name || 'No asignado'}</div>
                   <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '2px' }}>📞 {selectedReport.trip.driver?.phone || 'N/A'}</div>
-                  <div style={{ fontSize: '0.78rem', color: 'var(--accent)', fontWeight: 700, marginTop: '2px' }}>🚗 Patente: {selectedReport.trip.driver?.vehiclePlate || 'N/A'}</div>
+                  <div style={{ fontSize: '0.78rem', color: 'var(--accent)', fontWeight: 700, marginTop: '2px' }}>
+                    🚗 Vehículo: {selectedReport.trip.driver ? `${selectedReport.trip.driver.vehicleBrand} ${selectedReport.trip.driver.vehicleModel} (${selectedReport.trip.driver.vehicleColor || 'Sin Color'})` : 'N/A'} · Patente: {selectedReport.trip.driver?.vehiclePlate || 'N/A'}
+                  </div>
                 </div>
               </div>
 
@@ -1717,10 +1728,10 @@ export default function AdminDashboardPage() {
                 <div>
                   <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: 800, textTransform: 'uppercase' }}>Vehículo:</span>
                   <div style={{ fontSize: '0.85rem', fontWeight: 800, color: 'var(--accent)', marginTop: '2px' }}>
-                    Patente: {activeEmergencyAlert.trip.driver?.vehiclePlate || 'N/A'}
+                    {activeEmergencyAlert.trip.driver ? `${activeEmergencyAlert.trip.driver.vehicleBrand} ${activeEmergencyAlert.trip.driver.vehicleModel} (${activeEmergencyAlert.trip.driver.vehicleColor || 'Sin Color'})` : 'N/A'}
                   </div>
                   <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-                    {activeEmergencyAlert.trip.driver?.name || 'N/A'}
+                    Patente: {activeEmergencyAlert.trip.driver?.vehiclePlate || 'N/A'}
                   </div>
                 </div>
               </div>

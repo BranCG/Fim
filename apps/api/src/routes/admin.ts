@@ -62,6 +62,7 @@ router.get('/drivers/pending', async (_req: Request, res: Response) => {
         licenseNumber: true, licenseUrl: true, licenseBackUrl: true,
         vehicleBrand: true, vehicleModel: true, vehicleYear: true,
         vehiclePlate: true, vehiclePhotoUrl: true, tagNumber: true,
+        vehicleColor: true,
         membershipPaid: true, membershipPlan: true, comfortReceiptUrl: true,
         createdAt: true,
       },
@@ -84,7 +85,7 @@ router.get('/drivers', async (req: Request, res: Response) => {
         rut: true, status: true, membershipPaid: true,
         membershipPlan: true, membershipExpiresAt: true,
         comfortDebt: true, comfortReceiptUrl: true, comfortLastPaidAt: true,
-        vehicleBrand: true, vehicleModel: true, vehiclePlate: true,
+        vehicleBrand: true, vehicleModel: true, vehiclePlate: true, vehicleColor: true,
         totalRating: true, totalTrips: true, isOnline: true,
         createdAt: true,
       },
@@ -473,7 +474,7 @@ router.get('/safety-reports', async (_req: Request, res: Response) => {
               select: { id: true, name: true, phone: true }
             },
             driver: {
-              select: { id: true, name: true, phone: true, vehiclePlate: true }
+              select: { id: true, name: true, phone: true, vehiclePlate: true, vehicleBrand: true, vehicleModel: true, vehicleColor: true }
             }
           }
         }
