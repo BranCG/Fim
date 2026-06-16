@@ -186,6 +186,8 @@ interface Driver {
   comfortReceiptUrl?: string;
   trips?: any[];
   ratings?: any[];
+  isTrial?: boolean;
+  nextDiscount?: number;
 }
 
 interface Passenger {
@@ -232,6 +234,10 @@ export default function AdminDashboardPage() {
   const [passengers, setPassengers] = useState<Passenger[]>([]);
   const [selectedPassenger, setSelectedPassenger] = useState<Passenger | null>(null);
   const [rejectReason, setRejectReason] = useState('');
+  const [adjIsTrial, setAdjIsTrial] = useState<boolean>(false);
+  const [adjDays, setAdjDays] = useState<string>('');
+  const [adjPlan, setAdjPlan] = useState<string>('');
+  const [adjDiscount, setAdjDiscount] = useState<string>('');
   const [loading, setLoading] = useState(false);
   const [actionMsg, setActionMsg] = useState('');
   const [imgModal, setImgModal] = useState<string | null>(null);
@@ -433,7 +439,12 @@ export default function AdminDashboardPage() {
           setSelectedDriver(null);
         } else {
           const r = await api.get(`/admin/drivers/${driverId}`);
-          setSelectedDriver(r.data.driver);
+          const dr = r.data.driver;
+          setSelectedDriver(dr);
+          setAdjIsTrial(dr.isTrial || false);
+          setAdjDays('');
+          setAdjPlan(dr.membershipPlan || 'BLACK');
+          setAdjDiscount(dr.nextDiscount !== undefined ? String(dr.nextDiscount) : '0');
         }
       }
     } catch (err) {
@@ -495,7 +506,12 @@ export default function AdminDashboardPage() {
     setLoading(true);
     try {
       const r = await api.get(`/admin/drivers/${d.id}`);
-      setSelectedDriver(r.data.driver);
+      const dr = r.data.driver;
+      setSelectedDriver(dr);
+      setAdjIsTrial(dr.isTrial || false);
+      setAdjDays('');
+      setAdjPlan(dr.membershipPlan || 'BLACK');
+      setAdjDiscount(dr.nextDiscount !== undefined ? String(dr.nextDiscount) : '0');
     } catch (err) {
       setActionMsg('Error al obtener detalles del conductor');
     } finally { setLoading(false); }
@@ -512,6 +528,38 @@ export default function AdminDashboardPage() {
       setActionMsg('Error al obtener detalles del pasajero');
     } finally { setLoading(false); }
   };
+
+  async function handleAdjustMembership() {
+    if (!selectedDriver) return;
+    setLoading(true); setActionMsg('');
+    try {
+      const payload: any = {
+        isTrial: adjIsTrial,
+        membershipPlan: adjPlan,
+        nextDiscount: parseInt(adjDiscount, 10) || 0
+      };
+      if (adjDays && !isNaN(parseInt(adjDays, 10))) {
+        payload.expirationDays = parseInt(adjDays, 10);
+      }
+      
+      const r = await api.post(`/admin/drivers/${selectedDriver.id}/adjust-membership`, payload);
+      setActionMsg('Membresía ajustada con éxito');
+      
+      // Recargar detalles
+      const refetched = await api.get(`/admin/drivers/${selectedDriver.id}`);
+      const dr = refetched.data.driver;
+      setSelectedDriver(dr);
+      setAdjIsTrial(dr.isTrial || false);
+      setAdjDays('');
+      setAdjPlan(dr.membershipPlan || 'BLACK');
+      setAdjDiscount(dr.nextDiscount !== undefined ? String(dr.nextDiscount) : '0');
+    } catch (err) {
+      setActionMsg('Error al ajustar membresía');
+    } finally {
+      setLoading(false);
+      setTimeout(() => setActionMsg(''), 3000);
+    }
+  }
 
   const pendingBadgeCount = (stats?.pendingDrivers || 0) + (stats?.pendingPassengers || 0);
 
@@ -828,7 +876,47 @@ export default function AdminDashboardPage() {
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><Icon name="car" size={12} color="var(--text-muted)" /><strong>Vehículo:</strong> {selectedDriver.vehicleBrand} {selectedDriver.vehicleModel} ({selectedDriver.vehicleYear})</div>
               <div><strong>Patente:</strong> {selectedDriver.vehiclePlate}</div>
               <div><strong>Licencia N°:</strong> {selectedDriver.licenseNumber}</div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><Icon name="creditcard" size={12} color="var(--text-muted)" /><strong>Plan / Membresía:</strong> {selectedDriver.membershipPlan} · {selectedDriver.membershipPaid ? 'PAGADA' : 'NO PAGADA'}</div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><Icon name="creditcard" size={12} color="var(--text-muted)" /><strong>Plan / Membresía:</strong> {selectedDriver.membershipPlan} {selectedDriver.isTrial ? ' (Pase Libre - Prueba)' : ` · ${selectedDriver.membershipPaid ? 'PAGADA' : 'NO PAGADA'}`}</div>
+              {(() => {
+                const now = new Date();
+                const expires = selectedDriver.membershipExpiresAt ? new Date(selectedDriver.membershipExpiresAt) : null;
+                const remainingDays = expires ? Math.ceil((expires.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)) : null;
+                return expires ? (
+                  <div style={{ color: remainingDays !== null && remainingDays >= 0 ? 'var(--success)' : 'var(--danger)', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                    <Icon name="clock" size={12} color="currentColor" />
+                    <strong>Vencimiento:</strong> {expires.toLocaleDateString('es-CL')} ({remainingDays !== null && remainingDays >= 0 ? `Quedan ${remainingDays} días` : `Vencido hace ${Math.abs(remainingDays || 0)} días`})
+                  </div>
+                ) : (
+                  <div><strong>Vencimiento:</strong> No registrado</div>
+                );
+              })()}
+              {(selectedDriver.membershipPlan === 'BLACK' || selectedDriver.membershipPlan === 'FLEX') && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', background: 'var(--bg-secondary)', padding: '8px', borderRadius: '6px', border: '1px solid var(--border)', marginTop: '4px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.72rem' }}>
+                    <strong>Progreso de Metas:</strong>
+                    <span>{selectedDriver.membershipProgress || 0} / {selectedDriver.membershipGoal || (selectedDriver.membershipPlan === 'BLACK' ? 150 : 40)} viajes</span>
+                  </div>
+                  {/* Progress bar */}
+                  <div style={{ width: '100%', height: '6px', background: 'var(--border)', borderRadius: '3px', overflow: 'hidden' }}>
+                    <div style={{
+                      width: `${Math.min(100, ((selectedDriver.membershipProgress || 0) / (selectedDriver.membershipGoal || (selectedDriver.membershipPlan === 'BLACK' ? 150 : 40))) * 100)}%`,
+                      height: '100%',
+                      background: (selectedDriver.nextDiscount && selectedDriver.nextDiscount > 0) || (selectedDriver.membershipProgress || 0) >= (selectedDriver.membershipGoal || (selectedDriver.membershipPlan === 'BLACK' ? 150 : 40)) ? 'var(--success)' : 'var(--accent)',
+                      transition: 'width 0.3s ease'
+                    }} />
+                  </div>
+                  {(selectedDriver.nextDiscount && selectedDriver.nextDiscount > 0) || (selectedDriver.membershipProgress || 0) >= (selectedDriver.membershipGoal || (selectedDriver.membershipPlan === 'BLACK' ? 150 : 40)) ? (
+                    <div style={{ fontSize: '0.68rem', color: 'var(--success)', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '4px' }}>
+                      <Icon name="check" size={11} color="currentColor" />
+                      ¡Meta alcanzada! {selectedDriver.nextDiscount || (selectedDriver.membershipPlan === 'BLACK' ? 20 : 15)}% de descuento ganado para el próximo cobro.
+                    </div>
+                  ) : (
+                    <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)' }}>
+                      Faltan {Math.max(0, (selectedDriver.membershipGoal || (selectedDriver.membershipPlan === 'BLACK' ? 150 : 40)) - (selectedDriver.membershipProgress || 0))} viajes para desbloquear descuento de renovación.
+                    </div>
+                  )}
+                </div>
+              )}
               <div><strong>Estado:</strong> {selectedDriver.status.toUpperCase()}</div>
               {selectedDriver.adminNotes && <div style={{ color: 'var(--warning)' }}><strong>Notas Admin:</strong> {selectedDriver.adminNotes}</div>}
             </div>
@@ -1003,6 +1091,76 @@ export default function AdminDashboardPage() {
                     </button>
                   </div>
                 )}
+                
+                {/* Ajuste de Membresías y Pruebas (Formulario integrado) */}
+                <div style={{ borderTop: '1px solid var(--border)', paddingTop: '12px', marginTop: '12px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  <h4 style={{ fontSize: '0.74rem', color: 'var(--accent)', fontWeight: 800, margin: 0 }}>
+                    AJUSTAR PLAZOS, METAS Y DESCUENTOS
+                  </h4>
+                  
+                  {/* Fila 1: Trial Checkbox & Expiration days */}
+                  <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                    <label style={{ flex: '1 1 120px', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.72rem', cursor: 'pointer', background: 'var(--bg-secondary)', padding: '6px 10px', borderRadius: '6px', border: '1px solid var(--border)' }}>
+                      <input
+                        type="checkbox"
+                        checked={adjIsTrial}
+                        onChange={e => setAdjIsTrial(e.target.checked)}
+                      />
+                      <span>Pase Libre (Prueba)</span>
+                    </label>
+                    
+                    <div style={{ flex: '1 1 150px', display: 'flex', gap: '4px', alignItems: 'center' }}>
+                      <input
+                        type="number"
+                        placeholder="Extender días (ej. 14)"
+                        value={adjDays}
+                        onChange={e => setAdjDays(e.target.value)}
+                        style={{ fontSize: '0.72rem', padding: '6px 10px', flex: 1, border: '1px solid var(--border)', borderRadius: '6px', background: 'var(--bg-primary)', color: 'var(--text-primary)' }}
+                      />
+                      <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>días</span>
+                    </div>
+                  </div>
+
+                  {/* Fila 2: Plan & Discount */}
+                  <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                    <div style={{ flex: '1 1 120px', display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                      <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)' }}>Plan del Conductor:</span>
+                      <select
+                        value={adjPlan}
+                        onChange={e => setAdjPlan(e.target.value)}
+                        style={{ fontSize: '0.72rem', padding: '6px 10px', background: 'var(--bg-secondary)', color: 'var(--text-primary)', border: '1px solid var(--border)', borderRadius: '6px' }}
+                      >
+                        <option value="BLACK">BLACK (Mensual)</option>
+                        <option value="FLEX">FLEX (Semanal)</option>
+                        <option value="COMFORT">COMFORT (Diario)</option>
+                      </select>
+                    </div>
+
+                    <div style={{ flex: '1 1 120px', display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                      <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)' }}>% Descuento Renovación:</span>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                        <input
+                          type="number"
+                          placeholder="Descuento (ej. 20)"
+                          value={adjDiscount}
+                          onChange={e => setAdjDiscount(e.target.value)}
+                          style={{ fontSize: '0.72rem', padding: '6px 10px', flex: 1, border: '1px solid var(--border)', borderRadius: '6px', background: 'var(--bg-primary)', color: 'var(--text-primary)' }}
+                        />
+                        <span style={{ fontSize: '0.7rem' }}>%</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Botón Guardar Cambios */}
+                  <button
+                    className="btn btn-secondary btn-sm"
+                    onClick={handleAdjustMembership}
+                    disabled={loading}
+                    style={{ fontSize: '0.72rem', padding: '8px', background: 'var(--border-accent)', color: 'var(--accent)', fontWeight: 800, marginTop: '4px' }}
+                  >
+                    Guardar Ajustes de Membresía
+                  </button>
+                </div>
 
                 {/* Botón para eliminar permanentemente */}
                 <button

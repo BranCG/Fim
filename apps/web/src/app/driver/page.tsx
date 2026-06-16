@@ -390,15 +390,26 @@ export default function DriverPage() {
   const handlePayMembership = async () => {
     if (!driver) return;
 
-    // Links estáticos de Mercado Pago provistos por el usuario
-    const staticLinks: Record<string, string> = {
-      BLACK: 'https://mpago.la/2GQQM65',
-      FLEX: 'https://mpago.la/2kxLWNy',
-      COMFORT: 'https://mpago.la/1geQas2',
+    // Links estáticos de Mercado Pago provistos por el usuario (Estándar y con Descuento)
+    const links: Record<string, { standard: string; discounted: string }> = {
+      BLACK: {
+        standard: 'https://mpago.la/2GQQM65', // $150.000
+        discounted: 'https://mpago.la/12yMRoF', // $120.000 (20% dcto por meta)
+      },
+      FLEX: {
+        standard: 'https://mpago.la/2kxLWNy', // $60.000
+        discounted: 'https://mpago.la/2ShcYUk', // $51.000 (15% dcto por meta)
+      },
+      COMFORT: {
+        standard: 'https://mpago.la/1geQas2', // $20.000 diario
+        discounted: 'https://mpago.la/1geQas2', // COMFORT no tiene descuentos automáticos
+      },
     };
 
-    const url = staticLinks[driver.membershipPlan];
-    if (url) {
+    const planConfig = links[driver.membershipPlan];
+    if (planConfig) {
+      const hasDiscount = (driver.nextDiscount !== undefined && driver.nextDiscount > 0) || (driver.membershipProgress >= driver.membershipGoal);
+      const url = hasDiscount ? planConfig.discounted : planConfig.standard;
       window.location.href = url;
       return;
     }
@@ -1773,7 +1784,7 @@ export default function DriverPage() {
               <div style={{ fontSize: '0.78rem', color: 'rgba(255,255,255,0.6)' }}>
                 Vence el: <strong style={{ color: '#fff' }}>{getFreePassExpirationDate()}</strong>
                 <div style={{ marginTop: '8px', fontSize: '0.72rem', color: '#D4AF37', lineHeight: '1.45' }}>
-                  * Una vez finalizado tu periodo de FREE PASS de 10 días, podrás pagar y renovar tu membresía directamente en este panel.
+                  * Una vez finalizado tu periodo de FREE PASS de 14 días, podrás pagar y renovar tu membresía directamente en este panel.
                 </div>
               </div>
             </div>
@@ -3349,7 +3360,7 @@ export default function DriverPage() {
                     gap: '6px'
                   }}>
                     <span style={{ fontSize: '0.9rem' }}>✨</span>
-                    <span>FREE PASS Activo (10 días)</span>
+                    <span>FREE PASS Activo (14 días)</span>
                   </div>
                 )}
 

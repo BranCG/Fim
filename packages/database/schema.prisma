@@ -83,6 +83,8 @@ model Driver {
   totalRating         Float     @default(0) @map("calificacion_total")
   totalTrips          Int       @default(0) @map("viajes_totales")
   topQualities        String[]  @default([]) @map("mejores_cualidades")
+  isTrial             Boolean   @default(false) @map("es_prueba")
+  nextDiscount        Int       @default(0) @map("siguiente_descuento")
   emailVerified       Boolean   @default(true) @map("correo_verificado")
   emailCode           String?   @map("codigo_correo")
   resetCode           String?   @map("codigo_restablecer")

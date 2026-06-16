@@ -23,6 +23,7 @@ router.get('/me', requireAuth, requireRole('driver'), async (req: Request, res: 
         vehiclePlate: true, vehiclePhotoUrl: true, tagNumber: true,
         totalRating: true, totalTrips: true,
         adminNotes: true, mercadoPagoLink: true, walletBalance: true,
+        isTrial: true, nextDiscount: true,
         createdAt: true,
       },
     });
@@ -52,7 +53,9 @@ router.get('/me', requireAuth, requireRole('driver'), async (req: Request, res: 
       }
     }
 
-    return res.json({ driver: { ...driver, isPromoActive, freePassDays } });
+    const isTrialActive = !!(driver.isTrial && driver.membershipExpiresAt && new Date(driver.membershipExpiresAt) > new Date());
+
+    return res.json({ driver: { ...driver, isPromoActive, isTrialActive, freePassDays } });
   } catch (err) {
     return res.status(500).json({ error: 'Error interno' });
   }
@@ -112,9 +115,12 @@ router.post('/toggle-online', requireAuth, requireRole('driver'), async (req: Re
         }
       }
 
+      const isTrialActive = !!(driver.isTrial && driver.membershipExpiresAt && driver.membershipExpiresAt > now);
+      const isEligibleToGoOnline = isPromoActive || isTrialActive;
+
       if (plan === 'BLACK') {
-        // Requiere membresía pagada y vigente, a menos que esté en promoción
-        if (!isPromoActive) {
+        // Requiere membresía pagada y vigente, a menos que esté en promoción o prueba
+        if (!isEligibleToGoOnline) {
           if (!driver.membershipPaid) {
             return res.status(403).json({ error: 'Debes pagar tu membresía BLACK ($150.000) para activarte.' });
           }
@@ -133,7 +139,7 @@ router.post('/toggle-online', requireAuth, requireRole('driver'), async (req: Re
             error: 'La membresía FLEX solo está activa Viernes, Sábado y Domingo. Hoy no puedes operar.'
           });
         }
-        if (!isPromoActive) {
+        if (!isEligibleToGoOnline) {
           if (!driver.membershipPaid) {
             return res.status(403).json({ error: 'Debes pagar tu membresía FLEX ($60.000) para activarte este fin de semana.' });
           }
@@ -146,8 +152,8 @@ router.post('/toggle-online', requireAuth, requireRole('driver'), async (req: Re
       }
 
       if (plan === 'COMFORT') {
-        // Debe haber pagado la cuota diaria de $20.000, a menos que esté en promoción
-        if (!isPromoActive) {
+        // Debe haber pagado la cuota diaria de $20.000, a menos que esté en promoción o prueba
+        if (!isEligibleToGoOnline) {
           if (driver.comfortLastPaidAt) {
             const lastPaid = new Date(driver.comfortLastPaidAt);
             const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());

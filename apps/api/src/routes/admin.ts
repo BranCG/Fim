@@ -163,21 +163,31 @@ router.post('/drivers/:id/membership-paid', async (req: Request, res: Response) 
     let membershipExpiresAt: Date | null = null;
     let comfortLastPaidAt: Date | null = driver.comfortLastPaidAt;
     let comfortDebt = driver.comfortDebt;
+    let basePrice = 0;
+    let membershipGoal = 0;
 
     if (driver.membershipPlan === 'BLACK') {
+      basePrice = 150000;
+      membershipGoal = 150;
       const expires = new Date();
       expires.setDate(expires.getDate() + 30);
       membershipExpiresAt = expires;
     } else if (driver.membershipPlan === 'FLEX') {
+      basePrice = 60000;
+      membershipGoal = 40;
       const expires = new Date();
       const daysUntilMonday = (8 - expires.getDay()) % 7 || 7;
       expires.setDate(expires.getDate() + daysUntilMonday);
       expires.setHours(7, 0, 0, 0); // Lunes a las 7 AM
       membershipExpiresAt = expires;
     } else if (driver.membershipPlan === 'COMFORT') {
+      basePrice = 20000; // Cuota diaria
       comfortLastPaidAt = now;
       comfortDebt = 0; // Se pone al día al confirmar pago inicial
     }
+
+    const discountPercent = driver.nextDiscount || 0;
+    const finalPricePaid = basePrice * (1 - discountPercent / 100);
 
     const updated = await prisma.driver.update({
       where: { id: req.params.id },
@@ -188,9 +198,16 @@ router.post('/drivers/:id/membership-paid', async (req: Request, res: Response) 
         comfortLastPaidAt,
         comfortDebt,
         status: 'active',
+        isTrial: false, // Quitar estado de prueba al procesar pago oficial
+        membershipProgress: 0, // Resetear progreso de viajes
+        membershipGoal,
+        nextDiscount: 0, // Consumir descuento acumulado
       },
     });
-    return res.json({ message: 'Membresía confirmada. Conductor activado.', driver: updated });
+    return res.json({ 
+      message: `Membresía confirmada. Conductor activado. Pago final registrado: $${finalPricePaid.toLocaleString('es-CL')} (Descuento aplicado: ${discountPercent}%)`, 
+      driver: updated 
+    });
   } catch (err) {
     return res.status(500).json({ error: 'Error interno' });
   }
@@ -466,6 +483,54 @@ router.post('/safety-reports/:id/resolve', async (req: Request, res: Response) =
   } catch (err) {
     console.error('Error al resolver reporte de seguridad:', err);
     return res.status(500).json({ error: 'Error al resolver reporte de seguridad' });
+  }
+});
+
+
+router.post('/drivers/:id/adjust-membership', async (req: Request, res: Response) => {
+  try {
+    const { isTrial, expirationDays, membershipPlan, nextDiscount } = req.body;
+    
+    const driver = await prisma.driver.findUnique({ where: { id: req.params.id } });
+    if (!driver) return res.status(404).json({ error: 'Conductor no encontrado' });
+
+    const data: any = {};
+    if (typeof isTrial === 'boolean') {
+      data.isTrial = isTrial;
+      if (isTrial) {
+        data.membershipPaid = true; // Habilitar operación inmediata
+        data.status = 'active';
+      }
+    }
+
+    if (typeof expirationDays === 'number') {
+      const expires = new Date();
+      expires.setDate(expires.getDate() + expirationDays);
+      data.membershipExpiresAt = expires;
+    }
+
+    if (membershipPlan) {
+      data.membershipPlan = membershipPlan;
+      if (membershipPlan === 'BLACK') {
+        data.membershipGoal = 150;
+      } else if (membershipPlan === 'FLEX') {
+        data.membershipGoal = 40;
+      }
+    }
+
+    if (typeof nextDiscount === 'number') {
+      data.nextDiscount = nextDiscount;
+    }
+
+    const updated = await prisma.driver.update({
+      where: { id: req.params.id },
+      data,
+    });
+
+    return res.json({ message: 'Membresía y plazos actualizados con éxito.', driver: updated });
+  } catch (err) {
+    console.error('Error al ajustar membresía:', err);
+    return res.status(500).json({ error: 'Error al actualizar plazos del conductor' });
   }
 });
 

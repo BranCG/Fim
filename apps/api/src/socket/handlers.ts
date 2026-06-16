@@ -555,13 +555,47 @@ export function setupSocketHandlers(io: Server) {
           },
         });
 
-        // Actualizar estadísticas del conductor
-        await prisma.driver.update({
+        // Actualizar estadísticas del conductor y metas de membresía
+        const driver = await prisma.driver.findUnique({
           where: { id: trip.driverId! },
-          data: {
-            totalTrips: { increment: 1 },
-          }
+          select: { id: true, membershipDate: true, createdAt: true, membershipPlan: true, membershipGoal: true, nextDiscount: true }
         });
+
+        if (driver) {
+          const cycleStart = driver.membershipDate || driver.createdAt;
+          // Contamos los viajes completados en este ciclo
+          const tripsThisPeriod = await prisma.trip.count({
+            where: {
+              driverId: driver.id,
+              status: 'completed',
+              completedAt: { gte: cycleStart },
+            },
+          });
+
+          // Determinar meta y descuento por plan
+          let goal = driver.membershipGoal;
+          let earnedDiscount = 0;
+          if (driver.membershipPlan === 'BLACK') {
+            goal = 150;
+            if (tripsThisPeriod >= 150) earnedDiscount = 20; // 20% descuento
+          } else if (driver.membershipPlan === 'FLEX') {
+            goal = 40;
+            if (tripsThisPeriod >= 40) earnedDiscount = 15; // 15% descuento
+          }
+
+          // Si el descuento obtenido es mayor al actual, lo aplicamos
+          const nextDiscountUpdate = Math.max(driver.nextDiscount, earnedDiscount);
+
+          await prisma.driver.update({
+            where: { id: driver.id },
+            data: {
+              totalTrips: { increment: 1 },
+              membershipProgress: tripsThisPeriod,
+              membershipGoal: goal,
+              nextDiscount: nextDiscountUpdate,
+            }
+          });
+        }
 
         io.to(`trip:${tripId}`).emit('trip:completed', {
           tripId,
