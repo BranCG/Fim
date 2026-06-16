@@ -1110,12 +1110,17 @@ export default function PassengerPage() {
 
   const handleRate = useCallback(async () => {
     if (!currentTrip || rating === 0) return;
-    await api.post(`/trips/${currentTrip.id}/rate`, { 
-      driverScore: rating, 
-      driverComment: ratingComment,
-      tags: ratingTags
-    }).catch(() => {});
-    setRatingDone(true);
+    try {
+      await api.post(`/trips/${currentTrip.id}/rate`, { 
+        driverScore: rating, 
+        driverComment: ratingComment,
+        tags: ratingTags
+      });
+      setRatingDone(true);
+    } catch (err: any) {
+      console.error('Error al calificar al conductor:', err);
+      alert('Error al enviar la calificación: ' + (err.response?.data?.error || err.message));
+    }
   }, [currentTrip, rating, ratingComment, ratingTags]);
 
   const handleUploadReceipt = async (e: React.ChangeEvent<HTMLInputElement>) => {

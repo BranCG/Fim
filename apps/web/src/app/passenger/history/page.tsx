@@ -26,7 +26,7 @@ interface Trip {
   status: string;
   paymentMethod: string;
   driver?: { name: string; vehicleBrand: string; vehicleModel: string; vehiclePlate: string };
-  rating?: { score: number; comment?: string };
+  rating?: { driverScore: number; driverComment?: string; tags?: string[] };
 }
 
 export default function PassengerHistoryPage() {
@@ -116,13 +116,31 @@ export default function PassengerHistoryPage() {
               </div>
 
               {trip.rating && (
-                <div style={{ borderTop: '1px solid var(--border)', paddingTop: '12px', marginTop: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <div style={{ display: 'flex', gap: '2px' }}>
-                    {[...Array(5)].map((_, i) => (
-                      <svg key={i} width="12" height="12" viewBox="0 0 24 24" fill={i < trip.rating!.score ? 'var(--warning)' : 'rgba(255,255,255,0.1)'}><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-                    ))}
+                <div style={{ borderTop: '1px solid var(--border)', paddingTop: '12px', marginTop: '12px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                    <div style={{ display: 'flex', gap: '2px' }}>
+                      {[...Array(5)].map((_, i) => (
+                        <svg key={i} width="12" height="12" viewBox="0 0 24 24" fill={i < trip.rating!.driverScore ? 'var(--warning)' : 'rgba(255,255,255,0.1)'}><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                      ))}
+                    </div>
+                    {trip.rating.driverComment && <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontStyle: 'italic' }}>"{trip.rating.driverComment}"</span>}
                   </div>
-                  {trip.rating.comment && <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontStyle: 'italic' }}>"{trip.rating.comment}"</span>}
+                  {trip.rating.tags && trip.rating.tags.length > 0 && (
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                      {trip.rating.tags.map((tag: string) => (
+                        <span key={tag} style={{
+                          fontSize: '0.7rem',
+                          padding: '3px 8px',
+                          borderRadius: '12px',
+                          background: 'rgba(255, 255, 255, 0.05)',
+                          border: '1px solid var(--border)',
+                          color: 'var(--text-secondary)'
+                        }}>
+                          {tag}
+                        </span>
+                      ))}
+                    </div>
+                  )}
                 </div>
               )}
             </div>

@@ -15,14 +15,17 @@ const prisma = new PrismaClient({
 async function main() {
   console.log('Connecting to database:', process.env.DATABASE_URL?.split('@')[1] || 'undefined');
   try {
-    const users = await prisma.user.findMany({
-      select: { id: true, email: true, phone: true, rut: true, name: true, createdAt: true }
+    const ratings = await prisma.rating.findMany({
+      include: {
+        passenger: { select: { name: true } },
+        driver: { select: { name: true } }
+      }
     });
-    console.log(`Found ${users.length} users:`);
-    console.log(JSON.stringify(users, null, 2));
+    console.log(`Found ${ratings.length} ratings:`);
+    console.log(JSON.stringify(ratings, null, 2));
 
     const drivers = await prisma.driver.findMany({
-      select: { id: true, email: true, phone: true, rut: true, name: true, createdAt: true, vehiclePlate: true }
+      select: { id: true, name: true, totalRating: true, topQualities: true, totalTrips: true }
     });
     console.log(`Found ${drivers.length} drivers:`);
     console.log(JSON.stringify(drivers, null, 2));
