@@ -863,6 +863,9 @@ export default function PassengerPage() {
     const socket = connectSocket();
     socket.emit('passenger:join-trip', { tripId: currentTrip.id });
 
+    // Limpiar cualquier listener temprano (earlyAcceptHandler) registrado en executeRequestTrip
+    socket.off('trip:accepted');
+
     const handleTripConnect = () => {
       console.log('[Socket] Pasajero conectado/reconectado para viaje activo. Consultando estado del viaje...');
       socket.emit('passenger:join-trip', { tripId: currentTrip.id });
@@ -870,6 +873,10 @@ export default function PassengerPage() {
     };
 
     socket.on('connect', handleTripConnect);
+
+    // Verificar inmediatamente el estado del viaje al registrar listeners
+    // (captura eventos perdidos entre el request y la registración del useEffect)
+    checkActiveTrip();
 
     socket.on('trip:accepted', ({ trip }: { trip: any }) => {
       console.log('[Socket] Viaje aceptado por conductor:', trip.driver.name);
@@ -1023,22 +1030,49 @@ export default function PassengerPage() {
       });
 
       const trip = res.data.trip;
-      setCurrentTrip({ id: trip.id });
 
       const socket = connectSocket();
+
+      // ── IMPORTANTE: Registrar listener de aceptación ANTES de emitir la búsqueda ──
+      // Esto previene la race condition donde el conductor acepta antes de que
+      // el useEffect registre los listeners (siguiente ciclo de React).
+      const earlyAcceptHandler = ({ trip: acceptedTrip }: { trip: any }) => {
+        console.log('[Socket] Viaje aceptado (early handler):', acceptedTrip.driver?.name);
+        setDriver(acceptedTrip.driver);
+        setDriverPos({ lat: acceptedTrip.driver.lastLat, lng: acceptedTrip.driver.lastLng });
+        setCurrentTrip({ id: acceptedTrip.id, otpCode: acceptedTrip.otpCode, estimatedPrice: acceptedTrip.estimatedPrice });
+        setStatus('driver_assigned');
+        sendLocalNotification("¡Viaje Aceptado!", `${acceptedTrip.driver.name} va en camino en un ${acceptedTrip.driver.vehicleBrand} (${acceptedTrip.driver.vehiclePlate}).`);
+        // Remover este handler ya que el useEffect registrará el suyo
+        socket.off('trip:accepted', earlyAcceptHandler);
+      };
+      socket.on('trip:accepted', earlyAcceptHandler);
+
+      // Unirse a la sala del viaje
       socket.emit('passenger:join-trip', { tripId: trip.id });
+
+      // Iniciar la búsqueda de conductores
       socket.emit('trip:search', {
         tripId: trip.id,
         passengerId: session?.user?.id,
         originLat: origin.lat,
         originLng: origin.lng,
       });
+
+      // Ahora sí actualizar currentTrip (dispara el useEffect con los listeners permanentes)
+      setCurrentTrip({ id: trip.id });
+
+      // Fallback: consultar el estado del viaje después de 2s por si se perdió algún evento
+      setTimeout(() => {
+        checkActiveTrip();
+      }, 2000);
+
     } catch (err: unknown) {
       const e = err as { response?: { data?: { error?: string } } };
       setError(e.response?.data?.error || 'Error al solicitar el viaje');
       setStatus('confirm');
     }
-  }, [origin, dest, paymentMethod, passengerCount, session]);
+  }, [origin, dest, paymentMethod, passengerCount, session, checkActiveTrip]);
 
   const handleRequestTrip = useCallback(async () => {
     // Verificación biométrica desactivada temporalmente (bypass de cámara)
