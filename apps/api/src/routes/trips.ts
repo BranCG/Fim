@@ -131,7 +131,13 @@ router.get('/active', requireAuth, async (req: Request, res: Response) => {
       const trip = await prisma.trip.findFirst({
         where: {
           passengerId: userId,
-          status: { in: ['searching', 'driver_assigned', 'driver_arrived', 'in_progress'] },
+          OR: [
+            { status: { in: ['searching', 'driver_assigned', 'driver_arrived', 'in_progress'] } },
+            {
+              status: 'completed',
+              rating: { is: null }
+            }
+          ]
         },
         orderBy: { createdAt: 'desc' },
         include: {
@@ -147,6 +153,7 @@ router.get('/active', requireAuth, async (req: Request, res: Response) => {
               topQualities: true,
             },
           },
+          rating: true,
         },
       });
       return res.json({ trip });
