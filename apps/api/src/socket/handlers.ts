@@ -259,6 +259,7 @@ export function setupSocketHandlers(io: Server) {
                 lastLat: true, lastLng: true,
                 mercadoPagoLink: true,
                 membershipPlan: true,
+                topQualities: true,
               },
             },
             passenger: { select: { id: true, name: true, phone: true } },

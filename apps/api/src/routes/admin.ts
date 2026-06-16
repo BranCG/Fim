@@ -105,6 +105,10 @@ router.get('/drivers/:id', async (req: Request, res: Response) => {
         trips: {
           orderBy: { createdAt: 'desc' },
           include: { passenger: { select: { name: true } } }
+        },
+        ratings: {
+          orderBy: { createdAt: 'desc' },
+          include: { passenger: { select: { name: true } } }
         }
       }
     });

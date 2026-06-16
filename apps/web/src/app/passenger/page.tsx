@@ -260,6 +260,7 @@ export default function PassengerPage() {
   const [finalPrice, setFinalPrice] = useState(0);
   const [rating, setRating] = useState(0);
   const [ratingComment, setRatingComment] = useState('');
+  const [ratingTags, setRatingTags] = useState<string[]>([]);
   const [ratingDone, setRatingDone] = useState(false);
   const [error, setError] = useState('');
   const [centerTrigger, setCenterTrigger] = useState(0);
@@ -428,6 +429,7 @@ export default function PassengerPage() {
     setActiveField(null);
     setRating(0);
     setRatingComment('');
+    setRatingTags([]);
     setRatingDone(false);
     setError('');
     setPaymentRequested(false);
@@ -1108,9 +1110,13 @@ export default function PassengerPage() {
 
   const handleRate = useCallback(async () => {
     if (!currentTrip || rating === 0) return;
-    await api.post(`/trips/${currentTrip.id}/rate`, { driverScore: rating, driverComment: ratingComment }).catch(() => {});
+    await api.post(`/trips/${currentTrip.id}/rate`, { 
+      driverScore: rating, 
+      driverComment: ratingComment,
+      tags: ratingTags
+    }).catch(() => {});
     setRatingDone(true);
-  }, [currentTrip, rating, ratingComment]);
+  }, [currentTrip, rating, ratingComment, ratingTags]);
 
   const handleUploadReceipt = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -2050,9 +2056,25 @@ export default function PassengerPage() {
                   {driver.totalRating > 0 ? driver.totalRating.toFixed(1) : 'Nuevo'} · {driver.totalTrips} viajes
                 </span>
               </div>
-              <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
+              <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '8px' }}>
                 {driver.vehicleBrand} {driver.vehicleModel}
               </div>
+              {driver.topQualities && driver.topQualities.length > 0 && (
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
+                  {driver.topQualities.map((quality: string) => (
+                    <span key={quality} style={{
+                      background: 'rgba(255,255,255,0.05)',
+                      color: 'var(--text-secondary)',
+                      padding: '2px 8px',
+                      borderRadius: '12px',
+                      fontSize: '0.7rem',
+                      border: '1px solid var(--border)'
+                    }}>
+                      {quality}
+                    </span>
+                  ))}
+                </div>
+              )}
             </div>
             <div style={{
               padding: '8px 14px', background: 'var(--accent)', borderRadius: 'var(--radius)',
@@ -2148,9 +2170,33 @@ export default function PassengerPage() {
                         </span>
                       )}
                     </div>
-                    <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
+                    <div style={{ display: 'flex', gap: '2px', marginBottom: '4px' }}>
+                      {Array.from({ length: 5 }).map((_, i) => (
+                        <IconStar key={i} filled={i < Math.round(driver.totalRating)} />
+                      ))}
+                      <span style={{ color: 'var(--text-muted)', fontSize: '0.8rem', marginLeft: '4px' }}>
+                        {driver.totalRating > 0 ? driver.totalRating.toFixed(1) : 'Nuevo'}
+                      </span>
+                    </div>
+                    <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '8px' }}>
                       {driver.vehicleBrand} {driver.vehicleModel}
                     </div>
+                    {driver.topQualities && driver.topQualities.length > 0 && (
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
+                        {driver.topQualities.map((quality: string) => (
+                          <span key={quality} style={{
+                            background: 'rgba(255,255,255,0.05)',
+                            color: 'var(--text-secondary)',
+                            padding: '2px 8px',
+                            borderRadius: '12px',
+                            fontSize: '0.7rem',
+                            border: '1px solid var(--border)'
+                          }}>
+                            {quality}
+                          </span>
+                        ))}
+                      </div>
+                    )}
                   </div>
                   <div style={{
                     padding: '8px 14px', background: 'var(--accent)', borderRadius: 'var(--radius)',
@@ -2313,13 +2359,53 @@ export default function PassengerPage() {
                   {[1, 2, 3, 4, 5].map((star) => (
                     <button 
                       key={star} 
-                      onClick={() => setRating(star)}
+                      onClick={() => {
+                        setRating(star);
+                        setRatingTags([]); // Limpiar tags al cambiar la calificación
+                      }}
                       style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, transition: 'var(--transition)', transform: rating === star ? 'scale(1.2)' : 'scale(1)' }}
                     >
                       <IconStar filled={star <= rating} />
                     </button>
                   ))}
                 </div>
+                
+                {rating > 0 && (
+                  <div style={{ marginBottom: '24px', animation: 'fadeIn 0.3s' }}>
+                    <p style={{ fontWeight: 600, marginBottom: '12px', fontSize: '0.95rem' }}>
+                      {rating <= 3 ? "¿Por qué tan pocas estrellas? Coméntanos:" : "¿Qué fue positivo?"}
+                    </p>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', justifyContent: 'center' }}>
+                      {(rating <= 3 
+                        ? ['Vehículo huele mal', 'Vehículo en mal estado', 'Conductor maneja mal', 'Exceso de Velocidad', 'Tuve una discusión']
+                        : ['Conduce muy bien', 'Respetuoso y cordial', 'Buena conversación', 'Vehículo en buen estado']
+                      ).map(tag => (
+                        <button
+                          key={tag}
+                          onClick={() => {
+                            if (ratingTags.includes(tag)) {
+                              setRatingTags(ratingTags.filter(t => t !== tag));
+                            } else {
+                              setRatingTags([...ratingTags, tag]);
+                            }
+                          }}
+                          style={{
+                            padding: '8px 16px',
+                            borderRadius: '20px',
+                            border: `1px solid ${ratingTags.includes(tag) ? 'var(--primary)' : 'var(--border)'}`,
+                            background: ratingTags.includes(tag) ? 'var(--primary)' : 'transparent',
+                            color: ratingTags.includes(tag) ? '#fff' : 'var(--text)',
+                            fontSize: '0.85rem',
+                            cursor: 'pointer',
+                            transition: 'all 0.2s'
+                          }}
+                        >
+                          {tag}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
                 
                 <textarea 
                   className="form-input" 

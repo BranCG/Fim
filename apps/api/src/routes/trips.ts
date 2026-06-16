@@ -144,6 +144,7 @@ router.get('/active', requireAuth, async (req: Request, res: Response) => {
               lastLat: true, lastLng: true,
               mercadoPagoLink: true,
               membershipPlan: true,
+              topQualities: true,
             },
           },
         },
@@ -276,7 +277,7 @@ router.post('/:id/cancel', requireAuth, async (req: Request, res: Response) => {
 router.post('/:id/rate', requireAuth, requireRole('passenger'), async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const { driverScore, driverComment } = req.body;
+    const { driverScore, driverComment, tags } = req.body;
 
     const trip = await prisma.trip.findUnique({
       where: { id },
@@ -301,19 +302,39 @@ router.post('/:id/rate', requireAuth, requireRole('passenger'), async (req: Requ
         driverId: trip.driverId,
         driverScore,
         driverComment,
+        tags: Array.isArray(tags) ? tags : [],
       },
     });
 
-    // Actualizar rating promedio del conductor
+    // Actualizar rating promedio del conductor y top qualities
     const allRatings = await prisma.rating.findMany({ where: { driverId: trip.driverId } });
     const avgRating = allRatings.reduce((s: number, r: any) => s + r.driverScore, 0) / allRatings.length;
+
+    // Calcular las topQualities (etiquetas positivas más comunes en calificaciones de 4 o 5 estrellas)
+    const tagCounts: Record<string, number> = {};
+    allRatings.filter((r: any) => r.driverScore >= 4).forEach((r: any) => {
+      (r.tags || []).forEach((tag: string) => {
+        tagCounts[tag] = (tagCounts[tag] || 0) + 1;
+      });
+    });
+    
+    const topQualities = Object.entries(tagCounts)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 3)
+      .map(entry => entry[0]);
+
     await prisma.driver.update({
       where: { id: trip.driverId },
-      data: { totalRating: avgRating, totalTrips: { increment: 1 } },
+      data: { 
+        totalRating: avgRating, 
+        totalTrips: { increment: 1 },
+        topQualities,
+      },
     });
 
     return res.status(201).json({ rating });
   } catch (err) {
+    console.error('Error al calificar:', err);
     return res.status(500).json({ error: 'Error al calificar' });
   }
 });

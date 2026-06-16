@@ -185,6 +185,7 @@ interface Driver {
   comfortLastPaidAt?: string;
   comfortReceiptUrl?: string;
   trips?: any[];
+  ratings?: any[];
 }
 
 interface Passenger {
@@ -783,8 +784,32 @@ export default function AdminDashboardPage() {
         )}
 
         {/* ── 4. DETALLE CONDUCTOR ── */}
-        {selectedDriver && (
-          <div className="animate-in" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+        {selectedDriver && (() => {
+          const ratings = selectedDriver.ratings || [];
+          const totalRatingsCount = ratings.length;
+
+          // Calcular frecuencias de etiquetas
+          const negativeTagCounts: Record<string, number> = {};
+          const positiveTagCounts: Record<string, number> = {};
+
+          ratings.forEach(r => {
+            const tags = r.tags || [];
+            if (r.driverScore <= 3) {
+              tags.forEach((tag: string) => {
+                negativeTagCounts[tag] = (negativeTagCounts[tag] || 0) + 1;
+              });
+            } else {
+              tags.forEach((tag: string) => {
+                positiveTagCounts[tag] = (positiveTagCounts[tag] || 0) + 1;
+              });
+            }
+          });
+
+          const sortedNegativeTags = Object.entries(negativeTagCounts).sort((a, b) => b[1] - a[1]);
+          const sortedPositiveTags = Object.entries(positiveTagCounts).sort((a, b) => b[1] - a[1]);
+
+          return (
+            <div className="animate-in" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <button className="btn btn-secondary btn-sm" onClick={() => setSelectedDriver(null)} style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                 <Icon name="arrow_left" size={13} color="currentColor" /> Volver
@@ -806,6 +831,92 @@ export default function AdminDashboardPage() {
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><Icon name="creditcard" size={12} color="var(--text-muted)" /><strong>Plan / Membresía:</strong> {selectedDriver.membershipPlan} · {selectedDriver.membershipPaid ? 'PAGADA' : 'NO PAGADA'}</div>
               <div><strong>Estado:</strong> {selectedDriver.status.toUpperCase()}</div>
               {selectedDriver.adminNotes && <div style={{ color: 'var(--warning)' }}><strong>Notas Admin:</strong> {selectedDriver.adminNotes}</div>}
+            </div>
+
+            {/* ── Comportamiento y Calificaciones ── */}
+            <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <h3 style={{ fontSize: '0.82rem', color: 'var(--accent)', borderBottom: '1px solid var(--border)', paddingBottom: '4px', marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <Icon name="chart" size={14} color="var(--accent)" /> COMPORTAMIENTO Y CALIFICACIONES
+              </h3>
+              
+              <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
+                {/* Score */}
+                <div style={{ flex: '1 1 120px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: 'var(--bg-secondary)', borderRadius: '8px', padding: '12px', border: '1px solid var(--border)' }}>
+                  <div style={{ fontSize: '1.8rem', fontWeight: 900, color: 'var(--accent)' }}>
+                    {selectedDriver.totalRating ? selectedDriver.totalRating.toFixed(1) : 'Nuevo'}
+                  </div>
+                  <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '3px' }}>
+                    ⭐ Promedio ({totalRatingsCount} {totalRatingsCount === 1 ? 'calificación' : 'calificaciones'})
+                  </div>
+                </div>
+
+                {/* Resumen Cualidades Positivas (4-5 estrellas) */}
+                <div style={{ flex: '2 1 200px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                  <span style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--success)' }}>Cualidades Positivas (4-5 ⭐)</span>
+                  {sortedPositiveTags.length > 0 ? (
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
+                      {sortedPositiveTags.map(([tag, count]) => (
+                        <span key={tag} style={{ fontSize: '0.68rem', padding: '2px 8px', borderRadius: '50px', background: 'rgba(0, 229, 160, 0.12)', color: '#00e5a0', border: '1px solid rgba(0, 229, 160, 0.2)' }}>
+                          {tag} ({count})
+                        </span>
+                      ))}
+                    </div>
+                  ) : (
+                    <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>Ninguna cualidad positiva registrada.</span>
+                  )}
+                </div>
+              </div>
+
+              {/* Resumen Cualidades Negativas (1-3 estrellas) */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginTop: '4px', borderTop: '1px solid var(--border)', paddingTop: '10px' }}>
+                <span style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--danger)' }}>Alertas de Comportamiento / Reportes Negativos (1-3 ⭐)</span>
+                {sortedNegativeTags.length > 0 ? (
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
+                    {sortedNegativeTags.map(([tag, count]) => (
+                      <span key={tag} style={{ fontSize: '0.68rem', padding: '2px 8px', borderRadius: '50px', background: 'rgba(255, 74, 74, 0.12)', color: '#ff4a4a', border: '1px solid rgba(255, 74, 74, 0.2)' }}>
+                        ⚠️ {tag} ({count})
+                      </span>
+                    ))}
+                  </div>
+                ) : (
+                  <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>Sin reportes de mal comportamiento.</span>
+                )}
+              </div>
+
+              {/* Comentarios y Calificaciones Recientes */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginTop: '4px', borderTop: '1px solid var(--border)', paddingTop: '10px' }}>
+                <span style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--text-primary)' }}>Comentarios de Pasajeros</span>
+                {ratings.length > 0 ? (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', maxHeight: '180px', overflowY: 'auto', paddingRight: '4px' }}>
+                    {ratings.map((r: any) => (
+                      <div key={r.id} style={{ display: 'flex', flexDirection: 'column', gap: '2px', background: 'var(--bg-secondary)', borderRadius: '6px', padding: '8px', border: '1px solid var(--border)' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.68rem' }}>
+                          <strong style={{ color: 'var(--text-primary)' }}>{r.passenger?.name || 'Pasajero'}</strong>
+                          <span style={{ color: r.driverScore <= 3 ? 'var(--danger)' : 'var(--success)', fontWeight: 800 }}>
+                            {'★'.repeat(r.driverScore)}{'☆'.repeat(5 - r.driverScore)}
+                          </span>
+                        </div>
+                        {r.driverComment && (
+                          <p style={{ fontSize: '0.72rem', margin: '2px 0 0 0', color: 'var(--text-muted)', fontStyle: 'italic' }}>
+                            "{r.driverComment}"
+                          </p>
+                        )}
+                        {r.tags && r.tags.length > 0 && (
+                          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '2px', marginTop: '4px' }}>
+                            {r.tags.map((tag: string) => (
+                              <span key={tag} style={{ fontSize: '0.6rem', padding: '1px 5px', borderRadius: '4px', background: r.driverScore <= 3 ? 'rgba(255, 74, 74, 0.08)' : 'rgba(0, 229, 160, 0.08)', color: r.driverScore <= 3 ? 'var(--danger)' : 'var(--success)' }}>
+                                {tag}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>No hay comentarios ni evaluaciones para este conductor.</span>
+                )}
+              </div>
             </div>
 
             {/* Documentos Conductor */}
@@ -909,7 +1020,7 @@ export default function AdminDashboardPage() {
               </div>
             </div>
           </div>
-        )}
+        )})}
 
         {/* ── 5. PASAJEROS ── */}
         {view === 'passengers' && !selectedPassenger && (
