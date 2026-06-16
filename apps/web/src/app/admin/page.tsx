@@ -842,7 +842,7 @@ export default function AdminDashboardPage() {
 
           ratings.forEach(r => {
             const tags = r.tags || [];
-            if (r.driverScore <= 3) {
+            if ((r.driverScore || 0) <= 3) {
               tags.forEach((tag: string) => {
                 negativeTagCounts[tag] = (negativeTagCounts[tag] || 0) + 1;
               });
@@ -980,8 +980,8 @@ export default function AdminDashboardPage() {
                       <div key={r.id} style={{ display: 'flex', flexDirection: 'column', gap: '2px', background: 'var(--bg-secondary)', borderRadius: '6px', padding: '8px', border: '1px solid var(--border)' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.68rem' }}>
                           <strong style={{ color: 'var(--text-primary)' }}>{r.passenger?.name || 'Pasajero'}</strong>
-                          <span style={{ color: r.driverScore <= 3 ? 'var(--danger)' : 'var(--success)', fontWeight: 800 }}>
-                            {'★'.repeat(r.driverScore)}{'☆'.repeat(5 - r.driverScore)}
+                          <span style={{ color: (r.driverScore || 0) <= 3 ? 'var(--danger)' : 'var(--success)', fontWeight: 800 }}>
+                            {'★'.repeat(Math.max(0, Math.min(5, Math.round(r.driverScore || 0))))}{'☆'.repeat(Math.max(0, Math.min(5, 5 - Math.max(0, Math.min(5, Math.round(r.driverScore || 0))))))}
                           </span>
                         </div>
                         {r.driverComment && (
@@ -992,7 +992,7 @@ export default function AdminDashboardPage() {
                         {r.tags && r.tags.length > 0 && (
                           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '2px', marginTop: '4px' }}>
                             {r.tags.map((tag: string) => (
-                              <span key={tag} style={{ fontSize: '0.6rem', padding: '1px 5px', borderRadius: '4px', background: r.driverScore <= 3 ? 'rgba(255, 74, 74, 0.08)' : 'rgba(0, 229, 160, 0.08)', color: r.driverScore <= 3 ? 'var(--danger)' : 'var(--success)' }}>
+                              <span key={tag} style={{ fontSize: '0.6rem', padding: '1px 5px', borderRadius: '4px', background: (r.driverScore || 0) <= 3 ? 'rgba(255, 74, 74, 0.08)' : 'rgba(0, 229, 160, 0.08)', color: (r.driverScore || 0) <= 3 ? 'var(--danger)' : 'var(--success)' }}>
                                 {tag}
                               </span>
                             ))}
