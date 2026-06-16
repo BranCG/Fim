@@ -15,6 +15,7 @@
     "db:generate": "npm run generate --prefix packages/database",
     "db:migrate": "npm run migrate --prefix packages/database",
     "db:seed": "npm run seed --prefix packages/database",
+    "db:seed:demo": "npm run seed:demo --prefix packages/database",
     "db:studio": "npm run studio --prefix packages/database",
     "mobile:sync": "npm run build --prefix apps/web && npm run cap --prefix apps/web sync",
     "mobile:open-android": "npm run cap --prefix apps/web open android",
