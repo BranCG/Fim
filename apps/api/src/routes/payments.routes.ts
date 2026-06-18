@@ -90,6 +90,7 @@ router.post('/membership-webhook', async (req, res) => {
                 data: {
                   comfortLastPaidAt: now,
                   comfortDebt: newDebt,
+                  membershipPlan: 'COMFORT',
                   status: newStatus
                 }
               });
@@ -113,6 +114,7 @@ router.post('/membership-webhook', async (req, res) => {
                   membershipPaid: true,
                   membershipDate: now,
                   membershipExpiresAt: expiresAt,
+                  membershipPlan: plan,
                   isTrial: false, // Terminar periodo de prueba al pagar
                   status: newStatus
                 }

@@ -229,24 +229,30 @@ router.post('/pay-comfort-daily', requireAuth, requireRole('driver'), async (req
 
     const driver = await prisma.driver.findUnique({ where: { id: req.user!.id } });
     if (!driver) return res.status(404).json({ error: 'Conductor no encontrado' });
-    if (driver.membershipPlan !== 'COMFORT') return res.status(400).json({ error: 'Solo aplica para el plan COMFORT' });
 
     const now = new Date();
     const dailyAmount = 20000;
 
     // Calcular nuevo saldo de deuda
-    // Si es el primer pago, la deuda es 0 (comenzamos a contar desde 0)
-    const newDebt = Math.max(0, driver.comfortDebt - dailyAmount);
+    const newDebt = Math.max(0, (driver.comfortDebt || 0) - dailyAmount);
+
+    const updateData: any = {
+      comfortLastPaidAt: now,
+      comfortReceiptUrl: receiptUrl,
+      comfortDebt: newDebt,
+      // Si la cuenta estaba bloqueada, la reactivamos
+      isOnline: false, // Se tendrá que volver a activar manualmente
+    };
+
+    if (driver.membershipPlan !== 'COMFORT') {
+      updateData.membershipPlan = 'COMFORT';
+      updateData.isTrial = false;
+      updateData.membershipPaid = false;
+    }
 
     await prisma.driver.update({
       where: { id: req.user!.id },
-      data: {
-        comfortLastPaidAt: now,
-        comfortReceiptUrl: receiptUrl,
-        comfortDebt: newDebt,
-        // Si la cuenta estaba bloqueada, la reactivamos
-        isOnline: false, // Se tendrá que volver a activar manualmente
-      },
+      data: updateData,
     });
 
     console.log(`✅ COMFORT: Conductor ${driver.id} pagó cuota diaria $20.000. Deuda restante: $${newDebt.toLocaleString('es-CL')}`);

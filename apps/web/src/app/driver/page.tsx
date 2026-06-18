@@ -42,7 +42,12 @@ interface DriverInfo {
   isPromoActive?: boolean;
   freePassDays?: number;
   createdAt: string;
+  isTrial?: boolean;
+  nextDiscount?: number;
+  selfieUrl?: string;
 }
+
+const IconCheck = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>;
 
 const SANTIAGO = { lat: -33.4489, lng: -70.6693 };
 
@@ -387,8 +392,9 @@ export default function DriverPage() {
   const [loadingTimeout, setLoadingTimeout] = useState(false);
 
 
-  const handlePayMembership = async () => {
+  const handlePayMembership = async (plan?: string | React.MouseEvent) => {
     if (!driver) return;
+    const selectedPlan = (plan && typeof plan === 'string') ? plan : driver.membershipPlan;
 
     // Links estáticos de Mercado Pago provistos por el usuario (Estándar y con Descuento)
     const links: Record<string, { standard: string; discounted: string }> = {
@@ -406,9 +412,10 @@ export default function DriverPage() {
       },
     };
 
-    const planConfig = links[driver.membershipPlan];
+    const planConfig = links[selectedPlan];
     if (planConfig) {
-      const hasDiscount = (driver.nextDiscount !== undefined && driver.nextDiscount > 0) || (driver.membershipProgress >= driver.membershipGoal);
+      const goal = selectedPlan === 'BLACK' ? 150 : (selectedPlan === 'FLEX' ? 40 : 0);
+      const hasDiscount = (selectedPlan === driver.membershipPlan && ((driver.nextDiscount !== undefined && driver.nextDiscount > 0) || (driver.membershipProgress >= driver.membershipGoal))) || (driver.membershipProgress >= goal);
       const url = hasDiscount ? planConfig.discounted : planConfig.standard;
       window.location.href = url;
       return;
@@ -418,7 +425,7 @@ export default function DriverPage() {
     try {
       const res = await api.post('/payments/membership/create-preference', {
         driverId: driver.id,
-        plan: driver.membershipPlan,
+        plan: selectedPlan,
         email: driver.email,
       });
       if (res.data.init_point) {
@@ -1084,9 +1091,19 @@ export default function DriverPage() {
     return diffDays > 0 ? diffDays : 0;
   };
 
+  const getEstimatedPaidExpirationDate = () => {
+    if (!driver) return '';
+    const baseDate = (driver.isTrial && driver.membershipExpiresAt)
+      ? new Date(driver.membershipExpiresAt)
+      : new Date();
+    // Sumar 30 días adicionales
+    const estDate = new Date(baseDate.getTime() + 30 * 24 * 60 * 60 * 1000);
+    return estDate.toLocaleDateString('es-CL', { day: 'numeric', month: 'long', year: 'numeric' });
+  };
+
   const handleFreePassClick = () => {
     showCustomAlert(
-      `Bienvenido a FIM, la app que une a pasajeros y conductores más rentable del país. Nuestra app es 0% comisión.\n\n¡Aprovecha al máximo este FREE PASS!\n\n¡Saludos Jefe, conduzca con precaución! 🚗`,
+      `Bienvenido a FIM, la app que une a pasajeros y conductores más rentable del país. Nuestra app es 0% comisión.\n\n¡Aprovecha al máximo este FREE PASS!\n\n📅 Tu Free Pass vence el: ${getFreePassExpirationDate()}\n⏳ Si decides pagar tu membresía, esta se extenderá hasta el: ${getEstimatedPaidExpirationDate()} (30 días adicionales para ser totalmente transparentes).\n\n¡Saludos Jefe, conduzca con precaución! 🚗`,
       '¡Felicitaciones! FREE PASS Activo',
       'success'
     );
@@ -1792,7 +1809,10 @@ export default function DriverPage() {
                 Tienes pase libre para recibir viajes en el plan {driver.membershipPlan}.
               </p>
               <div style={{ fontSize: '0.78rem', color: 'rgba(255,255,255,0.6)' }}>
-                Vence el: <strong style={{ color: '#fff' }}>{getFreePassExpirationDate()}</strong>
+                Pase libre vence el: <strong style={{ color: '#fff' }}>{getFreePassExpirationDate()}</strong>
+                <div style={{ marginTop: '4px' }}>
+                  Término de membresía estimado (+30 días): <strong style={{ color: '#fff' }}>{getEstimatedPaidExpirationDate()}</strong>
+                </div>
                 <div style={{ marginTop: '8px', fontSize: '0.72rem', color: '#D4AF37', lineHeight: '1.45' }}>
                   * Una vez finalizado tu periodo de FREE PASS de 14 días, podrás pagar y renovar tu membresía directamente en este panel.
                 </div>
@@ -2900,116 +2920,157 @@ export default function DriverPage() {
               Debes estar al día con tu membresía para poder ponerte en línea y recibir solicitudes de viajes.
             </p>
 
-            {driver.membershipPlan === 'BLACK' && (
-              <div style={{ background: 'linear-gradient(135deg, rgba(212,175,55,0.08), rgba(212,175,55,0.03))', border: '1px solid rgba(212,175,55,0.25)', borderRadius: '12px', padding: '16px', display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '20px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <div>
-                    <div style={{ color: '#D4AF37', fontWeight: 900, fontSize: '0.85rem' }}>Plan BLACK</div>
-                    <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.7rem' }}>Pago Mensual Ilimitado</div>
+            {(() => {
+              // BLACK Plan Checks
+              const hasBlackDiscount = (driver.membershipPlan === 'BLACK' && ((driver.nextDiscount !== undefined && driver.nextDiscount > 0) || (driver.membershipProgress >= driver.membershipGoal))) || (driver.membershipProgress >= 150);
+              const remainingBlackTrips = Math.max(0, 150 - driver.membershipProgress);
+
+              // FLEX Plan Checks
+              const hasFlexDiscount = (driver.membershipPlan === 'FLEX' && ((driver.nextDiscount !== undefined && driver.nextDiscount > 0) || (driver.membershipProgress >= driver.membershipGoal))) || (driver.membershipProgress >= 40);
+              const remainingFlexTrips = Math.max(0, 40 - driver.membershipProgress);
+
+              return (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '20px' }}>
+                  {/* PLAN BLACK */}
+                  <div style={{ background: 'linear-gradient(135deg, rgba(212,175,55,0.08), rgba(212,175,55,0.02))', border: '1px solid rgba(212,175,55,0.25)', borderRadius: '12px', padding: '16px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <div>
+                        <div style={{ color: '#D4AF37', fontWeight: 900, fontSize: '0.9rem' }}>Plan BLACK</div>
+                        <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.72rem' }}>Mensual Ilimitado (30 días)</div>
+                      </div>
+                      <div style={{ textAlign: 'right' }}>
+                        <div style={{ color: '#D4AF37', fontWeight: 900, fontSize: '1.1rem' }}>
+                          {hasBlackDiscount ? (
+                            <>
+                              <span style={{ textDecoration: 'line-through', color: 'rgba(255,255,255,0.4)', marginRight: '6px', fontSize: '0.85rem' }}>$150.000</span>
+                              $120.000
+                            </>
+                          ) : '$150.000'}
+                        </div>
+                        <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.65rem' }}>/mes</div>
+                      </div>
+                    </div>
+                    {hasBlackDiscount ? (
+                      <div style={{ fontSize: '0.75rem', color: '#10B981', fontWeight: 600 }}>
+                        🎉 ¡Meta de 150 viajes cumplida! Tienes 20% de descuento ($120.000).
+                      </div>
+                    ) : (
+                      <div style={{ fontSize: '0.75rem', color: '#D4AF37', fontWeight: 600 }}>
+                        ⏳ Llevas {driver.membershipProgress} viajes. Te faltan {remainingBlackTrips} viajes para obtener 20% de descuento ($120.000) en tu renovación.
+                      </div>
+                    )}
+                    <button
+                      className="btn btn-accent btn-block"
+                      onClick={() => handlePayMembership('BLACK')}
+                      disabled={payingMembership}
+                      style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
+                    >
+                      {payingMembership ? <span className="spinner-sm"></span> : 'Pagar Plan BLACK'}
+                    </button>
                   </div>
-                  <div style={{ textAlign: 'right' }}>
-                    <div style={{ color: '#D4AF37', fontWeight: 900, fontSize: '1.1rem' }}>$150.000</div>
-                    <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.65rem' }}>/mes</div>
+
+                  {/* PLAN FLEX */}
+                  <div style={{ background: 'linear-gradient(135deg, rgba(16,185,129,0.08), rgba(16,185,129,0.03))', border: '1px solid rgba(16,185,129,0.25)', borderRadius: '12px', padding: '16px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <div>
+                        <div style={{ color: '#34D399', fontWeight: 900, fontSize: '0.9rem' }}>Plan FLEX</div>
+                        <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.72rem' }}>Fin de Semana (Vie·Sáb·Dom)</div>
+                      </div>
+                      <div style={{ textAlign: 'right' }}>
+                        <div style={{ color: '#34D399', fontWeight: 900, fontSize: '1.1rem' }}>
+                          {hasFlexDiscount ? (
+                            <>
+                              <span style={{ textDecoration: 'line-through', color: 'rgba(255,255,255,0.4)', marginRight: '6px', fontSize: '0.85rem' }}>$60.000</span>
+                              $51.000
+                            </>
+                          ) : '$60.000'}
+                        </div>
+                        <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.65rem' }}>/fin de semana</div>
+                      </div>
+                    </div>
+                    {hasFlexDiscount ? (
+                      <div style={{ fontSize: '0.75rem', color: '#10B981', fontWeight: 600 }}>
+                        🎉 ¡Meta de 40 viajes cumplida! Tienes 15% de descuento ($51.000).
+                      </div>
+                    ) : (
+                      <div style={{ fontSize: '0.75rem', color: '#34D399', fontWeight: 600 }}>
+                        ⏳ Llevas {driver.membershipProgress} viajes. Te faltan {remainingFlexTrips} viajes para obtener 15% de descuento ($51.000) en tu renovación.
+                      </div>
+                    )}
+                    <button
+                      className="btn btn-accent btn-block"
+                      onClick={() => handlePayMembership('FLEX')}
+                      disabled={payingMembership}
+                      style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
+                    >
+                      {payingMembership ? <span className="spinner-sm"></span> : 'Pagar Plan FLEX'}
+                    </button>
+                  </div>
+
+                  {/* PLAN COMFORT */}
+                  <div style={{ background: 'linear-gradient(135deg, rgba(59,130,246,0.08), rgba(59,130,246,0.03))', border: '1px solid rgba(59,130,246,0.25)', borderRadius: '12px', padding: '16px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <div>
+                        <div style={{ color: '#60A5FA', fontWeight: 900, fontSize: '0.9rem' }}>Plan COMFORT</div>
+                        <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.72rem' }}>Cuota Diaria de Operación</div>
+                      </div>
+                      <div style={{ textAlign: 'right' }}>
+                        <div style={{ color: '#60A5FA', fontWeight: 900, fontSize: '1.1rem' }}>$20.000</div>
+                        <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.65rem' }}>/día</div>
+                      </div>
+                    </div>
+
+                    <button
+                      className="btn btn-accent btn-block"
+                      onClick={() => handlePayMembership('COMFORT')}
+                      disabled={payingMembership}
+                      style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
+                    >
+                      {payingMembership ? <span className="spinner-sm"></span> : 'Pagar con Mercado Pago'}
+                    </button>
+
+                    <div style={{ borderTop: '1px dashed rgba(255,255,255,0.1)', paddingTop: '12px' }}>
+                      <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginBottom: '8px', lineHeight: '1.4' }}>
+                        O realiza transferencia bancaria y sube el comprobante:
+                        <br /><strong>Banco:</strong> Banco Estado | <strong>Cta Corriente:</strong> 987654321
+                        <br /><strong>RUT:</strong> 76.543.210-K | <strong>Destinatario:</strong> Fim SpA
+                        <br /><strong>Email:</strong> pagos@fim.cl
+                      </div>
+
+                      <label style={{ display: 'block', background: 'rgba(255,255,255,0.03)', border: '1px dashed var(--border)', borderRadius: '8px', padding: '10px', textAlign: 'center', cursor: 'pointer', transition: 'var(--transition)' }} onMouseEnter={e => e.currentTarget.style.borderColor = 'var(--accent)'} onMouseLeave={e => e.currentTarget.style.borderColor = 'var(--border)'}>
+                        <span style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--accent)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
+                          {uploadingReceipt ? (
+                            'Subiendo comprobante...'
+                          ) : (
+                            <>
+                              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" id="Office-Drawer--Streamline-Ultimate" height="16" width="16" style={{ flexShrink: 0 }}>
+                                <desc>Office Drawer Streamline Icon: https://streamlinehq.com</desc>
+                                <path fill="#e3e3e3" d="M2.9126 8.65216V3.86955c0 -0.25369 0.10078 -0.49698 0.28015 -0.67637 0.17939 -0.17938 0.42268 -0.28016 0.67637 -0.28016h8.13048c0.1484 0 0.2949 0.03457 0.4277 0.10098 0.1329 0.06642 0.2484 0.16283 0.3375 0.28163l1.1478 1.53044H20.13c0.2537 0 0.497 0.10078 0.6763 0.28015 0.1794 0.17939 0.2802 0.42268 0.2802 0.67637v2.86957" strokeWidth={1}></path>
+                                <path fill="#ffffff" d="M2.9126 12.4781V7.69554c0 -0.25369 0.10078 -0.49698 0.28015 -0.67637 0.17939 -0.17938 0.42268 -0.28016 0.67637 -0.28016h8.13048c0.1484 0 0.2949 0.03457 0.4277 0.10098 0.1329 0.06641 0.2484 0.16283 0.3375 0.28163l1.1478 1.53044H20.13c0.2537 0 0.497 0.10078 0.6763 0.28015 0.1794 0.17939 0.2802 0.42268 0.2802 0.67637v2.86952" strokeWidth={1}></path>
+                                <path stroke="#191919" strokeLinecap="round" strokeLinejoin="round" d="M2.9126 12.4781V7.69554c0 -0.25369 0.10078 -0.49698 0.28015 -0.67637 0.17939 -0.17938 0.42268 -0.28016 0.67637 -0.28016h8.13048c0.1484 0 0.2949 0.03457 0.4277 0.10098 0.1329 0.06641 0.2484 0.16283 0.3375 0.28163l1.1478 1.53044H20.13c0.2537 0 0.497 0.10078 0.6763 0.28015 0.1794 0.17939 0.2802 0.42268 0.2802 0.67637v2.86952" strokeWidth={1}></path>
+                                <path fill="#e3bfb3" d="M1 13.4347c0 -0.2537 0.10078 -0.497 0.28016 -0.6764 0.17938 -0.1793 0.42267 -0.2802 0.67636 -0.2802H22.0435c0.2536 0 0.497 0.1009 0.6763 0.2802 0.1794 0.1794 0.2802 0.4227 0.2802 0.6764v6.6956c0 0.2537 -0.1008 0.497 -0.2802 0.6764 -0.1793 0.1793 -0.4227 0.2801 -0.6763 0.2801H1.95652c-0.25369 0 -0.49698 -0.1008 -0.67636 -0.2801C1.10078 20.6273 1 20.384 1 20.1303v-6.6956Z" strokeWidth={1}></path>
+                                <path fill="#c77f67" d="M22.0435 18.2174H1.95652c-0.25369 0 -0.49698 -0.1008 -0.67636 -0.2802C1.10078 17.7579 1 17.5145 1 17.2609v2.8695c0 0.2537 0.10078 0.497 0.28016 0.6764 0.17938 0.1793 0.42267 0.2801 0.67636 0.2801H22.0435c0.2536 0 0.497 -0.1008 0.6763 -0.2801 0.1794 -0.1794 0.2802 -0.4227 0.2802 -0.6764v-2.8695c0 0.2536 -0.1008 0.497 -0.2802 0.6763 -0.1793 0.1794 -0.4227 0.2802 -0.6763 0.2802Z" strokeWidth={1}></path>
+                                <path stroke="#191919" strokeLinecap="round" strokeLinejoin="round" d="M1 13.4347c0 -0.2537 0.10078 -0.497 0.28016 -0.6764 0.17938 -0.1793 0.42267 -0.2802 0.67636 -0.2802H22.0435c0.2536 0 0.497 0.1009 0.6763 0.2802 0.1794 0.1794 0.2802 0.4227 0.2802 0.6764v6.6956c0 0.2537 -0.1008 0.497 -0.2802 0.6764 -0.1793 0.1793 -0.4227 0.2801 -0.6763 0.2801H1.95652c-0.25369 0 -0.49698 -0.1008 -0.67636 -0.2801C1.10078 20.6273 1 20.384 1 20.1303v-6.6956Z" strokeWidth={1}></path>
+                                <path stroke="#191919" strokeLinecap="round" strokeLinejoin="round" d="M2.9126 4.82607v-0.95652c0 -0.25369 0.10078 -0.49698 0.28015 -0.67637 0.17939 -0.17938 0.42268 -0.28016 0.67637 -0.28016h8.13048c0.1484 0 0.2949 0.03457 0.4277 0.10098 0.1329 0.06642 0.2484 0.16283 0.3375 0.28163l1.1478 1.53044H20.13c0.2537 0 0.497 0.10078 0.6763 0.28015 0.1794 0.17939 0.2802 0.42268 0.2802 0.67637" strokeWidth={1}></path>
+                                <path stroke="#191919" strokeLinecap="round" strokeLinejoin="round" d="M9.13037 15.3477h5.73913" strokeWidth={1}></path>
+                              </svg>
+                              Subir Comprobante de Transferencia
+                            </>
+                          )}
+                        </span>
+                        <input type="file" accept="image/*" onChange={(e) => { handleReceiptUpload(e); setShowPaymentModal(false); }} disabled={uploadingReceipt} style={{ display: 'none' }} />
+                      </label>
+                    </div>
                   </div>
                 </div>
-                <button
-                  className="btn btn-accent btn-block"
-                  onClick={handlePayMembership}
-                  disabled={payingMembership}
-                  style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
-                >
-                  {payingMembership ? <span className="spinner-sm"></span> : 'Pagar con Mercado Pago'}
-                </button>
-              </div>
-            )}
-
-            {driver.membershipPlan === 'FLEX' && (
-              <div style={{ background: 'linear-gradient(135deg, rgba(16,185,129,0.08), rgba(16,185,129,0.03))', border: '1px solid rgba(16,185,129,0.25)', borderRadius: '12px', padding: '16px', display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '20px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <div>
-                    <div style={{ color: '#34D399', fontWeight: 900, fontSize: '0.85rem' }}>Plan FLEX</div>
-                    <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.7rem' }}>Fin de Semana (Vie·Sáb·Dom)</div>
-                  </div>
-                  <div style={{ textAlign: 'right' }}>
-                    <div style={{ color: '#34D399', fontWeight: 900, fontSize: '1.1rem' }}>$60.000</div>
-                    <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.65rem' }}>/fin de semana</div>
-                  </div>
-                </div>
-                <button
-                  className="btn btn-accent btn-block"
-                  onClick={handlePayMembership}
-                  disabled={payingMembership}
-                  style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
-                >
-                  {payingMembership ? <span className="spinner-sm"></span> : 'Pagar con Mercado Pago'}
-                </button>
-              </div>
-            )}
-
-            {driver.membershipPlan === 'COMFORT' && (
-              <div style={{ background: 'linear-gradient(135deg, rgba(59,130,246,0.08), rgba(59,130,246,0.03))', border: '1px solid rgba(59,130,246,0.25)', borderRadius: '12px', padding: '16px', display: 'flex', flexDirection: 'column', gap: '14px', marginBottom: '20px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <div>
-                    <div style={{ color: '#60A5FA', fontWeight: 900, fontSize: '0.85rem' }}>Plan COMFORT</div>
-                    <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.7rem' }}>Cuota Diaria de Operación</div>
-                  </div>
-                  <div style={{ textAlign: 'right' }}>
-                    <div style={{ color: '#60A5FA', fontWeight: 900, fontSize: '1.1rem' }}>$20.000</div>
-                    <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.65rem' }}>/día</div>
-                  </div>
-                </div>
-
-                <button
-                  className="btn btn-accent btn-block"
-                  onClick={handlePayMembership}
-                  disabled={payingMembership}
-                  style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
-                >
-                  {payingMembership ? <span className="spinner-sm"></span> : 'Pagar con Mercado Pago'}
-                </button>
-
-                <div style={{ borderTop: '1px dashed rgba(255,255,255,0.1)', paddingTop: '12px' }}>
-                  <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginBottom: '8px', lineHeight: '1.4' }}>
-                    O realiza transferencia bancaria y sube el comprobante:
-                    <br /><strong>Banco:</strong> Banco Estado | <strong>Cta Corriente:</strong> 987654321
-                    <br /><strong>RUT:</strong> 76.543.210-K | <strong>Destinatario:</strong> Fim SpA
-                    <br /><strong>Email:</strong> pagos@fim.cl
-                  </div>
-
-                  <label style={{ display: 'block', background: 'rgba(255,255,255,0.03)', border: '1px dashed var(--border)', borderRadius: '8px', padding: '10px', textAlign: 'center', cursor: 'pointer', transition: 'var(--transition)' }} onMouseEnter={e => e.currentTarget.style.borderColor = 'var(--accent)'} onMouseLeave={e => e.currentTarget.style.borderColor = 'var(--border)'}>
-                    <span style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--accent)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
-                      {uploadingReceipt ? (
-                        'Subiendo comprobante...'
-                      ) : (
-                        <>
-                          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" id="Office-Drawer--Streamline-Ultimate" height="16" width="16" style={{ flexShrink: 0 }}>
-                            <desc>Office Drawer Streamline Icon: https://streamlinehq.com</desc>
-                            <path fill="#e3e3e3" d="M2.9126 8.65216V3.86955c0 -0.25369 0.10078 -0.49698 0.28015 -0.67637 0.17939 -0.17938 0.42268 -0.28016 0.67637 -0.28016h8.13048c0.1484 0 0.2949 0.03457 0.4277 0.10098 0.1329 0.06642 0.2484 0.16283 0.3375 0.28163l1.1478 1.53044H20.13c0.2537 0 0.497 0.10078 0.6763 0.28015 0.1794 0.17939 0.2802 0.42268 0.2802 0.67637v2.86957" strokeWidth={1}></path>
-                            <path fill="#ffffff" d="M2.9126 12.4781V7.69554c0 -0.25369 0.10078 -0.49698 0.28015 -0.67637 0.17939 -0.17938 0.42268 -0.28016 0.67637 -0.28016h8.13048c0.1484 0 0.2949 0.03457 0.4277 0.10098 0.1329 0.06641 0.2484 0.16283 0.3375 0.28163l1.1478 1.53044H20.13c0.2537 0 0.497 0.10078 0.6763 0.28015 0.1794 0.17939 0.2802 0.42268 0.2802 0.67637v2.86952" strokeWidth={1}></path>
-                            <path stroke="#191919" strokeLinecap="round" strokeLinejoin="round" d="M2.9126 12.4781V7.69554c0 -0.25369 0.10078 -0.49698 0.28015 -0.67637 0.17939 -0.17938 0.42268 -0.28016 0.67637 -0.28016h8.13048c0.1484 0 0.2949 0.03457 0.4277 0.10098 0.1329 0.06641 0.2484 0.16283 0.3375 0.28163l1.1478 1.53044H20.13c0.2537 0 0.497 0.10078 0.6763 0.28015 0.1794 0.17939 0.2802 0.42268 0.2802 0.67637v2.86952" strokeWidth={1}></path>
-                            <path fill="#e3bfb3" d="M1 13.4347c0 -0.2537 0.10078 -0.497 0.28016 -0.6764 0.17938 -0.1793 0.42267 -0.2802 0.67636 -0.2802H22.0435c0.2536 0 0.497 0.1009 0.6763 0.2802 0.1794 0.1794 0.2802 0.4227 0.2802 0.6764v6.6956c0 0.2537 -0.1008 0.497 -0.2802 0.6764 -0.1793 0.1793 -0.4227 0.2801 -0.6763 0.2801H1.95652c-0.25369 0 -0.49698 -0.1008 -0.67636 -0.2801C1.10078 20.6273 1 20.384 1 20.1303v-6.6956Z" strokeWidth={1}></path>
-                            <path fill="#c77f67" d="M22.0435 18.2174H1.95652c-0.25369 0 -0.49698 -0.1008 -0.67636 -0.2802C1.10078 17.7579 1 17.5145 1 17.2609v2.8695c0 0.2537 0.10078 0.497 0.28016 0.6764 0.17938 0.1793 0.42267 0.2801 0.67636 0.2801H22.0435c0.2536 0 0.497 -0.1008 0.6763 -0.2801 0.1794 -0.1794 0.2802 -0.4227 0.2802 -0.6764v-2.8695c0 0.2536 -0.1008 0.497 -0.2802 0.6763 -0.1793 0.1794 -0.4227 0.2802 -0.6763 0.2802Z" strokeWidth={1}></path>
-                            <path stroke="#191919" strokeLinecap="round" strokeLinejoin="round" d="M1 13.4347c0 -0.2537 0.10078 -0.497 0.28016 -0.6764 0.17938 -0.1793 0.42267 -0.2802 0.67636 -0.2802H22.0435c0.2536 0 0.497 0.1009 0.6763 0.2802 0.1794 0.1794 0.2802 0.4227 0.2802 0.6764v6.6956c0 0.2537 -0.1008 0.497 -0.2802 0.6764 -0.1793 0.1793 -0.4227 0.2801 -0.6763 0.2801H1.95652c-0.25369 0 -0.49698 -0.1008 -0.67636 -0.2801C1.10078 20.6273 1 20.384 1 20.1303v-6.6956Z" strokeWidth={1}></path>
-                            <path stroke="#191919" strokeLinecap="round" strokeLinejoin="round" d="M2.9126 4.82607v-0.95652c0 -0.25369 0.10078 -0.49698 0.28015 -0.67637 0.17939 -0.17938 0.42268 -0.28016 0.67637 -0.28016h8.13048c0.1484 0 0.2949 0.03457 0.4277 0.10098 0.1329 0.06642 0.2484 0.16283 0.3375 0.28163l1.1478 1.53044H20.13c0.2537 0 0.497 0.10078 0.6763 0.28015 0.1794 0.17939 0.2802 0.42268 0.2802 0.67637" strokeWidth={1}></path>
-                            <path stroke="#191919" strokeLinecap="round" strokeLinejoin="round" d="M9.13037 15.3477h5.73913" strokeWidth={1}></path>
-                          </svg>
-                          Subir Comprobante de Transferencia
-                        </>
-                      )}
-                    </span>
-                    <input type="file" accept="image/*" onChange={(e) => { handleReceiptUpload(e); setShowPaymentModal(false); }} disabled={uploadingReceipt} style={{ display: 'none' }} />
-                  </label>
-                </div>
-              </div>
-            )}
+              );
+            })()}
 
             <button className="btn btn-secondary btn-block" onClick={() => setShowPaymentModal(false)}>
               Cerrar
             </button>
           </div>
         </div>
-      )}
-
       )}
 
       {/* MODAL DE SOS / EMERGENCIA */}
@@ -3361,16 +3422,24 @@ export default function DriverPage() {
                     background: 'rgba(212,175,55,0.1)',
                     border: '1px solid rgba(212,175,55,0.2)',
                     borderRadius: '6px',
-                    padding: '6px 10px',
+                    padding: '8px 12px',
                     fontSize: '0.72rem',
                     color: '#D4AF37',
                     fontWeight: 700,
                     display: 'flex',
-                    alignItems: 'center',
-                    gap: '6px'
+                    flexDirection: 'column',
+                    gap: '4px'
                   }}>
-                    <span style={{ fontSize: '0.9rem' }}>✨</span>
-                    <span>FREE PASS Activo (14 días)</span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <span style={{ fontSize: '0.9rem' }}>✨</span>
+                      <span>FREE PASS Activo (14 días)</span>
+                    </div>
+                    <div style={{ marginTop: '4px', color: 'rgba(255,255,255,0.8)', fontWeight: 'normal', fontSize: '0.72rem' }}>
+                      Pase libre vence: <strong>{getFreePassExpirationDate()}</strong>
+                    </div>
+                    <div style={{ color: 'rgba(255,255,255,0.8)', fontWeight: 'normal', fontSize: '0.72rem' }}>
+                      Membresía estimada (+30 días): <strong>{getEstimatedPaidExpirationDate()}</strong>
+                    </div>
                   </div>
                 )}
 

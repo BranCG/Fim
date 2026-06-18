@@ -727,11 +727,19 @@ export default function DashboardPage() {
                 ))}
                 {/* Info de Membresía del Conductor */}
                 {selectedDriver.isTrial && (
-                  <div style={{ marginTop: '16px', background: 'rgba(212,175,55,0.05)', padding: '12px', borderRadius: '8px', border: '1px solid rgba(212,175,55,0.3)' }}>
+                  <div style={{ marginTop: '16px', background: 'rgba(212,175,55,0.05)', padding: '12px', borderRadius: '8px', border: '1px solid rgba(212,175,55,0.3)', display: 'flex', flexDirection: 'column', gap: '6px' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem' }}>
                       <span style={{ color: 'var(--text-muted)' }}>🎁 Vencimiento Free Pass</span>
                       <span style={{ fontWeight: 700, color: '#D4AF37' }}>
                         {selectedDriver.membershipExpiresAt ? new Date(selectedDriver.membershipExpiresAt).toLocaleDateString('es-CL') : 'Sin fecha'}
+                      </span>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem' }}>
+                      <span style={{ color: 'var(--text-muted)' }}>📅 Membresía Estimada (+30 días)</span>
+                      <span style={{ fontWeight: 700, color: '#ffffff' }}>
+                        {selectedDriver.membershipExpiresAt 
+                          ? new Date(new Date(selectedDriver.membershipExpiresAt).getTime() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString('es-CL') 
+                          : 'Sin fecha'}
                       </span>
                     </div>
                   </div>
