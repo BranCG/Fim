@@ -375,31 +375,35 @@ function RegisterForm() {
     try {
       let ocrText = '';
 
-      try {
-        const ocrPromise = (async () => {
-          const worker = await createWorker('spa'); // Idioma español
-          const { data: { text } } = await worker.recognize(file);
-          await worker.terminate();
-          return (text || '').toUpperCase();
-        })();
+      const isOcrEligible = (docType === 'id-front' || docType === 'id-back' || docType === 'license-front' || docType === 'license-back') && file.type !== 'application/pdf';
 
-        const timeoutPromise = new Promise<string>((_, reject) =>
-          setTimeout(() => reject(new Error('OCR Timeout')), 3500)
-        );
+      if (isOcrEligible) {
+        try {
+          const ocrPromise = (async () => {
+            const worker = await createWorker('spa'); // Idioma español
+            const { data: { text } } = await worker.recognize(file);
+            await worker.terminate();
+            return (text || '').toUpperCase();
+          })();
 
-        // Omitir OCR en dispositivos móviles (Capacitor) para prevenir bloqueos por Web Workers/CDN
-        const isMobile = typeof window !== 'undefined' &&
-          ((window as any).Capacitor ||
-            window.location.origin.includes('capacitor://') ||
-            ((window.location.hostname === 'localhost' || window.location.hostname === '') && window.location.port === ''));
+          const timeoutPromise = new Promise<string>((_, reject) =>
+            setTimeout(() => reject(new Error('OCR Timeout')), 3500)
+          );
 
-        if (!isMobile) {
-          ocrText = await Promise.race([ocrPromise, timeoutPromise]);
-        } else {
-          console.log('Fim: Omitiendo validación OCR en plataforma móvil');
+          // Omitir OCR en dispositivos móviles (Capacitor) para prevenir bloqueos por Web Workers/CDN
+          const isMobile = typeof window !== 'undefined' &&
+            ((window as any).Capacitor ||
+              window.location.origin.includes('capacitor://') ||
+              ((window.location.hostname === 'localhost' || window.location.hostname === '') && window.location.port === ''));
+
+          if (!isMobile) {
+            ocrText = await Promise.race([ocrPromise, timeoutPromise]);
+          } else {
+            console.log('Fim: Omitiendo validación OCR en plataforma móvil');
+          }
+        } catch (ocrErr) {
+          console.warn('La validación OCR falló, fue omitida o superó el tiempo límite:', ocrErr);
         }
-      } catch (ocrErr) {
-        console.warn('La validación OCR falló, fue omitida o superó el tiempo límite:', ocrErr);
       }
 
       if (ocrText) {
@@ -438,16 +442,35 @@ function RegisterForm() {
     upload: FileUpload,
     setter: (v: FileUpload) => void,
     id: string,
-    hint?: string
+    hint?: string,
+    accept: string = 'image/*',
+    capture?: 'user' | 'environment' | boolean
   ) {
+    const isPdf = upload.file?.type === 'application/pdf' || upload.file?.name.toLowerCase().endsWith('.pdf');
     return (
       <div className="form-group">
         <label className="form-label">{label}</label>
         <label htmlFor={id} className={`upload-area ${upload.loading ? 'dragging' : ''}`} style={{ position: 'relative', overflow: 'hidden' }}>
           {upload.preview ? (
-            <div style={{ position: 'relative', width: '100%', height: '100%' }}>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={upload.preview} alt={label} style={{ opacity: upload.loading ? 0.5 : 1 }} />
+            <div style={{ position: 'relative', width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              {isPdf ? (
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '16px', textAlign: 'center', width: '100%', height: '100%', background: '#0d0d16' }}>
+                  <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#ff4d4f" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginBottom: '8px' }}>
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                    <polyline points="14 2 14 8 20 8" />
+                    <line x1="16" y1="13" x2="8" y2="13" />
+                    <line x1="16" y1="17" x2="8" y2="17" />
+                    <polyline points="10 9 9 9 8 9" />
+                  </svg>
+                  <span style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-primary)', maxWidth: '90%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {upload.file?.name || 'documento.pdf'}
+                  </span>
+                  <span style={{ fontSize: '0.75rem', color: '#ff4d4f', marginTop: '4px', fontWeight: 600 }}>DOCUMENTO PDF</span>
+                </div>
+              ) : (
+                /* eslint-disable-next-line @next/next/no-img-element */
+                <img src={upload.preview} alt={label} style={{ opacity: upload.loading ? 0.5 : 1 }} />
+              )}
               {upload.loading && (
                 <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.5)' }}>
                   <div className="spinner" style={{ marginBottom: '8px' }} />
@@ -463,12 +486,12 @@ function RegisterForm() {
               <div style={{ marginBottom: '8px', color: 'var(--text-muted)' }}>
                 <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" /><circle cx="12" cy="13" r="4" /></svg>
               </div>
-              <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>Toca para capturar</p>
+              <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>Toca para capturar o seleccionar</p>
               {hint && <p style={{ color: 'var(--text-muted)', fontSize: '0.78rem', marginTop: '4px' }}>{hint}</p>}
             </div>
           )}
         </label>
-        <input id={id} type="file" accept="image/*" capture="environment" style={{ display: 'none' }} onChange={(e) => handleFileChange(e, setter, id)} />
+        <input id={id} type="file" accept={accept} capture={capture} style={{ display: 'none' }} onChange={(e) => handleFileChange(e, setter, id)} />
       </div>
     );
   }
@@ -1039,7 +1062,7 @@ function RegisterForm() {
               {renderUploadArea('Selfie con Cédula', selfie, setSelfie, 'selfie-file')}
               {renderUploadArea('Cédula (Frontal)', idFront, setIdFront, 'id-front')}
               {renderUploadArea('Cédula (Posterior)', idBack, setIdBack, 'id-back')}
-              {renderUploadArea('Certificado de Antecedentes', backgroundDoc, setBackgroundDoc, 'background-doc')}
+              {renderUploadArea('Certificado de Antecedentes', backgroundDoc, setBackgroundDoc, 'background-doc', undefined, 'image/*,application/pdf', undefined)}
               <div style={{
                 background: 'rgba(255, 255, 255, 0.03)',
                 border: '1px solid var(--border)',
