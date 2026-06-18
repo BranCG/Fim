@@ -564,7 +564,8 @@ router.post('/gift-free-days', async (req: Request, res: Response) => {
         membershipExpiresAt: true,
         fcmToken: true,
         createdAt: true,
-        isTrial: true
+        isTrial: true,
+        membershipPaid: true
       }
     });
 
@@ -577,16 +578,11 @@ router.post('/gift-free-days', async (req: Request, res: Response) => {
     let updatedCount = 0;
 
     for (const d of drivers) {
-      let baseExpiresDate = now;
-      let isCurrentlyActive = false;
-
-      // 1. Verificar si tiene una membresía/prueba activa en el futuro en BD
-      if (d.membershipExpiresAt && d.membershipExpiresAt > now) {
-        baseExpiresDate = d.membershipExpiresAt;
-        isCurrentlyActive = true;
-      }
+      // 1. Verificar si está en período de prueba inicial (isTrial === true y vigente)
+      const isTrialActive = !!(d.isTrial && d.membershipExpiresAt && d.membershipExpiresAt > now);
 
       // 2. Verificar si está en promoción de lanzamiento (cálculo dinámico)
+      let isPromoActive = false;
       if (config.free_pass_enabled === 'true') {
         const startDate = new Date(config.free_pass_start_date);
         startDate.setHours(0, 0, 0, 0);
@@ -598,27 +594,32 @@ router.post('/gift-free-days', async (req: Request, res: Response) => {
         if (driverCreatedAt >= startDate && driverCreatedAt <= endDate) {
           const promoExpiresAt = new Date(driverCreatedAt.getTime() + freeDays * 24 * 60 * 60 * 1000);
           if (promoExpiresAt > now) {
-            isCurrentlyActive = true;
-            if (promoExpiresAt > baseExpiresDate) {
-              baseExpiresDate = promoExpiresAt;
-            }
+            isPromoActive = true;
           }
         }
       }
 
+      const inRegistrationFreePass = isTrialActive || isPromoActive;
+
+      // El conductor debe tener membresía pagada activa
+      const hasActivePaidMembership = d.membershipPaid && d.membershipExpiresAt && d.membershipExpiresAt > now;
+
+      // SOLO y UNICAMENTE para conductores que NO estén en período FREE PASS por registro de 14 días
+      // Y que tengan membresía activa y pagada
+      if (inRegistrationFreePass || !hasActivePaidMembership) {
+        continue;
+      }
+
+      // Sumar los días regalados a la membresía activa del conductor
+      const baseExpiresDate = d.membershipExpiresAt!; // No puede ser nula por la validación anterior
       const newExpiresAt = new Date(baseExpiresDate.getTime());
       newExpiresAt.setDate(newExpiresAt.getDate() + daysNum);
-
-      const shouldSetPaid = !isCurrentlyActive;
-      const setIsTrial = !d.isTrial; // Si no está marcado como prueba, marcarlo para activar el Free Pass
 
       await prisma.driver.update({
         where: { id: d.id },
         data: {
           membershipExpiresAt: newExpiresAt,
-          giftDaysPending: { increment: daysNum },
-          ...(shouldSetPaid ? { membershipPaid: true } : {}),
-          ...(setIsTrial ? { isTrial: true } : {})
+          giftDaysPending: { increment: daysNum }
         }
       });
 

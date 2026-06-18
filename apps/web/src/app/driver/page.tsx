@@ -3577,6 +3577,29 @@ export default function DriverPage() {
                   </div>
                 )}
 
+                {!driver.isPromoActive && driver.membershipPaid && driver.membershipExpiresAt && new Date(driver.membershipExpiresAt) > new Date() && (
+                  <div style={{
+                    background: 'rgba(0, 229, 160, 0.1)',
+                    border: '1px solid rgba(0, 229, 160, 0.2)',
+                    borderRadius: '6px',
+                    padding: '8px 12px',
+                    fontSize: '0.72rem',
+                    color: '#00E5A0',
+                    fontWeight: 700,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '4px'
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <span style={{ fontSize: '0.9rem' }}>✅</span>
+                      <span>Membresía Activa</span>
+                    </div>
+                    <div style={{ marginTop: '4px', color: 'rgba(255,255,255,0.8)', fontWeight: 'normal', fontSize: '0.72rem' }}>
+                      Vence el: <strong>{new Date(driver.membershipExpiresAt).toLocaleDateString('es-CL', { day: 'numeric', month: 'long', year: 'numeric' })}</strong>
+                    </div>
+                  </div>
+                )}
+
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginTop: '2px' }}>
                   {/* Advantages list */}
                   {(driver.membershipPlan === 'BLACK' ? [
