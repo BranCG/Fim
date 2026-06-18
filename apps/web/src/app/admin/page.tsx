@@ -132,6 +132,12 @@ function Icon({ name, size = 16, color = 'currentColor' }: { name: string; size?
         <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
       </svg>
     ),
+    file: (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+        <polyline points="14 2 14 8 20 8" />
+      </svg>
+    ),
   };
   return icons[name] || <span />;
 }
@@ -1022,17 +1028,34 @@ export default function AdminDashboardPage() {
                   { label: 'Licencia Dorso', url: selectedDriver.licenseBackUrl },
                   { label: 'Vehículo', url: selectedDriver.vehiclePhotoUrl },
                   { label: 'Recibo COMFORT', url: selectedDriver.comfortReceiptUrl },
-                ].map(d => d.url ? (
-                  <div
-                    key={d.label}
-                    onClick={() => setImgModal(d.url || null)}
-                    style={{ flexShrink: 0, width: '100px', cursor: 'pointer', border: '1px solid var(--border)', borderRadius: '8px', overflow: 'hidden' }}
-                  >
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={d.url} alt={d.label} loading="lazy" style={{ width: '100px', height: '70px', objectFit: 'cover' }} />
-                    <div style={{ fontSize: '0.6rem', textAlign: 'center', padding: '4px 2px', background: 'var(--bg-secondary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{d.label}</div>
-                  </div>
-                ) : null)}
+                ].map(d => {
+                  if (!d.url) return null;
+                  const isPdf = d.url.split('?')[0].toLowerCase().endsWith('.pdf') || d.url.toLowerCase().includes('.pdf');
+                  return (
+                    <div
+                      key={d.label}
+                      onClick={() => {
+                        if (isPdf) {
+                          window.open(d.url || '', '_blank');
+                        } else {
+                          setImgModal(d.url || null);
+                        }
+                      }}
+                      style={{ flexShrink: 0, width: '100px', cursor: 'pointer', border: '1px solid var(--border)', borderRadius: '8px', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}
+                    >
+                      {isPdf ? (
+                        <div style={{ width: '100px', height: '70px', background: 'var(--bg-secondary)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
+                          <Icon name="file" size={24} color="var(--danger)" />
+                          <span style={{ fontSize: '0.55rem', fontWeight: 900, color: 'var(--danger)' }}>ABRIR PDF</span>
+                        </div>
+                      ) : (
+                        /* eslint-disable-next-line @next/next/no-img-element */
+                        <img src={d.url} alt={d.label} loading="lazy" style={{ width: '100px', height: '70px', objectFit: 'cover' }} />
+                      )}
+                      <div style={{ fontSize: '0.6rem', textAlign: 'center', padding: '4px 2px', background: 'var(--bg-secondary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', width: '100%' }}>{d.label}</div>
+                    </div>
+                  );
+                })}
               </div>
             </div>
 
@@ -1323,23 +1346,42 @@ export default function AdminDashboardPage() {
                   { label: 'Cédula Dorso', url: selectedPassenger.idBackUrl },
                   { label: 'Selfie', url: selectedPassenger.selfieUrl },
                   { label: 'Antecedentes', url: selectedPassenger.backgroundDocUrl },
-                ].map(d => d.url ? (
-                  <div
-                    key={d.label}
-                    onClick={() => setImgModal(d.url || null)}
-                    style={{ flex: 1, cursor: 'pointer', border: '1px solid var(--border)', borderRadius: '8px', overflow: 'hidden' }}
-                  >
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={d.url} alt={d.label} loading="lazy" style={{ width: '100%', height: '90px', objectFit: 'cover' }} />
-                    <div style={{ fontSize: '0.62rem', textAlign: 'center', padding: '5px 2px', background: 'var(--bg-secondary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{d.label}</div>
-                  </div>
-                ) : (
-                  <div key={d.label} style={{ flex: 1, height: '110px', background: 'rgba(255,255,255,0.01)', border: '1px dashed var(--border)', borderRadius: '8px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '6px', fontSize: '0.62rem', color: 'var(--text-muted)' }}>
-                    <Icon name="image" size={18} color="var(--text-muted)" />
-                    <span>{d.label}</span>
-                    <span style={{ fontSize: '0.55rem' }}>Sin imagen</span>
-                  </div>
-                ))}
+                ].map(d => {
+                  if (!d.url) {
+                    return (
+                      <div key={d.label} style={{ flex: 1, height: '110px', background: 'rgba(255,255,255,0.01)', border: '1px dashed var(--border)', borderRadius: '8px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '6px', fontSize: '0.62rem', color: 'var(--text-muted)' }}>
+                        <Icon name="image" size={18} color="var(--text-muted)" />
+                        <span>{d.label}</span>
+                        <span style={{ fontSize: '0.55rem' }}>Sin imagen</span>
+                      </div>
+                    );
+                  }
+                  const isPdf = d.url.split('?')[0].toLowerCase().endsWith('.pdf') || d.url.toLowerCase().includes('.pdf');
+                  return (
+                    <div
+                      key={d.label}
+                      onClick={() => {
+                        if (isPdf) {
+                          window.open(d.url || '', '_blank');
+                        } else {
+                          setImgModal(d.url || null);
+                        }
+                      }}
+                      style={{ flex: 1, cursor: 'pointer', border: '1px solid var(--border)', borderRadius: '8px', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}
+                    >
+                      {isPdf ? (
+                        <div style={{ width: '100%', height: '90px', background: 'var(--bg-secondary)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
+                          <Icon name="file" size={24} color="var(--danger)" />
+                          <span style={{ fontSize: '0.55rem', fontWeight: 900, color: 'var(--danger)' }}>ABRIR PDF</span>
+                        </div>
+                      ) : (
+                        /* eslint-disable-next-line @next/next/no-img-element */
+                        <img src={d.url} alt={d.label} loading="lazy" style={{ width: '100%', height: '90px', objectFit: 'cover' }} />
+                      )}
+                      <div style={{ fontSize: '0.62rem', textAlign: 'center', padding: '5px 2px', background: 'var(--bg-secondary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', width: '100%' }}>{d.label}</div>
+                    </div>
+                  );
+                })}
               </div>
             </div>
 

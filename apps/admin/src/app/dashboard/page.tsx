@@ -427,23 +427,43 @@ export default function DashboardPage() {
                           { label: 'Licencia Dorso', url: driver.licenseBackUrl },
                           { label: 'Foto Vehículo', url: driver.vehiclePhotoUrl },
                           { label: 'Comprobante COMFORT', url: driver.comfortReceiptUrl },
-                        ].map(doc => (
-                          doc.url ? (
+                        ].map(doc => {
+                          if (!doc.url) {
+                            return (
+                              <div key={doc.label} style={{ width: '90px', height: '80px', background: 'var(--bg-secondary)', border: '2px dashed var(--border)', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.7rem', color: 'var(--text-muted)', textAlign: 'center', padding: '4px' }}>Sin imagen</div>
+                            );
+                          }
+                          const isPdf = doc.url.split('?')[0].toLowerCase().endsWith('.pdf') || doc.url.toLowerCase().includes('.pdf');
+                          return (
                             <button
                               key={doc.label}
-                              onClick={() => setImgModal(getImageUrl(doc.url))}
+                              onClick={() => {
+                                if (isPdf) {
+                                  window.open(getImageUrl(doc.url) || '', '_blank');
+                                } else {
+                                  setImgModal(getImageUrl(doc.url));
+                                }
+                              }}
                               style={{ padding: '0', border: '2px solid var(--border)', borderRadius: '8px', cursor: 'pointer', background: 'var(--bg-card)', overflow: 'hidden', display: 'flex', flexDirection: 'column', alignItems: 'center', minWidth: '90px', transition: 'var(--transition)' }}
                               onMouseEnter={e => (e.currentTarget.style.borderColor = 'var(--accent)')}
                               onMouseLeave={e => (e.currentTarget.style.borderColor = 'var(--border)')}
                             >
-                              {/* eslint-disable-next-line @next/next/no-img-element */}
-                              <img src={getImageUrl(doc.url)} alt={doc.label} style={{ width: '90px', height: '60px', objectFit: 'cover' }} />
-                              <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', padding: '4px 6px', textAlign: 'center' }}>{doc.label}</span>
+                              {isPdf ? (
+                                <div style={{ width: '90px', height: '60px', background: 'var(--bg-secondary)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '2px' }}>
+                                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--danger)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                                    <polyline points="14 2 14 8 20 8" />
+                                  </svg>
+                                  <span style={{ fontSize: '0.55rem', fontWeight: 900, color: 'var(--danger)' }}>ABRIR PDF</span>
+                                </div>
+                              ) : (
+                                /* eslint-disable-next-line @next/next/no-img-element */
+                                <img src={getImageUrl(doc.url)} alt={doc.label} style={{ width: '90px', height: '60px', objectFit: 'cover' }} />
+                              )}
+                              <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', padding: '4px 6px', textAlign: 'center', width: '100%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{doc.label}</span>
                             </button>
-                          ) : (
-                            <div key={doc.label} style={{ width: '90px', height: '80px', background: 'var(--bg-secondary)', border: '2px dashed var(--border)', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.7rem', color: 'var(--text-muted)', textAlign: 'center', padding: '4px' }}>Sin imagen</div>
-                          )
-                        ))}
+                          );
+                        })}
                       </div>
                     </div>
 
@@ -744,15 +764,39 @@ export default function DashboardPage() {
                   { label: 'Licencia Dorso', url: selectedDriver.licenseBackUrl },
                   { label: 'Foto Vehículo', url: selectedDriver.vehiclePhotoUrl },
                   { label: 'Comprobante COMFORT', url: selectedDriver.comfortReceiptUrl },
-                ].map(doc => (
-                  doc.url ? (
-                    <button key={doc.label} onClick={() => setImgModal(getImageUrl(doc.url) || null)} style={{ border: '2px solid var(--border)', borderRadius: '10px', overflow: 'hidden', cursor: 'pointer', background: 'var(--bg-card)', transition: 'var(--transition)' }} onMouseEnter={e => (e.currentTarget.style.borderColor = 'var(--accent)')} onMouseLeave={e => (e.currentTarget.style.borderColor = 'var(--border)')}>
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={getImageUrl(doc.url)} alt={doc.label} style={{ width: '120px', height: '80px', objectFit: 'cover', display: 'block' }} />
-                      <div style={{ padding: '6px 8px', fontSize: '0.75rem', color: 'var(--text-muted)', textAlign: 'center' }}>{doc.label}</div>
+                ].map(doc => {
+                  if (!doc.url) return null;
+                  const isPdf = doc.url.split('?')[0].toLowerCase().endsWith('.pdf') || doc.url.toLowerCase().includes('.pdf');
+                  return (
+                    <button
+                      key={doc.label}
+                      onClick={() => {
+                        if (isPdf) {
+                          window.open(getImageUrl(doc.url) || '', '_blank');
+                        } else {
+                          setImgModal(getImageUrl(doc.url) || null);
+                        }
+                      }}
+                      style={{ border: '2px solid var(--border)', borderRadius: '10px', overflow: 'hidden', cursor: 'pointer', background: 'var(--bg-card)', transition: 'var(--transition)', display: 'flex', flexDirection: 'column', alignItems: 'center' }}
+                      onMouseEnter={e => (e.currentTarget.style.borderColor = 'var(--accent)')}
+                      onMouseLeave={e => (e.currentTarget.style.borderColor = 'var(--border)')}
+                    >
+                      {isPdf ? (
+                        <div style={{ width: '120px', height: '80px', background: 'var(--bg-secondary)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
+                          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--danger)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                            <polyline points="14 2 14 8 20 8" />
+                          </svg>
+                          <span style={{ fontSize: '0.6rem', fontWeight: 900, color: 'var(--danger)' }}>ABRIR PDF</span>
+                        </div>
+                      ) : (
+                        /* eslint-disable-next-line @next/next/no-img-element */
+                        <img src={getImageUrl(doc.url)} alt={doc.label} style={{ width: '120px', height: '80px', objectFit: 'cover', display: 'block' }} />
+                      )}
+                      <div style={{ padding: '6px 8px', fontSize: '0.75rem', color: 'var(--text-muted)', textAlign: 'center', width: '120px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{doc.label}</div>
                     </button>
-                  ) : null
-                ))}
+                  );
+                })}
               </div>
               {(() => {
                 const urls = [selectedDriver.idFrontUrl, selectedDriver.idBackUrl, selectedDriver.selfieUrl, selectedDriver.backgroundDocUrl, selectedDriver.licenseUrl, selectedDriver.licenseBackUrl, selectedDriver.vehiclePhotoUrl].filter(Boolean);
