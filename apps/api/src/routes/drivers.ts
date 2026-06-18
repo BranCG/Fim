@@ -25,6 +25,7 @@ router.get('/me', requireAuth, requireRole('driver'), async (req: Request, res: 
         totalRating: true, totalTrips: true,
         adminNotes: true, mercadoPagoLink: true, walletBalance: true,
         isTrial: true, nextDiscount: true,
+        giftDaysPending: true,
         createdAt: true,
       },
     });
@@ -316,6 +317,20 @@ router.post('/comfort-accrue-debt', async (req: Request, res: Response) => {
     return res.json({ ok: true, message: `Deuda acumulada para ${updated} conductores COMFORT.` });
   } catch (err) {
     return res.status(500).json({ error: 'Error al acumular deuda' });
+  }
+});
+
+// ─── LIMPIAR DÍAS DE REGALO PENDIENTES ─────────────────────────────────────
+router.post('/me/clear-gift-pending', requireAuth, requireRole('driver'), async (req: Request, res: Response) => {
+  try {
+    await prisma.driver.update({
+      where: { id: req.user!.id },
+      data: { giftDaysPending: 0 }
+    });
+    return res.json({ ok: true });
+  } catch (err) {
+    console.error('Error clearing gift pending days:', err);
+    return res.status(500).json({ error: 'Error al limpiar días de regalo pendientes' });
   }
 });
 

@@ -45,6 +45,7 @@ interface DriverInfo {
   isTrial?: boolean;
   nextDiscount?: number;
   selfieUrl?: string;
+  giftDaysPending?: number;
 }
 
 const IconCheck = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>;
@@ -240,6 +241,8 @@ export default function DriverPage() {
   const [uploadingReceipt, setUploadingReceipt] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [showProfileModal, setShowProfileModal] = useState(false);
+  const [showGiftModal, setShowGiftModal] = useState(false);
+  const [giftDaysAmount, setGiftDaysAmount] = useState(0);
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmNewPassword, setConfirmNewPassword] = useState('');
@@ -628,6 +631,32 @@ export default function DriverPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     return () => clearTimeout(timeoutId);
   }, []);
+
+  useEffect(() => {
+    if (driver && driver.giftDaysPending && driver.giftDaysPending > 0 && !showGiftModal) {
+      const pendingDays = driver.giftDaysPending;
+      setGiftDaysAmount(pendingDays);
+      setShowGiftModal(true);
+      
+      // Play sound
+      try {
+        const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2019/2019-84.wav');
+        audio.volume = 0.8;
+        audio.play().catch(e => console.error("Audio autoplay was prevented:", e));
+      } catch (err) {
+        console.error("Failed to play sound effect:", err);
+      }
+      
+      // Update local state immediately to avoid double calls
+      setDriver(prev => prev ? { ...prev, giftDaysPending: 0 } : null);
+      
+      // Call endpoint to clear it in DB
+      api.post('/drivers/me/clear-gift-pending')
+        .catch(err => {
+          console.error('Error clearing gift pending status:', err);
+        });
+    }
+  }, [driver, showGiftModal]);
 
   // GPS tracking
   useEffect(() => {
@@ -3688,6 +3717,134 @@ export default function DriverPage() {
           </div>
         </div>
       )}
+
+      {/* MODAL DE REGALO DE DÍAS (FREE PASS FIM) */}
+      {showGiftModal && (
+        <div style={{
+          position: 'fixed',
+          inset: 0,
+          background: 'rgba(9, 9, 15, 0.95)',
+          backdropFilter: 'blur(16px)',
+          zIndex: 12000,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '20px',
+          animation: 'fadeIn 0.3s ease'
+        }}>
+          <div className="card animate-scale-in" style={{
+            width: '100%',
+            maxWidth: '440px',
+            border: '2px solid #FFD700', // Golden border
+            background: 'linear-gradient(145deg, #151522 0%, #0D0D15 100%)',
+            padding: '32px 24px',
+            borderRadius: '24px',
+            boxShadow: '0 20px 40px rgba(255, 215, 0, 0.15)',
+            textAlign: 'center',
+            position: 'relative',
+            overflow: 'hidden'
+          }}>
+            <div style={{
+              position: 'absolute',
+              top: '-50%',
+              left: '-50%',
+              width: '200%',
+              height: '200%',
+              background: 'radial-gradient(circle, rgba(255, 215, 0, 0.08) 0%, transparent 60%)',
+              pointerEvents: 'none',
+              zIndex: 0
+            }} />
+            
+            <div style={{ position: 'relative', zIndex: 1 }}>
+              <div style={{
+                width: '80px',
+                height: '80px',
+                borderRadius: '50%',
+                background: 'rgba(255, 215, 0, 0.1)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                margin: '0 auto 24px auto',
+                border: '1px solid rgba(255, 215, 0, 0.3)',
+                boxShadow: '0 0 20px rgba(255, 215, 0, 0.2)',
+                animation: 'pulse 2s infinite'
+              }}>
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#FFD700" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ width: '40px', height: '40px' }}>
+                  <path d="M20 12v10H4V12" />
+                  <path d="M2 7h20v5H2z" />
+                  <path d="M12 22V7" />
+                  <path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z" />
+                  <path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z" />
+                </svg>
+              </div>
+
+              <h2 style={{
+                fontSize: '2rem',
+                fontWeight: 900,
+                color: '#FFD700',
+                margin: '0 0 8px 0',
+                letterSpacing: '2px',
+                textTransform: 'uppercase',
+                textShadow: '0 2px 10px rgba(255, 215, 0, 0.3)'
+              }}>
+                FREE PASS
+              </h2>
+              
+              <div style={{
+                fontSize: '1rem',
+                color: '#A0A0B0',
+                fontWeight: 600,
+                marginBottom: '24px',
+                textTransform: 'uppercase',
+                letterSpacing: '1px'
+              }}>
+                ¡Beneficio Exclusivo!
+              </div>
+
+              <p style={{
+                fontSize: '1.25rem',
+                lineHeight: '1.6',
+                color: '#FFFFFF',
+                margin: '0 0 32px 0',
+                fontWeight: 500
+              }}>
+                Te hemos regalado <strong style={{ color: '#FFD700', fontSize: '1.45rem', fontWeight: 800 }}>{giftDaysAmount} días</strong>, premiando tu compromiso con FIM.
+                <span style={{ display: 'block', marginTop: '16px', fontStyle: 'italic', color: '#00E5A0', fontWeight: 600 }}>
+                  ¡Maneje con cuidado jefe! 🚗💨
+                </span>
+              </p>
+
+              <button 
+                onClick={() => setShowGiftModal(false)}
+                className="btn btn-accent btn-lg btn-block"
+                style={{
+                  background: 'linear-gradient(90deg, #FFD700 0%, #FFA500 100%)',
+                  color: '#000000',
+                  fontWeight: 900,
+                  fontSize: '1.1rem',
+                  border: 'none',
+                  borderRadius: '16px',
+                  boxShadow: '0 8px 20px rgba(255, 215, 0, 0.3)',
+                  cursor: 'pointer',
+                  padding: '16px',
+                  transition: 'transform 0.2s, box-shadow 0.2s'
+                }}
+                onMouseOver={(e) => {
+                  e.currentTarget.style.transform = 'translateY(-2px)';
+                  e.currentTarget.style.boxShadow = '0 12px 24px rgba(255, 215, 0, 0.4)';
+                }}
+                onMouseOut={(e) => {
+                  e.currentTarget.style.transform = 'translateY(0)';
+                  e.currentTarget.style.boxShadow = '0 8px 20px rgba(255, 215, 0, 0.3)';
+                }}
+              >
+                ENTENDIDO, GRACIAS
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <BiometricModal
         isOpen={showBiometricModal}
         onClose={() => {

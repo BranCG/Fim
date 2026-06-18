@@ -588,6 +588,7 @@ router.post('/gift-free-days', async (req: Request, res: Response) => {
         where: { id: d.id },
         data: {
           membershipExpiresAt: newExpiresAt,
+          giftDaysPending: { increment: daysNum },
           ...(shouldSetPaid ? { membershipPaid: true } : {})
         }
       });

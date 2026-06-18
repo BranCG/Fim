@@ -94,6 +94,7 @@ model Driver {
   ratings             Rating[]  @relation("DriverRatings")
   trips               Trip[]    @relation("DriverTrips")
   fcmToken            String?   @map("token_fcm")
+  giftDaysPending     Int       @default(0) @map("dias_regalo_pendientes")
 
   @@map("conductores")
 }
