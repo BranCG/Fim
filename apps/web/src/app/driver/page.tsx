@@ -243,6 +243,8 @@ export default function DriverPage() {
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [showGiftModal, setShowGiftModal] = useState(false);
   const [giftDaysAmount, setGiftDaysAmount] = useState(0);
+  const [showNotificationsModal, setShowNotificationsModal] = useState(false);
+  const [notifications, setNotifications] = useState<any[]>([]);
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmNewPassword, setConfirmNewPassword] = useState('');
@@ -646,6 +648,19 @@ export default function DriverPage() {
       } catch (err) {
         console.error("Failed to play sound effect:", err);
       }
+
+      // Add to local notifications list
+      const newNotif = {
+        id: Date.now().toString() + '_' + Math.random().toString(36).substr(2, 9),
+        text: `🎁 Regalo FIM: Se te han regalado ${pendingDays} días de Free Pass, premiando tu compromiso con FIM. ¡Maneje con cuidado jefe!`,
+        date: new Date().toISOString(),
+        read: false
+      };
+      setNotifications(prev => {
+        const updated = [newNotif, ...prev];
+        localStorage.setItem(`fim_driver_notifications_${driver.id}`, JSON.stringify(updated));
+        return updated;
+      });
       
       // Update local state immediately to avoid double calls
       setDriver(prev => prev ? { ...prev, giftDaysPending: 0 } : null);
@@ -657,6 +672,19 @@ export default function DriverPage() {
         });
     }
   }, [driver, showGiftModal]);
+
+  useEffect(() => {
+    if (driver?.id) {
+      const saved = localStorage.getItem(`fim_driver_notifications_${driver.id}`);
+      if (saved) {
+        try {
+          setNotifications(JSON.parse(saved));
+        } catch (e) {
+          console.error("Error parsing notifications:", e);
+        }
+      }
+    }
+  }, [driver?.id]);
 
   // GPS tracking
   useEffect(() => {
@@ -1120,6 +1148,22 @@ export default function DriverPage() {
     return expDate.toLocaleDateString('es-CL', { day: 'numeric', month: 'long', year: 'numeric' });
   };
 
+  const getRemainingDaysForModal = () => {
+    if (driver?.isTrial) {
+      return getRemainingFreePassDays();
+    }
+    return giftDaysAmount;
+  };
+
+  const markAllNotificationsAsRead = () => {
+    if (!driver?.id) return;
+    setNotifications(prev => {
+      const updated = prev.map((n: any) => ({ ...n, read: true }));
+      localStorage.setItem(`fim_driver_notifications_${driver.id}`, JSON.stringify(updated));
+      return updated;
+    });
+  };
+
   const getRemainingFreePassDays = () => {
     if (!driver) return 0;
     if (driver.isTrial && driver.membershipExpiresAt) {
@@ -1510,6 +1554,52 @@ export default function DriverPage() {
           </div>
         </div>
         <div className="header-actions" style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+          {/* Campanita de Notificaciones Amarilla */}
+          <div style={{ position: 'relative' }}>
+            <button
+              onClick={() => setShowNotificationsModal(true)}
+              style={{
+                background: 'rgba(255, 255, 255, 0.04)',
+                border: '1px solid var(--border)',
+                borderRadius: '50%',
+                width: '40px',
+                height: '40px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                cursor: 'pointer',
+                transition: 'all 0.25s ease',
+                position: 'relative'
+              }}
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#FFD700" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ width: '20px', height: '20px' }}>
+                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+                <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+              </svg>
+              {notifications.filter((n: any) => !n.read).length > 0 && (
+                <span style={{
+                  position: 'absolute',
+                  top: '-2px',
+                  right: '-2px',
+                  background: '#FF3B30',
+                  color: 'white',
+                  borderRadius: '50%',
+                  width: '18px',
+                  height: '18px',
+                  fontSize: '0.65rem',
+                  fontWeight: 'bold',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  border: '1.5px solid #0D0D15',
+                  boxShadow: '0 2px 5px rgba(0,0,0,0.3)'
+                }}>
+                  {notifications.filter((n: any) => !n.read).length}
+                </span>
+              )}
+            </button>
+          </div>
+
           <div style={{ position: 'relative' }}>
             {/* Hamburger button */}
             <button
@@ -3794,11 +3884,27 @@ export default function DriverPage() {
                 fontSize: '1rem',
                 color: '#A0A0B0',
                 fontWeight: 600,
-                marginBottom: '24px',
+                marginBottom: '16px',
                 textTransform: 'uppercase',
                 letterSpacing: '1px'
               }}>
                 ¡Beneficio Exclusivo!
+              </div>
+
+              <div style={{
+                fontSize: '1.1rem',
+                color: '#FFD700',
+                fontWeight: 800,
+                marginBottom: '24px',
+                textTransform: 'uppercase',
+                letterSpacing: '1px',
+                background: 'rgba(255, 215, 0, 0.1)',
+                padding: '8px 16px',
+                borderRadius: '12px',
+                display: 'inline-block',
+                border: '1px solid rgba(255, 215, 0, 0.2)'
+              }}>
+                FREE PASS quedan {getRemainingDaysForModal()} días
               </div>
 
               <p style={{
@@ -3841,6 +3947,122 @@ export default function DriverPage() {
                 ENTENDIDO, GRACIAS
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL DE NOTIFICACIONES */}
+      {showNotificationsModal && (
+        <div style={{
+          position: 'fixed',
+          inset: 0,
+          background: 'rgba(9, 9, 15, 0.85)',
+          backdropFilter: 'blur(12px)',
+          zIndex: 11500,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '20px',
+          animation: 'fadeIn 0.25s ease'
+        }}>
+          <div className="card animate-scale-in" style={{
+            width: '100%',
+            maxWidth: '400px',
+            maxHeight: '80vh',
+            overflowY: 'auto',
+            border: '1px solid var(--border)',
+            background: '#0D0D15',
+            padding: '24px',
+            borderRadius: '20px',
+            boxShadow: 'var(--shadow-lg)'
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+              <h3 style={{ fontSize: '1.2rem', fontWeight: 900, color: 'white', margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#FFD700" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ width: '22px', height: '22px' }}>
+                  <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+                  <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+                </svg>
+                Notificaciones
+              </h3>
+              <button 
+                onClick={() => setShowNotificationsModal(false)}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: '#A0A0B0',
+                  cursor: 'pointer',
+                  padding: '4px'
+                }}
+              >
+                <IconX />
+              </button>
+            </div>
+
+            {notifications.length === 0 ? (
+              <div style={{ textAlign: 'center', padding: '40px 20px', color: '#A0A0B0' }}>
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ width: '48px', height: '48px', margin: '0 auto 16px auto', opacity: 0.4 }}>
+                  <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+                  <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+                </svg>
+                <p style={{ margin: 0, fontSize: '0.95rem' }}>No tienes notificaciones por el momento.</p>
+              </div>
+            ) : (
+              <div>
+                <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '12px' }}>
+                  <button 
+                    onClick={markAllNotificationsAsRead}
+                    style={{
+                      background: 'none',
+                      border: 'none',
+                      color: 'var(--accent)',
+                      fontSize: '0.8rem',
+                      fontWeight: 700,
+                      cursor: 'pointer',
+                      padding: 0
+                    }}
+                  >
+                    Marcar todas como leídas
+                  </button>
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                  {notifications.map((n: any) => (
+                    <div key={n.id} style={{
+                      padding: '12px 16px',
+                      background: n.read ? 'rgba(255,255,255,0.02)' : 'rgba(255, 215, 0, 0.04)',
+                      border: `1px solid ${n.read ? 'rgba(255,255,255,0.05)' : 'rgba(255, 215, 0, 0.2)'}`,
+                      borderRadius: '12px',
+                      position: 'relative'
+                    }}>
+                      {!n.read && (
+                        <span style={{
+                          position: 'absolute',
+                          top: '12px',
+                          right: '12px',
+                          width: '8px',
+                          height: '8px',
+                          borderRadius: '50%',
+                          background: '#FFD700'
+                        }} />
+                      )}
+                      <p style={{ margin: '0 0 6px 0', fontSize: '0.95rem', color: 'white', lineHeight: '1.4', paddingRight: '16px' }}>
+                        {n.text}
+                      </p>
+                      <span style={{ fontSize: '0.75rem', color: '#A0A0B0' }}>
+                        {new Date(n.date).toLocaleDateString('es-CL', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+            
+            <button 
+              onClick={() => setShowNotificationsModal(false)}
+              className="btn btn-secondary btn-block"
+              style={{ marginTop: '20px' }}
+            >
+              Cerrar
+            </button>
           </div>
         </div>
       )}

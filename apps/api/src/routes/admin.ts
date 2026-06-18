@@ -572,6 +572,7 @@ router.post('/gift-free-days', async (req: Request, res: Response) => {
     for (const d of drivers) {
       let newExpiresAt: Date;
       let shouldSetPaid = false;
+      let setIsTrial = false;
 
       if (d.membershipExpiresAt && d.membershipExpiresAt > now) {
         // Sumar a la fecha de vencimiento existente
@@ -582,6 +583,7 @@ router.post('/gift-free-days', async (req: Request, res: Response) => {
         newExpiresAt = new Date(now.getTime());
         newExpiresAt.setDate(newExpiresAt.getDate() + daysNum);
         shouldSetPaid = true;
+        setIsTrial = true;
       }
 
       await prisma.driver.update({
@@ -589,7 +591,8 @@ router.post('/gift-free-days', async (req: Request, res: Response) => {
         data: {
           membershipExpiresAt: newExpiresAt,
           giftDaysPending: { increment: daysNum },
-          ...(shouldSetPaid ? { membershipPaid: true } : {})
+          ...(shouldSetPaid ? { membershipPaid: true } : {}),
+          ...(setIsTrial ? { isTrial: true } : {})
         }
       });
 
