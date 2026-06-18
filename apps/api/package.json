@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "scripts": {
     "dev": "ts-node-dev --respawn --transpile-only src/index.ts",
-    "build": "prisma generate --schema=../../packages/database/schema.prisma && tsc",
+    "build": "node build.js",
     "start": "node dist/index.js"
   },
   "dependencies": {
