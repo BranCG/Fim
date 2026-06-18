@@ -1178,7 +1178,7 @@ export default function AdminDashboardPage() {
               </div>
             </div>
           </div>
-        )})}
+        )})()}
 
         {/* ── 5. PASAJEROS ── */}
         {view === 'passengers' && !selectedPassenger && (
