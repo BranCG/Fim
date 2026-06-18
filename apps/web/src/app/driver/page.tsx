@@ -1136,16 +1136,18 @@ export default function DriverPage() {
     if (driver?.mercadoPagoLink) setMpLink(driver.mercadoPagoLink);
   }, [driver]);
 
-  const getFreePassExpirationDate = () => {
-    if (!driver) return '';
-    if (driver.isTrial && driver.membershipExpiresAt) {
-      const expDate = new Date(driver.membershipExpiresAt);
-      return expDate.toLocaleDateString('es-CL', { day: 'numeric', month: 'long', year: 'numeric' });
+  const getFreePassExpirationDateObj = () => {
+    if (!driver) return new Date();
+    if (driver.membershipExpiresAt) {
+      return new Date(driver.membershipExpiresAt);
     }
     const createdAt = new Date(driver.createdAt);
     const freeDays = driver.freePassDays || 0;
-    const expDate = new Date(createdAt.getTime() + freeDays * 24 * 60 * 60 * 1000);
-    return expDate.toLocaleDateString('es-CL', { day: 'numeric', month: 'long', year: 'numeric' });
+    return new Date(createdAt.getTime() + freeDays * 24 * 60 * 60 * 1000);
+  };
+
+  const getFreePassExpirationDate = () => {
+    return getFreePassExpirationDateObj().toLocaleDateString('es-CL', { day: 'numeric', month: 'long', year: 'numeric' });
   };
 
   const getRemainingDaysForModal = () => {
@@ -1182,10 +1184,7 @@ export default function DriverPage() {
 
   const getEstimatedPaidExpirationDate = () => {
     if (!driver) return '';
-    const baseDate = (driver.isTrial && driver.membershipExpiresAt)
-      ? new Date(driver.membershipExpiresAt)
-      : new Date();
-    // Sumar 30 días adicionales
+    const baseDate = getFreePassExpirationDateObj();
     const estDate = new Date(baseDate.getTime() + 30 * 24 * 60 * 60 * 1000);
     return estDate.toLocaleDateString('es-CL', { day: 'numeric', month: 'long', year: 'numeric' });
   };
@@ -3567,7 +3566,7 @@ export default function DriverPage() {
                   }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                       <span style={{ fontSize: '0.9rem' }}>✨</span>
-                      <span>FREE PASS Activo (14 días)</span>
+                      <span>FREE PASS Activo ({getRemainingFreePassDays()} días)</span>
                     </div>
                     <div style={{ marginTop: '4px', color: 'rgba(255,255,255,0.8)', fontWeight: 'normal', fontSize: '0.72rem' }}>
                       Pase libre vence: <strong>{getFreePassExpirationDate()}</strong>

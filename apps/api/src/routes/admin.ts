@@ -562,29 +562,55 @@ router.post('/gift-free-days', async (req: Request, res: Response) => {
       select: {
         id: true,
         membershipExpiresAt: true,
-        fcmToken: true
+        fcmToken: true,
+        createdAt: true,
+        isTrial: true
       }
     });
+
+    const configRows = await prisma.systemConfig.findMany({
+      where: { key: { in: ['free_pass_enabled', 'free_pass_start_date', 'free_pass_end_date', 'free_pass_days'] } }
+    });
+    const config = configRows.reduce((acc: any, curr: any) => ({ ...acc, [curr.key]: curr.value }), {});
 
     const now = new Date();
     let updatedCount = 0;
 
     for (const d of drivers) {
-      let newExpiresAt: Date;
-      let shouldSetPaid = false;
-      let setIsTrial = false;
+      let baseExpiresDate = now;
+      let isCurrentlyActive = false;
 
+      // 1. Verificar si tiene una membresía/prueba activa en el futuro en BD
       if (d.membershipExpiresAt && d.membershipExpiresAt > now) {
-        // Sumar a la fecha de vencimiento existente
-        newExpiresAt = new Date(d.membershipExpiresAt.getTime());
-        newExpiresAt.setDate(newExpiresAt.getDate() + daysNum);
-      } else {
-        // Sumar a la fecha actual y activar la membresía
-        newExpiresAt = new Date(now.getTime());
-        newExpiresAt.setDate(newExpiresAt.getDate() + daysNum);
-        shouldSetPaid = true;
-        setIsTrial = true;
+        baseExpiresDate = d.membershipExpiresAt;
+        isCurrentlyActive = true;
       }
+
+      // 2. Verificar si está en promoción de lanzamiento (cálculo dinámico)
+      if (config.free_pass_enabled === 'true') {
+        const startDate = new Date(config.free_pass_start_date);
+        startDate.setHours(0, 0, 0, 0);
+        const endDate = new Date(config.free_pass_end_date);
+        endDate.setHours(23, 59, 59, 999);
+        const freeDays = parseInt(config.free_pass_days || '0', 10);
+
+        const driverCreatedAt = new Date(d.createdAt);
+        if (driverCreatedAt >= startDate && driverCreatedAt <= endDate) {
+          const promoExpiresAt = new Date(driverCreatedAt.getTime() + freeDays * 24 * 60 * 60 * 1000);
+          if (promoExpiresAt > now) {
+            isCurrentlyActive = true;
+            if (promoExpiresAt > baseExpiresDate) {
+              baseExpiresDate = promoExpiresAt;
+            }
+          }
+        }
+      }
+
+      const newExpiresAt = new Date(baseExpiresDate.getTime());
+      newExpiresAt.setDate(newExpiresAt.getDate() + daysNum);
+
+      const shouldSetPaid = !isCurrentlyActive;
+      const setIsTrial = !d.isTrial; // Si no está marcado como prueba, marcarlo para activar el Free Pass
 
       await prisma.driver.update({
         where: { id: d.id },
