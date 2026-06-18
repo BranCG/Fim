@@ -47,8 +47,6 @@ router.post('/passenger/register', async (req: Request, res: Response) => {
     }
 
     const passwordHash = await bcrypt.hash(password, 12);
-    const code = Math.floor(100000 + Math.random() * 900000).toString();
-
     const user = await prisma.user.create({
       data: {
         email,
@@ -63,18 +61,21 @@ router.post('/passenger/register', async (req: Request, res: Response) => {
         selfieUrl,
         backgroundDocUrl,
         role: 'passenger',
-        emailVerified: false,
-        emailCode: code,
+        emailVerified: true,
+        emailCode: null,
       },
     });
 
-    await sendVerificationEmail(email, code);
+    const tokens = generateTokens({
+      id: user.id,
+      role: 'passenger',
+      email: user.email,
+    });
 
     return res.status(201).json({
-      status: 'verification_pending',
-      email: user.email,
-      role: 'passenger',
-      message: 'Código de verificación enviado a tu correo'
+      message: 'Registro exitoso',
+      user: { id: user.id, name: user.name, email: user.email, role: user.role, isVerified: user.isVerified },
+      ...tokens,
     });
   } catch (err) {
     console.error(err);
@@ -98,11 +99,9 @@ router.post('/passenger/login', async (req: Request, res: Response) => {
     }
 
     if (!user.emailVerified) {
-      return res.json({
-        status: 'verification_pending',
-        email: user.email,
-        role: 'passenger',
-        message: 'Por favor verifica tu correo electrónico'
+      await prisma.user.update({
+        where: { id: user.id },
+        data: { emailVerified: true, emailCode: null }
       });
     }
 
@@ -160,8 +159,6 @@ router.post('/driver/register', async (req: Request, res: Response) => {
     }
 
     const passwordHash = await bcrypt.hash(password, 12);
-    const code = Math.floor(100000 + Math.random() * 900000).toString();
-
     const driver = await prisma.driver.create({
       data: {
         email, phone, name, passwordHash,
@@ -175,18 +172,28 @@ router.post('/driver/register', async (req: Request, res: Response) => {
         membershipPlan,
         membershipGoal: membershipPlan === 'PROGRESSIVE' ? 120000 : 100000,
         status: 'pending',
-        emailVerified: false,
-        emailCode: code,
+        emailVerified: true,
+        emailCode: null,
       },
     });
 
-    await sendVerificationEmail(email, code);
+    const tokens = generateTokens({
+      id: driver.id,
+      role: 'driver',
+      email: driver.email,
+    });
 
     return res.status(201).json({
-      status: 'verification_pending',
-      email: driver.email,
-      role: 'driver',
-      message: 'Código de verificación enviado a tu correo'
+      message: 'Registro exitoso',
+      driver: {
+        id: driver.id,
+        name: driver.name,
+        email: driver.email,
+        status: driver.status,
+        membershipPaid: driver.membershipPaid,
+        walletBalance: driver.walletBalance,
+      },
+      ...tokens,
     });
   } catch (err) {
     console.error(err);
@@ -210,11 +217,9 @@ router.post('/driver/login', async (req: Request, res: Response) => {
     }
 
     if (!driver.emailVerified) {
-      return res.json({
-        status: 'verification_pending',
-        email: driver.email,
-        role: 'driver',
-        message: 'Por favor verifica tu correo electrónico'
+      await prisma.driver.update({
+        where: { id: driver.id },
+        data: { emailVerified: true, emailCode: null }
       });
     }
 

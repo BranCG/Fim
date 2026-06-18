@@ -716,7 +716,7 @@ export default function DashboardPage() {
                     selectedDriver.membershipPlan === 'BLACK' ? '🖤 BLACK — $150.000/mes' :
                       selectedDriver.membershipPlan === 'COMFORT' ? '🟡 COMFORT — $20.000/día' :
                         '🟢 FLEX — $60.000/fin de semana'],
-                  ['Membresía', selectedDriver.membershipPaid ? '✅ Pagada' : '❌ Sin pagar'],
+                  ['Membresía', selectedDriver.isTrial ? '🎁 Prueba (Pase Libre)' : (selectedDriver.membershipPaid ? '✅ Pagada' : '❌ Sin pagar')],
                   ['Rating', selectedDriver.totalRating > 0 ? `⭐ ${selectedDriver.totalRating.toFixed(1)}` : 'Nuevo'],
                   ['Viajes', selectedDriver.totalTrips],
                 ].map(([k, v]) => (
@@ -726,7 +726,18 @@ export default function DashboardPage() {
                   </div>
                 ))}
                 {/* Info de Membresía del Conductor */}
-                {selectedDriver.membershipPlan === 'COMFORT' && (
+                {selectedDriver.isTrial && (
+                  <div style={{ marginTop: '16px', background: 'rgba(212,175,55,0.05)', padding: '12px', borderRadius: '8px', border: '1px solid rgba(212,175,55,0.3)' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem' }}>
+                      <span style={{ color: 'var(--text-muted)' }}>🎁 Vencimiento Free Pass</span>
+                      <span style={{ fontWeight: 700, color: '#D4AF37' }}>
+                        {selectedDriver.membershipExpiresAt ? new Date(selectedDriver.membershipExpiresAt).toLocaleDateString('es-CL') : 'Sin fecha'}
+                      </span>
+                    </div>
+                  </div>
+                )}
+
+                {!selectedDriver.isTrial && selectedDriver.membershipPlan === 'COMFORT' && (
                   <div style={{ marginTop: '16px', background: 'rgba(96,165,250,0.05)', padding: '12px', borderRadius: '8px', border: '1px solid rgba(96,165,250,0.2)' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', marginBottom: '6px' }}>
                       <span style={{ color: 'var(--text-muted)' }}>Deuda Acumulada COMFORT</span>
@@ -738,7 +749,7 @@ export default function DashboardPage() {
                   </div>
                 )}
 
-                {(selectedDriver.membershipPlan === 'BLACK' || selectedDriver.membershipPlan === 'FLEX') && (
+                {!selectedDriver.isTrial && (selectedDriver.membershipPlan === 'BLACK' || selectedDriver.membershipPlan === 'FLEX') && (
                   <div style={{ marginTop: '16px', background: 'rgba(0,229,160,0.05)', padding: '12px', borderRadius: '8px', border: '1px solid var(--border-accent)' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem' }}>
                       <span style={{ color: 'var(--text-muted)' }}>Vencimiento del Acceso</span>

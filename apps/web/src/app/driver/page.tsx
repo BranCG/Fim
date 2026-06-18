@@ -1058,6 +1058,10 @@ export default function DriverPage() {
 
   const getFreePassExpirationDate = () => {
     if (!driver) return '';
+    if (driver.isTrial && driver.membershipExpiresAt) {
+      const expDate = new Date(driver.membershipExpiresAt);
+      return expDate.toLocaleDateString('es-CL', { day: 'numeric', month: 'long', year: 'numeric' });
+    }
     const createdAt = new Date(driver.createdAt);
     const freeDays = driver.freePassDays || 0;
     const expDate = new Date(createdAt.getTime() + freeDays * 24 * 60 * 60 * 1000);
@@ -1066,6 +1070,12 @@ export default function DriverPage() {
 
   const getRemainingFreePassDays = () => {
     if (!driver) return 0;
+    if (driver.isTrial && driver.membershipExpiresAt) {
+      const expDate = new Date(driver.membershipExpiresAt);
+      const diffMs = expDate.getTime() - new Date().getTime();
+      const diffDays = Math.ceil(diffMs / (24 * 60 * 60 * 1000));
+      return diffDays > 0 ? diffDays : 0;
+    }
     const createdAt = new Date(driver.createdAt);
     const freeDays = driver.freePassDays || 0;
     const expDate = new Date(createdAt.getTime() + freeDays * 24 * 60 * 60 * 1000);

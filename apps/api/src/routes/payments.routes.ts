@@ -95,12 +95,15 @@ router.post('/membership-webhook', async (req, res) => {
               });
               console.log(`✅ COMFORT: Conductor ${driverId} pagó cuota diaria vía Mercado Pago. Deuda restante: $${newDebt}`);
             } else {
-              let expiresAt = new Date(now);
+              const baseDate = (driver.isTrial && driver.membershipExpiresAt && driver.membershipExpiresAt > now)
+                ? new Date(driver.membershipExpiresAt)
+                : now;
+              let expiresAt = new Date(baseDate);
               if (plan === 'BLACK') {
                 expiresAt.setMonth(expiresAt.getMonth() + 1);
               } else if (plan === 'FLEX') {
                 // Expira el próximo lunes (fin del fin de semana)
-                const daysUntilMonday = (8 - now.getDay()) % 7 || 7;
+                const daysUntilMonday = (8 - baseDate.getDay()) % 7 || 7;
                 expiresAt.setDate(expiresAt.getDate() + daysUntilMonday);
               }
 
@@ -110,6 +113,7 @@ router.post('/membership-webhook', async (req, res) => {
                   membershipPaid: true,
                   membershipDate: now,
                   membershipExpiresAt: expiresAt,
+                  isTrial: false, // Terminar periodo de prueba al pagar
                   status: newStatus
                 }
               });
@@ -132,14 +136,27 @@ router.post('/membership/simulate', async (req, res) => {
     const { driverId, plan } = req.body;
     if (!driverId || !plan) return res.status(400).json({ error: 'Faltan datos' });
 
+    const driver = await prisma.driver.findUnique({ where: { id: driverId } });
+    if (!driver) return res.status(404).json({ error: 'Conductor no encontrado' });
+
     const now = new Date();
-    let expiresAt = new Date(now);
+    const baseDate = (driver.isTrial && driver.membershipExpiresAt && driver.membershipExpiresAt > now)
+      ? new Date(driver.membershipExpiresAt)
+      : now;
+    let expiresAt = new Date(baseDate);
     if (plan === 'BLACK') expiresAt.setMonth(expiresAt.getMonth() + 1);
     else if (plan === 'FLEX') expiresAt.setDate(expiresAt.getDate() + 7);
 
     await prisma.driver.update({
       where: { id: driverId },
-      data: { membershipPaid: true, membershipDate: now, membershipExpiresAt: expiresAt, membershipPlan: plan, status: 'active' }
+      data: { 
+        membershipPaid: true, 
+        membershipDate: now, 
+        membershipExpiresAt: expiresAt, 
+        membershipPlan: plan, 
+        isTrial: false, // Terminar periodo de prueba al pagar
+        status: 'active' 
+      }
     });
 
     res.json({ success: true, message: `Membresía ${plan} simulada hasta ${expiresAt.toLocaleDateString('es-CL')}` });
@@ -219,16 +236,20 @@ router.post('/webhook', async (req, res) => {
         });
 
         if (driver) {
-          // Calculamos la fecha de expiración (1 mes desde hoy)
-          const expiresAt = new Date();
+          const now = new Date();
+          const baseDate = (driver.isTrial && driver.membershipExpiresAt && driver.membershipExpiresAt > now)
+            ? new Date(driver.membershipExpiresAt)
+            : now;
+          const expiresAt = new Date(baseDate);
           expiresAt.setMonth(expiresAt.getMonth() + 1);
 
           await prisma.driver.update({
             where: { id: driver.id },
             data: {
               membershipPaid: true,
-              membershipDate: new Date(),
+              membershipDate: now,
               membershipExpiresAt: expiresAt,
+              isTrial: false, // Terminar periodo de prueba al pagar
               status: 'active' // ¡Activar al conductor!
             }
           });
@@ -251,15 +272,23 @@ router.post('/simulate-subscription', async (req, res) => {
     const { driverId } = req.body;
     if (!driverId) return res.status(400).json({ error: 'Falta driverId' });
 
-    const expiresAt = new Date();
+    const driver = await prisma.driver.findUnique({ where: { id: driverId } });
+    if (!driver) return res.status(404).json({ error: 'Conductor no encontrado' });
+
+    const now = new Date();
+    const baseDate = (driver.isTrial && driver.membershipExpiresAt && driver.membershipExpiresAt > now)
+      ? new Date(driver.membershipExpiresAt)
+      : now;
+    const expiresAt = new Date(baseDate);
     expiresAt.setMonth(expiresAt.getMonth() + 1);
 
     await prisma.driver.update({
       where: { id: driverId },
       data: {
         membershipPaid: true,
-        membershipDate: new Date(),
+        membershipDate: now,
         membershipExpiresAt: expiresAt,
+        isTrial: false, // Terminar periodo de prueba al pagar
         status: 'active'
       }
     });

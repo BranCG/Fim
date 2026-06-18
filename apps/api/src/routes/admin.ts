@@ -125,13 +125,20 @@ router.post('/drivers/:id/approve', async (req: Request, res: Response) => {
     const driver = await prisma.driver.findUnique({ where: { id: req.params.id } });
     if (!driver) return res.status(404).json({ error: 'Conductor no encontrado' });
 
-    const newStatus = driver.membershipPaid ? 'active' : 'approved';
+    const trialExpiration = new Date();
+    trialExpiration.setDate(trialExpiration.getDate() + 14);
 
     const updated = await prisma.driver.update({
       where: { id: req.params.id },
-      data: { status: newStatus, adminNotes: null },
+      data: {
+        status: 'active', // Activar inmediatamente
+        adminNotes: null,
+        isTrial: true, // Habilitar Free Pass
+        membershipExpiresAt: trialExpiration,
+        membershipPaid: false,
+      },
     });
-    return res.json({ message: `Conductor aprobado. Estado: ${newStatus}`, driver: updated });
+    return res.json({ message: 'Conductor aprobado y activado con 14 días de Free Pass', driver: updated });
   } catch (err) {
     return res.status(500).json({ error: 'Error interno' });
   }
@@ -166,16 +173,20 @@ router.post('/drivers/:id/membership-paid', async (req: Request, res: Response) 
     let basePrice = 0;
     let membershipGoal = 0;
 
+    const baseDate = (driver.isTrial && driver.membershipExpiresAt && driver.membershipExpiresAt > now)
+      ? new Date(driver.membershipExpiresAt)
+      : now;
+
     if (driver.membershipPlan === 'BLACK') {
       basePrice = 150000;
       membershipGoal = 150;
-      const expires = new Date();
+      const expires = new Date(baseDate);
       expires.setDate(expires.getDate() + 30);
       membershipExpiresAt = expires;
     } else if (driver.membershipPlan === 'FLEX') {
       basePrice = 60000;
       membershipGoal = 40;
-      const expires = new Date();
+      const expires = new Date(baseDate);
       const daysUntilMonday = (8 - expires.getDay()) % 7 || 7;
       expires.setDate(expires.getDate() + daysUntilMonday);
       expires.setHours(7, 0, 0, 0); // Lunes a las 7 AM

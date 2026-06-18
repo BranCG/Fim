@@ -54,8 +54,9 @@ router.get('/me', requireAuth, requireRole('driver'), async (req: Request, res: 
     }
 
     const isTrialActive = !!(driver.isTrial && driver.membershipExpiresAt && new Date(driver.membershipExpiresAt) > new Date());
+    const effectivePromoActive = isPromoActive || isTrialActive;
 
-    return res.json({ driver: { ...driver, isPromoActive, isTrialActive, freePassDays } });
+    return res.json({ driver: { ...driver, isPromoActive: effectivePromoActive, isTrialActive, freePassDays } });
   } catch (err) {
     return res.status(500).json({ error: 'Error interno' });
   }
@@ -264,12 +265,19 @@ router.post('/comfort-accrue-debt', async (req: Request, res: Response) => {
       return res.status(403).json({ error: 'No autorizado' });
     }
 
-    // Encontrar todos los conductores COMFORT activos
+    // Encontrar todos los conductores COMFORT activos que no estén en su periodo de prueba
+    const now = new Date();
     const comfortDrivers = await prisma.driver.findMany({
-      where: { membershipPlan: 'COMFORT', status: 'active' }
+      where: { 
+        membershipPlan: 'COMFORT', 
+        status: 'active',
+        OR: [
+          { isTrial: false },
+          { membershipExpiresAt: { lt: now } }
+        ]
+      }
     });
 
-    const now = new Date();
     const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
 
     let updated = 0;
