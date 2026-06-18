@@ -545,5 +545,81 @@ router.post('/drivers/:id/adjust-membership', async (req: Request, res: Response
   }
 });
 
+// ─── REGALO MASIVO DE DÍAS DE MEMBRESÍA (FREE PASS FIM) ───────────────────
+router.post('/gift-free-days', async (req: Request, res: Response) => {
+  try {
+    const { days } = req.body;
+    const daysNum = Math.floor(Number(days));
+    if (isNaN(daysNum) || daysNum <= 0) {
+      return res.status(400).json({ error: 'La cantidad de días debe ser un número entero positivo.' });
+    }
+
+    // Buscar todos los conductores con estado 'active' o 'approved'
+    const drivers = await prisma.driver.findMany({
+      where: {
+        status: { in: ['active', 'approved'] }
+      },
+      select: {
+        id: true,
+        membershipExpiresAt: true,
+        fcmToken: true
+      }
+    });
+
+    const now = new Date();
+    let updatedCount = 0;
+
+    for (const d of drivers) {
+      let newExpiresAt: Date;
+      let shouldSetPaid = false;
+
+      if (d.membershipExpiresAt && d.membershipExpiresAt > now) {
+        // Sumar a la fecha de vencimiento existente
+        newExpiresAt = new Date(d.membershipExpiresAt.getTime());
+        newExpiresAt.setDate(newExpiresAt.getDate() + daysNum);
+      } else {
+        // Sumar a la fecha actual y activar la membresía
+        newExpiresAt = new Date(now.getTime());
+        newExpiresAt.setDate(newExpiresAt.getDate() + daysNum);
+        shouldSetPaid = true;
+      }
+
+      await prisma.driver.update({
+        where: { id: d.id },
+        data: {
+          membershipExpiresAt: newExpiresAt,
+          ...(shouldSetPaid ? { membershipPaid: true } : {})
+        }
+      });
+
+      updatedCount++;
+
+      // Enviar notificación push si tienen token
+      if (d.fcmToken) {
+        try {
+          const { sendPushNotification } = require('../utils/firebase');
+          await sendPushNotification(
+            d.fcmToken,
+            "🎁 ¡Días de Regalo en Fim!",
+            `Te hemos obsequiado ${daysNum} días de membresía gratis. Tu fecha de expiración se ha extendido al ${newExpiresAt.toLocaleDateString('es-CL', { timeZone: 'America/Santiago' })}.`,
+            { type: 'gift_days_applied', days: String(daysNum) }
+          );
+        } catch (pushErr) {
+          console.error(`Error al enviar push a conductor ${d.id}:`, pushErr);
+        }
+      }
+    }
+
+    return res.json({
+      message: `Se han otorgado ${daysNum} días de regalo con éxito a ${updatedCount} conductores.`,
+      updatedCount
+    });
+  } catch (err) {
+    console.error('Error al otorgar días de regalo masivos:', err);
+    return res.status(500).json({ error: 'Error al otorgar días de regalo masivos.' });
+  }
+});
+
 export default router;
+
 

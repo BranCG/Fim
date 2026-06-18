@@ -1874,6 +1874,12 @@ export default function PassengerPage() {
       {status === 'confirm' && (
         <div className="bottom-sheet animate-slide-up" style={bottomSheetStyle()}>
           <BottomSheetHandle />
+          {error && (
+            <div className="alert alert-error" style={{ marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.85rem' }}>
+              <span style={{ fontSize: '1.1rem' }}>⚠️</span>
+              <div style={{ flex: 1, textAlign: 'left', fontWeight: 600 }}>{error}</div>
+            </div>
+          )}
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '20px' }}>
             <div style={{ flex: 1 }}>
               <h3 style={{ fontWeight: 900, marginBottom: '4px' }}>Detalle del viaje</h3>

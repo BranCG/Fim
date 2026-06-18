@@ -30,7 +30,7 @@ interface Driver {
   trips?: any[];
 }
 
-type View = 'dashboard' | 'pending' | 'all_drivers' | 'driver_detail' | 'revenue_analysis' | 'passengers' | 'passenger_detail';
+type View = 'dashboard' | 'pending' | 'all_drivers' | 'driver_detail' | 'revenue_analysis' | 'passengers' | 'passenger_detail' | 'settings';
 
 function formatCLP(n: number) {
   return new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP', minimumFractionDigits: 0 }).format(n);
@@ -73,6 +73,10 @@ export default function DashboardPage() {
   const [imgModal, setImgModal] = useState<string | null>(null);
   const [historyPayment, setHistoryPayment] = useState<string>('all');
   const [driverPlanTab, setDriverPlanTab] = useState<'BLACK' | 'COMFORT' | 'FLEX'>('BLACK');
+  const [config, setConfig] = useState<Record<string, string>>({});
+  const [giftDays, setGiftDays] = useState(5);
+  const [gifting, setGifting] = useState(false);
+  const [giftSuccess, setGiftSuccess] = useState('');
 
   // Pasajeros
   interface Passenger {
@@ -146,6 +150,47 @@ export default function DashboardPage() {
     } finally { setLoading(false); }
   }, [revenueFilter]);
 
+  const loadConfig = useCallback(async () => {
+    try {
+      const r = await api.get('/admin/config');
+      setConfig(r.data.config || {});
+    } catch {
+      setActionMsg('❌ Error al cargar configuraciones');
+    }
+  }, []);
+
+  const handleToggleConfig = async (key: string, currentValue: string) => {
+    const newValue = currentValue === 'true' ? 'false' : 'true';
+    setConfig(prev => ({ ...prev, [key]: newValue }));
+    try {
+      await api.post('/admin/config', { key, value: newValue });
+      setActionMsg('✅ Configuración guardada');
+      setTimeout(() => setActionMsg(''), 2000);
+    } catch {
+      setConfig(prev => ({ ...prev, [key]: currentValue }));
+      setActionMsg('❌ Error al guardar configuración');
+      setTimeout(() => setActionMsg(''), 2000);
+    }
+  };
+
+  const handleGiftDays = async () => {
+    if (giftDays <= 0) return;
+    const confirm = window.confirm(`¿Estás seguro de que deseas regalar ${giftDays} días de membresía gratis a TODOS los conductores?`);
+    if (!confirm) return;
+
+    setGifting(true);
+    setGiftSuccess('');
+    try {
+      const res = await api.post('/admin/gift-free-days', { days: giftDays });
+      setGiftSuccess(`✅ ${res.data.message}`);
+      loadStats();
+    } catch (err: any) {
+      setGiftSuccess(`❌ Error: ${err.response?.data?.error || 'No se pudo procesar.'}`);
+    } finally {
+      setGifting(false);
+    }
+  };
+
   useEffect(() => {
     checkAuth();
     loadStats();
@@ -156,7 +201,8 @@ export default function DashboardPage() {
     if (view === 'all_drivers') loadAll();
     if (view === 'revenue_analysis') loadRevenue();
     if (view === 'passengers') loadPassengers();
-  }, [view, loadPending, loadAll, loadRevenue, loadPassengers]);
+    if (view === 'settings') loadConfig();
+  }, [view, loadPending, loadAll, loadRevenue, loadPassengers, loadConfig]);
 
   async function doAction(driverId: string, action: string, reason?: string) {
     setLoading(true); setActionMsg('');
@@ -244,6 +290,7 @@ export default function DashboardPage() {
     { key: 'all_drivers', icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2" /><circle cx="7" cy="17" r="2" /><path d="M9 17h6" /><circle cx="17" cy="17" r="2" /></svg>, label: 'Conductores' },
     { key: 'passengers', icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M23 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" /></svg>, label: 'Pasajeros' },
     { key: 'revenue_analysis', icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="20" x2="12" y2="10" /><line x1="18" y1="20" x2="18" y2="4" /><line x1="6" y1="20" x2="6" y2="16" /></svg>, label: 'Estudios de Mercado' },
+    { key: 'settings', icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" /></svg>, label: 'Configuración' },
   ];
 
   return (
@@ -1186,6 +1233,207 @@ export default function DashboardPage() {
                     )}
                   </tbody>
                 </table>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ── SETTINGS / CONFIGURACIÓN DE COBERTURA Y REGALOS ────────────────────── */}
+        {view === 'settings' && (
+          <div className="animate-in">
+            <div style={{ marginBottom: '24px' }}>
+              <h1 style={{ fontSize: '1.5rem', marginBottom: '4px' }}>⚙️ Configuración del Sistema</h1>
+              <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>Controla la cobertura geográfica del lanzamiento y gestiona los regalos masivos de días.</p>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '24px', marginBottom: '40px' }}>
+              {/* Bloque de Regalo Masivo */}
+              <div className="card">
+                <h3 style={{ fontSize: '1.1rem', marginBottom: '8px', color: 'var(--accent)' }}>🎁 Días de Membresía de Regalo (Free Pass Fim)</h3>
+                <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem', marginBottom: '16px' }}>
+                  Añade días de membresía gratis a todos los conductores con estado <strong>Activo</strong> o <strong>Aprobado</strong> simultáneamente. 
+                  Si un conductor ya tiene su membresía pagada y vigente, su fecha de expiración se extenderá automáticamente por esta cantidad de días. Si está vencido, se le activará desde hoy por esa cantidad de días.
+                </p>
+
+                <div style={{ display: 'flex', gap: '12px', alignItems: 'center', maxWidth: '450px' }}>
+                  <div style={{ width: '120px' }}>
+                    <input
+                      type="number"
+                      min="1"
+                      className="form-input"
+                      value={giftDays}
+                      onChange={e => setGiftDays(Math.max(1, parseInt(e.target.value) || 0))}
+                      disabled={gifting}
+                      style={{ textAlign: 'center' }}
+                    />
+                  </div>
+                  <button
+                    className="btn btn-primary"
+                    onClick={handleGiftDays}
+                    disabled={gifting}
+                    style={{ flex: 1 }}
+                  >
+                    {gifting ? 'Procesando...' : `Obsequiar ${giftDays} Días Gratis`}
+                  </button>
+                </div>
+
+                {giftSuccess && (
+                  <div style={{
+                    marginTop: '16px',
+                    padding: '12px',
+                    borderRadius: 'var(--radius)',
+                    background: giftSuccess.startsWith('❌') ? 'rgba(255, 69, 96, 0.1)' : 'rgba(0, 229, 160, 0.1)',
+                    border: giftSuccess.startsWith('❌') ? '1px solid var(--danger)' : '1px solid var(--success)',
+                    fontSize: '0.875rem',
+                    color: giftSuccess.startsWith('❌') ? 'var(--danger)' : 'var(--success)'
+                  }}>
+                    {giftSuccess}
+                  </div>
+                )}
+              </div>
+
+              {/* Bloque de Cobertura */}
+              <div className="card">
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '12px' }}>
+                  <div>
+                    <h3 style={{ fontSize: '1.1rem', color: 'var(--text-primary)' }}>📍 Cobertura Geográfica de Operación</h3>
+                    <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>Define en qué zonas los pasajeros pueden pedir viajes y los conductores ponerse en línea.</p>
+                  </div>
+                  <div>
+                    <button
+                      className={`btn ${config.zone_enabled_all_chile === 'true' ? 'btn-primary' : 'btn-secondary'}`}
+                      onClick={() => handleToggleConfig('zone_enabled_all_chile', config.zone_enabled_all_chile || 'false')}
+                      style={{ fontSize: '0.85rem', padding: '8px 16px' }}
+                    >
+                      {config.zone_enabled_all_chile === 'true' ? '🌎 Cobertura Nacional Activa (Sin Restricciones)' : '🔒 Restringir Cobertura por Zonas'}
+                    </button>
+                  </div>
+                </div>
+
+                {config.zone_enabled_all_chile === 'true' ? (
+                  <div style={{
+                    padding: '20px',
+                    textAlign: 'center',
+                    background: 'rgba(212,175,55,0.05)',
+                    border: '1.5px dashed var(--accent)',
+                    borderRadius: 'var(--radius-lg)',
+                    color: 'var(--accent)',
+                    fontWeight: 600,
+                    fontSize: '0.95rem'
+                  }}>
+                    ✨ Fim está operando actualmente a NIVEL NACIONAL en todo Chile sin restricciones de geocerca.
+                  </div>
+                ) : (
+                  <div>
+                    {/* Secciones de Zonas */}
+                    <div style={{ marginBottom: '24px' }}>
+                      <h4 style={{ fontSize: '0.95rem', color: 'var(--accent)', marginBottom: '12px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                        🏙️ REGIÓN METROPOLITANA (MACRO-ZONAS)
+                      </h4>
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '12px' }}>
+                        {[
+                          { id: 'rm_centro_oriente', name: 'Centro-Oriente', desc: 'Santiago Centro, Providencia, Las Condes, Vitacura, Ñuñoa, La Reina, Macul.' },
+                          { id: 'rm_sur', name: 'Sur', desc: 'San Bernardo, Puente Alto, La Cisterna, San Miguel, El Bosque, La Pintana.' },
+                          { id: 'rm_poniente', name: 'Poniente', desc: 'Maipú, Pudahuel, Cerrillos, Estación Central, Lo Prado.' },
+                          { id: 'rm_norte', name: 'Norte', desc: 'Colina (Chicureo), Huechuraba, Quilicura, Conchalí, Recoleta.' },
+                        ].map(z => {
+                          const isEnabled = config[`zone_enabled_${z.id}`] === 'true';
+                          return (
+                            <div
+                              key={z.id}
+                              onClick={() => handleToggleConfig(`zone_enabled_${z.id}`, config[`zone_enabled_${z.id}`] || 'false')}
+                              style={{
+                                padding: '14px',
+                                background: isEnabled ? 'rgba(0, 229, 160, 0.04)' : 'rgba(255,255,255,0.01)',
+                                border: isEnabled ? '1.5px solid var(--success)' : '1.5px solid var(--border)',
+                                borderRadius: 'var(--radius)',
+                                cursor: 'pointer',
+                                transition: 'var(--transition)'
+                              }}
+                              onMouseEnter={e => {
+                                if (!isEnabled) e.currentTarget.style.borderColor = 'var(--text-muted)';
+                              }}
+                              onMouseLeave={e => {
+                                if (!isEnabled) e.currentTarget.style.borderColor = 'var(--border)';
+                              }}
+                            >
+                              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                                <strong style={{ fontSize: '0.9rem', color: isEnabled ? 'var(--success)' : 'var(--text-primary)' }}>{z.name}</strong>
+                                <span style={{
+                                  width: '10px',
+                                  height: '10px',
+                                  borderRadius: '50%',
+                                  background: isEnabled ? 'var(--success)' : '#444'
+                                }}></span>
+                              </div>
+                              <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', lineHeight: '1.3' }}>{z.desc}</p>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    <hr style={{ border: 'none', borderBottom: '1px solid var(--border)', margin: '24px 0' }} />
+
+                    <div>
+                      <h4 style={{ fontSize: '0.95rem', color: 'var(--info)', marginBottom: '12px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                        🇨🇱 OTRAS REGIONES DE CHILE (REGIONES COMPLETAS)
+                      </h4>
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px' }}>
+                        {[
+                          { id: 'valparaiso', name: 'Región de Valparaíso' },
+                          { id: 'biobio', name: 'Región del Biobío' },
+                          { id: 'coquimbo', name: 'Región de Coquimbo' },
+                          { id: 'arica_y_parinacota', name: 'Región de Arica y Parinacota' },
+                          { id: 'tarapaca', name: 'Región de Tarapacá' },
+                          { id: 'antofagasta', name: 'Región de Antofagasta' },
+                          { id: 'atacama', name: 'Región de Atacama' },
+                          { id: 'ohiggins', name: "Región de O'Higgins" },
+                          { id: 'maule', name: 'Región del Maule' },
+                          { id: 'nuble', name: 'Región de Ñuble' },
+                          { id: 'araucania', name: 'Región de La Araucanía' },
+                          { id: 'los_rios', name: 'Región de Los Ríos' },
+                          { id: 'los_lagos', name: 'Región de Los Lagos' },
+                          { id: 'aysen', name: 'Región de Aysén' },
+                          { id: 'magallanes', name: 'Región de Magallanes' },
+                        ].map(r => {
+                          const isEnabled = config[`zone_enabled_${r.id}`] === 'true';
+                          return (
+                            <div
+                              key={r.id}
+                              onClick={() => handleToggleConfig(`zone_enabled_${r.id}`, config[`zone_enabled_${r.id}`] || 'false')}
+                              style={{
+                                padding: '12px 14px',
+                                background: isEnabled ? 'rgba(79, 195, 247, 0.04)' : 'rgba(255,255,255,0.01)',
+                                border: isEnabled ? '1.5px solid var(--info)' : '1.5px solid var(--border)',
+                                borderRadius: 'var(--radius)',
+                                cursor: 'pointer',
+                                display: 'flex',
+                                justifyContent: 'space-between',
+                                alignItems: 'center',
+                                transition: 'var(--transition)'
+                              }}
+                              onMouseEnter={e => {
+                                if (!isEnabled) e.currentTarget.style.borderColor = 'var(--text-muted)';
+                              }}
+                              onMouseLeave={e => {
+                                if (!isEnabled) e.currentTarget.style.borderColor = 'var(--border)';
+                              }}
+                            >
+                              <span style={{ fontSize: '0.85rem', fontWeight: 600, color: isEnabled ? 'var(--info)' : 'var(--text-secondary)' }}>{r.name}</span>
+                              <span style={{
+                                width: '8px',
+                                height: '8px',
+                                borderRadius: '50%',
+                                background: isEnabled ? 'var(--info)' : '#444'
+                              }}></span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           </div>

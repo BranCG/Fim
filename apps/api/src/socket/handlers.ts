@@ -2,6 +2,7 @@ import { Server, Socket } from 'socket.io';
 import prisma from '../utils/prisma';
 import { calculateDistance } from '../utils/pricing';
 import { sendPushNotification } from '../utils/firebase';
+import { checkCoordinateInAllowedRegion } from '../utils/location';
 
 // ─── Mapa de conductores online ───────────────────────────────────────────
 // driverId -> { socketId, lat, lng }
@@ -111,6 +112,21 @@ export function setupSocketHandlers(io: Server) {
 
     // ─── CONDUCTOR: se conecta y anuncia su posición ───────────────────────
     socket.on('driver:online', async ({ driverId, lat, lng }: { driverId: string; lat: number; lng: number }) => {
+      // Validar área de cobertura geográfica
+      const locationCheck = await checkCoordinateInAllowedRegion(lat, lng);
+      if (!locationCheck.allowed) {
+        socket.emit('error', {
+          message: `No puedes ponerse en línea fuera de la zona de cobertura. Actualmente operamos en: ${locationCheck.activeZonesText}.`
+        });
+        await prisma.driver.update({
+          where: { id: driverId },
+          data: { isOnline: false, lastLat: lat, lastLng: lng, lastSeen: new Date() },
+        }).catch(console.error);
+        onlineDrivers.delete(driverId);
+        console.log(`[Socket] Conductor ${driverId} desconectado automáticamente por geocerca en (${lat}, ${lng})`);
+        return;
+      }
+
       onlineDrivers.set(driverId, { socketId: socket.id, lat, lng });
       socket.data.driverId = driverId;
       socket.join(`driver:${driverId}`);

@@ -101,6 +101,24 @@ async function main() {
   });
   console.log('✅ Conductor pendiente de prueba:', pending.email);
 
+  // Configuración de Zonas por defecto
+  const defaultZones = [
+    { key: 'zone_enabled_all_chile', value: 'false' },
+    { key: 'zone_enabled_rm_centro_oriente', value: 'true' },
+    { key: 'zone_enabled_rm_sur', value: 'false' },
+    { key: 'zone_enabled_rm_poniente', value: 'false' },
+    { key: 'zone_enabled_rm_norte', value: 'false' }
+  ];
+
+  for (const item of defaultZones) {
+    await prisma.systemConfig.upsert({
+      where: { key: item.key },
+      update: {},
+      create: item
+    });
+  }
+  console.log('✅ Zonas por defecto sembradas.');
+
   console.log('\n🎉 Seed de Producción completado exitosamente!\n');
 }
 

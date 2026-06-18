@@ -2,6 +2,7 @@ import { Router, Request, Response } from 'express';
 import prisma from '../utils/prisma';
 import { requireAuth, requireRole } from '../middleware/auth';
 import { updateDriverLocation } from '../socket/handlers';
+import { checkCoordinateInAllowedRegion } from '../utils/location';
 
 const router = Router();
 
@@ -89,6 +90,15 @@ router.post('/toggle-online', requireAuth, requireRole('driver'), async (req: Re
 
     // ── Validaciones por plan ─────────────────────────────────────────────
     if (isOnline) {
+      // Validar área de cobertura geográfica (últimas coordenadas del conductor)
+      if (driver.lastLat !== null && driver.lastLng !== null) {
+        const locationCheck = await checkCoordinateInAllowedRegion(driver.lastLat, driver.lastLng);
+        if (!locationCheck.allowed) {
+          return res.status(403).json({
+            error: `No puedes ponerte en línea fuera de la zona de cobertura. Actualmente operamos en: ${locationCheck.activeZonesText}.`
+          });
+        }
+      }
       const now = new Date();
       const plan = driver.membershipPlan;
       

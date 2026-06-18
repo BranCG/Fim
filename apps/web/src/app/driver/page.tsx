@@ -1001,6 +1001,22 @@ export default function DriverPage() {
       }
     }
 
+    if (newStatus) {
+      const lat = posRef.current.lat;
+      const lng = posRef.current.lng;
+      if (lat === 0 && lng === 0) {
+        showCustomAlert('No se ha podido detectar tu ubicación GPS. Habilita tu ubicación para continuar.', 'Error de GPS', 'error');
+        setLoading(false);
+        return;
+      }
+      const isInChile = lat >= -56.0 && lat <= -17.5 && lng >= -76.0 && lng <= -66.0;
+      if (!isInChile) {
+        showCustomAlert('Estás fuera del área de servicio (Chile). No es posible ponerse en línea.', 'Fuera de Cobertura', 'warning');
+        setLoading(false);
+        return;
+      }
+    }
+
     try {
       const res = await api.post('/drivers/toggle-online', { isOnline: newStatus });
       setIsOnline(res.data.isOnline);

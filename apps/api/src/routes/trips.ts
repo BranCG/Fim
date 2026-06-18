@@ -3,6 +3,7 @@ import prisma from '../utils/prisma';
 import { requireAuth, requireRole } from '../middleware/auth';
 import { calculateDistance, calculateTripPrice, estimateDuration, roundCLP } from '../utils/pricing';
 import { cancelActiveSearch } from '../socket/handlers';
+import { checkCoordinateInAllowedRegion, getActiveZonesBoundingBox } from '../utils/location';
 
 const router = Router();
 
@@ -24,6 +25,14 @@ router.post('/request', requireAuth, requireRole('passenger'), async (req: Reque
       paymentMethod,
       passengerCount,
     } = req.body;
+
+    // Validar área de cobertura geográfica (Origen)
+    const originCheck = await checkCoordinateInAllowedRegion(Number(originLat), Number(originLng));
+    if (!originCheck.allowed) {
+      return res.status(400).json({
+        error: `Fim no opera en este sector aún. Actualmente cubrimos: ${originCheck.activeZonesText}.`
+      });
+    }
 
     const count = Number(passengerCount) || 1;
     if (count < 1 || count > 4) {
@@ -81,6 +90,14 @@ router.post('/request', requireAuth, requireRole('passenger'), async (req: Reque
 router.post('/estimate', requireAuth, async (req: Request, res: Response) => {
   try {
     const { originLat, originLng, destLat, destLng } = req.body;
+
+    // Validar área de cobertura geográfica (Origen)
+    const originCheck = await checkCoordinateInAllowedRegion(Number(originLat), Number(originLng));
+    if (!originCheck.allowed) {
+      return res.status(400).json({
+        error: `Fim no opera en este sector aún. Actualmente cubrimos: ${originCheck.activeZonesText}.`
+      });
+    }
     const distanceKm = calculateDistance(originLat, originLng, destLat, destLng) * 1.3;
     const durationMin = estimateDuration(distanceKm);
     let estimatedPrice = calculateTripPrice(distanceKm, durationMin);
@@ -361,7 +378,10 @@ router.get('/autocomplete', requireAuth, async (req: Request, res: Response) => 
     if (apiKey) {
       // Usar Google Places Autocomplete API
       let url = `https://maps.googleapis.com/maps/api/place/autocomplete/json?input=${encodeURIComponent(q)}&key=${apiKey}&components=country:cl&language=es`;
-      if (originLat && originLng) {
+      const bbox = await getActiveZonesBoundingBox();
+      if (bbox) {
+        url += `&locationrestriction=rectangle:${bbox.minLat},${bbox.minLng}|${bbox.maxLat},${bbox.maxLng}`;
+      } else if (originLat && originLng) {
         url += `&location=${originLat},${originLng}&radius=20000`; // Sesgar a 20km alrededor del origen
       }
       const response = await fetch(url);
@@ -380,7 +400,10 @@ router.get('/autocomplete', requireAuth, async (req: Request, res: Response) => 
     } else {
       // Fallback a Nominatim (OpenStreetMap)
       let url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(q)}&countrycodes=cl&limit=6&addressdetails=1`;
-      if (originLat && originLng) {
+      const bbox = await getActiveZonesBoundingBox();
+      if (bbox) {
+        url += `&viewbox=${bbox.minLng},${bbox.maxLat},${bbox.maxLng},${bbox.minLat}&bounded=1`;
+      } else if (originLat && originLng) {
         url += `&lat=${originLat}&lon=${originLng}`;
       }
       const response = await fetch(url, {
