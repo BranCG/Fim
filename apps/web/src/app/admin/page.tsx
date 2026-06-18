@@ -263,6 +263,9 @@ export default function AdminDashboardPage() {
 
   // Configuraciones de Sistema
   const [systemConfig, setSystemConfig] = useState<any>({});
+  const [giftDays, setGiftDays] = useState(5);
+  const [gifting, setGifting] = useState(false);
+  const [giftSuccess, setGiftSuccess] = useState('');
 
   // Trazabilidad de Viajes (paginación y expansión)
   const [tripsVisible, setTripsVisible] = useState(10);
@@ -385,6 +388,24 @@ export default function AdminDashboardPage() {
       setLoading(false);
     }
   }, []);
+
+  const handleGiftDays = async () => {
+    if (giftDays <= 0) return;
+    const confirm = window.confirm(`¿Estás seguro de que deseas regalar ${giftDays} días de membresía gratis a TODOS los conductores?`);
+    if (!confirm) return;
+
+    setGifting(true);
+    setGiftSuccess('');
+    try {
+      const res = await api.post('/admin/gift-free-days', { days: giftDays });
+      setGiftSuccess(`✅ ${res.data.message}`);
+      loadStats();
+    } catch (err: any) {
+      setGiftSuccess(`❌ Error: ${err.response?.data?.error || 'No se pudo procesar.'}`);
+    } finally {
+      setGifting(false);
+    }
+  };
 
   const loadSafetyReports = useCallback(async () => {
     try {
@@ -1735,6 +1756,192 @@ export default function AdminDashboardPage() {
                   placeholder="Ej: 10"
                 />
               </div>
+            </div>
+
+            {/* ── Regalo Masivo de Días a Todos los Conductores ── */}
+            <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <h3 style={{ fontSize: '1rem', fontWeight: 800, color: 'var(--accent)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                🎁 Días de Membresía de Regalo (Free Pass Fim)
+              </h3>
+              <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', lineHeight: '1.4' }}>
+                Añade días de membresía gratis a todos los conductores con estado <strong>Activo</strong> o <strong>Aprobado</strong> de forma simultánea. Se extenderá su fecha de vencimiento.
+              </p>
+              <div style={{ display: 'flex', gap: '8px', alignItems: 'center', maxWidth: '300px' }}>
+                <input
+                  type="number"
+                  min="1"
+                  className="form-input"
+                  value={giftDays}
+                  onChange={(e) => setGiftDays(Math.max(1, parseInt(e.target.value) || 0))}
+                  disabled={gifting}
+                  style={{ width: '80px', textAlign: 'center' }}
+                />
+                <button
+                  className="btn btn-primary"
+                  onClick={handleGiftDays}
+                  disabled={gifting}
+                  style={{ flex: 1, padding: '10px 14px', fontSize: '0.8rem' }}
+                >
+                  {gifting ? 'Procesando...' : `Obsequiar ${giftDays} Días`}
+                </button>
+              </div>
+              {giftSuccess && (
+                <div style={{
+                  fontSize: '0.75rem',
+                  padding: '8px',
+                  borderRadius: '6px',
+                  background: giftSuccess.startsWith('❌') ? 'rgba(255, 69, 96, 0.08)' : 'rgba(0, 229, 160, 0.08)',
+                  color: giftSuccess.startsWith('❌') ? 'var(--danger)' : 'var(--success)',
+                  border: giftSuccess.startsWith('❌') ? '1px solid rgba(255, 69, 96, 0.2)' : '1px solid rgba(0, 229, 160, 0.2)'
+                }}>
+                  {giftSuccess}
+                </div>
+              )}
+            </div>
+
+            {/* ── Cobertura Geográfica de Operación ── */}
+            <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
+                <div>
+                  <h3 style={{ fontSize: '1rem', fontWeight: 800, color: 'var(--accent)' }}>
+                    📍 Cobertura Geográfica de Operación
+                  </h3>
+                  <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Define en qué zonas pueden operar pasajeros y conductores.</p>
+                </div>
+                <button
+                  className="btn"
+                  onClick={async () => {
+                    const currentVal = systemConfig.zone_enabled_all_chile || 'false';
+                    const newVal = currentVal === 'true' ? 'false' : 'true';
+                    setSystemConfig({ ...systemConfig, zone_enabled_all_chile: newVal });
+                    await api.post('/admin/config', { key: 'zone_enabled_all_chile', value: newVal });
+                    setActionMsg('Configuración de cobertura nacional guardada');
+                  }}
+                  style={{
+                    padding: '8px 12px',
+                    fontSize: '0.75rem',
+                    background: systemConfig.zone_enabled_all_chile === 'true' ? 'var(--success)' : 'var(--bg-secondary)',
+                    color: systemConfig.zone_enabled_all_chile === 'true' ? '#09090F' : 'var(--text-primary)',
+                    border: '1px solid var(--border)'
+                  }}
+                >
+                  {systemConfig.zone_enabled_all_chile === 'true' ? '🌎 Cobertura Nacional Activa' : '🔒 Restringir por Zonas'}
+                </button>
+              </div>
+
+              {systemConfig.zone_enabled_all_chile === 'true' ? (
+                <div style={{
+                  padding: '12px',
+                  textAlign: 'center',
+                  background: 'rgba(0, 229, 160, 0.05)',
+                  border: '1px dashed var(--success)',
+                  borderRadius: '8px',
+                  color: 'var(--success)',
+                  fontSize: '0.8rem',
+                  fontWeight: 600
+                }}>
+                  Fim está operando a NIVEL NACIONAL en todo Chile sin restricciones de geocerca.
+                </div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                  {/* Macro-zonas RM */}
+                  <div>
+                    <strong style={{ fontSize: '0.75rem', color: 'var(--accent)', letterSpacing: '0.05em' }}>🏙️ REGIÓN METROPOLITANA (MACRO-ZONAS)</strong>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginTop: '8px' }}>
+                      {[
+                        { id: 'rm_centro_oriente', name: 'Centro-Oriente' },
+                        { id: 'rm_sur', name: 'Sector Sur' },
+                        { id: 'rm_poniente', name: 'Sector Poniente' },
+                        { id: 'rm_norte', name: 'Sector Norte' }
+                      ].map(z => {
+                        const isEnabled = systemConfig[`zone_enabled_${z.id}`] === 'true';
+                        return (
+                          <label
+                            key={z.id}
+                            style={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'space-between',
+                              padding: '10px 12px',
+                              background: isEnabled ? 'rgba(0, 229, 160, 0.04)' : 'rgba(255,255,255,0.01)',
+                              border: isEnabled ? '1px solid var(--success)' : '1px solid var(--border)',
+                              borderRadius: '8px',
+                              cursor: 'pointer'
+                            }}
+                          >
+                            <span style={{ fontSize: '0.8rem', fontWeight: 600 }}>{z.name}</span>
+                            <input
+                              type="checkbox"
+                              checked={isEnabled}
+                              onChange={async (e) => {
+                                const val = e.target.checked ? 'true' : 'false';
+                                setSystemConfig({ ...systemConfig, [`zone_enabled_${z.id}`]: val });
+                                await api.post('/admin/config', { key: `zone_enabled_${z.id}`, value: val });
+                                setActionMsg('Zona actualizada');
+                              }}
+                              style={{ width: '16px', height: '16px', accentColor: 'var(--success)' }}
+                            />
+                          </label>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Otras regiones */}
+                  <div>
+                    <strong style={{ fontSize: '0.75rem', color: 'var(--info)', letterSpacing: '0.05em' }}>🇨🇱 OTRAS REGIONES DE CHILE</strong>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginTop: '8px' }}>
+                      {[
+                        { id: 'valparaiso', name: 'Región de Valparaíso' },
+                        { id: 'biobio', name: 'Región del Biobío' },
+                        { id: 'coquimbo', name: 'Región de Coquimbo' },
+                        { id: 'arica_y_parinacota', name: 'Región de Arica' },
+                        { id: 'tarapaca', name: 'Región de Tarapacá' },
+                        { id: 'antofagasta', name: 'Región de Antofagasta' },
+                        { id: 'atacama', name: 'Región de Atacama' },
+                        { id: 'ohiggins', name: "Región de O'Higgins" },
+                        { id: 'maule', name: 'Región del Maule' },
+                        { id: 'nuble', name: 'Región de Ñuble' },
+                        { id: 'araucania', name: 'Región de Araucanía' },
+                        { id: 'los_rios', name: 'Región de Los Ríos' },
+                        { id: 'los_lagos', name: 'Región de Los Lagos' },
+                        { id: 'aysen', name: 'Región de Aysén' },
+                        { id: 'magallanes', name: 'Región de Magallanes' }
+                      ].map(r => {
+                        const isEnabled = systemConfig[`zone_enabled_${r.id}`] === 'true';
+                        return (
+                          <label
+                            key={r.id}
+                            style={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'space-between',
+                              padding: '8px 10px',
+                              background: isEnabled ? 'rgba(79, 195, 247, 0.04)' : 'rgba(255,255,255,0.01)',
+                              border: isEnabled ? '1px solid var(--info)' : '1px solid var(--border)',
+                              borderRadius: '8px',
+                              cursor: 'pointer'
+                            }}
+                          >
+                            <span style={{ fontSize: '0.75rem', fontWeight: 600 }}>{r.name}</span>
+                            <input
+                              type="checkbox"
+                              checked={isEnabled}
+                              onChange={async (e) => {
+                                const val = e.target.checked ? 'true' : 'false';
+                                setSystemConfig({ ...systemConfig, [`zone_enabled_${r.id}`]: val });
+                                await api.post('/admin/config', { key: `zone_enabled_${r.id}`, value: val });
+                                setActionMsg('Región actualizada');
+                              }}
+                              style={{ width: '16px', height: '16px', accentColor: 'var(--info)' }}
+                            />
+                          </label>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
 
           </div>
