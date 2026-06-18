@@ -447,6 +447,9 @@ function RegisterForm() {
     capture?: 'user' | 'environment' | boolean
   ) {
     const isPdf = upload.file?.type === 'application/pdf' || upload.file?.name.toLowerCase().endsWith('.pdf');
+    const isBackgroundDoc = id === 'background-doc';
+    const captureVal = capture === false ? undefined : (capture || 'environment');
+
     return (
       <div className="form-group">
         <label className="form-label">{label}</label>
@@ -484,14 +487,25 @@ function RegisterForm() {
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
               <div style={{ marginBottom: '8px', color: 'var(--text-muted)' }}>
-                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" /><circle cx="12" cy="13" r="4" /></svg>
+                {isBackgroundDoc ? (
+                  <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
+                  </svg>
+                ) : (
+                  <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
+                    <circle cx="12" cy="13" r="4" />
+                  </svg>
+                )}
               </div>
-              <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>Toca para capturar o seleccionar</p>
+              <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>
+                {isBackgroundDoc ? 'Selecciona el archivo' : 'Toca para capturar'}
+              </p>
               {hint && <p style={{ color: 'var(--text-muted)', fontSize: '0.78rem', marginTop: '4px' }}>{hint}</p>}
             </div>
           )}
         </label>
-        <input id={id} type="file" accept={accept} capture={capture} style={{ display: 'none' }} onChange={(e) => handleFileChange(e, setter, id)} />
+        <input id={id} type="file" accept={accept} capture={captureVal} style={{ display: 'none' }} onChange={(e) => handleFileChange(e, setter, id)} />
       </div>
     );
   }
@@ -1062,7 +1076,7 @@ function RegisterForm() {
               {renderUploadArea('Selfie con Cédula', selfie, setSelfie, 'selfie-file')}
               {renderUploadArea('Cédula (Frontal)', idFront, setIdFront, 'id-front')}
               {renderUploadArea('Cédula (Posterior)', idBack, setIdBack, 'id-back')}
-              {renderUploadArea('Certificado de Antecedentes', backgroundDoc, setBackgroundDoc, 'background-doc', undefined, 'image/*,application/pdf', undefined)}
+              {renderUploadArea('Certificado de Antecedentes', backgroundDoc, setBackgroundDoc, 'background-doc', undefined, 'image/*,application/pdf', false)}
               <div style={{
                 background: 'rgba(255, 255, 255, 0.03)',
                 border: '1px solid var(--border)',
