@@ -634,6 +634,34 @@ export default function DriverPage() {
     return () => clearTimeout(timeoutId);
   }, []);
 
+  // Poll driver status in the background every 10 seconds to detect gifted days instantly
+  useEffect(() => {
+    const s = getSession();
+    if (!s) return;
+
+    const intervalId = setInterval(() => {
+      api.get('/drivers/me').then(r => {
+        setDriver(prev => {
+          if (!prev) return r.data.driver;
+          if (
+            prev.giftDaysPending !== r.data.driver.giftDaysPending ||
+            prev.membershipExpiresAt !== r.data.driver.membershipExpiresAt ||
+            prev.membershipPaid !== r.data.driver.membershipPaid ||
+            prev.status !== r.data.driver.status ||
+            prev.isOnline !== r.data.driver.isOnline
+          ) {
+            return r.data.driver;
+          }
+          return prev;
+        });
+      }).catch(err => {
+        console.error('Error in background driver status poll:', err);
+      });
+    }, 10000);
+
+    return () => clearInterval(intervalId);
+  }, []);
+
   useEffect(() => {
     if (driver && driver.giftDaysPending && driver.giftDaysPending > 0 && !showGiftModal) {
       const pendingDays = driver.giftDaysPending;
@@ -652,7 +680,7 @@ export default function DriverPage() {
       // Add to local notifications list
       const newNotif = {
         id: Date.now().toString() + '_' + Math.random().toString(36).substr(2, 9),
-        text: `🎁 Regalo FIM: Se te han regalado ${pendingDays} días de Free Pass, premiando tu compromiso con FIM. ¡Maneje con cuidado jefe!`,
+        text: `Regalo FIM: Se te han regalado ${pendingDays} días de Free Pass, premiando tu compromiso con FIM. ¡Maneje con cuidado jefe!`,
         date: new Date().toISOString(),
         read: false
       };
@@ -1982,7 +2010,9 @@ export default function DriverPage() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '16px' }}>
               <div style={{ background: 'linear-gradient(135deg, rgba(212,175,55,0.08), rgba(212,175,55,0.03))', border: '1px solid rgba(212,175,55,0.25)', borderRadius: '12px', padding: '14px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                  <span style={{ fontSize: '1.3rem' }}>🖤</span>
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" style={{ width: '20px', height: '20px', flexShrink: 0, color: '#D4AF37' }}>
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                  </svg>
                   <div>
                     <div style={{ color: '#D4AF37', fontWeight: 900, fontSize: '0.85rem' }}>Plan BLACK</div>
                     <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.75rem' }}>
@@ -1990,7 +2020,16 @@ export default function DriverPage() {
                         ? driver.membershipExpiresAt
                           ? `Vence: ${new Date(driver.membershipExpiresAt).toLocaleDateString('es-CL')}`
                           : 'Activo ∞'
-                        : '⚠️ Membresía no pagada'}
+                        : (
+                          <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', color: '#EF4444' }}>
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ width: '12px', height: '12px', flexShrink: 0 }}>
+                              <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+                              <line x1="12" y1="9" x2="12" y2="13" />
+                              <line x1="12" y1="17" x2="12.01" y2="17" />
+                            </svg>
+                            Membresía no pagada
+                          </span>
+                        )}
                     </div>
                   </div>
                 </div>
@@ -3565,7 +3604,9 @@ export default function DriverPage() {
                     gap: '4px'
                   }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                      <span style={{ fontSize: '0.9rem' }}>✨</span>
+                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" style={{ width: '13px', height: '13px', flexShrink: 0, color: '#D4AF37' }}>
+                        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+                      </svg>
                       <span>FREE PASS Activo ({getRemainingFreePassDays()} días)</span>
                     </div>
                     <div style={{ marginTop: '4px', color: 'rgba(255,255,255,0.8)', fontWeight: 'normal', fontSize: '0.72rem' }}>
@@ -3591,7 +3632,9 @@ export default function DriverPage() {
                     gap: '4px'
                   }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                      <span style={{ fontSize: '0.9rem' }}>✅</span>
+                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" style={{ width: '13px', height: '13px', flexShrink: 0, color: '#00E5A0' }}>
+                        <polyline points="20 6 9 17 4 12" />
+                      </svg>
                       <span>Membresía Activa</span>
                     </div>
                     <div style={{ marginTop: '4px', color: 'rgba(255,255,255,0.8)', fontWeight: 'normal', fontSize: '0.72rem' }}>
@@ -3891,27 +3934,17 @@ export default function DriverPage() {
               </div>
 
               <h2 style={{
-                fontSize: '2rem',
+                fontSize: '1.5rem',
                 fontWeight: 900,
                 color: '#FFD700',
-                margin: '0 0 8px 0',
-                letterSpacing: '2px',
+                margin: '0 0 16px 0',
+                letterSpacing: '1px',
                 textTransform: 'uppercase',
-                textShadow: '0 2px 10px rgba(255, 215, 0, 0.3)'
+                textShadow: '0 2px 10px rgba(255, 215, 0, 0.3)',
+                lineHeight: '1.3'
               }}>
-                FREE PASS
+                ¡FELICIDADES! GANASTE {giftDaysAmount} DÍAS DE FREE PASS
               </h2>
-              
-              <div style={{
-                fontSize: '1rem',
-                color: '#A0A0B0',
-                fontWeight: 600,
-                marginBottom: '16px',
-                textTransform: 'uppercase',
-                letterSpacing: '1px'
-              }}>
-                ¡Beneficio Exclusivo!
-              </div>
 
               <div style={{
                 fontSize: '1.1rem',
@@ -4047,31 +4080,49 @@ export default function DriverPage() {
                   </button>
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                  {notifications.map((n: any) => (
+                   {notifications.map((n: any) => (
                     <div key={n.id} style={{
                       padding: '12px 16px',
                       background: n.read ? 'rgba(255,255,255,0.02)' : 'rgba(255, 215, 0, 0.04)',
                       border: `1px solid ${n.read ? 'rgba(255,255,255,0.05)' : 'rgba(255, 215, 0, 0.2)'}`,
                       borderRadius: '12px',
-                      position: 'relative'
+                      position: 'relative',
+                      display: 'flex',
+                      gap: '12px',
+                      alignItems: 'flex-start'
                     }}>
-                      {!n.read && (
-                        <span style={{
-                          position: 'absolute',
-                          top: '12px',
-                          right: '12px',
-                          width: '8px',
-                          height: '8px',
-                          borderRadius: '50%',
-                          background: '#FFD700'
-                        }} />
-                      )}
-                      <p style={{ margin: '0 0 6px 0', fontSize: '0.95rem', color: 'white', lineHeight: '1.4', paddingRight: '16px' }}>
-                        {n.text}
-                      </p>
-                      <span style={{ fontSize: '0.75rem', color: '#A0A0B0' }}>
-                        {new Date(n.date).toLocaleDateString('es-CL', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
-                      </span>
+                      <div style={{
+                        marginTop: '2px',
+                        color: n.read ? '#A0A0B0' : '#FFD700',
+                        flexShrink: 0
+                      }}>
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ width: '18px', height: '18px' }}>
+                          <path d="M20 12v10H4V12" />
+                          <path d="M2 7h20v5H2z" />
+                          <path d="M12 22V7" />
+                          <path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z" />
+                          <path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z" />
+                        </svg>
+                      </div>
+                      <div style={{ flex: 1 }}>
+                        {!n.read && (
+                          <span style={{
+                            position: 'absolute',
+                            top: '12px',
+                            right: '12px',
+                            width: '8px',
+                            height: '8px',
+                            borderRadius: '50%',
+                            background: '#FFD700'
+                          }} />
+                        )}
+                        <p style={{ margin: '0 0 6px 0', fontSize: '0.95rem', color: 'white', lineHeight: '1.4', paddingRight: '16px' }}>
+                          {n.text}
+                        </p>
+                        <span style={{ fontSize: '0.75rem', color: '#A0A0B0' }}>
+                          {new Date(n.date).toLocaleDateString('es-CL', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                        </span>
+                      </div>
                     </div>
                   ))}
                 </div>
