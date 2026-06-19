@@ -7,7 +7,7 @@
     "packages/*"
   ],
   "scripts": {
-    "dev": "concurrently \"npm run dev --prefix apps/api\" \"npm run dev --prefix apps/web\" \"npm run dev --prefix apps/admin\"",
+    "dev": "concurrently \"npm run dev -w @fim/api\" \"npm run dev -w @fim/web\" \"npm run dev -w @fim/admin\"",
     "dev:web": "npm run dev --prefix apps/web",
     "dev:admin": "npm run dev --prefix apps/admin",
     "dev:api": "npm run dev --prefix apps/api",

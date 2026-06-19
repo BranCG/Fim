@@ -55,6 +55,9 @@ async function main() {
   const blackExpires = new Date();
   blackExpires.setDate(now.getDate() + 30);
 
+  const date20DaysAgo = new Date();
+  date20DaysAgo.setDate(date20DaysAgo.getDate() - 20);
+
   const blackDriver = await prisma.driver.upsert({
     where: { email: 'black@fim.cl' },
     update: {
@@ -62,7 +65,8 @@ async function main() {
       isTrial: false,
       membershipPaid: true,
       membershipExpiresAt: blackExpires,
-      membershipPlan: 'BLACK'
+      membershipPlan: 'BLACK',
+      createdAt: date20DaysAgo
     },
     create: {
       email: 'black@fim.cl',
@@ -88,7 +92,8 @@ async function main() {
       membershipExpiresAt: blackExpires,
       membershipPlan: 'BLACK',
       totalRating: 5.0,
-      totalTrips: 12
+      totalTrips: 12,
+      createdAt: date20DaysAgo
     }
   });
   console.log('✅ Conductor BLACK creado/actualizado:', blackDriver.email);
