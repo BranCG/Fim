@@ -33,6 +33,7 @@ model User {
   ratings          Rating[]  @relation("PassengerRatings")
   trips            Trip[]    @relation("PassengerTrips")
   fcmToken         String?   @map("token_fcm")
+  tokenVersion     Int       @default(0) @map("version_token")
 
   @@map("usuarios")
 }
@@ -95,6 +96,7 @@ model Driver {
   trips               Trip[]    @relation("DriverTrips")
   fcmToken            String?   @map("token_fcm")
   giftDaysPending     Int       @default(0) @map("dias_regalo_pendientes")
+  tokenVersion        Int       @default(0) @map("version_token")
 
   @@map("conductores")
 }

@@ -70,6 +70,7 @@ router.post('/passenger/register', async (req: Request, res: Response) => {
       id: user.id,
       role: 'passenger',
       email: user.email,
+      tokenVersion: user.tokenVersion,
     });
 
     return res.status(201).json({
@@ -98,22 +99,24 @@ router.post('/passenger/login', async (req: Request, res: Response) => {
       return res.status(401).json({ error: 'Credenciales incorrectas' });
     }
 
-    if (!user.emailVerified) {
-      await prisma.user.update({
-        where: { id: user.id },
-        data: { emailVerified: true, emailCode: null }
-      });
-    }
+    const updatedUser = await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        tokenVersion: { increment: 1 },
+        ...(!user.emailVerified ? { emailVerified: true, emailCode: null } : {})
+      }
+    });
 
     const tokens = generateTokens({
-      id: user.id,
-      role: user.role as 'passenger' | 'driver' | 'admin',
-      email: user.email,
+      id: updatedUser.id,
+      role: updatedUser.role as 'passenger' | 'driver' | 'admin',
+      email: updatedUser.email,
+      tokenVersion: updatedUser.tokenVersion,
     });
 
     return res.json({
       message: 'Login exitoso',
-      user: { id: user.id, name: user.name, email: user.email, role: user.role, isVerified: user.isVerified },
+      user: { id: updatedUser.id, name: updatedUser.name, email: updatedUser.email, role: updatedUser.role, isVerified: updatedUser.isVerified },
       ...tokens,
     });
   } catch (err) {
@@ -181,6 +184,7 @@ router.post('/driver/register', async (req: Request, res: Response) => {
       id: driver.id,
       role: 'driver',
       email: driver.email,
+      tokenVersion: driver.tokenVersion,
     });
 
     return res.status(201).json({
@@ -216,28 +220,30 @@ router.post('/driver/login', async (req: Request, res: Response) => {
       return res.status(401).json({ error: 'Credenciales incorrectas' });
     }
 
-    if (!driver.emailVerified) {
-      await prisma.driver.update({
-        where: { id: driver.id },
-        data: { emailVerified: true, emailCode: null }
-      });
-    }
+    const updatedDriver = await prisma.driver.update({
+      where: { id: driver.id },
+      data: {
+        tokenVersion: { increment: 1 },
+        ...(!driver.emailVerified ? { emailVerified: true, emailCode: null } : {})
+      }
+    });
 
     const tokens = generateTokens({
-      id: driver.id,
+      id: updatedDriver.id,
       role: 'driver',
-      email: driver.email,
+      email: updatedDriver.email,
+      tokenVersion: updatedDriver.tokenVersion,
     });
 
     return res.json({
       message: 'Login exitoso',
       driver: {
-        id: driver.id,
-        name: driver.name,
-        email: driver.email,
-        status: driver.status,
-        membershipPaid: driver.membershipPaid,
-        walletBalance: driver.walletBalance,
+        id: updatedDriver.id,
+        name: updatedDriver.name,
+        email: updatedDriver.email,
+        status: updatedDriver.status,
+        membershipPaid: updatedDriver.membershipPaid,
+        walletBalance: updatedDriver.walletBalance,
       },
       ...tokens,
     });
@@ -262,11 +268,23 @@ router.post('/admin/login', async (req: Request, res: Response) => {
       return res.status(401).json({ error: 'Credenciales incorrectas' });
     }
 
-    const tokens = generateTokens({ id: user.id, role: 'admin', email: user.email });
+    const updatedUser = await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        tokenVersion: { increment: 1 }
+      }
+    });
+
+    const tokens = generateTokens({
+      id: updatedUser.id,
+      role: 'admin',
+      email: updatedUser.email,
+      tokenVersion: updatedUser.tokenVersion,
+    });
 
     return res.json({
       message: 'Login admin exitoso',
-      user: { id: user.id, name: user.name, email: user.email, role: user.role },
+      user: { id: updatedUser.id, name: updatedUser.name, email: updatedUser.email, role: updatedUser.role },
       ...tokens,
     });
   } catch (err) {
@@ -513,10 +531,19 @@ router.post('/verify-email', async (req: Request, res: Response) => {
 
       const updated = await prisma.driver.update({
         where: { email },
-        data: { emailVerified: true, emailCode: null }
+        data: {
+          emailVerified: true,
+          emailCode: null,
+          tokenVersion: { increment: 1 }
+        }
       });
 
-      const tokens = generateTokens({ id: updated.id, role: 'driver', email: updated.email });
+      const tokens = generateTokens({
+        id: updated.id,
+        role: 'driver',
+        email: updated.email,
+        tokenVersion: updated.tokenVersion
+      });
       return res.json({
         message: 'Verificación exitosa',
         user: { id: updated.id, name: updated.name, email: updated.email, role: 'driver', status: updated.status, membershipPaid: updated.membershipPaid },
@@ -532,10 +559,19 @@ router.post('/verify-email', async (req: Request, res: Response) => {
 
       const updated = await prisma.user.update({
         where: { email },
-        data: { emailVerified: true, emailCode: null }
+        data: {
+          emailVerified: true,
+          emailCode: null,
+          tokenVersion: { increment: 1 }
+        }
       });
 
-      const tokens = generateTokens({ id: updated.id, role: updated.role as 'passenger' | 'admin', email: updated.email });
+      const tokens = generateTokens({
+        id: updated.id,
+        role: updated.role as 'passenger' | 'admin',
+        email: updated.email,
+        tokenVersion: updated.tokenVersion
+      });
       return res.json({
         message: 'Verificación exitosa',
         user: { id: updated.id, name: updated.name, email: updated.email, role: updated.role, isVerified: updated.isVerified },
@@ -600,22 +636,40 @@ router.post('/google/check', async (req: Request, res: Response) => {
 
     const driver = await prisma.driver.findUnique({ where: { email } });
     if (driver) {
-      const tokens = generateTokens({ id: driver.id, role: 'driver', email: driver.email });
+      const updatedDriver = await prisma.driver.update({
+        where: { id: driver.id },
+        data: { tokenVersion: { increment: 1 } }
+      });
+      const tokens = generateTokens({
+        id: updatedDriver.id,
+        role: 'driver',
+        email: updatedDriver.email,
+        tokenVersion: updatedDriver.tokenVersion
+      });
       return res.json({
         exists: true,
         role: 'driver',
-        user: { id: driver.id, name: driver.name, email: driver.email, role: 'driver', status: driver.status, membershipPaid: driver.membershipPaid },
+        user: { id: updatedDriver.id, name: updatedDriver.name, email: updatedDriver.email, role: 'driver', status: updatedDriver.status, membershipPaid: updatedDriver.membershipPaid },
         ...tokens
       });
     }
 
     const user = await prisma.user.findUnique({ where: { email } });
     if (user) {
-      const tokens = generateTokens({ id: user.id, role: user.role as 'passenger' | 'admin', email: user.email });
+      const updatedUser = await prisma.user.update({
+        where: { id: user.id },
+        data: { tokenVersion: { increment: 1 } }
+      });
+      const tokens = generateTokens({
+        id: updatedUser.id,
+        role: updatedUser.role as 'passenger' | 'admin',
+        email: updatedUser.email,
+        tokenVersion: updatedUser.tokenVersion
+      });
       return res.json({
         exists: true,
-        role: user.role,
-        user: { id: user.id, name: user.name, email: user.email, role: user.role, isVerified: user.isVerified },
+        role: updatedUser.role,
+        user: { id: updatedUser.id, name: updatedUser.name, email: updatedUser.email, role: updatedUser.role, isVerified: updatedUser.isVerified },
         ...tokens
       });
     }
@@ -684,7 +738,12 @@ router.post('/google/register', async (req: Request, res: Response) => {
         }
       });
 
-      const tokens = generateTokens({ id: driver.id, role: 'driver', email: driver.email });
+      const tokens = generateTokens({
+        id: driver.id,
+        role: 'driver',
+        email: driver.email,
+        tokenVersion: driver.tokenVersion
+      });
       return res.status(201).json({
         message: 'Registro exitoso',
         driver: { id: driver.id, name: driver.name, email: driver.email, role: 'driver', status: driver.status },
@@ -713,7 +772,12 @@ router.post('/google/register', async (req: Request, res: Response) => {
         }
       });
 
-      const tokens = generateTokens({ id: user.id, role: 'passenger', email: user.email });
+      const tokens = generateTokens({
+        id: user.id,
+        role: 'passenger',
+        email: user.email,
+        tokenVersion: user.tokenVersion
+      });
       return res.status(201).json({
         message: 'Registro exitoso',
         user: { id: user.id, name: user.name, email: user.email, role: 'passenger', isVerified: user.isVerified },
