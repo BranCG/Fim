@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import api from '@/lib/api';
 
@@ -10,6 +10,16 @@ export default function AdminLoginPage() {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const reason = localStorage.getItem('admin_logout_reason');
+      if (reason === 'duplicate_session') {
+        setError('Tu sesión ha sido abierta en otro dispositivo. Por favor, vuelve a iniciar sesión.');
+        localStorage.removeItem('admin_logout_reason');
+      }
+    }
+  }, []);
 
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault();

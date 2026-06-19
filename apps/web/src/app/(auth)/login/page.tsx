@@ -36,6 +36,16 @@ export default function LoginPage() {
   }, []);
 
   useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const reason = localStorage.getItem('logout_reason');
+      if (reason === 'duplicate_session') {
+        setError('Tu sesión ha sido abierta en otro dispositivo. Por favor, vuelve a iniciar sesión.');
+        localStorage.removeItem('logout_reason');
+      }
+    }
+  }, []);
+
+  useEffect(() => {
     const s = getSession();
     if (s && s.user && s.user.role) {
       if (s.user.role === 'admin') {

@@ -28,6 +28,7 @@ api.interceptors.response.use(
   (err) => {
     if (err.response?.status === 401 && typeof window !== 'undefined') {
       localStorage.removeItem('fim_admin_token');
+      localStorage.setItem('admin_logout_reason', 'duplicate_session');
       window.location.href = '/';
     }
     return Promise.reject(err);

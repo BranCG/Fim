@@ -54,6 +54,7 @@ api.interceptors.response.use(
     if (error.response?.status === 401 && !isLoginOrAuth && typeof window !== 'undefined') {
       localStorage.removeItem('fim_token');
       localStorage.removeItem('fim_user');
+      localStorage.setItem('logout_reason', 'duplicate_session');
       
       const isMobileApp = (window.location.hostname === 'localhost' || window.location.hostname === '') && window.location.port === '';
       const isCapacitor = (window as any).Capacitor || window.location.origin.includes('capacitor://') || isMobileApp;
