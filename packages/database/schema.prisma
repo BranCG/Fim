@@ -34,6 +34,7 @@ model User {
   trips            Trip[]    @relation("PassengerTrips")
   fcmToken         String?   @map("token_fcm")
   tokenVersion     Int       @default(0) @map("version_token")
+  isDeleted        Boolean   @default(false) @map("esta_eliminado")
 
   @@map("usuarios")
 }
@@ -97,6 +98,7 @@ model Driver {
   fcmToken            String?   @map("token_fcm")
   giftDaysPending     Int       @default(0) @map("dias_regalo_pendientes")
   tokenVersion        Int       @default(0) @map("version_token")
+  isDeleted           Boolean   @default(false) @map("esta_eliminado")
 
   @@map("conductores")
 }
