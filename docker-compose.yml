@@ -17,5 +17,8 @@ services:
       - JWT_REFRESH_SECRET=${JWT_REFRESH_SECRET}
       - REDIS_URL=${REDIS_URL}
       - FIREBASE_CREDENTIALS=${FIREBASE_CREDENTIALS}
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
     volumes:
       - ./apps/api/uploads:/app/apps/api/uploads
