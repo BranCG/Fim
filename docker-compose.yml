@@ -16,5 +16,6 @@ services:
       - JWT_SECRET=${JWT_SECRET}
       - JWT_REFRESH_SECRET=${JWT_REFRESH_SECRET}
       - REDIS_URL=${REDIS_URL}
+      - FIREBASE_CREDENTIALS=${FIREBASE_CREDENTIALS}
     volumes:
       - ./apps/api/uploads:/app/apps/api/uploads
