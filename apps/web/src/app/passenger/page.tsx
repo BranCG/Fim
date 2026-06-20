@@ -268,6 +268,7 @@ export default function PassengerPage() {
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [selectedCancelOption, setSelectedCancelOption] = useState('');
   const [customCancelReason, setCustomCancelReason] = useState('');
+  const isUsingLocalGpsRef = useRef(false);
 
   const [isMinimized, setIsMinimized] = useState(false);
 
@@ -890,6 +891,10 @@ export default function PassengerPage() {
     });
 
     socket.on('driver:moved', ({ lat, lng }: { lat: number; lng: number }) => {
+      // Ignoramos la actualización por red si estamos usando el GPS local del pasajero (viaje en curso)
+      // para evitar saltos o jitter.
+      if (isUsingLocalGpsRef.current) return;
+      
       setDriverPos({ lat, lng });
     });
 
@@ -970,6 +975,44 @@ export default function PassengerPage() {
     const parsed = parseInt(gpsBottom, 10);
     return `${parsed + 60}px`;
   };
+
+  // ── Seguir la posición del pasajero en viaje activo para navegación fluida ──
+  useEffect(() => {
+    let cleanupFn: (() => void) | undefined;
+    
+    if (status === 'in_progress') {
+      console.log('[GPS Local] Iniciando watchPosition para fluidez en el viaje...');
+      const startWatching = async () => {
+        try {
+          const { watchPosition } = await import('@/lib/geolocation');
+          cleanupFn = await watchPosition(
+            (pos) => {
+              isUsingLocalGpsRef.current = true;
+              // El pasajero está en el vehículo, así que su GPS es la posición del auto.
+              // Actualizamos driverPos frecuentemente para que el mapa se mueva de forma fluida.
+              setDriverPos({ lat: pos.lat, lng: pos.lng });
+            },
+            (err) => {
+              console.warn('[GPS Local] Passenger watchPosition error:', err);
+              isUsingLocalGpsRef.current = false;
+            }
+          );
+        } catch (e) {
+          console.error('[GPS Local] Error al iniciar watchPosition:', e);
+          isUsingLocalGpsRef.current = false;
+        }
+      };
+      startWatching();
+    }
+
+    return () => {
+      if (cleanupFn) {
+        console.log('[GPS Local] Deteniendo watchPosition.');
+        cleanupFn();
+      }
+      isUsingLocalGpsRef.current = false;
+    };
+  }, [status]);
 
   useEffect(() => {
     let timer: NodeJS.Timeout;
