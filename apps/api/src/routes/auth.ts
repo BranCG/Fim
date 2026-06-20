@@ -94,6 +94,10 @@ router.post('/passenger/login', async (req: Request, res: Response) => {
       return res.status(401).json({ error: 'Credenciales incorrectas' });
     }
 
+    if (user.isDeleted) {
+      return res.status(401).json({ error: 'Esta cuenta ha sido eliminada o desactivada. Contacte a soporte.' });
+    }
+
     const valid = await bcrypt.compare(password, user.passwordHash);
     if (!valid) {
       return res.status(401).json({ error: 'Credenciales incorrectas' });
@@ -213,6 +217,10 @@ router.post('/driver/login', async (req: Request, res: Response) => {
     const driver = await prisma.driver.findUnique({ where: { email } });
     if (!driver) {
       return res.status(401).json({ error: 'Credenciales incorrectas' });
+    }
+
+    if (driver.isDeleted) {
+      return res.status(401).json({ error: 'Esta cuenta ha sido eliminada o desactivada. Contacte a soporte.' });
     }
 
     const valid = await bcrypt.compare(password, driver.passwordHash);
@@ -490,20 +498,16 @@ router.post('/delete-account', requireAuth, async (req: Request, res: Response) 
 
     if (role === 'driver') {
       await prisma.$transaction([
-        prisma.rating.deleteMany({ where: { OR: [{ driverId: userId }, { trip: { driverId: userId } }] } }),
-        prisma.trip.deleteMany({ where: { driverId: userId } }),
         prisma.refreshToken.deleteMany({ where: { driverId: userId } }),
-        prisma.driver.delete({ where: { id: userId } }),
+        prisma.driver.update({ where: { id: userId }, data: { isDeleted: true } }),
       ]);
-      console.log(`❌ Conductor ${userId} eliminado permanentemente.`);
+      console.log(`❌ Conductor ${userId} eliminado de forma lógica (Soft Delete).`);
     } else {
       await prisma.$transaction([
-        prisma.rating.deleteMany({ where: { OR: [{ passengerId: userId }, { trip: { passengerId: userId } }] } }),
-        prisma.trip.deleteMany({ where: { passengerId: userId } }),
         prisma.refreshToken.deleteMany({ where: { userId: userId } }),
-        prisma.user.delete({ where: { id: userId } }),
+        prisma.user.update({ where: { id: userId }, data: { isDeleted: true } }),
       ]);
-      console.log(`❌ Pasajero ${userId} eliminado permanentemente.`);
+      console.log(`❌ Pasajero ${userId} eliminado de forma lógica (Soft Delete).`);
     }
 
     return res.json({ message: 'Tu cuenta ha sido eliminada permanentemente.' });
@@ -636,6 +640,9 @@ router.post('/google/check', async (req: Request, res: Response) => {
 
     const driver = await prisma.driver.findUnique({ where: { email } });
     if (driver) {
+      if (driver.isDeleted) {
+        return res.status(401).json({ error: 'Esta cuenta ha sido eliminada o desactivada. Contacte a soporte.' });
+      }
       const updatedDriver = await prisma.driver.update({
         where: { id: driver.id },
         data: { tokenVersion: { increment: 1 } }
@@ -656,6 +663,9 @@ router.post('/google/check', async (req: Request, res: Response) => {
 
     const user = await prisma.user.findUnique({ where: { email } });
     if (user) {
+      if (user.isDeleted) {
+        return res.status(401).json({ error: 'Esta cuenta ha sido eliminada o desactivada. Contacte a soporte.' });
+      }
       const updatedUser = await prisma.user.update({
         where: { id: user.id },
         data: { tokenVersion: { increment: 1 } }
