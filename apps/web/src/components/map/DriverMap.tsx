@@ -29,6 +29,8 @@ export default function DriverMap({ driverPos, passengerPos, destPos, centerTrig
   const currentRouteEndpoints = useRef<string>('');
   const hasFittedBounds = useRef<string>('');
   const currentAngleRef = useRef<number>(0);
+  const animationFrameRef = useRef<number | null>(null);
+  const lastUpdateTimestampRef = useRef<number>(performance.now());
 
   // Inicializar el mapa una sola vez
   useEffect(() => {
@@ -126,26 +128,41 @@ export default function DriverMap({ driverPos, passengerPos, destPos, centerTrig
       });
     };
 
-    // ── Interpolación para movimiento fluido ──────────────────
-    const animateMarker = (marker: any, start: { lat: number; lng: number }, end: { lat: number; lng: number }, duration = 1200) => {
-      const startTime = performance.now();
+    // ── Interpolación para movimiento fluido dinámico ──────────────────
+    const animateMarker = (marker: any, targetPos: { lat: number; lng: number }) => {
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
+      }
       
-      const dLng = end.lng - start.lng;
-      const dLat = end.lat - start.lat;
+      const now = performance.now();
+      let dt = now - lastUpdateTimestampRef.current;
+      lastUpdateTimestampRef.current = now;
+      
+      // Limitar dt para evitar saltos locos si la app estuvo en background
+      if (dt < 500 || dt > 10000) dt = 2000;
+      
+      const startPos = marker.getLatLng();
+      const dLng = targetPos.lng - startPos.lng;
+      const dLat = targetPos.lat - startPos.lat;
+      
       let angle = currentAngleRef.current;
       const hasMovement = Math.abs(dLng) > 1e-6 || Math.abs(dLat) > 1e-6;
       if (hasMovement) {
         angle = Math.atan2(dLng, dLat) * (180 / Math.PI);
       }
 
-      const step = (now: number) => {
-        const elapsed = now - startTime;
-        const progress = Math.min(elapsed / duration, 1);
+      const startTime = performance.now();
+      
+      const step = (timestamp: number) => {
+        const elapsed = timestamp - startTime;
+        // Extrapolación suave hasta 1.5x el tiempo esperado (Dead Reckoning)
+        const progress = Math.min(elapsed / dt, 1.5);
         
-        // Easing OutQuad
-        const easeProgress = progress * (2 - progress); 
-        const currentLat = start.lat + (end.lat - start.lat) * easeProgress;
-        const currentLng = start.lng + (end.lng - start.lng) * easeProgress;
+        // Suavizado OutQuad para la interpolación inicial, lineal para extrapolación
+        const easeProgress = progress <= 1.0 ? progress * (2 - progress) : progress; 
+        
+        const currentLat = startPos.lat + dLat * easeProgress;
+        const currentLng = startPos.lng + dLng * easeProgress;
         
         marker.setLatLng([currentLat, currentLng]);
 
@@ -160,25 +177,27 @@ export default function DriverMap({ driverPos, passengerPos, destPos, centerTrig
           }
         }
 
-        if (progress < 1) {
-          requestAnimationFrame(step);
+        if (progress < 1.5) {
+          animationFrameRef.current = requestAnimationFrame(step);
         } else if (hasMovement) {
           currentAngleRef.current = angle;
           marker.setIcon(getDriverIcon(angle));
         }
       };
-      requestAnimationFrame(step);
+      
+      animationFrameRef.current = requestAnimationFrame(step);
     };
 
-    // ── 1. Marcador Conductor (Con interpolación suave) ───────────────────
+    // ── 1. Marcador Conductor (Con interpolación suave dinámica) ───────────────
     if (!driverMarkerRef.current) {
       const driverIcon = getDriverIcon(currentAngleRef.current);
       driverMarkerRef.current = L.marker([driverPos.lat, driverPos.lng], { icon: driverIcon }).addTo(map);
       driverMarkerRef.current.bindTooltip('Tu posición', { permanent: false, direction: 'top', className: 'fim-tooltip' });
+      lastUpdateTimestampRef.current = performance.now();
     } else {
       const prevPos = driverMarkerRef.current.getLatLng();
       if (prevPos.lat !== driverPos.lat || prevPos.lng !== driverPos.lng) {
-        animateMarker(driverMarkerRef.current, prevPos, driverPos, 1200);
+        animateMarker(driverMarkerRef.current, driverPos);
       }
     }
 

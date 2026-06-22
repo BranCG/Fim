@@ -63,7 +63,7 @@ export async function watchPosition(
       {
         enableHighAccuracy: true,
         timeout: 10000,
-        maximumAge: 5000,
+        maximumAge: 0,
       },
       (position, err) => {
         if (err) {
@@ -88,7 +88,7 @@ export async function watchPosition(
     const watchId = navigator.geolocation.watchPosition(
       (p) => onSuccess({ lat: p.coords.latitude, lng: p.coords.longitude }),
       (err) => onError(err),
-      { enableHighAccuracy: true, maximumAge: 5000, timeout: 10000 }
+      { enableHighAccuracy: true, maximumAge: 0, timeout: 10000 }
     );
     return () => {
       navigator.geolocation.clearWatch(watchId);

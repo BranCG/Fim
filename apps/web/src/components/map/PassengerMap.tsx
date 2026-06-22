@@ -49,6 +49,8 @@ export default function PassengerMap({
   const currentAngleRef = useRef<number>(0);
   const nearbyMarkersRef = useRef<Map<string, any>>(new Map());
   const nearbyAnglesRef = useRef<Map<string, number>>(new Map());
+  const animationFramesRef = useRef<Map<string, number>>(new Map());
+  const lastUpdateTimestampsRef = useRef<Map<string, number>>(new Map());
 
   // Inicializar el mapa una sola vez
   useEffect(() => {
@@ -152,26 +154,38 @@ export default function PassengerMap({
       });
     };
 
-    // ── Interpolación para movimiento fluido ──────────────────
-    const animateMarker = (marker: any, start: { lat: number; lng: number }, end: { lat: number; lng: number }, driverId?: string, duration = 1200) => {
-      const startTime = performance.now();
+    // ── Interpolación para movimiento fluido dinámico ──────────────────
+    const animateMarker = (marker: any, targetPos: { lat: number; lng: number }, driverId: string = 'main') => {
+      const prevFrame = animationFramesRef.current.get(driverId);
+      if (prevFrame) {
+        cancelAnimationFrame(prevFrame);
+      }
       
-      const dLng = end.lng - start.lng;
-      const dLat = end.lat - start.lat;
-      let angle = driverId ? (nearbyAnglesRef.current.get(driverId) || 0) : currentAngleRef.current;
+      const now = performance.now();
+      let dt = now - (lastUpdateTimestampsRef.current.get(driverId) || now);
+      lastUpdateTimestampsRef.current.set(driverId, now);
+      
+      if (dt < 500 || dt > 10000) dt = 2000;
+      
+      const startPos = marker.getLatLng();
+      const dLng = targetPos.lng - startPos.lng;
+      const dLat = targetPos.lat - startPos.lat;
+      
+      let angle = driverId === 'main' ? currentAngleRef.current : (nearbyAnglesRef.current.get(driverId) || 0);
       const hasMovement = Math.abs(dLng) > 1e-6 || Math.abs(dLat) > 1e-6;
       if (hasMovement) {
         angle = Math.atan2(dLng, dLat) * (180 / Math.PI);
       }
 
-      const step = (now: number) => {
-        const elapsed = now - startTime;
-        const progress = Math.min(elapsed / duration, 1);
+      const startTime = performance.now();
+      
+      const step = (timestamp: number) => {
+        const elapsed = timestamp - startTime;
+        const progress = Math.min(elapsed / dt, 1.5);
+        const easeProgress = progress <= 1.0 ? progress * (2 - progress) : progress; 
         
-        // Easing OutQuad
-        const easeProgress = progress * (2 - progress); 
-        const currentLat = start.lat + (end.lat - start.lat) * easeProgress;
-        const currentLng = start.lng + (end.lng - start.lng) * easeProgress;
+        const currentLat = startPos.lat + dLat * easeProgress;
+        const currentLng = startPos.lng + dLng * easeProgress;
         
         marker.setLatLng([currentLat, currentLng]);
 
@@ -186,18 +200,19 @@ export default function PassengerMap({
           }
         }
 
-        if (progress < 1) {
-          requestAnimationFrame(step);
+        if (progress < 1.5) {
+          animationFramesRef.current.set(driverId, requestAnimationFrame(step));
         } else if (hasMovement) {
-          if (driverId) {
-            nearbyAnglesRef.current.set(driverId, angle);
-          } else {
+          if (driverId === 'main') {
             currentAngleRef.current = angle;
+          } else {
+            nearbyAnglesRef.current.set(driverId, angle);
           }
           marker.setIcon(getDriverIcon(angle));
         }
       };
-      requestAnimationFrame(step);
+      
+      animationFramesRef.current.set(driverId, requestAnimationFrame(step));
     };
 
     // ── 1. Origen ──────────────────────────────────────────────────────────
@@ -369,11 +384,12 @@ export default function PassengerMap({
         const driverIcon = getDriverIcon(currentAngleRef.current);
         driverMarkerRef.current = L.marker([driverPos.lat, driverPos.lng], { icon: driverIcon }).addTo(map);
         driverMarkerRef.current.bindTooltip('Tu conductor', { permanent: false, direction: 'top', className: 'fim-tooltip' });
+        lastUpdateTimestampsRef.current.set('main', performance.now());
       } else {
         // Si ya existe, animar suavemente a la nueva ubicación
         const prevPos = driverMarkerRef.current.getLatLng();
         if (prevPos.lat !== driverPos.lat || prevPos.lng !== driverPos.lng) {
-          animateMarker(driverMarkerRef.current, prevPos, driverPos, undefined, 1200);
+          animateMarker(driverMarkerRef.current, driverPos, 'main');
         }
       }
     } else if (driverMarkerRef.current) {
@@ -402,10 +418,11 @@ export default function PassengerMap({
         const marker = L.marker([driver.lat, driver.lng], { icon: driverIcon }).addTo(map);
         marker.bindTooltip('Conductor disponible', { permanent: false, direction: 'top', className: 'fim-tooltip' });
         nearbyMarkersRef.current.set(driver.id, marker);
+        lastUpdateTimestampsRef.current.set(driver.id, performance.now());
       } else {
         const prevPos = prevMarker.getLatLng();
         if (prevPos.lat !== driver.lat || prevPos.lng !== driver.lng) {
-          animateMarker(prevMarker, prevPos, { lat: driver.lat, lng: driver.lng }, driver.id, 1200);
+          animateMarker(prevMarker, { lat: driver.lat, lng: driver.lng }, driver.id);
         }
       }
     });
