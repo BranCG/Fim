@@ -356,8 +356,8 @@ export default function PassengerMap({
                   line.eachLayer((layer: any) => {
                     if (layer._path && layer._path.getTotalLength) {
                       const length = layer._path.getTotalLength();
-                      layer._path.style.strokeDasharray = length;
-                      layer._path.style.strokeDashoffset = length;
+                      layer._path.style.strokeDasharray = `${length} ${length}`;
+                      layer._path.style.strokeDashoffset = `${length}`;
                       layer._path.getBoundingClientRect();
                       layer._path.style.transition = 'stroke-dashoffset 1.8s ease-out';
                       layer._path.style.strokeDashoffset = '0';
@@ -440,8 +440,8 @@ export default function PassengerMap({
                   line.eachLayer((layer: any) => {
                     if (layer._path && layer._path.getTotalLength) {
                       const length = layer._path.getTotalLength();
-                      layer._path.style.strokeDasharray = length;
-                      layer._path.style.strokeDashoffset = length;
+                      layer._path.style.strokeDasharray = `${length} ${length}`;
+                      layer._path.style.strokeDashoffset = `${length}`;
                       layer._path.getBoundingClientRect();
                       layer._path.style.transition = 'stroke-dashoffset 1.8s ease-out';
                       layer._path.style.strokeDashoffset = '0';
