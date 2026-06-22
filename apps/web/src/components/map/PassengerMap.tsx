@@ -11,6 +11,7 @@ interface Props {
   isSelectingLocation?: 'origin' | 'dest' | null;
   onMapCenterChange?: (coords: { lat: number; lng: number }) => void;
   tripStatus?: string | null;
+  stops?: { lat: number; lng: number; address: string }[];
 }
 
 const getDistanceMeters = (lat1: number, lng1: number, lat2: number, lng2: number) => {
@@ -27,7 +28,8 @@ export default function PassengerMap({
   nearbyDrivers = [],
   isSelectingLocation = null,
   onMapCenterChange,
-  tripStatus = null
+  tripStatus = null,
+  stops = []
 }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -43,6 +45,7 @@ export default function PassengerMap({
   const destMarkerRef = useRef<any>(null);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const driverMarkerRef = useRef<any>(null);
+  const stopsMarkersRef = useRef<any[]>([]);
   const routeLineRef = useRef<any>(null);
   const currentRouteEndpoints = useRef<string>('');
   const hasFittedBounds = useRef<string>('');
@@ -95,6 +98,7 @@ export default function PassengerMap({
       }
       nearbyMarkersRef.current.clear();
       nearbyAnglesRef.current.clear();
+      stopsMarkersRef.current = [];
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -267,6 +271,36 @@ export default function PassengerMap({
       destMarkerRef.current = null;
     }
 
+    // ── 2.5 Paradas ────────────────────────────────────────────────────────
+    const showStops = stops && stops.length > 0 && (!isTripActive || tripStatus === 'in_progress');
+    
+    if (showStops) {
+      stops.forEach((stop, idx) => {
+        if (!stopsMarkersRef.current[idx]) {
+           const stopIcon = L.divIcon({
+              className: 'transparent-icon',
+              html: `<div style="background:#FFA500;width:14px;height:14px;border-radius:50%;border:2px solid white;box-shadow:0 0 5px rgba(255,165,0,0.6)"></div>`,
+              iconSize: [14, 14],
+              iconAnchor: [7, 7]
+           });
+           const m = L.marker([stop.lat, stop.lng], { icon: stopIcon }).addTo(map);
+           m.bindTooltip(`Parada ${idx+1}`, { permanent: false, direction: 'top', className: 'fim-tooltip' });
+           stopsMarkersRef.current[idx] = m;
+        } else {
+           stopsMarkersRef.current[idx].setLatLng([stop.lat, stop.lng]);
+        }
+      });
+      while (stopsMarkersRef.current.length > stops.length) {
+         const m = stopsMarkersRef.current.pop();
+         if (m) m.remove();
+      }
+    } else {
+      while (stopsMarkersRef.current.length > 0) {
+         const m = stopsMarkersRef.current.pop();
+         if (m) m.remove();
+      }
+    }
+
     // ── 3. Ruta OSRM ───────────────────────────────────────────────────────
     const activeRouteTarget = isTripActive
       ? ((tripStatus === 'driver_assigned' || tripStatus === 'driver_arrived') ? origin : dest)
@@ -289,7 +323,13 @@ export default function PassengerMap({
         const fetchRoute = async () => {
           const color = (tripStatus === 'driver_assigned' || tripStatus === 'driver_arrived') ? '#00E5A0' : '#FF4560'; // Verde para buscar al pasajero, rojo para ir al destino
           try {
-            const res = await fetch(`https://router.project-osrm.org/route/v1/driving/${driverPos.lng},${driverPos.lat};${activeRouteTarget.lng},${activeRouteTarget.lat}?overview=full&geometries=geojson`);
+            let waypoints = `${driverPos.lng},${driverPos.lat}`;
+            if (stops && stops.length > 0 && activeRouteTarget === dest) {
+              stops.forEach(s => waypoints += `;${s.lng},${s.lat}`);
+            }
+            waypoints += `;${activeRouteTarget.lng},${activeRouteTarget.lat}`;
+            
+            const res = await fetch(`https://router.project-osrm.org/route/v1/driving/${waypoints}?overview=full&geometries=geojson`);
             const data = await res.json();
             
             if (!mapRef.current) return;
@@ -340,7 +380,13 @@ export default function PassengerMap({
 
         const fetchRoute = async () => {
           try {
-            const res = await fetch(`https://router.project-osrm.org/route/v1/driving/${origin.lng},${origin.lat};${dest.lng},${dest.lat}?overview=full&geometries=geojson`);
+            let waypoints = `${origin.lng},${origin.lat}`;
+            if (stops && stops.length > 0) {
+              stops.forEach(s => waypoints += `;${s.lng},${s.lat}`);
+            }
+            waypoints += `;${dest.lng},${dest.lat}`;
+
+            const res = await fetch(`https://router.project-osrm.org/route/v1/driving/${waypoints}?overview=full&geometries=geojson`);
             const data = await res.json();
             
             if (!mapRef.current) return;

@@ -6,10 +6,11 @@ interface Props {
   driverPos: { lat: number; lng: number };
   passengerPos: { lat: number; lng: number } | null;
   destPos: { lat: number; lng: number } | null;
+  stops?: { lat: number; lng: number }[];
   centerTrigger?: number;
 }
 
-export default function DriverMap({ driverPos, passengerPos, destPos, centerTrigger }: Props) {
+export default function DriverMap({ driverPos, passengerPos, destPos, stops = [], centerTrigger }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const mapRef = useRef<any>(null);
@@ -24,6 +25,7 @@ export default function DriverMap({ driverPos, passengerPos, destPos, centerTrig
   const passengerMarkerRef = useRef<any>(null);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const destMarkerRef = useRef<any>(null);
+  const stopsMarkersRef = useRef<any[]>([]);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const routeLineRef = useRef<any>(null);
   const currentRouteEndpoints = useRef<string>('');
@@ -76,6 +78,7 @@ export default function DriverMap({ driverPos, passengerPos, destPos, centerTrig
         mapRef.current.remove();
         mapRef.current = null;
       }
+      stopsMarkersRef.current = [];
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -254,6 +257,34 @@ export default function DriverMap({ driverPos, passengerPos, destPos, centerTrig
       destMarkerRef.current = null;
     }
 
+    // ── 3.5 Marcadores Paradas ────────────────────────────────────────────────
+    if (destPos && stops && stops.length > 0) {
+      stops.forEach((stop, idx) => {
+        if (!stopsMarkersRef.current[idx]) {
+           const stopIcon = L.divIcon({
+              className: 'transparent-icon',
+              html: `<div style="background:#FFA500;width:14px;height:14px;border-radius:50%;border:2px solid white;box-shadow:0 0 5px rgba(255,165,0,0.6)"></div>`,
+              iconSize: [14, 14],
+              iconAnchor: [7, 7]
+           });
+           const m = L.marker([stop.lat, stop.lng], { icon: stopIcon }).addTo(map);
+           m.bindTooltip(`Parada ${idx+1}`, { permanent: false, direction: 'top', className: 'fim-tooltip' });
+           stopsMarkersRef.current[idx] = m;
+        } else {
+           stopsMarkersRef.current[idx].setLatLng([stop.lat, stop.lng]);
+        }
+      });
+      while (stopsMarkersRef.current.length > stops.length) {
+         const m = stopsMarkersRef.current.pop();
+         if (m) m.remove();
+      }
+    } else {
+      while (stopsMarkersRef.current.length > 0) {
+         const m = stopsMarkersRef.current.pop();
+         if (m) m.remove();
+      }
+    }
+
     // ── 4. Ruta Dinámica OSRM ─────────────────────────────────────────────
     // Origen de la ruta: conductor (redondeado a 3 decimales para evitar recreaciones y saltos continuos)
     const activeRouteTarget = passengerPos ? passengerPos : destPos;
@@ -274,7 +305,13 @@ export default function DriverMap({ driverPos, passengerPos, destPos, centerTrig
         const fetchRoute = async () => {
           const color = passengerPos ? '#00E5A0' : '#FF4560'; // Verde para buscar al pasajero, rojo para ir al destino
           try {
-            const res = await fetch(`https://router.project-osrm.org/route/v1/driving/${driverPos.lng},${driverPos.lat};${activeRouteTarget.lng},${activeRouteTarget.lat}?overview=full&geometries=geojson`);
+            let waypoints = `${driverPos.lng},${driverPos.lat}`;
+            if (!passengerPos && stops && stops.length > 0 && activeRouteTarget === destPos) {
+              stops.forEach(s => waypoints += `;${s.lng},${s.lat}`);
+            }
+            waypoints += `;${activeRouteTarget.lng},${activeRouteTarget.lat}`;
+
+            const res = await fetch(`https://router.project-osrm.org/route/v1/driving/${waypoints}?overview=full&geometries=geojson`);
             const data = await res.json();
             
             if (!mapRef.current) return;

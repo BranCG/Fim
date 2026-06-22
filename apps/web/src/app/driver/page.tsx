@@ -16,6 +16,7 @@ interface TripRequest {
   id: string;
   originLat: number; originLng: number; originAddress: string;
   destLat: number; destLng: number; destAddress: string;
+  stops?: any[];
   distanceKm: number; durationMin: number; estimatedPrice: number;
   paymentMethod: string;
   passenger: { id: string; name: string; phone: string };
@@ -1804,6 +1805,7 @@ export default function DriverPage() {
           driverPos={pos}
           passengerPos={(activeTrip && (tripPhase === 'going_to_passenger' || tripPhase === 'arrived')) ? { lat: activeTrip.originLat, lng: activeTrip.originLng } : null}
           destPos={(activeTrip && tripPhase === 'in_progress') ? { lat: activeTrip.destLat, lng: activeTrip.destLng } : null}
+          stops={activeTrip?.stops || []}
           centerTrigger={centerTrigger}
         />
       </main>
@@ -2406,6 +2408,20 @@ export default function DriverPage() {
                   </div>
                 </div>
 
+                {/* Paradas (si existen) */}
+                {tripRequest.stops && tripRequest.stops.length > 0 && (
+                  <div style={{ marginTop: '8px', marginBottom: '8px' }}>
+                    <div style={{ fontSize: '0.75rem', color: '#A0AEC0', fontWeight: 600, marginBottom: '2px' }}>
+                      Paradas Intermedias ({tripRequest.stops.length})
+                    </div>
+                    {tripRequest.stops.map((stop: any, idx: number) => (
+                      <div key={idx} style={{ fontSize: '0.85rem', fontWeight: 500, color: '#F6AD55', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '250px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                        <span style={{ fontSize: '10px' }}>🟠</span> {stop.address || `Parada ${idx + 1}`}
+                      </div>
+                    ))}
+                  </div>
+                )}
+
                 {/* Destination Address */}
                 <div>
                   <div style={{ fontSize: '0.8rem', color: '#A0AEC0', fontWeight: 600, marginBottom: '2px' }}>
@@ -2571,6 +2587,18 @@ export default function DriverPage() {
             <div style={{ fontSize: '0.95rem', fontWeight: 600 }}>
               {tripPhase === 'going_to_passenger' ? activeTrip.originAddress : activeTrip.destAddress}
             </div>
+
+            {/* Paradas */}
+            {tripPhase === 'in_progress' && activeTrip.stops && activeTrip.stops.length > 0 && (
+              <div style={{ marginTop: '12px', paddingTop: '12px', borderTop: '1px dashed var(--border)' }}>
+                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '6px' }}>Paradas</div>
+                {activeTrip.stops.map((stop: any, idx: number) => (
+                  <div key={idx} style={{ fontSize: '0.85rem', fontWeight: 600, color: '#FFA500', display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}>
+                     <span style={{ fontSize: '10px' }}>🟠</span> {stop.address || `Parada ${idx + 1}`}
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           {tripPhase === 'going_to_passenger' && (

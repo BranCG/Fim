@@ -248,7 +248,8 @@ export default function PassengerPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [originQuery, setOriginQuery] = useState('');
   const [destQuery, setDestQuery] = useState('');
-  const [activeField, setActiveField] = useState<'origin' | 'dest' | null>(null);
+  const [stopsData, setStopsData] = useState<{ loc: Location | null; query: string }[]>([]);
+  const [activeField, setActiveField] = useState<'origin' | 'dest' | 'stop_0' | 'stop_1' | null>(null);
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [currentCommune, setCurrentCommune] = useState<string>('');
@@ -530,6 +531,9 @@ export default function PassengerPage() {
             address: trip.destAddress || 'Destino',
           });
         }
+        if (trip.stops && Array.isArray(trip.stops)) {
+          setStopsData(trip.stops.map((s: any) => ({ loc: s, query: s.address || '' })));
+        }
         if (trip.driver) {
           setDriver(trip.driver);
           if (trip.driver.lastLat && trip.driver.lastLng) {
@@ -732,7 +736,8 @@ export default function PassengerPage() {
         originLat: origin.lat,
         originLng: origin.lng,
         destLat: dest.lat,
-        destLng: dest.lng
+        destLng: dest.lng,
+        stops: stopsData.map(s => s.loc).filter(Boolean)
       })
       .then(res => {
         const { distanceKm, durationMin, estimatedPrice } = res.data;
@@ -749,7 +754,7 @@ export default function PassengerPage() {
         setStatus('idle');
       });
     }
-  }, [origin, dest, status]);
+  }, [origin, dest, status, stopsData]);
 
   // Autocomplete con Google Maps / Geoproxy
   useEffect(() => {
@@ -857,7 +862,7 @@ export default function PassengerPage() {
         if (dest) {
           setStatus('selecting_dest');
         }
-      } else {
+      } else if (activeField === 'dest') {
         setDest(loc);
         setDestQuery(loc.address.split(',')[0]);
         setSearchResults([]);
@@ -866,6 +871,18 @@ export default function PassengerPage() {
         if (origin) {
           setStatus('selecting_dest');
         }
+      } else if (activeField && activeField.startsWith('stop_')) {
+        const idx = parseInt(activeField.split('_')[1], 10);
+        setStopsData(prev => {
+          const newStops = [...prev];
+          if (!newStops[idx]) newStops[idx] = { loc: null, query: '' };
+          newStops[idx].loc = loc;
+          newStops[idx].query = loc.address.split(',')[0];
+          return newStops;
+        });
+        setSearchResults([]);
+        setActiveField(null);
+        setSearchQuery('');
       }
     } catch (err) {
       console.error('Error selecting address:', err);
@@ -1124,10 +1141,15 @@ export default function PassengerPage() {
 
     try {
       const res = await api.post('/trips/request', {
-        originLat: origin.lat, originLng: origin.lng, originAddress: origin.address,
-        destLat: dest.lat, destLng: dest.lng, destAddress: dest.address,
-        paymentMethod,
-        passengerCount,
+        originLat: origin.lat,
+        originLng: origin.lng,
+        originAddress: origin.address,
+        destLat: dest.lat,
+        destLng: dest.lng,
+        destAddress: dest.address,
+        paymentMethod: paymentMethod,
+        passengerCount: passengerCount,
+        stops: stopsData.map(s => s.loc).filter(Boolean)
       });
 
       const trip = res.data.trip;
@@ -1565,6 +1587,7 @@ export default function PassengerPage() {
         <PassengerMap
           origin={origin}
           dest={dest}
+          stops={stopsData.map(s => s.loc).filter((loc): loc is Location => loc !== null)}
           driverPos={driverPos}
           centerTrigger={centerTrigger}
           nearbyDrivers={nearbyDrivers}
@@ -1674,6 +1697,72 @@ export default function PassengerPage() {
               )}
             </div>
 
+            {/* Paradas intermedias */}
+            {stopsData.map((stop, idx) => (
+              <div key={`stop_${idx}`} className="form-group" style={{ position: 'relative' }}>
+                <div style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: '#FFA500', zIndex: 10, display: 'flex', alignItems: 'center' }}>
+                  <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#FFA500', boxShadow: '0 0 8px #FFA500' }}></div>
+                </div>
+                <input 
+                  className="form-input" 
+                  placeholder={`Parada ${idx + 1}`} 
+                  style={{ paddingLeft: '44px', paddingRight: '40px' }}
+                  value={stop.query}
+                  onFocus={() => {
+                    setActiveField(`stop_${idx}` as any);
+                    setSearchQuery(stop.query);
+                  }}
+                  onChange={(e) => {
+                    const newQuery = e.target.value;
+                    setStopsData(prev => {
+                      const newStops = [...prev];
+                      newStops[idx].query = newQuery;
+                      return newStops;
+                    });
+                    setSearchQuery(newQuery);
+                  }}
+                />
+                {isSearching && activeField === `stop_${idx}` ? (
+                  <div style={{ position: 'absolute', right: '16px', top: '50%', transform: 'translateY(-50%)' }}>
+                    <div className="spinner" style={{ width: '16px', height: '16px', borderWidth: '2px' }} />
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setStopsData(prev => prev.filter((_, i) => i !== idx));
+                      if (activeField === `stop_${idx}`) {
+                        setSearchQuery('');
+                        setActiveField(null);
+                      }
+                    }}
+                    style={{
+                      position: 'absolute',
+                      right: '12px',
+                      top: '50%',
+                      transform: 'translateY(-50%)',
+                      background: 'rgba(255, 255, 255, 0.08)',
+                      border: 'none',
+                      color: 'var(--text-secondary)',
+                      fontSize: '1rem',
+                      fontWeight: 'bold',
+                      borderRadius: '50%',
+                      width: '22px',
+                      height: '22px',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      zIndex: 15,
+                      transition: 'background 0.2s'
+                    }}
+                  >
+                    ×
+                  </button>
+                )}
+              </div>
+            ))}
+
             {/* Input Destino */}
             <div className="form-group" style={{ position: 'relative' }}>
               <div style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: 'var(--danger)', zIndex: 10, display: 'flex', alignItems: 'center' }}>
@@ -1732,6 +1821,17 @@ export default function PassengerPage() {
                 )
               )}
             </div>
+
+            {/* Añadir Parada Button */}
+            {stopsData.length < 2 && (
+              <button 
+                type="button" 
+                onClick={() => setStopsData(prev => [...prev, { loc: null, query: '' }])}
+                style={{ alignSelf: 'flex-start', background: 'none', border: 'none', color: 'var(--accent)', fontSize: '0.85rem', fontWeight: 700, cursor: 'pointer', padding: '0 8px', marginTop: '-4px' }}
+              >
+                + Añadir Parada
+              </button>
+            )}
 
             {/* Search Results */}
             {searchResults.length > 0 && activeField && (
