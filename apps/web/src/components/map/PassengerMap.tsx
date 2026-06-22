@@ -321,35 +321,62 @@ export default function PassengerMap({
         }
 
         const fetchRoute = async () => {
-          const color = (tripStatus === 'driver_assigned' || tripStatus === 'driver_arrived') ? '#00E5A0' : '#FF4560'; // Verde para buscar al pasajero, rojo para ir al destino
+          const isGoingToPassenger = (tripStatus === 'driver_assigned' || tripStatus === 'driver_arrived');
+          const points = [{ lat: driverPos.lat, lng: driverPos.lng }];
+          if (stops && stops.length > 0 && activeRouteTarget === dest) {
+            points.push(...stops);
+          }
+          points.push({ lat: activeRouteTarget.lat, lng: activeRouteTarget.lng });
+
           try {
-            let waypoints = `${driverPos.lng},${driverPos.lat}`;
-            if (stops && stops.length > 0 && activeRouteTarget === dest) {
-              stops.forEach(s => waypoints += `;${s.lng},${s.lat}`);
+            const promises = [];
+            for (let i = 0; i < points.length - 1; i++) {
+              const wp = `${points[i].lng},${points[i].lat};${points[i+1].lng},${points[i+1].lat}`;
+              promises.push(fetch(`https://router.project-osrm.org/route/v1/driving/${wp}?overview=full&geometries=geojson`).then(res => res.json()));
             }
-            waypoints += `;${activeRouteTarget.lng},${activeRouteTarget.lat}`;
-            
-            const res = await fetch(`https://router.project-osrm.org/route/v1/driving/${waypoints}?overview=full&geometries=geojson`);
-            const data = await res.json();
+            const results = await Promise.all(promises);
             
             if (!mapRef.current) return;
             if (routeLineRef.current) { routeLineRef.current.remove(); }
 
-            if (data.routes && data.routes[0]) {
-              const route = L.geoJSON(data.routes[0].geometry, {
-                style: { color: color, weight: 5, opacity: 0.85, lineCap: 'round', lineJoin: 'round' }
-              }).addTo(map);
-              routeLineRef.current = route;
-            } else {
-              throw new Error('Sin ruta');
-            }
+            const routeGroup = L.featureGroup().addTo(map);
+            routeLineRef.current = routeGroup;
+            let hasRoute = false;
+
+            results.forEach((data, idx) => {
+              if (data.routes && data.routes[0]) {
+                hasRoute = true;
+                const isLast = idx === results.length - 1;
+                let color = isGoingToPassenger ? '#00E5A0' : (isLast ? '#FF4560' : '#FFA500');
+                const line = L.geoJSON(data.routes[0].geometry, {
+                  style: { className: 'animated-route-line', color: color, weight: 5, opacity: 0.85, lineCap: 'round', lineJoin: 'round' }
+                }).addTo(routeGroup);
+                
+                setTimeout(() => {
+                  line.eachLayer((layer: any) => {
+                    if (layer._path && layer._path.getTotalLength) {
+                      const length = layer._path.getTotalLength();
+                      layer._path.style.strokeDasharray = length;
+                      layer._path.style.strokeDashoffset = length;
+                      layer._path.getBoundingClientRect();
+                      layer._path.style.transition = 'stroke-dashoffset 1.8s ease-out';
+                      layer._path.style.strokeDashoffset = '0';
+                    }
+                  });
+                }, 50);
+              }
+            });
+            if (!hasRoute) throw new Error('Sin ruta');
           } catch (e) {
             if (!mapRef.current) return;
-            const route = L.polyline(
-              [[driverPos.lat, driverPos.lng], [activeRouteTarget.lat, activeRouteTarget.lng]],
-              { color: color, weight: 4, opacity: 0.85, dashArray: '10 6', lineCap: 'round' }
-            ).addTo(map);
-            routeLineRef.current = route;
+            if (routeLineRef.current) { routeLineRef.current.remove(); }
+            const routeGroup = L.featureGroup().addTo(map);
+            routeLineRef.current = routeGroup;
+            for (let i = 0; i < points.length - 1; i++) {
+              const isLast = i === points.length - 1;
+              let color = isGoingToPassenger ? '#00E5A0' : (isLast ? '#FF4560' : '#FFA500');
+              L.polyline([[points[i].lat, points[i].lng], [points[i+1].lat, points[i+1].lng]], { color: color, weight: 4, opacity: 0.85, dashArray: '10 6', lineCap: 'round' }).addTo(routeGroup);
+            }
           }
 
           // Ajustar vista del mapa una sola vez por fase
@@ -379,34 +406,61 @@ export default function PassengerMap({
         }
 
         const fetchRoute = async () => {
-          try {
-            let waypoints = `${origin.lng},${origin.lat}`;
-            if (stops && stops.length > 0) {
-              stops.forEach(s => waypoints += `;${s.lng},${s.lat}`);
-            }
-            waypoints += `;${dest.lng},${dest.lat}`;
+          const points = [{ lat: origin.lat, lng: origin.lng }];
+          if (stops && stops.length > 0) {
+            points.push(...stops);
+          }
+          points.push({ lat: dest.lat, lng: dest.lng });
 
-            const res = await fetch(`https://router.project-osrm.org/route/v1/driving/${waypoints}?overview=full&geometries=geojson`);
-            const data = await res.json();
+          try {
+            const promises = [];
+            for (let i = 0; i < points.length - 1; i++) {
+              const wp = `${points[i].lng},${points[i].lat};${points[i+1].lng},${points[i+1].lat}`;
+              promises.push(fetch(`https://router.project-osrm.org/route/v1/driving/${wp}?overview=full&geometries=geojson`).then(res => res.json()));
+            }
+            const results = await Promise.all(promises);
             
             if (!mapRef.current) return;
             if (routeLineRef.current) { routeLineRef.current.remove(); }
 
-            if (data.routes && data.routes[0]) {
-              const routeLine = L.geoJSON(data.routes[0].geometry, {
-                style: { color: '#00E5A0', weight: 5, opacity: 0.85, lineCap: 'round', lineJoin: 'round' }
-              }).addTo(map);
-              routeLineRef.current = routeLine;
-            } else {
-              throw new Error('Sin ruta');
-            }
-          } catch (error) {
+            const routeGroup = L.featureGroup().addTo(map);
+            routeLineRef.current = routeGroup;
+            let hasRoute = false;
+
+            results.forEach((data, idx) => {
+              if (data.routes && data.routes[0]) {
+                hasRoute = true;
+                const isLast = idx === results.length - 1;
+                let color = isLast ? '#00E5A0' : '#FFA500'; // Naranjo para paradas, verde para destino final
+                const line = L.geoJSON(data.routes[0].geometry, {
+                  style: { className: 'animated-route-line', color: color, weight: 5, opacity: 0.85, lineCap: 'round', lineJoin: 'round' }
+                }).addTo(routeGroup);
+                
+                setTimeout(() => {
+                  line.eachLayer((layer: any) => {
+                    if (layer._path && layer._path.getTotalLength) {
+                      const length = layer._path.getTotalLength();
+                      layer._path.style.strokeDasharray = length;
+                      layer._path.style.strokeDashoffset = length;
+                      layer._path.getBoundingClientRect();
+                      layer._path.style.transition = 'stroke-dashoffset 1.8s ease-out';
+                      layer._path.style.strokeDashoffset = '0';
+                    }
+                  });
+                }, 50);
+              }
+            });
+            if (!hasRoute) throw new Error('Sin ruta');
+          } catch (e) {
             if (!mapRef.current) return;
-            const routeLine = L.polyline(
-              [[origin.lat, origin.lng], [dest.lat, dest.lng]],
-              { color: '#00E5A0', weight: 4, opacity: 0.85, dashArray: '10 6', lineCap: 'round' }
-            ).addTo(map);
-            routeLineRef.current = routeLine;
+            if (routeLineRef.current) { routeLineRef.current.remove(); }
+            const routeGroup = L.featureGroup().addTo(map);
+            routeLineRef.current = routeGroup;
+            for (let i = 0; i < points.length - 1; i++) {
+              const isLast = i === points.length - 1;
+              let color = isLast ? '#00E5A0' : '#FFA500';
+              L.polyline([[points[i].lat, points[i].lng], [points[i+1].lat, points[i+1].lng]], { color: color, weight: 4, opacity: 0.85, dashArray: '10 6', lineCap: 'round' }).addTo(routeGroup);
+            }
           }
 
           // Ajustar vista del mapa

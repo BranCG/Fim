@@ -1415,6 +1415,39 @@ export default function PassengerPage() {
       </div>
     );
   }
+  const renderSearchResults = (forField: string) => {
+    if (activeField !== forField || searchResults.length === 0) return null;
+    return (
+      <div className="search-results" style={{ 
+        position: 'absolute', 
+        top: 'calc(100% + 4px)', 
+        left: 0, 
+        right: 0, 
+        zIndex: 100, 
+        background: '#1A1A28', 
+        border: '1px solid var(--border)', 
+        borderRadius: '12px',
+        boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
+        maxHeight: '220px',
+        overflowY: 'auto'
+      }}>
+        {searchResults.map((item, idx) => {
+          const parts = item.description.split(',');
+          const title = parts[0].trim();
+          const subtitle = parts.slice(1).join(',').trim();
+          return (
+            <div key={idx} className="search-item" onClick={() => handleSelectAddress(item)} style={{ padding: '12px 16px', borderBottom: '1px solid var(--border)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <div className="search-item-icon" style={{ display: 'flex', alignItems: 'center', color: 'var(--accent)' }}><IconPin /></div>
+              <div className="search-item-text" style={{ flex: 1, overflow: 'hidden' }}>
+                <div className="search-item-title" style={{ fontWeight: 700, fontSize: '0.9rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{title}</div>
+                {subtitle && <div className="search-item-sub" style={{ fontSize: '0.75rem', color: 'var(--text-muted)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{subtitle}</div>}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    );
+  };
 
   return (
     <div className="app-container">
@@ -1687,6 +1720,7 @@ export default function PassengerPage() {
                   </button>
                 )
               )}
+              {renderSearchResults('origin')}
             </div>
 
             {/* Paradas intermedias */}
@@ -1752,6 +1786,7 @@ export default function PassengerPage() {
                     ×
                   </button>
                 )}
+                {renderSearchResults(`stop_${idx}`)}
               </div>
             ))}
 
@@ -1812,6 +1847,7 @@ export default function PassengerPage() {
                   </button>
                 )
               )}
+              {renderSearchResults('dest')}
             </div>
 
             {/* Añadir Parada Button */}
@@ -1841,26 +1877,6 @@ export default function PassengerPage() {
               >
                 Pedir Viaje
               </button>
-            )}
-
-            {/* Search Results */}
-            {searchResults.length > 0 && activeField && (
-              <div className="search-results" style={{ marginTop: '4px' }}>
-                {searchResults.map((item, idx) => {
-                  const parts = item.description.split(',');
-                  const title = parts[0].trim();
-                  const subtitle = parts.slice(1).join(',').trim();
-                  return (
-                    <div key={idx} className="search-item" onClick={() => handleSelectAddress(item)}>
-                      <div className="search-item-icon" style={{ display: 'flex', alignItems: 'center', color: 'var(--accent)' }}><IconPin /></div>
-                      <div className="search-item-text">
-                        <div className="search-item-title">{title}</div>
-                        {subtitle && <div className="search-item-sub">{subtitle}</div>}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
             )}
           </div>
           
