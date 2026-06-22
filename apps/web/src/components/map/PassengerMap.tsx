@@ -77,12 +77,18 @@ export default function PassengerMap({
         attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors © <a href="https://carto.com/attributions">CARTO</a>',
         maxZoom: 20,
         subdomains: 'abcd',
+        keepBuffer: 4,
+        updateWhenZooming: false,
+        updateWhenIdle: true
       }).addTo(map);
 
       L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_only_labels/{z}/{x}/{y}{r}.png', {
         maxZoom: 20,
         subdomains: 'abcd',
         className: 'map-labels-layer',
+        keepBuffer: 4,
+        updateWhenZooming: false,
+        updateWhenIdle: true
       }).addTo(map);
 
       setTimeout(() => map.invalidateSize(true), 200);

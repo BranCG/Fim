@@ -571,11 +571,9 @@ background: var(--accent);
 @keyframes routePulse {
   0% {
     opacity: 0.6;
-    filter: drop-shadow(0 0 2px currentColor);
   }
   100% {
     opacity: 1;
-    filter: drop-shadow(0 0 10px currentColor);
   }
 }
 
