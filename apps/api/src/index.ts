@@ -21,24 +21,37 @@ import { setupSocketHandlers } from './socket/handlers';
 const app = express();
 const httpServer = createServer(app);
 
-// ─── CORS configuration for local network testing ──────────────────────────
+// ─── CORS configuration ───────────────────────────────────────────────────
 const corsOptions = {
   origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
+    // 1. Siempre permitir peticiones sin origen (Nativas Móviles / Postman / Servidor a Servidor)
     if (!origin) return callback(null, true);
-    // Allow http:// and capacitor:// origins for local dev subnets
-    const isLocal = /^(http|capacitor):\/\/(localhost|127\.0\.0\.1|10\.\d+\.\d+\.\d+|192\.168\.\d+\.\d+|172\.(1[6-9]|2\d|3[0-1])\.\d+\.\d+)(:\d+)?$/.test(origin);
-    // Allow Vercel deployments (production/preview)
-    const isVercel = /\.vercel\.app$/.test(origin);
     
-    // Check if it matches CLIENT_URL or ADMIN_URL from env
     const clientUrl = process.env.CLIENT_URL;
     const adminUrl = process.env.ADMIN_URL;
     const matchesEnv = (clientUrl && origin === clientUrl) || (adminUrl && origin === adminUrl);
+
+    // 2. Si es Producción, ser muy estricto
+    if (process.env.NODE_ENV === 'production') {
+      // Las apps híbridas (Capacitor/Ionic) en móviles a veces envían estos origenes
+      const isMobileApp = origin === 'capacitor://localhost' || origin === 'http://localhost';
+      
+      if (matchesEnv || isMobileApp) {
+        callback(null, true);
+      } else {
+        callback(new Error(`Origen no permitido por CORS en Producción: ${origin}`));
+      }
+      return;
+    }
+
+    // 3. Si es Desarrollo (Local), ser más flexible
+    const isLocal = /^(http|capacitor):\/\/(localhost|127\.0\.0\.1|10\.\d+\.\d+\.\d+|192\.168\.\d+\.\d+|172\.(1[6-9]|2\d|3[0-1])\.\d+\.\d+)(:\d+)?$/.test(origin);
+    const isVercel = /\.vercel\.app$/.test(origin);
     
     if (isLocal || isVercel || matchesEnv) {
       callback(null, true);
     } else {
-      callback(new Error(`Not allowed by CORS: ${origin}`));
+      callback(new Error(`Origen no permitido por CORS: ${origin}`));
     }
   },
   credentials: true,
