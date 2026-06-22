@@ -87,7 +87,7 @@ router.post('/request', requireAuth, requireRole('passenger'), async (req: Reque
         paymentMethod: paymentMethod || 'cash',
         status: 'searching',
         passengerCount: count,
-        stops: Array.isArray(stops) ? stops : null,
+        stops: Array.isArray(stops) ? stops : undefined,
       },
       include: { passenger: { select: { id: true, name: true, phone: true } } },
     });
