@@ -113,6 +113,7 @@ model Trip {
   destLat         Float          @map("latitud_destino")
   destLng         Float          @map("longitud_destino")
   destAddress     String         @map("direccion_destino")
+  stops           Json?          @map("paradas")
   distanceKm      Float          @map("distancia_km")
   durationMin     Int            @map("duracion_min")
   estimatedPrice  Int            @map("precio_estimado")
