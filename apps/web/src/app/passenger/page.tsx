@@ -244,6 +244,7 @@ export default function PassengerPage() {
   const [estimatedPrice, setEstimatedPrice] = useState(0);
   const [distanceKm, setDistanceKm] = useState(0);
   const [durationMin, setDurationMin] = useState(0);
+  const [isEstimatingPrice, setIsEstimatingPrice] = useState(false);
 
   // Búsqueda de direcciones
   const [searchQuery, setSearchQuery] = useState('');
@@ -733,6 +734,7 @@ export default function PassengerPage() {
   useEffect(() => {
     if (origin && dest && (status === 'selecting_dest' || status === 'confirm')) {
       setError('');
+      setIsEstimatingPrice(true);
       api.post('/trips/estimate', {
         originLat: origin.lat,
         originLng: origin.lng,
@@ -750,6 +752,9 @@ export default function PassengerPage() {
         console.error('Error al estimar viaje:', err);
         setError('Error al calcular el precio estimado.');
         setStatus('idle');
+      })
+      .finally(() => {
+        setIsEstimatingPrice(false);
       });
     }
   }, [origin, dest, status, stopsData]);
@@ -2114,7 +2119,11 @@ export default function PassengerPage() {
             </div>
             <div style={{ textAlign: 'right' }}>
               <div className="price-display">
-                {formatCLP(estimatedPrice)}
+                {isEstimatingPrice ? (
+                  <div className="spinner" style={{ width: '24px', height: '24px', borderWidth: '3px', borderColor: 'var(--accent)', borderTopColor: 'transparent' }} />
+                ) : (
+                  estimatedPrice ? formatCLP(estimatedPrice) : '$0'
+                )}
               </div>
             </div>
           </div>
@@ -2214,8 +2223,13 @@ export default function PassengerPage() {
             </div>
           </div>
 
-          <button className="btn btn-accent btn-block btn-lg" onClick={handleRequestTrip}>
-            Confirmar y pedir viaje
+          <button 
+            className="btn btn-accent btn-block btn-lg" 
+            onClick={handleRequestTrip}
+            disabled={isEstimatingPrice || !estimatedPrice}
+            style={{ opacity: (isEstimatingPrice || !estimatedPrice) ? 0.7 : 1 }}
+          >
+            {isEstimatingPrice ? 'Calculando...' : 'Confirmar y pedir viaje'}
           </button>
           <button 
             className="btn btn-secondary btn-block" 
