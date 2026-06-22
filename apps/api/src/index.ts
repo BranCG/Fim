@@ -2,6 +2,7 @@ import express from 'express';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
 import cors from 'cors';
+import helmet from 'helmet';
 import dotenv from 'dotenv';
 import path from 'path';
 
@@ -70,6 +71,10 @@ app.set('io', io);
 import fs from 'fs';
 
 // ─── Middleware ────────────────────────────────────────────────────────────
+app.use(helmet({
+  crossOriginResourcePolicy: { policy: "cross-origin" } // Permite que tus imágenes en /uploads carguen en tu app
+}));
+
 // Logger middleware to write requests to a file for mobile debugging
 app.use((req, res, next) => {
   const logFile = path.join(__dirname, '..', 'api-debug.log');
