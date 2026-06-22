@@ -744,9 +744,6 @@ export default function PassengerPage() {
         setEstimatedPrice(estimatedPrice);
         setDistanceKm(distanceKm);
         setDurationMin(durationMin);
-        if (status === 'selecting_dest') {
-          setStatus('confirm');
-        }
       })
       .catch(err => {
         console.error('Error al estimar viaje:', err);
@@ -859,18 +856,12 @@ export default function PassengerPage() {
         setSearchResults([]);
         setActiveField(null);
         setSearchQuery('');
-        if (dest) {
-          setStatus('selecting_dest');
-        }
       } else if (activeField === 'dest') {
         setDest(loc);
         setDestQuery(loc.address.split(',')[0]);
         setSearchResults([]);
         setActiveField(null);
         setSearchQuery('');
-        if (origin) {
-          setStatus('selecting_dest');
-        }
       } else if (activeField && activeField.startsWith('stop_')) {
         const idx = parseInt(activeField.split('_')[1], 10);
         setStopsData(prev => {
@@ -1830,6 +1821,24 @@ export default function PassengerPage() {
                 style={{ alignSelf: 'flex-start', background: 'none', border: 'none', color: 'var(--accent)', fontSize: '0.85rem', fontWeight: 700, cursor: 'pointer', padding: '0 8px', marginTop: '-4px' }}
               >
                 + Añadir Parada
+              </button>
+            )}
+
+            {/* Pedir Viaje Button */}
+            {origin && dest && (
+              <button 
+                type="button"
+                className="btn btn-primary btn-block btn-lg" 
+                style={{ marginTop: '8px' }}
+                onClick={() => {
+                  if (activeField) {
+                    setActiveField(null);
+                    setSearchQuery('');
+                  }
+                  setStatus('confirm');
+                }}
+              >
+                Pedir Viaje
               </button>
             )}
 
