@@ -43,6 +43,7 @@ interface Driver {
   lastLat: number; lastLng: number;
   mercadoPagoLink: string | null;
   membershipPlan?: 'BLACK' | 'COMFORT' | 'FLEX';
+  topQualities?: string[];
 }
 
 // Santiago, Chile centro

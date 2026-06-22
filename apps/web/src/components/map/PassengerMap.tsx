@@ -447,7 +447,7 @@ export default function PassengerMap({
     const currentNearbyIds = new Set(nearbyDrivers.map(d => d.id));
 
     // Eliminar conductores que ya no están online o ya no están en la lista
-    for (const [id, marker] of nearbyMarkersRef.current.entries()) {
+    for (const [id, marker] of Array.from(nearbyMarkersRef.current.entries())) {
       if (!currentNearbyIds.has(id)) {
         marker.remove();
         nearbyMarkersRef.current.delete(id);
