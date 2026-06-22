@@ -448,6 +448,62 @@ export default function PassengerPage() {
     statusRef.current = status;
   }, [status]);
 
+  // Auto-fill origin location on initial load if idle
+  useEffect(() => {
+    let mounted = true;
+    const autoFetchLoc = async () => {
+      try {
+        const { requestLocationPermissions, getCurrentPosition } = await import('@/lib/geolocation');
+        const hasPermission = await requestLocationPermissions();
+        if (!hasPermission) return; // Silent return for auto-fetch
+        
+        const pos = await getCurrentPosition();
+        if (!mounted || statusRef.current !== 'idle') return;
+        
+        setOrigin(prev => {
+          if (prev) return prev; 
+          return { lat: pos.lat, lng: pos.lng, address: 'Obteniendo dirección...' };
+        });
+        setOriginQuery(prev => prev ? prev : 'Obteniendo dirección...');
+        setCenterTrigger(prev => prev + 1);
+        
+        try {
+          const res = await api.get(`/trips/reverse-geocode?lat=${pos.lat}&lng=${pos.lng}`);
+          if (!mounted || statusRef.current !== 'idle') return;
+          if (res.data.address) {
+            setOrigin(prev => {
+              if (prev && prev.address !== 'Obteniendo dirección...' && prev.address !== 'Mi ubicación actual') return prev;
+              return { lat: pos.lat, lng: pos.lng, address: res.data.address };
+            });
+            setOriginQuery(prev => {
+              if (prev && prev !== 'Obteniendo dirección...' && prev !== 'Mi ubicación actual') return prev;
+              return res.data.address;
+            });
+          }
+        } catch (e) {
+          if (!mounted || statusRef.current !== 'idle') return;
+          setOrigin(prev => {
+            if (prev && prev.address !== 'Obteniendo dirección...') return prev;
+            return { lat: pos.lat, lng: pos.lng, address: 'Mi ubicación actual' };
+          });
+          setOriginQuery(prev => {
+            if (prev && prev !== 'Obteniendo dirección...') return prev;
+            return 'Mi ubicación actual';
+          });
+        }
+      } catch (err) {
+        console.error('Auto fetch location failed:', err);
+      }
+    };
+    
+    // Solo auto-detectar si el origen está vacío inicialmente
+    autoFetchLoc();
+    
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
   const checkActiveTrip = useCallback(async () => {
     try {
       const res = await api.get('/trips/active');
@@ -1521,7 +1577,7 @@ export default function PassengerPage() {
         {gpsError && (
           <div style={{
             position: 'absolute',
-            top: '16px',
+            top: '84px',
             left: '16px',
             right: '76px',
             background: 'rgba(239, 68, 68, 0.95)',
@@ -1536,7 +1592,7 @@ export default function PassengerPage() {
             alignItems: 'center',
             gap: '8px',
             boxShadow: 'var(--shadow-lg)',
-            zIndex: 999,
+            zIndex: 9999,
             animation: 'fadeIn 0.3s ease'
           }}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>

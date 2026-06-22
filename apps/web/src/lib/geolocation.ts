@@ -28,7 +28,8 @@ export async function getCurrentPosition(): Promise<{ lat: number; lng: number }
     }
     const pos = await Geolocation.getCurrentPosition({
       enableHighAccuracy: true,
-      timeout: 10000,
+      timeout: 15000,
+      maximumAge: 10000,
     });
     return {
       lat: pos.coords.latitude,
@@ -40,7 +41,7 @@ export async function getCurrentPosition(): Promise<{ lat: number; lng: number }
       navigator.geolocation.getCurrentPosition(
         (p) => resolve({ lat: p.coords.latitude, lng: p.coords.longitude }),
         (err) => reject(err),
-        { enableHighAccuracy: true, timeout: 10000 }
+        { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 }
       );
     });
   }
