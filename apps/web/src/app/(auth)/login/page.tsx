@@ -179,12 +179,16 @@ export default function LoginPage() {
     } catch (err: any) {
       console.error('Native Google Error:', err);
       const errMsg = err?.message || err?.errorMessage || (typeof err === 'string' ? err : JSON.stringify(err));
-      let friendlyError = 'Error al iniciar sesión con Google.';
+      let friendlyError = 'No pudimos autenticarte con Google en este momento.';
+      
       if (errMsg && errMsg.toLowerCase().includes('cancel')) {
-        friendlyError = 'Inicio de sesión con Google cancelado por el usuario.';
-      } else if (errMsg) {
-        friendlyError = `Error al iniciar sesión con Google: ${errMsg}`;
+        friendlyError = 'Inicio de sesión con Google cancelado.';
+      } else {
+        // En lugar de concatenar el error técnico en inglés (ej. "Something went wrong"),
+        // mostramos un mensaje genérico por seguridad.
+        friendlyError = 'Credenciales inválidas o error de conexión con Google. Por favor, intenta de nuevo o usa otro método de acceso.';
       }
+      
       setError(friendlyError);
       setLoading(false);
     }
