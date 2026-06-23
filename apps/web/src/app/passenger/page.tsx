@@ -1669,7 +1669,7 @@ export default function PassengerPage() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', position: 'relative' }}>
             
             {/* Input Origen */}
-            <div className="form-group" style={{ position: 'relative' }}>
+            <div className="form-group" style={{ position: 'relative', zIndex: activeField === 'origin' ? 200 : 10 }}>
               <div style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: 'var(--accent)', zIndex: 10, display: 'flex', alignItems: 'center' }}>
                 <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: 'var(--accent)', boxShadow: '0 0 8px var(--accent)' }}></div>
               </div>
@@ -1730,7 +1730,7 @@ export default function PassengerPage() {
 
             {/* Paradas intermedias */}
             {stopsData.map((stop, idx) => (
-              <div key={`stop_${idx}`} className="form-group" style={{ position: 'relative' }}>
+              <div key={`stop_${idx}`} className="form-group" style={{ position: 'relative', zIndex: activeField === `stop_${idx}` ? 200 : 9 - idx }}>
                 <div style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: '#FFA500', zIndex: 10, display: 'flex', alignItems: 'center' }}>
                   <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#FFA500', boxShadow: '0 0 8px #FFA500' }}></div>
                 </div>
@@ -1796,7 +1796,7 @@ export default function PassengerPage() {
             ))}
 
             {/* Input Destino */}
-            <div className="form-group" style={{ position: 'relative' }}>
+            <div className="form-group" style={{ position: 'relative', zIndex: activeField === 'dest' ? 200 : 5 }}>
               <div style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: 'var(--danger)', zIndex: 10, display: 'flex', alignItems: 'center' }}>
                 <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: 'var(--danger)', boxShadow: '0 0 8px var(--danger)' }}></div>
               </div>
@@ -3439,7 +3439,7 @@ export default function PassengerPage() {
             </p>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', position: 'relative' }}>
-              <div className="form-group" style={{ position: 'relative', margin: 0 }}>
+              <div className="form-group" style={{ position: 'relative', margin: 0, zIndex: 200 }}>
                 <input 
                   type="text" 
                   className="form-input" 
