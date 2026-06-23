@@ -298,8 +298,9 @@ export default function PassengerPage() {
   // Helper styles to support collapsing/minimizing bottom sheets smoothly
   const bottomSheetStyle = (customStyle: React.CSSProperties = {}): React.CSSProperties => ({
     transform: isMinimized ? 'translateY(calc(100% - 62px))' : 'translateY(0)',
-    transition: 'transform 0.35s cubic-bezier(0.4, 0, 0.2, 1)',
+    transition: 'transform 0.35s cubic-bezier(0.4, 0, 0.2, 1), height 0.35s ease',
     maxHeight: '85vh',
+    height: activeField ? '80vh' : 'auto',
     overflowY: 'auto',
     ...customStyle
   });
