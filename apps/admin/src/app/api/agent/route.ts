@@ -30,7 +30,7 @@ export async function POST(request: Request) {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        // 'Authorization': `Bearer my-openclaw-token` // Si configuraste un auth local en openclaw
+        'Authorization': `Bearer ${process.env.OPENCLAW_TOKEN || 'MISSING_TOKEN'}`
       },
       body: JSON.stringify(payload)
     });
