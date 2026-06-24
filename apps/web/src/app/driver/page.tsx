@@ -1828,7 +1828,7 @@ export default function DriverPage() {
         />
 
         {activeTab === 'finances' && (
-          <div style={{ position: 'absolute', inset: 0, zIndex: 100, background: 'var(--bg-primary)', overflowY: 'auto' }}>
+          <div style={{ position: 'absolute', inset: 0, zIndex: 100, background: 'var(--bg-primary)', overflowY: 'auto', paddingTop: '80px' }}>
             <FinancesDashboard />
           </div>
         )}
@@ -1900,10 +1900,7 @@ export default function DriverPage() {
               </p>
             </div>
             <div style={{ textAlign: 'right' }}>
-              <div style={{ fontSize: '1.4rem', fontWeight: 900, color: 'var(--accent)' }}>
-                {formatCLP(totalEarnings !== null ? totalEarnings : 0)}
-              </div>
-              <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>RECAUDACIÓN TOTAL</div>
+              {/* Recaudación removida: Ahora se muestra en Fim Finanzas */}
             </div>
           </div>
 
