@@ -28,6 +28,7 @@ interface Driver {
   comfortLastPaidAt?: string;
   comfortReceiptUrl?: string;
   trips?: any[];
+  isTrial?: boolean;
 }
 
 type View = 'dashboard' | 'pending' | 'all_drivers' | 'driver_detail' | 'revenue_analysis' | 'passengers' | 'passenger_detail' | 'settings';
