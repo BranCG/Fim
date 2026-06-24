@@ -105,16 +105,16 @@ router.get('/dashboard', requireAuth, requireRole('driver'), async (req: Request
 
     const fuelCost = round10(Math.round((weekDistance / fuelE) * fuelP));
     const wearCost = round10(Math.round(weekDistance * 50)); // 50 CLP por km
-    const fixedCost = round10(driver.membershipPlan === 'BLACK' ? Math.round(150000 / 4.3) : (driver.membershipPlan === 'COMFORT' ? 20000 * 7 : 60000));
+    const fixedCost = round10(driver.membershipPlan === 'BLACK' ? Math.round((150000 / 30) * 7) : (driver.membershipPlan === 'COMFORT' ? 20000 * 7 : 60000));
     
     // Procesar el historial de las últimas 4 semanas
     const history = weeklyData.map((week, index) => {
       const wGross = round10(week.gross);
       const wFuel = round10(Math.round((week.distance / fuelE) * fuelP));
       const wWear = round10(Math.round(week.distance * 50));
-      const wRawNet = wGross - (wFuel + wWear + fixedCost);
-      const wTax = wRawNet > 0 ? round10(Math.round(wRawNet * 0.1375)) : 0;
-      const wNet = wRawNet - wTax;
+      const wTax = round10(Math.round(wGross * 0.1375)); // SII sobre Bruto
+      const wRawNet = wGross - (wFuel + wWear + fixedCost + wTax);
+      const wNet = wRawNet;
       const incomeGoal = driver.netIncomeGoal || 1000000;
       const progress = Math.max(0, Math.min((wNet / incomeGoal) * 100, 100));
       
@@ -135,12 +135,11 @@ router.get('/dashboard', requireAuth, requireRole('driver'), async (req: Request
     weekGross = round10(weekGross);
     todayGross = round10(todayGross);
 
-    const totalExpenses = fuelCost + wearCost + fixedCost;
-    const rawNet = weekGross - totalExpenses;
-    
-    // Provisión de impuestos (13.75%)
-    const taxProvision = rawNet > 0 ? round10(Math.round(rawNet * 0.1375)) : 0;
-    const realNetIncome = rawNet - taxProvision;
+    // Provisión de impuestos (13.75%) sobre el Ingreso Bruto
+    const taxProvision = round10(Math.round(weekGross * 0.1375));
+
+    const totalExpenses = fuelCost + wearCost + fixedCost + taxProvision;
+    const realNetIncome = weekGross - totalExpenses;
 
     // Metas de Membresía (Descuento)
     const discountGoal = driver.membershipPlan === 'BLACK' ? 150 : (driver.membershipPlan === 'FLEX' ? 40 : 0);

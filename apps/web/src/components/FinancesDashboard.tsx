@@ -158,7 +158,7 @@ export default function FinancesDashboard() {
           <div style={{ color: '#60A5FA' }}><IconTax /></div>
           <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '4px' }}>
             Provisión SII
-            <button onClick={() => setInfoModal({title: 'Provisión SII (13.75%)', desc: 'Reservamos un 13.75% calculado sobre tu ganancia líquida (Bruto menos costos operativos) para cubrir tus futuras obligaciones tributarias de boletas de honorarios.'})} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', padding: 0, cursor: 'pointer', display: 'flex' }}><IconInfo /></button>
+            <button onClick={() => setInfoModal({title: 'Provisión SII (13.75%)', desc: 'Reservamos un 13.75% calculado sobre tu Ingreso Bruto total (recaudación sin descontar costos) para simular de forma exacta tus futuras obligaciones tributarias de boletas de honorarios en Chile.'})} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', padding: 0, cursor: 'pointer', display: 'flex' }}><IconInfo /></button>
           </div>
           <div style={{ fontSize: '1.1rem', fontWeight: 700, color: '#fff' }}>-{formatCLP(data.expenses.taxes)}</div>
         </div>
