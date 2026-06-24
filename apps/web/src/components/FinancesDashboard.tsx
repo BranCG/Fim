@@ -23,6 +23,10 @@ export default function FinancesDashboard() {
   // Info Modal state
   const [infoModal, setInfoModal] = useState<{title: string, desc: string} | null>(null);
 
+  // Pagination states
+  const [historyPage, setHistoryPage] = useState(1);
+  const historyItemsPerPage = 4;
+
   const fetchData = async () => {
     try {
       const res = await api.get('/finances/dashboard');
@@ -229,21 +233,45 @@ export default function FinancesDashboard() {
             Acá podrás ver tu historial de METAS. Con esto podrás ir viendo tu avance y tu % de éxito mediante las metas que vas cumpliendo semana a semana.
           </p>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            {data.history.map((week: any, idx: number) => (
-              <div key={idx} className="card" style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '8px', opacity: idx === 0 ? 1 : 0.8 }}>
+            {data.history.slice((historyPage - 1) * historyItemsPerPage, historyPage * historyItemsPerPage).map((week: any, idx: number) => {
+              const isCurrentWeek = historyPage === 1 && idx === 0;
+              return (
+              <div key={idx} className="card" style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '8px', opacity: isCurrentWeek ? 1 : 0.8 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span style={{ fontSize: '0.9rem', fontWeight: 700, color: idx === 0 ? 'var(--accent)' : 'var(--text-primary)' }}>{week.label}</span>
+                  <span style={{ fontSize: '0.9rem', fontWeight: 700, color: isCurrentWeek ? 'var(--accent)' : 'var(--text-primary)' }}>{week.label}</span>
                   <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{formatCLP(week.netIncome)} / {formatCLP(week.goal)}</span>
                 </div>
                 <div style={{ width: '100%', height: '6px', background: 'rgba(255,255,255,0.1)', borderRadius: '3px', overflow: 'hidden' }}>
-                  <div style={{ width: `${week.progress}%`, height: '100%', background: week.progress >= 100 ? 'var(--success)' : (idx === 0 ? 'var(--accent)' : 'var(--text-secondary)'), borderRadius: '3px' }} />
+                  <div style={{ width: `${week.progress}%`, height: '100%', background: week.progress >= 100 ? 'var(--success)' : (isCurrentWeek ? 'var(--accent)' : 'var(--text-secondary)'), borderRadius: '3px' }} />
                 </div>
                 <div style={{ fontSize: '0.75rem', color: week.progress >= 100 ? 'var(--success)' : 'var(--text-muted)', textAlign: 'right', fontWeight: week.progress >= 100 ? 700 : 400 }}>
                   {week.progress >= 100 ? '¡Meta Cumplida! 🏆' : `${week.progress.toFixed(1)}% logrado`}
                 </div>
               </div>
-            ))}
+            )})}
           </div>
+          
+          {data.history.length > historyItemsPerPage && (
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '16px' }}>
+              <button 
+                onClick={() => setHistoryPage(p => Math.max(1, p - 1))}
+                disabled={historyPage === 1}
+                style={{ background: 'none', border: 'none', color: historyPage === 1 ? 'var(--text-muted)' : 'var(--accent)', fontWeight: 700, opacity: historyPage === 1 ? 0.3 : 1 }}
+              >
+                ← Más recientes
+              </button>
+              <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                Pág {historyPage} de {Math.ceil(data.history.length / historyItemsPerPage)}
+              </span>
+              <button 
+                onClick={() => setHistoryPage(p => Math.min(Math.ceil(data.history.length / historyItemsPerPage), p + 1))}
+                disabled={historyPage === Math.ceil(data.history.length / historyItemsPerPage)}
+                style={{ background: 'none', border: 'none', color: historyPage === Math.ceil(data.history.length / historyItemsPerPage) ? 'var(--text-muted)' : 'var(--accent)', fontWeight: 700, opacity: historyPage === Math.ceil(data.history.length / historyItemsPerPage) ? 0.3 : 1 }}
+              >
+                Anteriores →
+              </button>
+            </div>
+          )}
         </div>
       )}
 

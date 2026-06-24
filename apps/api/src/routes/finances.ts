@@ -35,11 +35,12 @@ router.get('/dashboard', requireAuth, requireRole('driver'), async (req: Request
     // Obtener viajes del mes actual para la meta de descuento
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
 
-    // Consultar todos los viajes completados desde la fecha más antigua (4 semanas o inicio de mes)
-    const fourWeeksAgo = new Date(startOfWeek);
-    fourWeeksAgo.setDate(fourWeeksAgo.getDate() - 21); // Hace 3 semanas + la actual = 4 semanas
+    // Consultar todos los viajes completados desde la fecha más antigua (12 semanas o inicio de mes)
+    const historyWeeks = 12;
+    const historyStartDate = new Date(startOfWeek);
+    historyStartDate.setDate(historyStartDate.getDate() - ((historyWeeks - 1) * 7));
     
-    const earliestDate = startOfMonth < fourWeeksAgo ? startOfMonth : fourWeeksAgo;
+    const earliestDate = startOfMonth < historyStartDate ? startOfMonth : historyStartDate;
 
     const allRecentTrips = await prisma.trip.findMany({
       where: {
@@ -61,12 +62,11 @@ router.get('/dashboard', requireAuth, requireRole('driver'), async (req: Request
     let monthTripCount = 0;
     
     // Para el historial (0 = esta semana, 1 = semana pasada, etc)
-    const weeklyData = [
-      { gross: 0, distance: 0, start: new Date(startOfWeek) },
-      { gross: 0, distance: 0, start: new Date(startOfWeek.getTime() - 7 * 24 * 60 * 60 * 1000) },
-      { gross: 0, distance: 0, start: new Date(startOfWeek.getTime() - 14 * 24 * 60 * 60 * 1000) },
-      { gross: 0, distance: 0, start: new Date(startOfWeek.getTime() - 21 * 24 * 60 * 60 * 1000) },
-    ];
+    const weeklyData = Array.from({ length: historyWeeks }, (_, i) => ({
+      gross: 0,
+      distance: 0,
+      start: new Date(startOfWeek.getTime() - i * 7 * 24 * 60 * 60 * 1000)
+    }));
 
     for (const trip of allRecentTrips) {
       const tripDate = new Date(trip.createdAt);
@@ -78,17 +78,14 @@ router.get('/dashboard', requireAuth, requireRole('driver'), async (req: Request
       if (tripDate >= startOfWeek) {
         weekGross += trip.estimatedPrice;
         weekDistance += trip.distanceKm;
-        weeklyData[0].gross += trip.estimatedPrice;
-        weeklyData[0].distance += trip.distanceKm;
-      } else if (tripDate >= weeklyData[1].start) {
-        weeklyData[1].gross += trip.estimatedPrice;
-        weeklyData[1].distance += trip.distanceKm;
-      } else if (tripDate >= weeklyData[2].start) {
-        weeklyData[2].gross += trip.estimatedPrice;
-        weeklyData[2].distance += trip.distanceKm;
-      } else if (tripDate >= weeklyData[3].start) {
-        weeklyData[3].gross += trip.estimatedPrice;
-        weeklyData[3].distance += trip.distanceKm;
+      }
+      
+      for (let i = 0; i < historyWeeks; i++) {
+        if (tripDate >= weeklyData[i].start && (i === 0 || tripDate < weeklyData[i - 1].start)) {
+          weeklyData[i].gross += trip.estimatedPrice;
+          weeklyData[i].distance += trip.distanceKm;
+          break;
+        }
       }
       
       if (tripDate >= startOfToday) {
@@ -120,8 +117,10 @@ router.get('/dashboard', requireAuth, requireRole('driver'), async (req: Request
       
       let label = 'Esta semana';
       if (index === 1) label = 'Semana pasada';
-      if (index === 2) label = 'Hace 2 semanas';
-      if (index === 3) label = 'Hace 3 semanas';
+      if (index > 1) {
+        const d = new Date(week.start);
+        label = `Semana del ${d.getDate()}/${d.getMonth() + 1}`;
+      }
 
       return {
         label,
