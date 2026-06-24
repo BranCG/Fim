@@ -9,6 +9,7 @@ import { sendLocalNotification, initializePushNotifications } from '@/lib/notifi
 
 const DriverMap = dynamic(() => import('@/components/map/DriverMap'), { ssr: false });
 import BiometricModal from '@/components/BiometricModal';
+import FinancesDashboard from '@/components/FinancesDashboard';
 
 type DriverStatus = 'pending' | 'approved' | 'active' | 'rejected' | 'suspended';
 
@@ -199,6 +200,7 @@ export default function DriverPage() {
   const [session, setSession] = useState<any>(null);
   const [centerTrigger, setCenterTrigger] = useState(0);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState<'map' | 'finances'>('map');
 
   const formatDuration = (min: number) => {
     if (min < 60) return `${min} min aprox.`;
@@ -1684,6 +1686,22 @@ export default function DriverPage() {
             {/* Dropdown menu */}
             {isMenuOpen && (
               <div className="header-menu-dropdown">
+                {activeTab === 'finances' ? (
+                  <button className="header-nav-btn" onClick={() => { setActiveTab('map'); setIsMenuOpen(false); }}>
+                    <div className="icon-circle">
+                      <IconCompass />
+                    </div>
+                    <span className="btn-label">Volver al Mapa</span>
+                  </button>
+                ) : (
+                  <button className="header-nav-btn" onClick={() => { setActiveTab('finances'); setIsMenuOpen(false); }}>
+                    <div className="icon-circle">
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2" /><line x1="8" y1="21" x2="16" y2="21" /><line x1="12" y1="17" x2="12" y2="21" /></svg>
+                    </div>
+                    <span className="btn-label">Finanzas</span>
+                  </button>
+                )}
+
                 <button className="header-nav-btn" onClick={() => { openProfileModal(); setIsMenuOpen(false); }}>
                   <div className="icon-circle">
                     <IconUser />
@@ -1808,10 +1826,16 @@ export default function DriverPage() {
           stops={activeTrip?.stops || []}
           centerTrigger={centerTrigger}
         />
+
+        {activeTab === 'finances' && (
+          <div style={{ position: 'absolute', inset: 0, zIndex: 100, background: 'var(--bg-primary)', overflowY: 'auto' }}>
+            <FinancesDashboard />
+          </div>
+        )}
       </main>
 
       {/* DASHBOARD INFERIOR */}
-      {!tripRequest && !activeTrip && (
+      {!tripRequest && !activeTrip && activeTab === 'map' && (
         <div className="bottom-sheet" style={bottomSheetStyle()}>
           <BottomSheetHandle />
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>

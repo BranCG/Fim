@@ -100,6 +100,11 @@ model Driver {
   tokenVersion        Int       @default(0) @map("version_token")
   isDeleted           Boolean   @default(false) @map("esta_eliminado")
 
+  // Fim Finanzas Config
+  fuelEfficiency      Float?    @default(12.0) @map("rendimiento_combustible")
+  fuelPrice           Int?      @default(1300) @map("precio_combustible")
+  netIncomeGoal       Int?      @default(1000000) @map("meta_ingreso_neto")
+
   @@map("conductores")
 }
 

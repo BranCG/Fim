@@ -15,7 +15,9 @@ import tripRoutes from './routes/trips';
 import adminRoutes from './routes/admin';
 import uploadRoutes from './routes/uploads';
 import paymentRoutes from './routes/payments.routes';
+import configRoutes from './routes/config';
 import agentRoutes from './routes/agent';
+import financeRoutes from './routes/finances';
 
 // Socket handler
 import { setupSocketHandlers } from './socket/handlers';
@@ -110,6 +112,7 @@ app.use('/api/upload', uploadRoutes);
 app.use('/api/payments', paymentRoutes);
 app.use('/api/config', configRoutes);
 app.use('/api/agent', agentRoutes);
+app.use('/api/finances', financeRoutes);
 
 // Health check
 app.get('/api/health', (_, res) => {
