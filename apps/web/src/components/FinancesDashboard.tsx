@@ -7,6 +7,7 @@ const IconWrench = () => <svg width="24" height="24" viewBox="0 0 24 24" fill="n
 const IconTax = () => <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="4" y="4" width="16" height="16" rx="2" ry="2" /><rect x="9" y="9" width="6" height="6" /><line x1="9" y1="1" x2="9" y2="4" /><line x1="15" y1="1" x2="15" y2="4" /><line x1="9" y1="20" x2="9" y2="23" /><line x1="15" y1="20" x2="15" y2="23" /><line x1="20" y1="9" x2="23" y2="9" /><line x1="20" y1="14" x2="23" y2="14" /><line x1="1" y1="9" x2="4" y2="9" /><line x1="1" y1="14" x2="4" y2="14" /></svg>;
 const IconAward = () => <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="8" r="6" /><path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11" /></svg>;
 const IconSettings = () => <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" /></svg>;
+const IconInfo = () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><path d="M12 16v-4" /><path d="M12 8h.01" /></svg>;
 
 export default function FinancesDashboard() {
   const [data, setData] = useState<any>(null);
@@ -18,6 +19,9 @@ export default function FinancesDashboard() {
   const [fuelPrice, setFuelPrice] = useState('');
   const [netIncomeGoal, setNetIncomeGoal] = useState('');
   const [saving, setSaving] = useState(false);
+  
+  // Info Modal state
+  const [infoModal, setInfoModal] = useState<{title: string, desc: string} | null>(null);
 
   const fetchData = async () => {
     try {
@@ -71,12 +75,16 @@ export default function FinancesDashboard() {
   return (
     <div style={{ padding: '20px', paddingBottom: '100px', animation: 'fadeIn 0.3s' }}>
       
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-        <div>
-          <h1 style={{ fontSize: '1.5rem', margin: 0, fontWeight: 800 }}>Fim Finanzas</h1>
-          <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', margin: 0 }}>Tu Ingreso Neto Real y Costos Operativos</p>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '24px' }}>
+        <div style={{ flex: 1, paddingRight: '12px' }}>
+          <h1 style={{ fontSize: '1.5rem', margin: '0 0 8px 0', fontWeight: 800 }}>Fim Finanzas</h1>
+          <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', margin: 0, lineHeight: 1.4 }}>
+            Tu <strong>ingreso neto real</strong> se calcula restando todos tus costos operativos (bencina, mantención, impuestos y membresía) a tu recaudación bruta. 
+            <br/><br/>
+            Toca el <strong>engranaje</strong> para configurar el rendimiento de tu vehículo y establecer tu meta motivadora de la semana.
+          </p>
         </div>
-        <button onClick={() => setShowConfig(true)} style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}>
+        <button onClick={() => setShowConfig(true)} style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '4px' }}>
           <IconSettings />
         </button>
       </div>
@@ -108,25 +116,37 @@ export default function FinancesDashboard() {
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px', marginBottom: '32px' }}>
         <div className="card" style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '8px', border: '1px solid rgba(255,69,96,0.2)' }}>
           <div style={{ color: 'var(--danger)' }}><IconFuel /></div>
-          <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Bencina</div>
+          <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '4px' }}>
+            Bencina 
+            <button onClick={() => setInfoModal({title: 'Cálculo de Bencina', desc: 'Se calcula dividiendo la distancia exacta recorrida en tus viajes por el rendimiento configurado (km/l), multiplicado por el precio del litro.'})} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', padding: 0, cursor: 'pointer', display: 'flex' }}><IconInfo /></button>
+          </div>
           <div style={{ fontSize: '1.1rem', fontWeight: 700, color: '#fff' }}>-{formatCLP(data.expenses.fuel)}</div>
         </div>
         
         <div className="card" style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '8px', border: '1px solid rgba(255,165,0,0.2)' }}>
           <div style={{ color: 'orange' }}><IconWrench /></div>
-          <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Deterioro / Mantención</div>
+          <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '4px' }}>
+            Deterioro
+            <button onClick={() => setInfoModal({title: 'Deterioro / Mantención', desc: 'Es una estimación estándar de $50 CLP por cada kilómetro recorrido, para cubrir desgastes a largo plazo de neumáticos, aceite y reparaciones generales.'})} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', padding: 0, cursor: 'pointer', display: 'flex' }}><IconInfo /></button>
+          </div>
           <div style={{ fontSize: '1.1rem', fontWeight: 700, color: '#fff' }}>-{formatCLP(data.expenses.wear)}</div>
         </div>
 
         <div className="card" style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '8px', border: '1px solid rgba(96,165,250,0.2)' }}>
           <div style={{ color: '#60A5FA' }}><IconTax /></div>
-          <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Provisión SII (13.75%)</div>
+          <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '4px' }}>
+            Provisión SII
+            <button onClick={() => setInfoModal({title: 'Provisión SII (13.75%)', desc: 'Reservamos un 13.75% calculado sobre tu ganancia líquida (Bruto menos costos operativos) para cubrir tus futuras obligaciones tributarias de boletas de honorarios.'})} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', padding: 0, cursor: 'pointer', display: 'flex' }}><IconInfo /></button>
+          </div>
           <div style={{ fontSize: '1.1rem', fontWeight: 700, color: '#fff' }}>-{formatCLP(data.expenses.taxes)}</div>
         </div>
 
         <div className="card" style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '8px', border: '1px solid rgba(212,175,55,0.2)' }}>
           <div style={{ color: 'var(--gold)' }}><IconWallet /></div>
-          <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Membresía Fim</div>
+          <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '4px' }}>
+            Membresía
+            <button onClick={() => setInfoModal({title: 'Membresía Fim', desc: 'Es el valor de tu plan mensual de Fim prorrateado proporcionalmente a una semana, para que sepas exactamente cuál es tu costo fijo por operar en estos 7 días.'})} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', padding: 0, cursor: 'pointer', display: 'flex' }}><IconInfo /></button>
+          </div>
           <div style={{ fontSize: '1.1rem', fontWeight: 700, color: '#fff' }}>-{formatCLP(data.expenses.membership)}</div>
         </div>
       </div>
@@ -204,6 +224,22 @@ export default function FinancesDashboard() {
               <button className="btn btn-secondary" style={{ flex: 1 }} onClick={() => setShowConfig(false)}>Cancelar</button>
               <button className="btn btn-primary" style={{ flex: 1 }} onClick={handleSaveConfig} disabled={saving}>{saving ? 'Guardando...' : 'Guardar'}</button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL DE INFORMACIÓN (TOOLTIPS) */}
+      {infoModal && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', zIndex: 1100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px' }} onClick={() => setInfoModal(null)}>
+          <div className="card" style={{ width: '100%', maxWidth: '350px', padding: '24px', animation: 'scaleIn 0.2s', position: 'relative' }} onClick={e => e.stopPropagation()}>
+            <h3 style={{ margin: '0 0 12px 0', fontSize: '1.1rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <IconInfo />
+              {infoModal.title}
+            </h3>
+            <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', lineHeight: 1.5, margin: '0 0 24px 0' }}>
+              {infoModal.desc}
+            </p>
+            <button className="btn btn-primary" style={{ width: '100%' }} onClick={() => setInfoModal(null)}>Entendido</button>
           </div>
         </div>
       )}
