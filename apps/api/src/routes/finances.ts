@@ -35,12 +35,17 @@ router.get('/dashboard', requireAuth, requireRole('driver'), async (req: Request
     // Obtener viajes del mes actual para la meta de descuento
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
 
-    // Consultar todos los viajes completados desde el inicio del mes
-    const completedTrips = await prisma.trip.findMany({
+    // Consultar todos los viajes completados desde la fecha más antigua (4 semanas o inicio de mes)
+    const fourWeeksAgo = new Date(startOfWeek);
+    fourWeeksAgo.setDate(fourWeeksAgo.getDate() - 21); // Hace 3 semanas + la actual = 4 semanas
+    
+    const earliestDate = startOfMonth < fourWeeksAgo ? startOfMonth : fourWeeksAgo;
+
+    const allRecentTrips = await prisma.trip.findMany({
       where: {
         driverId: driverId,
         status: 'completed',
-        createdAt: { gte: startOfMonth }
+        createdAt: { gte: earliestDate }
       },
       select: {
         createdAt: true,
@@ -54,14 +59,36 @@ router.get('/dashboard', requireAuth, requireRole('driver'), async (req: Request
     let todayDistance = 0;
     let weekDistance = 0;
     let monthTripCount = 0;
+    
+    // Para el historial (0 = esta semana, 1 = semana pasada, etc)
+    const weeklyData = [
+      { gross: 0, distance: 0, start: new Date(startOfWeek) },
+      { gross: 0, distance: 0, start: new Date(startOfWeek.getTime() - 7 * 24 * 60 * 60 * 1000) },
+      { gross: 0, distance: 0, start: new Date(startOfWeek.getTime() - 14 * 24 * 60 * 60 * 1000) },
+      { gross: 0, distance: 0, start: new Date(startOfWeek.getTime() - 21 * 24 * 60 * 60 * 1000) },
+    ];
 
-    for (const trip of completedTrips) {
-      monthTripCount++;
+    for (const trip of allRecentTrips) {
       const tripDate = new Date(trip.createdAt);
+      
+      if (tripDate >= startOfMonth) {
+        monthTripCount++;
+      }
       
       if (tripDate >= startOfWeek) {
         weekGross += trip.estimatedPrice;
         weekDistance += trip.distanceKm;
+        weeklyData[0].gross += trip.estimatedPrice;
+        weeklyData[0].distance += trip.distanceKm;
+      } else if (tripDate >= weeklyData[1].start) {
+        weeklyData[1].gross += trip.estimatedPrice;
+        weeklyData[1].distance += trip.distanceKm;
+      } else if (tripDate >= weeklyData[2].start) {
+        weeklyData[2].gross += trip.estimatedPrice;
+        weeklyData[2].distance += trip.distanceKm;
+      } else if (tripDate >= weeklyData[3].start) {
+        weeklyData[3].gross += trip.estimatedPrice;
+        weeklyData[3].distance += trip.distanceKm;
       }
       
       if (tripDate >= startOfToday) {
@@ -70,19 +97,49 @@ router.get('/dashboard', requireAuth, requireRole('driver'), async (req: Request
       }
     }
 
-    // Cálculos de Costos (Basado en la semana)
+    // Cálculos de Costos (Basado en la semana) y redondeados a 10s para consistencia
     const fuelE = driver.fuelEfficiency || 12.0;
     const fuelP = driver.fuelPrice || 1300;
     
-    const fuelCost = Math.round((weekDistance / fuelE) * fuelP);
-    const wearCost = Math.round(weekDistance * 50); // 50 CLP por km
-    const fixedCost = driver.membershipPlan === 'BLACK' ? Math.round(150000 / 4.3) : (driver.membershipPlan === 'COMFORT' ? 20000 * 7 : 60000); // Costo semanal prorrateado
+    const round10 = (val: number) => Math.round(val / 10) * 10;
+
+    const fuelCost = round10(Math.round((weekDistance / fuelE) * fuelP));
+    const wearCost = round10(Math.round(weekDistance * 50)); // 50 CLP por km
+    const fixedCost = round10(driver.membershipPlan === 'BLACK' ? Math.round(150000 / 4.3) : (driver.membershipPlan === 'COMFORT' ? 20000 * 7 : 60000));
     
+    // Procesar el historial de las últimas 4 semanas
+    const history = weeklyData.map((week, index) => {
+      const wGross = round10(week.gross);
+      const wFuel = round10(Math.round((week.distance / fuelE) * fuelP));
+      const wWear = round10(Math.round(week.distance * 50));
+      const wRawNet = wGross - (wFuel + wWear + fixedCost);
+      const wTax = wRawNet > 0 ? round10(Math.round(wRawNet * 0.1375)) : 0;
+      const wNet = wRawNet - wTax;
+      const incomeGoal = driver.netIncomeGoal || 1000000;
+      const progress = Math.max(0, Math.min((wNet / incomeGoal) * 100, 100));
+      
+      let label = 'Esta semana';
+      if (index === 1) label = 'Semana pasada';
+      if (index === 2) label = 'Hace 2 semanas';
+      if (index === 3) label = 'Hace 3 semanas';
+
+      return {
+        label,
+        netIncome: wNet,
+        goal: incomeGoal,
+        progress
+      };
+    });
+
+    // Redondeamos también los ingresos para que la resta sea exacta
+    weekGross = round10(weekGross);
+    todayGross = round10(todayGross);
+
     const totalExpenses = fuelCost + wearCost + fixedCost;
     const rawNet = weekGross - totalExpenses;
     
     // Provisión de impuestos (13.75%)
-    const taxProvision = rawNet > 0 ? Math.round(rawNet * 0.1375) : 0;
+    const taxProvision = rawNet > 0 ? round10(Math.round(rawNet * 0.1375)) : 0;
     const realNetIncome = rawNet - taxProvision;
 
     // Metas de Membresía (Descuento)
@@ -107,6 +164,7 @@ router.get('/dashboard', requireAuth, requireRole('driver'), async (req: Request
         discountGoal,
         discountProgress,
       },
+      history,
       config: {
         fuelEfficiency: driver.fuelEfficiency,
         fuelPrice: driver.fuelPrice

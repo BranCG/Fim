@@ -117,14 +117,7 @@ export const FIM_PRICING = {
 };
 
 export function roundCLP(amount: number): number {
-  const rounded = Math.round(amount);
-  const lastDigit = rounded % 10;
-  if (lastDigit >= 1 && lastDigit <= 5) {
-    return rounded - lastDigit;
-  } else if (lastDigit >= 6 && lastDigit <= 9) {
-    return rounded + (10 - lastDigit);
-  }
-  return rounded;
+  return Math.round(amount / 10) * 10;
 }
 
 export function calculatePrice(distanceKm: number, durationMin: number): number {

@@ -67,7 +67,7 @@ export default function FinancesDashboard() {
   if (!data) return null;
 
   // Calculamos el % de la meta de ingresos
-  const incomeProgress = Math.min((data.netIncome / data.goals.incomeGoal) * 100, 100);
+  const incomeProgress = Math.max(0, Math.min((data.netIncome / data.goals.incomeGoal) * 100, 100));
   
   // Calculamos el % de la meta de descuento
   const discountGoalPercent = data.goals.discountGoal > 0 ? Math.min((data.goals.discountProgress / data.goals.discountGoal) * 100, 100) : 0;
@@ -81,10 +81,32 @@ export default function FinancesDashboard() {
           <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', margin: 0, lineHeight: 1.4 }}>
             Tu <strong>ingreso neto real</strong> se calcula restando todos tus costos operativos (bencina, mantención, impuestos y membresía) a tu recaudación bruta. 
             <br/><br/>
-            Toca el <strong>engranaje</strong> para configurar el rendimiento de tu vehículo y establecer tu meta motivadora de la semana.
+            Toca el <strong>engranaje dorado a tu derecha</strong> para configurar el rendimiento de tu vehículo y establecer tu meta motivadora de la semana.
           </p>
         </div>
-        <button onClick={() => setShowConfig(true)} style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '4px' }}>
+        <button 
+          onClick={() => setShowConfig(true)} 
+          style={{ 
+            background: 'transparent', 
+            border: 'none', 
+            color: 'var(--gold)', 
+            cursor: 'pointer', 
+            padding: '8px',
+            animation: 'pulseGold 2s infinite',
+            borderRadius: '50%',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            boxShadow: '0 0 15px rgba(212, 175, 55, 0.4)'
+          }}
+        >
+          <style>{`
+            @keyframes pulseGold {
+              0% { box-shadow: 0 0 0 0 rgba(212, 175, 55, 0.7); transform: scale(1); }
+              70% { box-shadow: 0 0 0 10px rgba(212, 175, 55, 0); transform: scale(1.1); }
+              100% { box-shadow: 0 0 0 0 rgba(212, 175, 55, 0); transform: scale(1); }
+            }
+          `}</style>
           <IconSettings />
         </button>
       </div>
@@ -160,8 +182,8 @@ export default function FinancesDashboard() {
           <span style={{ fontSize: '0.9rem', fontWeight: 600 }}>Meta de Ganancia (Semanal)</span>
           <span style={{ fontSize: '0.9rem', color: 'var(--accent)' }}>{formatCLP(data.netIncome)} / {formatCLP(data.goals.incomeGoal)}</span>
         </div>
-        <div style={{ width: '100%', height: '8px', background: 'var(--bg-card)', borderRadius: '4px', overflow: 'hidden' }}>
-          <div style={{ width: `${incomeProgress}%`, height: '100%', background: 'var(--accent)', borderRadius: '4px', transition: 'width 1s ease-out' }} />
+        <div style={{ width: '100%', height: '8px', background: 'rgba(255,255,255,0.15)', borderRadius: '4px', overflow: 'hidden' }}>
+          <div style={{ width: `${incomeProgress}%`, height: '100%', background: 'var(--success)', borderRadius: '4px', transition: 'width 1s ease-out' }} />
         </div>
         <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '8px', textAlign: 'right' }}>
           {incomeProgress.toFixed(1)}% logrado
@@ -196,6 +218,32 @@ export default function FinancesDashboard() {
               ✨ ¡Felicidades! Has asegurado tu descuento para el próximo pago.
             </div>
           )}
+        </div>
+      )}
+
+      {/* HISTORIAL DE METAS */}
+      {data.history && data.history.length > 0 && (
+        <div style={{ marginTop: '32px' }}>
+          <h3 style={{ fontSize: '1.1rem', marginBottom: '8px', color: 'var(--text-primary)' }}>Historial de Metas</h3>
+          <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '16px' }}>
+            Acá podrás ver tu historial de METAS. Con esto podrás ir viendo tu avance y tu % de éxito mediante las metas que vas cumpliendo semana a semana.
+          </p>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            {data.history.map((week: any, idx: number) => (
+              <div key={idx} className="card" style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '8px', opacity: idx === 0 ? 1 : 0.8 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ fontSize: '0.9rem', fontWeight: 700, color: idx === 0 ? 'var(--accent)' : 'var(--text-primary)' }}>{week.label}</span>
+                  <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{formatCLP(week.netIncome)} / {formatCLP(week.goal)}</span>
+                </div>
+                <div style={{ width: '100%', height: '6px', background: 'rgba(255,255,255,0.1)', borderRadius: '3px', overflow: 'hidden' }}>
+                  <div style={{ width: `${week.progress}%`, height: '100%', background: week.progress >= 100 ? 'var(--success)' : (idx === 0 ? 'var(--accent)' : 'var(--text-secondary)'), borderRadius: '3px' }} />
+                </div>
+                <div style={{ fontSize: '0.75rem', color: week.progress >= 100 ? 'var(--success)' : 'var(--text-muted)', textAlign: 'right', fontWeight: week.progress >= 100 ? 700 : 400 }}>
+                  {week.progress >= 100 ? '¡Meta Cumplida! 🏆' : `${week.progress.toFixed(1)}% logrado`}
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       )}
 
