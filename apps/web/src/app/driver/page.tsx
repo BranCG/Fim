@@ -1490,7 +1490,7 @@ export default function DriverPage() {
                 {driver.name}
               </span>
             )}
-            {driver?.membershipPlan && (
+            {activeTab !== 'finances' && driver?.membershipPlan && (
               <div
                 className={`seal-${driver.membershipPlan.toLowerCase()}`}
                 style={{
@@ -1531,7 +1531,7 @@ export default function DriverPage() {
                 )}
               </div>
             )}
-            {driver?.isPromoActive && (
+            {activeTab !== 'finances' && driver?.isPromoActive && (
               <div
                 onClick={handleFreePassClick}
                 style={{
@@ -1774,7 +1774,8 @@ export default function DriverPage() {
       )}
 
       {/* Botón flotante de GPS de alta prioridad fuera de main-content */}
-      <button
+      {activeTab !== 'finances' && (
+        <button
         onClick={() => {
           setCenterTrigger(prev => prev + 1);
         }}
@@ -1783,6 +1784,7 @@ export default function DriverPage() {
       >
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><circle cx="12" cy="12" r="3" /><line x1="12" y1="1" x2="12" y2="3" /><line x1="12" y1="21" x2="12" y2="23" /><line x1="1" y1="12" x2="3" y2="12" /><line x1="21" y1="12" x2="23" y2="12" /></svg>
       </button>
+      )}
 
       <main className="main-content">
 
@@ -1829,6 +1831,15 @@ export default function DriverPage() {
 
         {activeTab === 'finances' && (
           <div style={{ position: 'absolute', inset: 0, zIndex: 100, background: 'var(--bg-primary)', overflowY: 'auto', paddingTop: '80px' }}>
+            <div style={{ padding: '0 20px', marginBottom: '-10px' }}>
+              <button 
+                onClick={() => setActiveTab('map')}
+                style={{ background: 'transparent', border: 'none', color: 'var(--accent)', fontWeight: 700, fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', padding: 0 }}
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+                Volver al mapa
+              </button>
+            </div>
             <FinancesDashboard />
           </div>
         )}
