@@ -1052,16 +1052,16 @@ export default function PassengerPage() {
     let cleanupFn: (() => void) | undefined;
     
     if (status === 'in_progress') {
-      console.log('[GPS Local] Iniciando watchPosition para fluidez en el viaje...');
+      console.log('[GPS Local] Iniciando watchPosition local del pasajero...');
       const startWatching = async () => {
         try {
           const { watchPosition } = await import('@/lib/geolocation');
           cleanupFn = await watchPosition(
             (pos) => {
               isUsingLocalGpsRef.current = true;
-              // El pasajero está en el vehículo, así que su GPS es la posición del auto.
-              // Actualizamos driverPos frecuentemente para que el mapa se mueva de forma fluida.
-              setDriverPos({ lat: pos.lat, lng: pos.lng });
+              // NOTA: Se eliminó setDriverPos aquí para que la ubicación del coche
+              // dependa EXCLUSIVAMENTE del GPS del conductor recibido por Socket (driver:moved).
+              // Esto evita que el icono salte hacia atrás si el GPS del pasajero tiene lag.
             },
             (err) => {
               console.warn('[GPS Local] Passenger watchPosition error:', err);

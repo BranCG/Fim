@@ -28,6 +28,7 @@ export default function DriverMap({ driverPos, passengerPos, destPos, stops = []
   const stopsMarkersRef = useRef<any[]>([]);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const routeLineRef = useRef<any>(null);
+  const routeCoordinatesRef = useRef<{lat: number, lng: number}[]>([]);
   const currentRouteEndpoints = useRef<string>('');
   const hasFittedBounds = useRef<string>('');
   const currentAngleRef = useRef<number>(0);
@@ -97,6 +98,49 @@ export default function DriverMap({ driverPos, passengerPos, destPos, stops = []
     const map = mapRef.current;
 
     // Helper to generate custom divIcon with correct rotation
+    
+    // --- Helper matemático para "Snap to Route" ---
+    const getClosestPointOnPath = (point: {lat: number, lng: number}, path: {lat: number, lng: number}[]) => {
+      if (!path || path.length < 2) return { point, angle: 0 };
+      let minDist = Infinity;
+      let closestPoint = point;
+      let closestAngle = 0;
+
+      const dist2 = (p1: any, p2: any) => {
+        const dy = (p2.lat - p1.lat);
+        const dx = (p2.lng - p1.lng) * Math.cos(p1.lat * Math.PI / 180);
+        return dx*dx + dy*dy;
+      };
+
+      for (let i = 0; i < path.length - 1; i++) {
+        const A = path[i];
+        const B = path[i+1];
+        
+        const dyAB = B.lat - A.lat;
+        const dxAB = (B.lng - A.lng) * Math.cos(A.lat * Math.PI / 180);
+        const lenAB2 = dxAB*dxAB + dyAB*dyAB;
+        
+        let t = 0;
+        if (lenAB2 > 0) {
+          const dyAP = point.lat - A.lat;
+          const dxAP = (point.lng - A.lng) * Math.cos(A.lat * Math.PI / 180);
+          t = (dxAP * dxAB + dyAP * dyAB) / lenAB2;
+          t = Math.max(0, Math.min(1, t));
+        }
+        
+        const projLat = A.lat + t * dyAB;
+        const projLng = A.lng + (t * dxAB) / (Math.cos(A.lat * Math.PI / 180) || 1);
+        
+        const d = dist2(point, { lat: projLat, lng: projLng });
+        if (d < minDist) {
+          minDist = d;
+          closestPoint = { lat: projLat, lng: projLng };
+          closestAngle = Math.atan2(dxAB, dyAB) * (180 / Math.PI);
+        }
+      }
+      return { point: closestPoint, angle: closestAngle };
+    };
+
     const getDriverIcon = (angle: number) => {
       return L.divIcon({
         className: 'transparent-icon',
@@ -151,13 +195,28 @@ export default function DriverMap({ driverPos, passengerPos, destPos, stops = []
       if (dt < 500 || dt > 10000) dt = 2000;
       
       const startPos = marker.getLatLng();
-      const dLng = targetPos.lng - startPos.lng;
-      const dLat = targetPos.lat - startPos.lat;
+      let snappedTarget = targetPos;
+      let targetAngle = currentAngleRef.current;
+      let didSnap = false;
+      
+      // Snap to route if we have a path
+      if (routeCoordinatesRef.current.length > 0) {
+        const snap = getClosestPointOnPath(targetPos, routeCoordinatesRef.current);
+        // Only snap if we are reasonably close to the route (e.g. within a few blocks)
+        // If GPS is completely off route, we don't snap wildly.
+        snappedTarget = snap.point;
+        targetAngle = snap.angle;
+        didSnap = true;
+      }
+
+      const dLng = snappedTarget.lng - startPos.lng;
+      const dLat = snappedTarget.lat - startPos.lat;
       
       let angle = currentAngleRef.current;
       const hasMovement = Math.abs(dLng) > 1e-6 || Math.abs(dLat) > 1e-6;
       if (hasMovement) {
-        angle = Math.atan2(dLng, dLat) * (180 / Math.PI);
+        // Usa el ángulo de la calle si hicimos snap, si no, usa el vector GPS directo
+        angle = didSnap ? targetAngle : (Math.atan2(dLng, dLat) * (180 / Math.PI));
       }
 
       const startTime = performance.now();
@@ -329,8 +388,15 @@ export default function DriverMap({ driverPos, passengerPos, destPos, stops = []
             const routeGroup = L.featureGroup().addTo(map);
             routeLineRef.current = routeGroup;
             let hasRoute = false;
+            let newPath: {lat: number, lng: number}[] = [];
 
             results.forEach((data, idx) => {
+              if (data.routes && data.routes[0] && data.routes[0].geometry) {
+                 const coords = data.routes[0].geometry.coordinates; // [lng, lat]
+                 if (coords) {
+                   newPath.push(...coords.map((c: any) => ({ lat: c[1], lng: c[0] })));
+                 }
+              }
               if (data.routes && data.routes[0]) {
                 hasRoute = true;
                 const isLast = idx === results.length - 1;
@@ -353,12 +419,14 @@ export default function DriverMap({ driverPos, passengerPos, destPos, stops = []
                 }, 50);
               }
             });
+            routeCoordinatesRef.current = newPath;
             if (!hasRoute) throw new Error('Sin ruta');
           } catch (e) {
             if (!mapRef.current) return;
             if (routeLineRef.current) { routeLineRef.current.remove(); }
             const routeGroup = L.featureGroup().addTo(map);
             routeLineRef.current = routeGroup;
+            routeCoordinatesRef.current = points; // fallback a línea recta
             for (let i = 0; i < points.length - 1; i++) {
               const isLast = i === points.length - 1;
               let color = passengerPos ? '#00E5A0' : (isLast ? '#FF4560' : '#FFA500');
@@ -385,6 +453,7 @@ export default function DriverMap({ driverPos, passengerPos, destPos, stops = []
       // Limpiar estados de ruta
       currentRouteEndpoints.current = '';
       hasFittedBounds.current = '';
+      routeCoordinatesRef.current = [];
       if (routeLineRef.current) {
         routeLineRef.current.remove();
         routeLineRef.current = null;
