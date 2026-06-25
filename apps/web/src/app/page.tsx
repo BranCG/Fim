@@ -15,9 +15,25 @@ import SplashScreen from '@/components/SplashScreen';
 import ThemeToggle from '@/components/ThemeToggle';
 import api, { getSession } from '@/lib/api';
 
+const AppleBadgeIcon = () => (
+  <svg width="24" height="24" viewBox="0 0 384 512" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+    <path d="M318.7 268.7c-.2-36.7 16.4-64.4 50-84.8-18.8-26.9-47.2-41.7-84.7-44.6-35.5-2.8-74.3 20.7-88.5 20.7-15 0-49.4-19.7-76.4-19.7C63.3 141.2 4 184.8 4 273.5q0 39.3 14.4 81.2c12.8 36.7 59 126.7 107.2 125.2 25.2-.6 43-17.9 75.8-17.9 31.8 0 48.3 17.9 76.4 17.3 48.6-.7 90.4-82.5 102.7-119.3-65.2-30.7-61.7-90-61.8-91.3zM243.6 86.4c16.9-20.9 28.5-50.5 25.4-80.4-25.2 1-56.1 16.9-73.6 37.9-14.7 17.6-28.5 48.2-24.8 77.4 28.5 2.1 57-14.2 73-34.9z"/>
+  </svg>
+);
+
+const GooglePlayBadgeIcon = () => (
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+    <path d="M3.5 2C3.1 2.4 2.8 3.1 2.8 4V20C2.8 20.9 3.1 21.6 3.5 22L3.6 22L14 11.6L14 11.5L14 11.4L3.6 2L3.5 2Z"/>
+    <path d="M17.4 15L14 11.5L14 11.4L14 11.3L17.4 7.9L17.5 8L21.7 10.4C22.9 11.1 22.9 12.2 21.7 12.9L17.5 15.3L17.4 15Z"/>
+    <path d="M17.5 15.3L14 11.5L3.5 22C4 22.5 4.9 22.6 5.8 22.1L17.5 15.3Z"/>
+    <path d="M17.5 8L5.8 1.3C4.9 0.8 4 0.9 3.5 1.4L14 11.4L17.5 8Z"/>
+  </svg>
+);
+
 export default function Home() {
   const router = useRouter();
   const [activeView, setActiveView] = useState<'passenger' | 'driver'>('passenger');
+  const [activeCardIndex, setActiveCardIndex] = useState(0);
   const [tripsPerWeek, setTripsPerWeek] = useState(60);
   const [avgPrice, setAvgPrice] = useState(6000);
   const [loss, setLoss] = useState(0);
@@ -43,6 +59,19 @@ export default function Home() {
   }, [tripsPerWeek, avgPrice]);
 
   const formatCLP = (val: number) => '$' + val.toLocaleString('es-CL');
+
+  const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    const el = e.currentTarget;
+    const maxScroll = el.scrollWidth - el.clientWidth;
+    if (maxScroll <= 0) {
+      setActiveCardIndex(0);
+      return;
+    }
+    const ratio = el.scrollLeft / maxScroll;
+    if (ratio < 0.3) setActiveCardIndex(0);
+    else if (ratio < 0.7) setActiveCardIndex(1);
+    else setActiveCardIndex(2);
+  };
 
   // Variantes de animación
   const fadeInUp = {
@@ -155,18 +184,18 @@ export default function Home() {
                   La plataforma de movilidad que respeta tu tiempo y tu dinero. Conductores verificados, tarifas transparentes y viajes seguros.
                 </p>
                 <div style={{ display: 'flex', gap: '16px', justifyContent: 'center', flexWrap: 'wrap' }}>
-                  <button className="btn" style={{ background: '#fff', color: '#000', padding: '14px 24px', fontSize: '1rem', display: 'flex', alignItems: 'center', gap: '10px', borderRadius: '100px' }}>
-                    <Apple size={22} fill="#000" /> 
+                  <button className="btn" style={{ background: '#fff', color: '#000', padding: '10px 24px', fontSize: '1rem', display: 'flex', alignItems: 'center', gap: '10px', borderRadius: '100px' }}>
+                    <AppleBadgeIcon />
                     <div style={{ textAlign: 'left', lineHeight: 1 }}>
                       <span style={{ fontSize: '0.65rem', display: 'block', opacity: 0.7 }}>Consíguelo en el</span>
-                      <span style={{ fontWeight: 800, fontSize: '1rem' }}>App Store</span>
+                      <span style={{ fontWeight: 800, fontSize: '1.2rem', letterSpacing: '-0.02em' }}>App Store</span>
                     </div>
                   </button>
-                  <button className="btn" style={{ background: '#fff', color: '#000', padding: '14px 24px', fontSize: '1rem', display: 'flex', alignItems: 'center', gap: '10px', borderRadius: '100px' }}>
-                    <Play size={22} fill="#000" /> 
+                  <button className="btn" style={{ background: '#fff', color: '#000', padding: '10px 24px', fontSize: '1rem', display: 'flex', alignItems: 'center', gap: '10px', borderRadius: '100px' }}>
+                    <GooglePlayBadgeIcon />
                     <div style={{ textAlign: 'left', lineHeight: 1 }}>
                       <span style={{ fontSize: '0.65rem', display: 'block', opacity: 0.7 }}>Disponible en</span>
-                      <span style={{ fontWeight: 800, fontSize: '1rem' }}>Google Play</span>
+                      <span style={{ fontWeight: 800, fontSize: '1.2rem', letterSpacing: '-0.02em' }}>Google Play</span>
                     </div>
                   </button>
                 </div>
@@ -186,18 +215,18 @@ export default function Home() {
                   Dile adiós a las comisiones abusivas. Paga una suscripción justa y quédate con todo lo que ganes. Tú eres el dueño de tu volante.
                 </p>
                 <div style={{ display: 'flex', gap: '16px', justifyContent: 'center', flexWrap: 'wrap' }}>
-                  <button className="btn" style={{ background: '#fff', color: '#000', padding: '14px 24px', fontSize: '1rem', display: 'flex', alignItems: 'center', gap: '10px', borderRadius: '100px' }}>
-                    <Apple size={22} fill="#000" /> 
+                  <button className="btn" style={{ background: '#fff', color: '#000', padding: '10px 24px', fontSize: '1rem', display: 'flex', alignItems: 'center', gap: '10px', borderRadius: '100px' }}>
+                    <AppleBadgeIcon />
                     <div style={{ textAlign: 'left', lineHeight: 1 }}>
                       <span style={{ fontSize: '0.65rem', display: 'block', opacity: 0.7 }}>Consíguelo en el</span>
-                      <span style={{ fontWeight: 800, fontSize: '1rem' }}>App Store</span>
+                      <span style={{ fontWeight: 800, fontSize: '1.2rem', letterSpacing: '-0.02em' }}>App Store</span>
                     </div>
                   </button>
-                  <button className="btn" style={{ background: '#fff', color: '#000', padding: '14px 24px', fontSize: '1rem', display: 'flex', alignItems: 'center', gap: '10px', borderRadius: '100px' }}>
-                    <Play size={22} fill="#000" /> 
+                  <button className="btn" style={{ background: '#fff', color: '#000', padding: '10px 24px', fontSize: '1rem', display: 'flex', alignItems: 'center', gap: '10px', borderRadius: '100px' }}>
+                    <GooglePlayBadgeIcon />
                     <div style={{ textAlign: 'left', lineHeight: 1 }}>
                       <span style={{ fontSize: '0.65rem', display: 'block', opacity: 0.7 }}>Disponible en</span>
-                      <span style={{ fontWeight: 800, fontSize: '1rem' }}>Google Play</span>
+                      <span style={{ fontWeight: 800, fontSize: '1.2rem', letterSpacing: '-0.02em' }}>Google Play</span>
                     </div>
                   </button>
                 </div>
@@ -218,6 +247,7 @@ export default function Home() {
           
           <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, margin: '-100px' }} variants={staggerContainer} 
             className="cards-carousel"
+            onScroll={handleScroll}
             style={{ 
               display: 'flex', gap: '24px', overflowX: 'auto', scrollSnapType: 'x mandatory', 
               paddingBottom: '24px', margin: '0 -24px', paddingLeft: '24px', paddingRight: '24px',
@@ -260,6 +290,19 @@ export default function Home() {
               </>
             )}
           </motion.div>
+
+          {/* Carousel Pagination Dots */}
+          <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', marginTop: '16px' }}>
+            {[0, 1, 2].map((i) => (
+              <div key={i} style={{ 
+                width: activeCardIndex === i ? '24px' : '8px', 
+                height: '8px', 
+                borderRadius: '4px', 
+                background: activeCardIndex === i ? 'var(--accent)' : 'var(--border)',
+                transition: 'all 0.3s ease'
+              }} />
+            ))}
+          </div>
         </div>
       </section>
 
@@ -321,18 +364,18 @@ export default function Home() {
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '40px', flexWrap: 'wrap', gap: '24px' }}>
             <Logo width="120" height="45" subtitle={false} />
             <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
-              <button className="btn" style={{ background: '#1A1A1A', color: '#fff', padding: '10px 16px', display: 'flex', alignItems: 'center', gap: '8px', borderRadius: '8px', border: '1px solid #333' }}>
-                <Apple size={24} fill="#fff" />
+              <button className="btn" style={{ background: '#1A1A1A', color: '#fff', padding: '10px 16px', display: 'flex', alignItems: 'center', gap: '10px', borderRadius: '8px', border: '1px solid #333' }}>
+                <AppleBadgeIcon />
                 <div style={{ textAlign: 'left', lineHeight: 1 }}>
                   <span style={{ fontSize: '0.6rem', display: 'block', opacity: 0.8 }}>Consíguelo en el</span>
-                  <span style={{ fontWeight: 600, fontSize: '1rem' }}>App Store</span>
+                  <span style={{ fontWeight: 600, fontSize: '1rem', letterSpacing: '-0.02em' }}>App Store</span>
                 </div>
               </button>
-              <button className="btn" style={{ background: '#1A1A1A', color: '#fff', padding: '10px 16px', display: 'flex', alignItems: 'center', gap: '8px', borderRadius: '8px', border: '1px solid #333' }}>
-                <Play size={24} fill="#fff" />
+              <button className="btn" style={{ background: '#1A1A1A', color: '#fff', padding: '10px 16px', display: 'flex', alignItems: 'center', gap: '10px', borderRadius: '8px', border: '1px solid #333' }}>
+                <GooglePlayBadgeIcon />
                 <div style={{ textAlign: 'left', lineHeight: 1 }}>
                   <span style={{ fontSize: '0.6rem', display: 'block', opacity: 0.8 }}>DISPONIBLE EN</span>
-                  <span style={{ fontWeight: 600, fontSize: '1rem' }}>Google Play</span>
+                  <span style={{ fontWeight: 600, fontSize: '1rem', letterSpacing: '-0.02em' }}>Google Play</span>
                 </div>
               </button>
             </div>
