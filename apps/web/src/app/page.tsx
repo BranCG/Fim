@@ -54,14 +54,14 @@ export default function Home() {
 
   useEffect(() => {
     // Si el usuario abre esto desde la aplicación nativa (Android/iOS), 
-    // se salta la landing page web por completo y va directo al login/app.
+    // lo enviamos a la vista clásica de la app (/mobile).
     if (typeof window !== 'undefined') {
-      const isMobileApp = (window as any).Capacitor?.isNativePlatform?.() ||
+      const isMobileApp = (window as any).Capacitor ||
         window.location.origin.includes('capacitor://') ||
         ((window.location.hostname === 'localhost' || window.location.hostname === '') && window.location.port === '');
       
       if (isMobileApp) {
-        router.replace('/login');
+        router.replace('/mobile');
       }
     }
   }, [router]);
