@@ -7,7 +7,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
   ShieldCheck, Car, Wallet, Banknote, MapPin, 
   TrendingUp, Smartphone, Zap, ArrowRight, ChevronRight, User, CircleDollarSign,
-  Apple, Play
+  Apple, Play, CreditCard, Link2, CheckCircle2, QrCode
 } from 'lucide-react';
 import { Capacitor } from '@capacitor/core';
 import Logo from '@/components/Logo';
@@ -40,6 +40,8 @@ export default function Home() {
   const [tripsPerWeek, setTripsPerWeek] = useState(60);
   const [avgPrice, setAvgPrice] = useState(6000);
   const [loss, setLoss] = useState(0);
+  const [activeTimelineStep, setActiveTimelineStep] = useState(1);
+  const [showTutorial, setShowTutorial] = useState(false);
 
   useEffect(() => {
     const s = getSession();
@@ -216,7 +218,7 @@ export default function Home() {
                   de Chile.
                 </h1>
                 <p style={{ fontSize: '1rem', color: 'var(--text-secondary)', marginBottom: '48px', maxWidth: '600px', margin: '0 auto 48px', lineHeight: 1.6 }}>
-                  Dile adiós a las comisiones abusivas. Paga una suscripción justa y quédate con todo lo que ganes. Tú eres el dueño de tu volante.
+                  Dile adiós a las comisiones abusivas. Conduce con <strong style={{color: 'var(--accent)'}}>0% comisión</strong> y quédate con todo lo que ganes. Tú eres el dueño de tu volante.
                 </p>
                 <div style={{ display: 'flex', gap: '16px', justifyContent: 'center', flexWrap: 'wrap' }}>
                   <button className="btn" style={{ background: '#1A1A1A', color: '#fff', padding: '10px 20px', fontSize: '1rem', display: 'flex', alignItems: 'center', gap: '12px', borderRadius: '12px', border: '1px solid #333' }}>
@@ -309,6 +311,158 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      {/* ─── PASSENGER GUIDE (Only shows for Passengers) ─── */}
+      <AnimatePresence>
+        {activeView === 'passenger' && (
+          <motion.section 
+            initial={{ opacity: 0, height: 0 }} 
+            animate={{ opacity: 1, height: 'auto' }} 
+            exit={{ opacity: 0, height: 0 }} 
+            style={{ padding: '40px 24px', background: 'var(--bg-card)', borderTop: '1px solid var(--border)', borderBottom: '1px solid var(--border)', overflow: 'hidden' }}
+          >
+            <div style={{ maxWidth: '800px', margin: '0 auto' }}>
+              <h2 style={{ fontSize: '2rem', fontWeight: 900, textAlign: 'center', marginBottom: '40px', letterSpacing: '-0.02em' }}>¿Cómo funciona Fim para Pasajeros?</h2>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+                <div style={{ background: 'var(--bg-main)', padding: '24px', borderRadius: '24px', border: '1px solid var(--border)' }}>
+                  <div style={{ display: 'flex', gap: '20px', alignItems: 'flex-start' }}>
+                    <div style={{ background: '#fff', color: '#000', borderRadius: '50%', width: '40px', height: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                      <MapPin size={20} />
+                    </div>
+                    <div>
+                      <h3 style={{ fontSize: '1.25rem', fontWeight: 800, marginBottom: '8px' }}>1. Cotiza y Pide</h3>
+                      <p style={{ color: 'var(--text-secondary)', lineHeight: 1.6 }}>Ingresa tu origen y destino. El sistema calculará la tarifa justa sin tarifas dinámicas especulativas.</p>
+                    </div>
+                  </div>
+                </div>
+                <div style={{ background: 'var(--bg-main)', padding: '24px', borderRadius: '24px', border: '1px solid var(--border)' }}>
+                  <div style={{ display: 'flex', gap: '20px', alignItems: 'flex-start' }}>
+                    <div style={{ background: '#1A1A1A', color: '#fff', borderRadius: '50%', width: '40px', height: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, border: '1px solid #333' }}>
+                      <ShieldCheck size={20} />
+                    </div>
+                    <div>
+                      <h3 style={{ fontSize: '1.25rem', fontWeight: 800, marginBottom: '8px' }}>2. Código OTP Seguro</h3>
+                      <p style={{ color: 'var(--text-secondary)', lineHeight: 1.6 }}>Al abordar el auto, indícale al conductor tu código de seguridad OTP exclusivo para autorizar el viaje.</p>
+                    </div>
+                  </div>
+                </div>
+                <div style={{ background: 'var(--bg-main)', padding: '24px', borderRadius: '24px', border: '1px solid var(--border)' }}>
+                  <div style={{ display: 'flex', gap: '20px', alignItems: 'flex-start' }}>
+                    <div style={{ background: '#fff', color: '#000', borderRadius: '50%', width: '40px', height: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                      <Smartphone size={20} />
+                      <div style={{ position: 'absolute', background: 'var(--accent)', width: '12px', height: '12px', borderRadius: '50%', transform: 'translate(10px, 10px)' }} />
+                    </div>
+                    <div>
+                      <h3 style={{ fontSize: '1.25rem', fontWeight: 800, marginBottom: '8px' }}>3. Pago Directo</h3>
+                      <p style={{ color: 'var(--text-secondary)', lineHeight: 1.6 }}>Paga con tarjeta mediante Mercado Pago, transferencia directa al chofer o efectivo. Sin intermediarios.</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </motion.section>
+        )}
+      </AnimatePresence>
+
+      {/* ─── DRIVER ACTIVATION & TUTORIAL (Only shows for Drivers) ─── */}
+      <AnimatePresence>
+        {activeView === 'driver' && (
+          <motion.section 
+            initial={{ opacity: 0, height: 0 }} 
+            animate={{ opacity: 1, height: 'auto' }} 
+            exit={{ opacity: 0, height: 0 }} 
+            style={{ padding: '60px 24px', background: 'var(--bg-card)', borderTop: '1px solid var(--border)', overflow: 'hidden' }}
+          >
+            <div style={{ maxWidth: '800px', margin: '0 auto' }}>
+              <div style={{ textAlign: 'center', marginBottom: '40px' }}>
+                <span style={{ color: '#9d7cff', fontWeight: 800, fontSize: '0.85rem', letterSpacing: '0.1em', textTransform: 'uppercase' }}>Proceso de Activación</span>
+                <h2 style={{ fontSize: '2.5rem', fontWeight: 900, marginTop: '8px', marginBottom: '16px', letterSpacing: '-0.02em', lineHeight: 1.1 }}>Línea de Tiempo<br/>del Conductor</h2>
+                <p style={{ color: 'var(--text-secondary)', maxWidth: '500px', margin: '0 auto', lineHeight: 1.6 }}>Sigue estos sencillos pasos para registrarte, activar tu cuenta y comenzar a conducir con Fim.</p>
+              </div>
+
+              {/* Timeline Steps */}
+              <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', marginBottom: '40px', position: 'relative' }}>
+                <div style={{ position: 'absolute', height: '2px', background: 'var(--border)', width: '60%', zIndex: 0 }} />
+                {[1, 2, 3].map((step) => (
+                  <div key={step} style={{ flex: 1, display: 'flex', justifyContent: 'center', zIndex: 1 }}>
+                    <button 
+                      onClick={() => setActiveTimelineStep(step)}
+                      style={{ 
+                        width: '48px', height: '48px', borderRadius: '50%', fontWeight: 800, fontSize: '1.2rem',
+                        background: activeTimelineStep === step ? '#9d7cff' : 'var(--bg-main)',
+                        color: activeTimelineStep === step ? '#fff' : '#9d7cff',
+                        border: activeTimelineStep === step ? 'none' : '2px solid var(--border)',
+                        transition: 'all 0.3s ease', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center'
+                      }}
+                    >
+                      {step}
+                    </button>
+                  </div>
+                ))}
+              </div>
+
+              {/* Step Content */}
+              <div style={{ background: 'var(--bg-main)', padding: '32px', borderRadius: '24px', border: '1px solid var(--border)', marginBottom: '32px', minHeight: '200px' }}>
+                <span style={{ color: '#9d7cff', fontWeight: 800, fontSize: '0.8rem', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: '12px', display: 'block' }}>PASO {activeTimelineStep}</span>
+                {activeTimelineStep === 1 && (
+                  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+                    <h3 style={{ fontSize: '1.5rem', fontWeight: 900, marginBottom: '16px', lineHeight: 1.2 }}>Registro y Validación Biométrica</h3>
+                    <p style={{ color: 'var(--text-secondary)', lineHeight: 1.6 }}>Regístrate como Conductor en Fim. Sube tu licencia de conducir y pasa la verificación de identidad para garantizar la seguridad de la comunidad.</p>
+                  </motion.div>
+                )}
+                {activeTimelineStep === 2 && (
+                  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+                    <h3 style={{ fontSize: '1.5rem', fontWeight: 900, marginBottom: '16px', lineHeight: 1.2 }}>Configura tu Método de Cobro</h3>
+                    <p style={{ color: 'var(--text-secondary)', lineHeight: 1.6 }}>Asocia tu cuenta bancaria o enlace de Mercado Pago. En Fim, el dinero va directo del pasajero a ti, sin intermediarios ni retenciones.</p>
+                  </motion.div>
+                )}
+                {activeTimelineStep === 3 && (
+                  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+                    <h3 style={{ fontSize: '1.5rem', fontWeight: 900, marginBottom: '16px', lineHeight: 1.2 }}>¡Empieza a ganar el 100%!</h3>
+                    <p style={{ color: 'var(--text-secondary)', lineHeight: 1.6 }}>Conéctate, acepta viajes y mira cómo tus ganancias crecen de verdad. Conduce con la tranquilidad de que no hay comisiones ocultas.</p>
+                  </motion.div>
+                )}
+              </div>
+
+              {/* Tutorial Mercado Pago Toggle */}
+              <div style={{ border: '1px solid #9d7cff', borderRadius: '24px', overflow: 'hidden' }}>
+                <button 
+                  onClick={() => setShowTutorial(!showTutorial)}
+                  style={{ width: '100%', padding: '20px', background: 'transparent', border: 'none', color: '#9d7cff', fontWeight: 800, fontSize: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px', cursor: 'pointer' }}
+                >
+                  TUTORIAL FIM PAGOS 
+                  <motion.div animate={{ rotate: showTutorial ? 180 : 0 }}><ChevronRight size={20} style={{ transform: 'rotate(-90deg)' }} /></motion.div>
+                </button>
+                <AnimatePresence>
+                  {showTutorial && (
+                    <motion.div initial={{ height: 0 }} animate={{ height: 'auto' }} exit={{ height: 0 }} style={{ overflow: 'hidden' }}>
+                      <div style={{ padding: '0 24px 32px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
+                        <div style={{ display: 'flex', gap: '16px', alignItems: 'flex-start' }}>
+                          <div style={{ background: '#FEF08A', color: '#854D0E', padding: '8px', borderRadius: '8px' }}><CreditCard size={24} /></div>
+                          <p style={{ color: 'var(--text-secondary)', lineHeight: 1.5 }}>Crea una cuenta en <strong>Mercado Pago</strong> (es gratis y personal).</p>
+                        </div>
+                        <div style={{ display: 'flex', gap: '16px', alignItems: 'flex-start' }}>
+                          <div style={{ background: '#BFDBFE', color: '#1E3A8A', padding: '8px', borderRadius: '8px' }}><Link2 size={24} /></div>
+                          <p style={{ color: 'var(--text-secondary)', lineHeight: 1.5 }}>En tu app de Mercado Pago, ve a <strong>Cobrar con Link</strong> y crea un link genérico o usa tu código QR.</p>
+                        </div>
+                        <div style={{ display: 'flex', gap: '16px', alignItems: 'flex-start' }}>
+                          <div style={{ background: '#FED7AA', color: '#9A3412', padding: '8px', borderRadius: '8px' }}><User size={24} /></div>
+                          <p style={{ color: 'var(--text-secondary)', lineHeight: 1.5 }}>Pega ese link en tu perfil de <strong>Fim</strong> en la sección "Cobro Directo".</p>
+                        </div>
+                        <div style={{ display: 'flex', gap: '16px', alignItems: 'flex-start' }}>
+                          <div style={{ background: '#BBF7D0', color: '#166534', padding: '8px', borderRadius: '8px' }}><CircleDollarSign size={24} /></div>
+                          <p style={{ color: 'var(--text-secondary)', lineHeight: 1.5 }}>¡Listo! Al terminar un viaje, el pasajero verá tu link y te pagará <strong>directo a tu cuenta</strong>.</p>
+                        </div>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+
+            </div>
+          </motion.section>
+        )}
+      </AnimatePresence>
 
       {/* ─── DRIVER CALCULATOR (Only shows for Drivers) ─── */}
       <AnimatePresence>
