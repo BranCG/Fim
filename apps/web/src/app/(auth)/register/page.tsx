@@ -752,7 +752,7 @@ function RegisterForm() {
       if (!selfie.url) { setError(selfie.preview ? 'La foto Selfie con Cédula no pudo subirse. Inténtalo de nuevo.' : 'Por favor, sube la foto de tu Selfie con la Cédula.'); return; }
       if (!idFront.url) { setError(idFront.preview ? 'La foto frontal de tu Cédula no pudo subirse. Inténtalo de nuevo.' : 'Por favor, sube la foto frontal de tu Cédula.'); return; }
       if (!idBack.url) { setError(idBack.preview ? 'La foto posterior de tu Cédula no pudo subirse. Inténtalo de nuevo.' : 'Por favor, sube la foto posterior de tu Cédula.'); return; }
-      if (!backgroundDoc.url) { setError(backgroundDoc.preview ? 'El Certificado de Antecedentes no pudo subirse. Inténtalo de nuevo.' : 'Por favor, sube tu Certificado de Antecedentes.'); return; }
+      if (!backgroundDoc.url && role === 'driver') { setError(backgroundDoc.preview ? 'El Certificado de Antecedentes no pudo subirse. Inténtalo de nuevo.' : 'Por favor, sube tu Certificado de Antecedentes.'); return; }
     }
     if (step === 3 && role === 'driver') {
       if (licenseFront.loading || licenseBack.loading || vehiclePhoto.loading) { setError('Espera a que terminen de subirse todas las fotos.'); return; }
@@ -1072,11 +1072,16 @@ function RegisterForm() {
 
           {step === 2 && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', textAlign: 'center', marginBottom: '8px' }}>Necesitamos validar tu identidad y antecedentes para continuar.</p>
+              <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', textAlign: 'center', marginBottom: '8px' }}>
+                Necesitamos validar tu identidad {role === 'driver' && 'y antecedentes '}para continuar.
+              </p>
               {renderUploadArea('Selfie con Cédula', selfie, setSelfie, 'selfie-file')}
               {renderUploadArea('Cédula (Frontal)', idFront, setIdFront, 'id-front')}
               {renderUploadArea('Cédula (Posterior)', idBack, setIdBack, 'id-back')}
-              {renderUploadArea('Certificado de Antecedentes', backgroundDoc, setBackgroundDoc, 'background-doc', undefined, 'image/*,application/pdf', false)}
+              
+              {role === 'driver' && (
+                <>
+                  {renderUploadArea('Certificado de Antecedentes', backgroundDoc, setBackgroundDoc, 'background-doc', undefined, 'image/*,application/pdf', false)}
               <div style={{
                 background: 'rgba(255, 255, 255, 0.03)',
                 border: '1px solid var(--border)',
@@ -1151,6 +1156,8 @@ function RegisterForm() {
                   </svg>
                 </a>
               </div>
+              </>
+              )}
             </div>
           )}
 
