@@ -45,16 +45,10 @@ export default function Home() {
 
   useEffect(() => {
     const s = getSession();
-    if (s && s?.user?.role) {
-      router.push(s.user.role === 'admin' ? '/admin' : `/${s.user.role}`);
-    }
-  }, [router]);
-
-  useEffect(() => {
-    // Si el usuario abre esto desde la aplicación nativa (Android/iOS), 
-    // se salta la landing page por completo.
-    if (Capacitor.isNativePlatform()) {
-      router.replace('/login');
+    if (s && s.user && s.user.role) {
+      if (s.user.role === 'admin') router.replace('/admin');
+      else if (s.user.role === 'driver') router.replace('/driver');
+      else router.replace('/passenger');
     }
   }, [router]);
 

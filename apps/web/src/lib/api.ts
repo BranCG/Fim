@@ -2,25 +2,23 @@ import axios from 'axios';
 
 const getApiUrl = () => {
   if (typeof window !== 'undefined') {
-    // Under Capacitor on device/emulator, hostname is 'localhost' (Android) or empty, and port is empty (no dev server)
     const isMobileApp = (window.location.hostname === 'localhost' || window.location.hostname === '') && window.location.port === '';
     const isCapacitor = (window as any).Capacitor || window.location.origin.includes('capacitor://') || isMobileApp;
-    if (isCapacitor) {
-      return 'https://fim-api.duckdns.org';
-    }
-  }
-
-  if (process.env.NEXT_PUBLIC_API_URL) return process.env.NEXT_PUBLIC_API_URL;
-  
-  if (typeof window !== 'undefined') {
-    // If we are on localhost in a web browser, use local API
-    if (window.location.hostname === 'localhost') {
-      return 'http://localhost:3001';
-    }
     
-    return 'https://fim-api.duckdns.org';
+    // For Capacitor native apps, use the public domain (or you can use the AWS IP if you don't have a domain setup yet)
+    if (isCapacitor) {
+      // Si la app móvil está compilada y falla con duckdns, asegúrate de que este sea el dominio final
+      return 'https://fim-api.duckdns.org'; 
+    }
+
+    // For normal web browsers (desktop or mobile browser), dynamically construct the URL
+    // This allows it to work on any IP (like your AWS public IP) even over mobile data.
+    const protocol = window.location.hostname === 'localhost' ? 'http:' : window.location.protocol;
+    return `${protocol}//${window.location.hostname}:3001`;
   }
-  return 'https://fim-api.duckdns.org';
+  
+  if (process.env.NEXT_PUBLIC_API_URL) return process.env.NEXT_PUBLIC_API_URL;
+  return 'http://localhost:3001';
 };
 
 export const API_URL = getApiUrl();
