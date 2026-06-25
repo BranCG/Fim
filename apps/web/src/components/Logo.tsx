@@ -6,11 +6,13 @@ interface LogoProps {
   height?: string;
   subtitle?: boolean;
   className?: string;
+  forceDark?: boolean;
 }
 
-export default function Logo({ width = "120", height = "45", subtitle = true, className = "" }: LogoProps) {
+export default function Logo({ width = "120", height = "45", subtitle = true, className = "", forceDark = false }: LogoProps) {
+  const dynamicStyle = forceDark ? { '--text-primary': '#ffffff', '--bg-primary': '#09090f' } as any : {};
   return (
-    <div className={`flex flex-col items-start ${className}`} style={{ display: 'inline-flex', flexDirection: 'column', alignItems: 'flex-start' }}>
+    <div className={`flex flex-col items-start ${className}`} style={{ display: 'inline-flex', flexDirection: 'column', alignItems: 'flex-start', ...dynamicStyle }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
         <svg width={width} height={height} viewBox="0 0 130 50" fill="none" xmlns="http://www.w3.org/2000/svg">
           {/* Letra F */}

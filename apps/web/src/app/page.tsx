@@ -315,15 +315,118 @@ export default function Home() {
       </AnimatePresence>
 
       {/* ─── FOOTER ─── */}
-      <footer style={{ borderTop: '1px solid var(--border)', padding: '60px 40px', background: 'var(--bg-secondary)' }}>
-        <div style={{ maxWidth: '1200px', margin: '0 auto', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '24px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', opacity: 0.6 }}>
-            <Logo width="120" height="45" subtitle={true} />
+      <footer style={{ background: 'var(--bg-secondary)', padding: '60px 0', borderTop: '1px solid var(--border)', fontSize: '0.9rem' }}>
+        <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 24px' }}>
+          {/* Top row */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '40px', flexWrap: 'wrap', gap: '24px' }}>
+            <Logo width="120" height="45" subtitle={false} />
+            <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
+              <button className="btn" style={{ background: '#1A1A1A', color: '#fff', padding: '10px 16px', display: 'flex', alignItems: 'center', gap: '8px', borderRadius: '8px', border: '1px solid #333' }}>
+                <Apple size={24} fill="#fff" />
+                <div style={{ textAlign: 'left', lineHeight: 1 }}>
+                  <span style={{ fontSize: '0.6rem', display: 'block', opacity: 0.8 }}>Consíguelo en el</span>
+                  <span style={{ fontWeight: 600, fontSize: '1rem' }}>App Store</span>
+                </div>
+              </button>
+              <button className="btn" style={{ background: '#1A1A1A', color: '#fff', padding: '10px 16px', display: 'flex', alignItems: 'center', gap: '8px', borderRadius: '8px', border: '1px solid #333' }}>
+                <Play size={24} fill="#fff" />
+                <div style={{ textAlign: 'left', lineHeight: 1 }}>
+                  <span style={{ fontSize: '0.6rem', display: 'block', opacity: 0.8 }}>DISPONIBLE EN</span>
+                  <span style={{ fontWeight: 600, fontSize: '1rem' }}>Google Play</span>
+                </div>
+              </button>
+            </div>
           </div>
-          <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', textAlign: 'center' }}>
-            © {new Date().getFullYear()} Fim Mobility. Todos los derechos reservados. <br/>
-            Conectando pasajeros y conductores de manera inteligente y justa.
-          </p>
+
+          <div style={{ width: '100%', height: '1px', background: 'var(--border)', marginBottom: '40px', opacity: 0.5 }} />
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '40px', marginBottom: '60px' }}>
+            <div>
+              <h4 style={{ fontWeight: 800, marginBottom: '20px', color: 'var(--text-primary)' }}>Conductores</h4>
+              <ul style={{ listStyle: 'none', padding: 0, display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                <li><Link href="#" style={{ color: 'var(--text-secondary)' }}>Conductores</Link></li>
+              </ul>
+              <h4 style={{ fontWeight: 800, margin: '30px 0 20px', color: 'var(--text-primary)' }}>Empresas</h4>
+              <ul style={{ listStyle: 'none', padding: 0, display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                <li><Link href="#" style={{ color: 'var(--text-secondary)' }}>Fim para empresas</Link></li>
+                <li><Link href="#" style={{ color: 'var(--text-secondary)' }}>Soluciones</Link></li>
+                <li><Link href="#" style={{ color: 'var(--text-secondary)' }}>Plataforma</Link></li>
+                <li><Link href="#" style={{ color: 'var(--text-secondary)' }}>Recursos</Link></li>
+              </ul>
+              <h4 style={{ fontWeight: 800, margin: '30px 0 20px', color: 'var(--text-primary)' }}>Pasajeros</h4>
+              <ul style={{ listStyle: 'none', padding: 0, display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                <li><Link href="#" style={{ color: 'var(--text-secondary)' }}>Viaja en Fim</Link></li>
+                <li><Link href="#" style={{ color: 'var(--text-secondary)' }}>Envíos</Link></li>
+                <li><Link href="#" style={{ color: 'var(--text-secondary)' }}>Tarifas</Link></li>
+              </ul>
+            </div>
+            
+            <div>
+              <h4 style={{ fontWeight: 800, marginBottom: '20px', color: 'var(--text-primary)' }}>Ads</h4>
+              <ul style={{ listStyle: 'none', padding: 0, display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                <li><Link href="#" style={{ color: 'var(--text-secondary)' }}>Fim Ads</Link></li>
+                <li><Link href="#" style={{ color: 'var(--text-secondary)' }}>Online</Link></li>
+                <li><Link href="#" style={{ color: 'var(--text-secondary)' }}>Offline</Link></li>
+              </ul>
+              <h4 style={{ fontWeight: 800, margin: '30px 0 20px', color: 'var(--text-primary)' }}>Centros de ayuda</h4>
+              <ul style={{ listStyle: 'none', padding: 0, display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                <li><Link href="#" style={{ color: 'var(--text-secondary)' }}>Pasajeros</Link></li>
+                <li><Link href="#" style={{ color: 'var(--text-secondary)' }}>Empresas</Link></li>
+                <li><Link href="#" style={{ color: 'var(--text-secondary)' }}>Flotas</Link></li>
+                <li><Link href="#" style={{ color: 'var(--text-secondary)' }}>Conductores</Link></li>
+              </ul>
+            </div>
+
+            <div>
+              <h4 style={{ fontWeight: 800, marginBottom: '20px', color: 'var(--text-primary)' }}>Nosotros</h4>
+              <ul style={{ listStyle: 'none', padding: 0, display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                <li><Link href="#" style={{ color: 'var(--text-secondary)' }}>Sobre nosotros</Link></li>
+                <li><Link href="#" style={{ color: 'var(--text-secondary)' }}>Portal de Marca</Link></li>
+                <li><Link href="#" style={{ color: 'var(--text-secondary)' }}>Sostenibilidad</Link></li>
+                <li><Link href="#" style={{ color: 'var(--text-secondary)' }}>Seguridad</Link></li>
+                <li><Link href="#" style={{ color: 'var(--text-secondary)' }}>Gobierno Corporativo</Link></li>
+                <li><Link href="#" style={{ color: 'var(--text-secondary)' }}>Accesibilidad</Link></li>
+                <li><Link href="#" style={{ color: 'var(--text-secondary)' }}>Únete al equipo</Link></li>
+                <li><Link href="#" style={{ color: 'var(--text-secondary)' }}>Prensa</Link></li>
+                <li><Link href="#" style={{ color: 'var(--text-secondary)' }}>Blog</Link></li>
+              </ul>
+            </div>
+
+            <div>
+              <h4 style={{ fontWeight: 800, marginBottom: '20px', color: 'var(--text-primary)' }}>Legal</h4>
+              <ul style={{ listStyle: 'none', padding: 0, display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                <li><Link href="#" style={{ color: 'var(--text-secondary)' }}>Términos y condiciones</Link></li>
+                <li><Link href="#" style={{ color: 'var(--text-secondary)' }}>Privacidad</Link></li>
+                <li><Link href="#" style={{ color: 'var(--text-secondary)' }}>Políticas de cookies</Link></li>
+                <li><Link href="#" style={{ color: 'var(--text-secondary)' }}>Declaración de accesibilidad</Link></li>
+              </ul>
+            </div>
+          </div>
+
+          <div style={{ width: '100%', height: '1px', background: 'var(--border)', marginBottom: '30px', opacity: 0.5 }} />
+
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '24px' }}>
+            <div style={{ fontWeight: 700, color: 'var(--text-primary)' }}>
+              Chile ▾
+            </div>
+            <div style={{ display: 'flex', gap: '16px', alignItems: 'center', color: 'var(--text-primary)' }}>
+              <Link href="#" style={{ color: 'inherit' }}>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path></svg>
+              </Link>
+              <Link href="#" style={{ color: 'inherit' }}>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 4s-.7 2.1-2 3.4c1.6 10-9.4 17.3-18 11.6 2.2.1 4.4-.6 6-2C3 15.5.5 9.6 3 5c2.2 2.6 5.6 4.1 9 4-.9-4.2 4-6.6 7-3.8 1.1 0 3-1.2 3-1.2z"></path></svg>
+              </Link>
+              <Link href="https://www.instagram.com/fim.chile/" target="_blank" style={{ color: 'inherit' }}>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>
+              </Link>
+              <Link href="#" style={{ color: 'inherit' }}>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"></path><rect x="2" y="9" width="4" height="12"></rect><circle cx="4" cy="4" r="2"></circle></svg>
+              </Link>
+            </div>
+            <div style={{ color: 'var(--text-secondary)' }}>
+              © {new Date().getFullYear()} Fim Chile SpA
+            </div>
+          </div>
         </div>
       </footer>
       

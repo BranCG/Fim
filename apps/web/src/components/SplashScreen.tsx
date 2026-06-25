@@ -42,7 +42,7 @@ export default function SplashScreen() {
         alignItems: 'center',
         gap: '20px'
       }}>
-        <Logo width="240" height="90" className="animate-pulse" />
+        <Logo width="240" height="90" className="animate-pulse" forceDark={true} />
         <div style={{
           marginTop: '20px',
           width: '40px',
