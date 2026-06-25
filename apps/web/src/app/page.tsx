@@ -78,21 +78,23 @@ export default function Home() {
         transition={{ duration: 0.8, ease: "easeOut", delay: 0.2 }}
         style={{
           position: 'fixed', top: 0, left: 0, right: 0, zIndex: 50,
-          padding: '20px 40px', display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+          padding: '16px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center',
           backdropFilter: 'blur(20px)', borderBottom: '1px solid var(--border)'
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center' }}>
-          <Logo width="100" height="38" subtitle={false} />
+          <Logo width="80" height="30" subtitle={false} />
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <ThemeToggle />
           <Link href="/login" className="btn" style={{ 
-            background: 'transparent', border: '1px solid var(--border)', color: 'var(--text-primary)' 
-          }}>Iniciar Sesión</Link>
+            background: 'transparent', border: '1px solid var(--border)', color: 'var(--text-primary)',
+            padding: '8px 12px', fontSize: '0.85rem'
+          }}>Acceder</Link>
           <Link href="/register" className="btn" style={{ 
-            background: 'var(--accent)', color: '#000', boxShadow: 'var(--accent-glow)' 
-          }}>Registrarse</Link>
+            background: 'var(--accent)', color: '#000', boxShadow: 'var(--accent-glow)',
+            padding: '8px 12px', fontSize: '0.85rem'
+          }}>Registro</Link>
         </div>
       </motion.nav>
 
@@ -112,56 +114,57 @@ export default function Home() {
           
           {/* Toggle Pasajero/Conductor Apple Style */}
           <motion.div variants={fadeInUp} style={{ 
-            background: 'rgba(255,255,255,0.05)', padding: '6px', borderRadius: '100px', 
-            display: 'inline-flex', marginBottom: '40px', border: '1px solid rgba(255,255,255,0.1)', backdropFilter: 'blur(20px)'
+            background: 'var(--bg-card)', padding: '6px', borderRadius: '100px', 
+            display: 'inline-flex', marginBottom: '40px', border: '1px solid var(--border)', backdropFilter: 'blur(20px)',
+            maxWidth: '100%', overflowX: 'auto'
           }}>
             <button onClick={() => setActiveView('passenger')} style={{
-              padding: '10px 24px', borderRadius: '100px', border: 'none', fontWeight: 700, fontSize: '0.9rem', cursor: 'pointer',
-              transition: 'all 0.3s ease', display: 'flex', alignItems: 'center', gap: '8px',
+              padding: '10px 16px', borderRadius: '100px', border: 'none', fontWeight: 700, fontSize: '0.85rem', cursor: 'pointer',
+              transition: 'all 0.3s ease', display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0,
               background: activeView === 'passenger' ? 'var(--accent)' : 'transparent',
-              color: activeView === 'passenger' ? '#000' : 'rgba(255,255,255,0.6)',
+              color: activeView === 'passenger' ? '#000' : 'var(--text-secondary)',
               boxShadow: activeView === 'passenger' ? 'var(--accent-glow)' : 'none'
             }}>
-              <User size={18} /> Soy Pasajero
+              <User size={16} /> Pasajero
             </button>
             <button onClick={() => setActiveView('driver')} style={{
-              padding: '10px 24px', borderRadius: '100px', border: 'none', fontWeight: 700, fontSize: '0.9rem', cursor: 'pointer',
-              transition: 'all 0.3s ease', display: 'flex', alignItems: 'center', gap: '8px',
+              padding: '10px 16px', borderRadius: '100px', border: 'none', fontWeight: 700, fontSize: '0.85rem', cursor: 'pointer',
+              transition: 'all 0.3s ease', display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0,
               background: activeView === 'driver' ? 'var(--accent)' : 'transparent',
-              color: activeView === 'driver' ? '#000' : 'rgba(255,255,255,0.6)',
+              color: activeView === 'driver' ? '#000' : 'var(--text-secondary)',
               boxShadow: activeView === 'driver' ? 'var(--accent-glow)' : 'none'
             }}>
-              <Car size={18} /> Soy Conductor
+              <Car size={16} /> Conductor
             </button>
           </motion.div>
 
           <AnimatePresence mode="wait">
             {activeView === 'passenger' ? (
               <motion.div key="passenger-hero" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} transition={{ duration: 0.4 }}>
-                <h1 style={{ fontSize: 'clamp(2.5rem, 6vw, 4.5rem)', fontWeight: 900, lineHeight: 1.05, letterSpacing: '-0.04em', marginBottom: '24px' }}>
+                <h1 style={{ fontSize: 'clamp(2rem, 8vw, 4rem)', fontWeight: 900, lineHeight: 1.05, letterSpacing: '-0.04em', marginBottom: '24px' }}>
                   Muévete a tu ritmo. <br />
                   <span style={{ color: 'var(--accent)', textShadow: 'var(--accent-glow)' }}>Sin sorpresas.</span>
                 </h1>
-                <p style={{ fontSize: '1.15rem', color: 'var(--text-secondary)', marginBottom: '48px', maxWidth: '600px', margin: '0 auto 48px', lineHeight: 1.6 }}>
+                <p style={{ fontSize: '1rem', color: 'var(--text-secondary)', marginBottom: '48px', maxWidth: '600px', margin: '0 auto 48px', lineHeight: 1.6 }}>
                   La plataforma de movilidad que respeta tu tiempo y tu dinero. Conductores verificados, tarifas transparentes y viajes seguros.
                 </p>
                 <div style={{ display: 'flex', gap: '16px', justifyContent: 'center' }}>
-                  <Link href="/register" className="btn" style={{ background: 'var(--accent)', color: '#000', padding: '18px 36px', fontSize: '1.1rem', boxShadow: 'var(--accent-glow)' }}>
+                  <Link href="/register" className="btn" style={{ background: 'var(--accent)', color: '#000', padding: '14px 28px', fontSize: '1rem', boxShadow: 'var(--accent-glow)' }}>
                     Pedir un viaje <ArrowRight size={20} />
                   </Link>
                 </div>
               </motion.div>
             ) : (
               <motion.div key="driver-hero" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} transition={{ duration: 0.4 }}>
-                <h1 style={{ fontSize: 'clamp(2.5rem, 6vw, 4.5rem)', fontWeight: 900, lineHeight: 1.05, letterSpacing: '-0.04em', marginBottom: '24px' }}>
+                <h1 style={{ fontSize: 'clamp(2rem, 8vw, 4rem)', fontWeight: 900, lineHeight: 1.05, letterSpacing: '-0.04em', marginBottom: '24px' }}>
                   El 100% de tu viaje <br />
                   <span style={{ color: 'var(--accent)', textShadow: 'var(--accent-glow)' }}>es tuyo.</span>
                 </h1>
-                <p style={{ fontSize: '1.15rem', color: 'var(--text-secondary)', marginBottom: '48px', maxWidth: '600px', margin: '0 auto 48px', lineHeight: 1.6 }}>
+                <p style={{ fontSize: '1rem', color: 'var(--text-secondary)', marginBottom: '48px', maxWidth: '600px', margin: '0 auto 48px', lineHeight: 1.6 }}>
                   Dile adiós a las comisiones abusivas. Paga una suscripción justa y quédate con todo lo que ganes. Tú eres el dueño de tu volante.
                 </p>
                 <div style={{ display: 'flex', gap: '16px', justifyContent: 'center' }}>
-                  <Link href="/register" className="btn" style={{ background: 'var(--accent)', color: '#000', padding: '18px 36px', fontSize: '1.1rem', boxShadow: 'var(--accent-glow)' }}>
+                  <Link href="/register" className="btn" style={{ background: 'var(--accent)', color: '#000', padding: '14px 28px', fontSize: '1rem', boxShadow: 'var(--accent-glow)' }}>
                     Ser Conductor <ArrowRight size={20} />
                   </Link>
                 </div>
