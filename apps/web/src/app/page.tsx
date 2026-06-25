@@ -8,6 +8,7 @@ import {
   ShieldCheck, Car, Wallet, Banknote, MapPin, 
   TrendingUp, Smartphone, Zap, ArrowRight, ChevronRight, User, CircleDollarSign
 } from 'lucide-react';
+import { Capacitor } from '@capacitor/core';
 import Logo from '@/components/Logo';
 import SplashScreen from '@/components/SplashScreen';
 import ThemeToggle from '@/components/ThemeToggle';
@@ -24,6 +25,14 @@ export default function Home() {
     const s = getSession();
     if (s && s?.user?.role) {
       router.push(s.user.role === 'admin' ? '/admin' : `/${s.user.role}`);
+    }
+  }, [router]);
+
+  useEffect(() => {
+    // Si el usuario abre esto desde la aplicación nativa (Android/iOS), 
+    // se salta la landing page por completo.
+    if (Capacitor.isNativePlatform()) {
+      router.replace('/login');
     }
   }, [router]);
 
@@ -87,14 +96,10 @@ export default function Home() {
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <ThemeToggle />
-          <Link href="/login" className="btn" style={{ 
-            background: 'transparent', border: '1px solid var(--border)', color: 'var(--text-primary)',
-            padding: '8px 12px', fontSize: '0.85rem'
-          }}>Acceder</Link>
           <Link href="/register" className="btn" style={{ 
             background: 'var(--accent)', color: '#000', boxShadow: 'var(--accent-glow)',
-            padding: '8px 12px', fontSize: '0.85rem'
-          }}>Registro</Link>
+            padding: '8px 16px', fontSize: '0.85rem'
+          }}>Crear Cuenta</Link>
         </div>
       </motion.nav>
 
@@ -148,9 +153,12 @@ export default function Home() {
                 <p style={{ fontSize: '1rem', color: 'var(--text-secondary)', marginBottom: '48px', maxWidth: '600px', margin: '0 auto 48px', lineHeight: 1.6 }}>
                   La plataforma de movilidad que respeta tu tiempo y tu dinero. Conductores verificados, tarifas transparentes y viajes seguros.
                 </p>
-                <div style={{ display: 'flex', gap: '16px', justifyContent: 'center' }}>
-                  <Link href="/register" className="btn" style={{ background: 'var(--accent)', color: '#000', padding: '14px 28px', fontSize: '1rem', boxShadow: 'var(--accent-glow)' }}>
-                    Pedir un viaje <ArrowRight size={20} />
+                <div style={{ display: 'flex', gap: '16px', justifyContent: 'center', flexWrap: 'wrap' }}>
+                  <button className="btn" style={{ background: 'var(--accent)', color: '#000', padding: '14px 28px', fontSize: '1rem', boxShadow: 'var(--accent-glow)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <Smartphone size={20} /> Descargar App
+                  </button>
+                  <Link href="/register" className="btn" style={{ background: 'transparent', color: 'var(--text-primary)', border: '1px solid var(--border)', padding: '14px 28px', fontSize: '1rem' }}>
+                    Registro Web
                   </Link>
                 </div>
               </motion.div>
@@ -163,9 +171,12 @@ export default function Home() {
                 <p style={{ fontSize: '1rem', color: 'var(--text-secondary)', marginBottom: '48px', maxWidth: '600px', margin: '0 auto 48px', lineHeight: 1.6 }}>
                   Dile adiós a las comisiones abusivas. Paga una suscripción justa y quédate con todo lo que ganes. Tú eres el dueño de tu volante.
                 </p>
-                <div style={{ display: 'flex', gap: '16px', justifyContent: 'center' }}>
-                  <Link href="/register" className="btn" style={{ background: 'var(--accent)', color: '#000', padding: '14px 28px', fontSize: '1rem', boxShadow: 'var(--accent-glow)' }}>
-                    Ser Conductor <ArrowRight size={20} />
+                <div style={{ display: 'flex', gap: '16px', justifyContent: 'center', flexWrap: 'wrap' }}>
+                  <button className="btn" style={{ background: 'var(--accent)', color: '#000', padding: '14px 28px', fontSize: '1rem', boxShadow: 'var(--accent-glow)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <Smartphone size={20} /> Descargar App Conductor
+                  </button>
+                  <Link href="/register" className="btn" style={{ background: 'transparent', color: 'var(--text-primary)', border: '1px solid var(--border)', padding: '14px 28px', fontSize: '1rem' }}>
+                    Registro Web
                   </Link>
                 </div>
               </motion.div>
