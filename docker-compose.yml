@@ -19,3 +19,24 @@ services:
       - 1.1.1.1
     volumes:
       - ./apps/api/uploads:/app/apps/api/uploads
+
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+    container_name: fim-web
+    restart: always
+    ports:
+      - "3000:80"
+
+  admin:
+    build:
+      context: .
+      dockerfile: apps/admin/Dockerfile
+    container_name: fim-admin
+    restart: always
+    ports:
+      - "3002:3002"
+    environment:
+      - PORT=3002
+      - NODE_ENV=production
