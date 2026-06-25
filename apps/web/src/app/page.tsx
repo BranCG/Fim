@@ -22,11 +22,11 @@ const AppleBadgeIcon = () => (
 );
 
 const GooglePlayBadgeIcon = () => (
-  <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-    <path d="M3.5 2C3.1 2.4 2.8 3.1 2.8 4V20C2.8 20.9 3.1 21.6 3.5 22L3.6 22L14 11.6L14 11.5L14 11.4L3.6 2L3.5 2Z"/>
-    <path d="M17.4 15L14 11.5L14 11.4L14 11.3L17.4 7.9L17.5 8L21.7 10.4C22.9 11.1 22.9 12.2 21.7 12.9L17.5 15.3L17.4 15Z"/>
-    <path d="M17.5 15.3L14 11.5L3.5 22C4 22.5 4.9 22.6 5.8 22.1L17.5 15.3Z"/>
-    <path d="M17.5 8L5.8 1.3C4.9 0.8 4 0.9 3.5 1.4L14 11.4L17.5 8Z"/>
+  <svg width="24" height="24" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+    <path d="M3.5 2C3.1 2.4 2.8 3.1 2.8 4V20C2.8 20.9 3.1 21.6 3.5 22L3.6 22L14 11.6L14 11.5L14 11.4L3.6 2L3.5 2Z" fill="#00E676"/>
+    <path d="M17.4 15L14 11.5L14 11.4L14 11.3L17.4 7.9L17.5 8L21.7 10.4C22.9 11.1 22.9 12.2 21.7 12.9L17.5 15.3L17.4 15Z" fill="#FFCA28"/>
+    <path d="M17.5 15.3L14 11.5L3.5 22C4 22.5 4.9 22.6 5.8 22.1L17.5 15.3Z" fill="#F44336"/>
+    <path d="M17.5 8L5.8 1.3C4.9 0.8 4 0.9 3.5 1.4L14 11.4L17.5 8Z" fill="#29B6F6"/>
   </svg>
 );
 
@@ -184,18 +184,18 @@ export default function Home() {
                   La plataforma de movilidad que respeta tu tiempo y tu dinero. Conductores verificados, tarifas transparentes y viajes seguros.
                 </p>
                 <div style={{ display: 'flex', gap: '16px', justifyContent: 'center', flexWrap: 'wrap' }}>
-                  <button className="btn" style={{ background: '#fff', color: '#000', padding: '10px 24px', fontSize: '1rem', display: 'flex', alignItems: 'center', gap: '10px', borderRadius: '100px' }}>
+                  <button className="btn" style={{ background: '#1A1A1A', color: '#fff', padding: '10px 20px', fontSize: '1rem', display: 'flex', alignItems: 'center', gap: '12px', borderRadius: '12px', border: '1px solid #333' }}>
                     <AppleBadgeIcon />
-                    <div style={{ textAlign: 'left', lineHeight: 1 }}>
-                      <span style={{ fontSize: '0.65rem', display: 'block', opacity: 0.7 }}>Consíguelo en el</span>
-                      <span style={{ fontWeight: 800, fontSize: '1.2rem', letterSpacing: '-0.02em' }}>App Store</span>
+                    <div style={{ textAlign: 'left', lineHeight: 1.1 }}>
+                      <span style={{ fontSize: '0.65rem', display: 'block', opacity: 0.8 }}>Consíguelo en el</span>
+                      <span style={{ fontWeight: 600, fontSize: '1.2rem', letterSpacing: '-0.02em' }}>App Store</span>
                     </div>
                   </button>
-                  <button className="btn" style={{ background: '#fff', color: '#000', padding: '10px 24px', fontSize: '1rem', display: 'flex', alignItems: 'center', gap: '10px', borderRadius: '100px' }}>
+                  <button className="btn" style={{ background: '#1A1A1A', color: '#fff', padding: '10px 20px', fontSize: '1rem', display: 'flex', alignItems: 'center', gap: '12px', borderRadius: '12px', border: '1px solid #333' }}>
                     <GooglePlayBadgeIcon />
-                    <div style={{ textAlign: 'left', lineHeight: 1 }}>
-                      <span style={{ fontSize: '0.65rem', display: 'block', opacity: 0.7 }}>Disponible en</span>
-                      <span style={{ fontWeight: 800, fontSize: '1.2rem', letterSpacing: '-0.02em' }}>Google Play</span>
+                    <div style={{ textAlign: 'left', lineHeight: 1.1 }}>
+                      <span style={{ fontSize: '0.65rem', display: 'block', opacity: 0.8 }}>DISPONIBLE EN</span>
+                      <span style={{ fontWeight: 600, fontSize: '1.2rem', letterSpacing: '-0.02em' }}>Google Play</span>
                     </div>
                   </button>
                 </div>
@@ -215,18 +215,18 @@ export default function Home() {
                   Dile adiós a las comisiones abusivas. Paga una suscripción justa y quédate con todo lo que ganes. Tú eres el dueño de tu volante.
                 </p>
                 <div style={{ display: 'flex', gap: '16px', justifyContent: 'center', flexWrap: 'wrap' }}>
-                  <button className="btn" style={{ background: '#fff', color: '#000', padding: '10px 24px', fontSize: '1rem', display: 'flex', alignItems: 'center', gap: '10px', borderRadius: '100px' }}>
+                  <button className="btn" style={{ background: '#1A1A1A', color: '#fff', padding: '10px 20px', fontSize: '1rem', display: 'flex', alignItems: 'center', gap: '12px', borderRadius: '12px', border: '1px solid #333' }}>
                     <AppleBadgeIcon />
-                    <div style={{ textAlign: 'left', lineHeight: 1 }}>
-                      <span style={{ fontSize: '0.65rem', display: 'block', opacity: 0.7 }}>Consíguelo en el</span>
-                      <span style={{ fontWeight: 800, fontSize: '1.2rem', letterSpacing: '-0.02em' }}>App Store</span>
+                    <div style={{ textAlign: 'left', lineHeight: 1.1 }}>
+                      <span style={{ fontSize: '0.65rem', display: 'block', opacity: 0.8 }}>Consíguelo en el</span>
+                      <span style={{ fontWeight: 600, fontSize: '1.2rem', letterSpacing: '-0.02em' }}>App Store</span>
                     </div>
                   </button>
-                  <button className="btn" style={{ background: '#fff', color: '#000', padding: '10px 24px', fontSize: '1rem', display: 'flex', alignItems: 'center', gap: '10px', borderRadius: '100px' }}>
+                  <button className="btn" style={{ background: '#1A1A1A', color: '#fff', padding: '10px 20px', fontSize: '1rem', display: 'flex', alignItems: 'center', gap: '12px', borderRadius: '12px', border: '1px solid #333' }}>
                     <GooglePlayBadgeIcon />
-                    <div style={{ textAlign: 'left', lineHeight: 1 }}>
-                      <span style={{ fontSize: '0.65rem', display: 'block', opacity: 0.7 }}>Disponible en</span>
-                      <span style={{ fontWeight: 800, fontSize: '1.2rem', letterSpacing: '-0.02em' }}>Google Play</span>
+                    <div style={{ textAlign: 'left', lineHeight: 1.1 }}>
+                      <span style={{ fontSize: '0.65rem', display: 'block', opacity: 0.8 }}>DISPONIBLE EN</span>
+                      <span style={{ fontWeight: 600, fontSize: '1.2rem', letterSpacing: '-0.02em' }}>Google Play</span>
                     </div>
                   </button>
                 </div>
