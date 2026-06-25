@@ -50,9 +50,8 @@ const corsOptions = {
 
     // 3. Si es Desarrollo (Local), ser más flexible
     const isLocal = /^(http|capacitor):\/\/(localhost|127\.0\.0\.1|10\.\d+\.\d+\.\d+|192\.168\.\d+\.\d+|172\.(1[6-9]|2\d|3[0-1])\.\d+\.\d+)(:\d+)?$/.test(origin);
-    const isVercel = /\.vercel\.app$/.test(origin);
     
-    if (isLocal || isVercel || matchesEnv) {
+    if (isLocal || matchesEnv) {
       callback(null, true);
     } else {
       callback(new Error(`Origen no permitido por CORS: ${origin}`));
