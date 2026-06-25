@@ -53,6 +53,20 @@ export default function Home() {
   }, [router]);
 
   useEffect(() => {
+    // Si el usuario abre esto desde la aplicación nativa (Android/iOS), 
+    // se salta la landing page web por completo y va directo al login/app.
+    if (typeof window !== 'undefined') {
+      const isMobileApp = (window as any).Capacitor?.isNativePlatform?.() ||
+        window.location.origin.includes('capacitor://') ||
+        ((window.location.hostname === 'localhost' || window.location.hostname === '') && window.location.port === '');
+      
+      if (isMobileApp) {
+        router.replace('/login');
+      }
+    }
+  }, [router]);
+
+  useEffect(() => {
     // Calculamos pérdida semanal asumiendo 30% de comisión en la competencia
     setLoss(Math.round(tripsPerWeek * avgPrice * 0.30));
   }, [tripsPerWeek, avgPrice]);
