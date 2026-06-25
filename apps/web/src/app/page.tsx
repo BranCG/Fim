@@ -112,7 +112,7 @@ export default function Home() {
       {/* Marquee Banner */}
       <div style={{
         position: 'fixed', top: 0, left: 0, right: 0, zIndex: 60,
-        background: '#FEF08A', color: '#854D0E', height: '30px',
+        background: '#FEF08A', color: '#000', height: '30px',
         display: 'flex', alignItems: 'center', overflow: 'hidden',
         fontSize: '0.8rem', fontWeight: 800, whiteSpace: 'nowrap'
       }}>
