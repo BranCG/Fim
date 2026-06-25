@@ -14,6 +14,9 @@ import Logo from '@/components/Logo';
 import SplashScreen from '@/components/SplashScreen';
 import ThemeToggle from '@/components/ThemeToggle';
 import api, { getSession } from '@/lib/api';
+import { Caveat } from 'next/font/google';
+
+const caveat = Caveat({ subsets: ['latin'], weight: ['700'] });
 
 const AppleBadgeIcon = () => (
   <svg width="24" height="24" viewBox="0 0 384 512" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
@@ -207,9 +210,10 @@ export default function Home() {
               </motion.div>
             ) : (
               <motion.div key="driver-hero" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} transition={{ duration: 0.4 }}>
-                <h1 style={{ fontSize: 'clamp(2rem, 8vw, 4rem)', fontWeight: 900, lineHeight: 1.05, letterSpacing: '-0.04em', marginBottom: '24px' }}>
-                  El 100% de tu viaje <br />
-                  <span style={{ color: 'var(--accent)', textShadow: 'var(--accent-glow)' }}>es tuyo.</span>
+                <h1 style={{ fontSize: 'clamp(2rem, 6vw, 3.5rem)', fontWeight: 900, lineHeight: 1.1, letterSpacing: '-0.03em', marginBottom: '24px' }}>
+                  La red de conductores independientes <br />
+                  <span className={caveat.className} style={{ color: 'var(--accent)', fontSize: '1.4em', fontWeight: 700, transform: 'rotate(-3deg)', display: 'inline-block', textShadow: 'var(--accent-glow)' }}>más rentable</span> <br />
+                  de Chile.
                 </h1>
                 <p style={{ fontSize: '1rem', color: 'var(--text-secondary)', marginBottom: '48px', maxWidth: '600px', margin: '0 auto 48px', lineHeight: 1.6 }}>
                   Dile adiós a las comisiones abusivas. Paga una suscripción justa y quédate con todo lo que ganes. Tú eres el dueño de tu volante.
