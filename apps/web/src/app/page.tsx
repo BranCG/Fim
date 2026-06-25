@@ -48,8 +48,8 @@ export default function Home() {
   return (
     <main style={{
       minHeight: '100vh',
-      background: '#09090F',
-      color: '#FFFFFF',
+      background: 'var(--bg-primary)',
+      color: 'var(--text-primary)',
       fontFamily: 'var(--font-sans)',
       overflowX: 'hidden',
       position: 'relative',
@@ -79,17 +79,16 @@ export default function Home() {
         style={{
           position: 'fixed', top: 0, left: 0, right: 0, zIndex: 50,
           padding: '20px 40px', display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-          background: 'rgba(9, 9, 15, 0.6)', backdropFilter: 'blur(20px)', borderBottom: '1px solid rgba(255,255,255,0.05)'
+          backdropFilter: 'blur(20px)', borderBottom: '1px solid var(--border)'
         }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-          <Logo width={36} height={36} color="var(--text-primary)" />
-          <span style={{ fontSize: '1.5rem', fontWeight: 900, letterSpacing: '-0.05em' }}>Fim<span style={{ color: 'var(--accent)' }}>.</span></span>
+        <div style={{ display: 'flex', alignItems: 'center' }}>
+          <Logo width="100" height="38" subtitle={false} />
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
           <ThemeToggle />
           <Link href="/login" className="btn" style={{ 
-            background: 'transparent', border: '1px solid rgba(255,255,255,0.2)', color: '#FFF' 
+            background: 'transparent', border: '1px solid var(--border)', color: 'var(--text-primary)' 
           }}>Iniciar Sesión</Link>
           <Link href="/register" className="btn" style={{ 
             background: 'var(--accent)', color: '#000', boxShadow: 'var(--accent-glow)' 
@@ -139,11 +138,11 @@ export default function Home() {
           <AnimatePresence mode="wait">
             {activeView === 'passenger' ? (
               <motion.div key="passenger-hero" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} transition={{ duration: 0.4 }}>
-                <h1 style={{ fontSize: 'clamp(3.5rem, 8vw, 6rem)', fontWeight: 900, lineHeight: 1.05, letterSpacing: '-0.04em', marginBottom: '24px' }}>
+                <h1 style={{ fontSize: 'clamp(2.5rem, 6vw, 4.5rem)', fontWeight: 900, lineHeight: 1.05, letterSpacing: '-0.04em', marginBottom: '24px' }}>
                   Muévete a tu ritmo. <br />
                   <span style={{ color: 'var(--accent)', textShadow: 'var(--accent-glow)' }}>Sin sorpresas.</span>
                 </h1>
-                <p style={{ fontSize: '1.25rem', color: 'rgba(255,255,255,0.6)', marginBottom: '48px', maxWidth: '600px', margin: '0 auto 48px', lineHeight: 1.6 }}>
+                <p style={{ fontSize: '1.15rem', color: 'var(--text-secondary)', marginBottom: '48px', maxWidth: '600px', margin: '0 auto 48px', lineHeight: 1.6 }}>
                   La plataforma de movilidad que respeta tu tiempo y tu dinero. Conductores verificados, tarifas transparentes y viajes seguros.
                 </p>
                 <div style={{ display: 'flex', gap: '16px', justifyContent: 'center' }}>
@@ -154,11 +153,11 @@ export default function Home() {
               </motion.div>
             ) : (
               <motion.div key="driver-hero" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} transition={{ duration: 0.4 }}>
-                <h1 style={{ fontSize: 'clamp(3.5rem, 8vw, 6rem)', fontWeight: 900, lineHeight: 1.05, letterSpacing: '-0.04em', marginBottom: '24px' }}>
+                <h1 style={{ fontSize: 'clamp(2.5rem, 6vw, 4.5rem)', fontWeight: 900, lineHeight: 1.05, letterSpacing: '-0.04em', marginBottom: '24px' }}>
                   El 100% de tu viaje <br />
                   <span style={{ color: 'var(--accent)', textShadow: 'var(--accent-glow)' }}>es tuyo.</span>
                 </h1>
-                <p style={{ fontSize: '1.25rem', color: 'rgba(255,255,255,0.6)', marginBottom: '48px', maxWidth: '600px', margin: '0 auto 48px', lineHeight: 1.6 }}>
+                <p style={{ fontSize: '1.15rem', color: 'var(--text-secondary)', marginBottom: '48px', maxWidth: '600px', margin: '0 auto 48px', lineHeight: 1.6 }}>
                   Dile adiós a las comisiones abusivas. Paga una suscripción justa y quédate con todo lo que ganes. Tú eres el dueño de tu volante.
                 </p>
                 <div style={{ display: 'flex', gap: '16px', justifyContent: 'center' }}>
@@ -187,12 +186,12 @@ export default function Home() {
                   { icon: <Banknote size={36}/>, title: 'Tarifas Claras', desc: 'Sin multiplicadores dinámicos absurdos. Paga lo que ves desde el primer momento.' }
                 ].map((feature, i) => (
                   <motion.div key={i} variants={fadeInUp} className="card-glass" style={{
-                    padding: '40px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '24px',
+                    padding: '40px', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: '24px',
                     transition: 'all 0.3s ease', cursor: 'default'
-                  }} onMouseEnter={(e) => e.currentTarget.style.borderColor = 'var(--accent)'} onMouseLeave={(e) => e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)'}>
+                  }} onMouseEnter={(e) => e.currentTarget.style.borderColor = 'var(--accent)'} onMouseLeave={(e) => e.currentTarget.style.borderColor = 'var(--border)'}>
                     <div style={{ color: 'var(--accent)', marginBottom: '24px' }}>{feature.icon}</div>
                     <h3 style={{ fontSize: '1.5rem', marginBottom: '16px', fontWeight: 800 }}>{feature.title}</h3>
-                    <p style={{ color: 'rgba(255,255,255,0.6)', lineHeight: 1.6 }}>{feature.desc}</p>
+                    <p style={{ color: 'var(--text-secondary)', lineHeight: 1.6 }}>{feature.desc}</p>
                   </motion.div>
                 ))}
               </>
@@ -204,12 +203,12 @@ export default function Home() {
                   { icon: <Smartphone size={36}/>, title: 'Control Total', desc: 'Tú eliges qué viajes aceptar y qué zonas transitar. Nosotros solo ponemos la tecnología.' }
                 ].map((feature, i) => (
                   <motion.div key={i} variants={fadeInUp} className="card-glass" style={{
-                    padding: '40px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '24px',
+                    padding: '40px', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: '24px',
                     transition: 'all 0.3s ease', cursor: 'default'
-                  }} onMouseEnter={(e) => e.currentTarget.style.borderColor = 'var(--accent)'} onMouseLeave={(e) => e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)'}>
+                  }} onMouseEnter={(e) => e.currentTarget.style.borderColor = 'var(--accent)'} onMouseLeave={(e) => e.currentTarget.style.borderColor = 'var(--border)'}>
                     <div style={{ color: 'var(--accent)', marginBottom: '24px' }}>{feature.icon}</div>
                     <h3 style={{ fontSize: '1.5rem', marginBottom: '16px', fontWeight: 800 }}>{feature.title}</h3>
-                    <p style={{ color: 'rgba(255,255,255,0.6)', lineHeight: 1.6 }}>{feature.desc}</p>
+                    <p style={{ color: 'var(--text-secondary)', lineHeight: 1.6 }}>{feature.desc}</p>
                   </motion.div>
                 ))}
               </>
@@ -227,37 +226,37 @@ export default function Home() {
             exit={{ opacity: 0, height: 0 }}
             style={{ padding: '60px 24px 120px', overflow: 'hidden' }}
           >
-            <div style={{ maxWidth: '1000px', margin: '0 auto', background: 'rgba(20,20,30,0.6)', backdropFilter: 'blur(30px)', border: '1px solid rgba(139, 92, 246, 0.2)', borderRadius: '32px', padding: '60px', boxShadow: '0 40px 100px rgba(0,0,0,0.8)' }}>
+            <div className="card-glass" style={{ maxWidth: '1000px', margin: '0 auto', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: '32px', padding: '60px' }}>
               
               <div style={{ textAlign: 'center', marginBottom: '60px' }}>
-                <h2 style={{ fontSize: 'clamp(2rem, 5vw, 3.5rem)', fontWeight: 900, letterSpacing: '-0.03em', marginBottom: '16px' }}>Calcula tu <span style={{ color: 'var(--accent)' }}>Pérdida Actual</span></h2>
-                <p style={{ fontSize: '1.1rem', color: 'rgba(255,255,255,0.6)' }}>Descubre cuánto dinero le estás regalando a las apps tradicionales cada semana.</p>
+                <h2 style={{ fontSize: 'clamp(1.8rem, 4vw, 2.8rem)', fontWeight: 900, letterSpacing: '-0.03em', marginBottom: '16px' }}>Calcula tu <span style={{ color: 'var(--accent)' }}>Pérdida Actual</span></h2>
+                <p style={{ fontSize: '1.1rem', color: 'var(--text-secondary)' }}>Descubre cuánto dinero le estás regalando a las apps tradicionales cada semana.</p>
               </div>
 
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '60px', alignItems: 'center' }}>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '40px' }}>
                   <div>
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px' }}>
-                      <span style={{ fontWeight: 700, color: 'rgba(255,255,255,0.8)' }}>Viajes por semana</span>
+                      <span style={{ fontWeight: 700, color: 'var(--text-primary)' }}>Viajes por semana</span>
                       <span style={{ color: 'var(--accent)', fontWeight: 900, fontSize: '1.2rem' }}>{tripsPerWeek}</span>
                     </div>
                     <input type="range" min="10" max="150" value={tripsPerWeek} onChange={(e) => setTripsPerWeek(Number(e.target.value))} style={{ width: '100%', accentColor: 'var(--accent)', cursor: 'pointer' }} />
                   </div>
                   <div>
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px' }}>
-                      <span style={{ fontWeight: 700, color: 'rgba(255,255,255,0.8)' }}>Precio prom. por viaje</span>
+                      <span style={{ fontWeight: 700, color: 'var(--text-primary)' }}>Precio prom. por viaje</span>
                       <span style={{ color: 'var(--accent)', fontWeight: 900, fontSize: '1.2rem' }}>{formatCLP(avgPrice)}</span>
                     </div>
                     <input type="range" min="2000" max="25000" step="500" value={avgPrice} onChange={(e) => setAvgPrice(Number(e.target.value))} style={{ width: '100%', accentColor: 'var(--accent)', cursor: 'pointer' }} />
                   </div>
                 </div>
 
-                <div style={{ background: 'rgba(0,0,0,0.5)', padding: '40px', borderRadius: '24px', border: '1px solid rgba(255,255,255,0.05)', textAlign: 'center' }}>
-                  <p style={{ fontSize: '0.9rem', textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: 800, color: 'rgba(255,255,255,0.5)', marginBottom: '8px' }}>Estás perdiendo aprox.</p>
-                  <h3 style={{ fontSize: '3.5rem', fontWeight: 900, color: '#FF4560', textShadow: '0 0 40px rgba(255,69,96,0.3)', marginBottom: '8px' }}>
+                <div className="card-glass" style={{ background: 'var(--bg-secondary)', padding: '40px', borderRadius: '24px', border: '1px solid var(--border)', textAlign: 'center' }}>
+                  <p style={{ fontSize: '0.9rem', textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: 800, color: 'var(--text-muted)', marginBottom: '8px' }}>Estás perdiendo aprox.</p>
+                  <h3 style={{ fontSize: 'clamp(2.5rem, 5vw, 3.5rem)', fontWeight: 900, color: 'var(--danger)', textShadow: '0 0 40px rgba(255,69,96,0.3)', marginBottom: '8px' }}>
                     {formatCLP(loss)}
                   </h3>
-                  <p style={{ fontSize: '0.9rem', color: 'rgba(255,255,255,0.4)', marginBottom: '32px' }}>A la semana (Asumiendo 30% de comisión en otras apps)</p>
+                  <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)', marginBottom: '32px' }}>A la semana (Asumiendo 30% de comisión en otras apps)</p>
                   <Link href="/register" className="btn" style={{ background: 'var(--accent)', color: '#000', width: '100%', padding: '20px', fontSize: '1.1rem', boxShadow: 'var(--accent-glow)' }}>
                     Recuperar mi dinero <Zap size={20} />
                   </Link>
@@ -270,13 +269,12 @@ export default function Home() {
       </AnimatePresence>
 
       {/* ─── FOOTER ─── */}
-      <footer style={{ borderTop: '1px solid rgba(255,255,255,0.05)', padding: '60px 40px', background: '#050508' }}>
+      <footer style={{ borderTop: '1px solid var(--border)', padding: '60px 40px', background: 'var(--bg-secondary)' }}>
         <div style={{ maxWidth: '1200px', margin: '0 auto', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '24px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', opacity: 0.5 }}>
-            <Logo width={24} height={24} color="#FFF" />
-            <span style={{ fontSize: '1.2rem', fontWeight: 900 }}>Fim.</span>
+          <div style={{ display: 'flex', alignItems: 'center', opacity: 0.6 }}>
+            <Logo width="120" height="45" subtitle={true} />
           </div>
-          <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.9rem', textAlign: 'center' }}>
+          <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', textAlign: 'center' }}>
             © {new Date().getFullYear()} Fim Mobility. Todos los derechos reservados. <br/>
             Conectando pasajeros y conductores de manera inteligente y justa.
           </p>
