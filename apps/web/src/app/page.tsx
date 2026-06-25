@@ -6,7 +6,8 @@ import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   ShieldCheck, Car, Wallet, Banknote, MapPin, 
-  TrendingUp, Smartphone, Zap, ArrowRight, ChevronRight, User, CircleDollarSign
+  TrendingUp, Smartphone, Zap, ArrowRight, ChevronRight, User, CircleDollarSign,
+  Apple, Play
 } from 'lucide-react';
 import { Capacitor } from '@capacitor/core';
 import Logo from '@/components/Logo';
@@ -154,11 +155,24 @@ export default function Home() {
                   La plataforma de movilidad que respeta tu tiempo y tu dinero. Conductores verificados, tarifas transparentes y viajes seguros.
                 </p>
                 <div style={{ display: 'flex', gap: '16px', justifyContent: 'center', flexWrap: 'wrap' }}>
-                  <button className="btn" style={{ background: 'var(--accent)', color: '#000', padding: '14px 28px', fontSize: '1rem', boxShadow: 'var(--accent-glow)', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <Smartphone size={20} /> Descargar App
+                  <button className="btn" style={{ background: '#fff', color: '#000', padding: '14px 24px', fontSize: '1rem', display: 'flex', alignItems: 'center', gap: '10px', borderRadius: '100px' }}>
+                    <Apple size={22} fill="#000" /> 
+                    <div style={{ textAlign: 'left', lineHeight: 1 }}>
+                      <span style={{ fontSize: '0.65rem', display: 'block', opacity: 0.7 }}>Consíguelo en el</span>
+                      <span style={{ fontWeight: 800, fontSize: '1rem' }}>App Store</span>
+                    </div>
                   </button>
-                  <Link href="/register" className="btn" style={{ background: 'transparent', color: 'var(--text-primary)', border: '1px solid var(--border)', padding: '14px 28px', fontSize: '1rem' }}>
-                    Registro Web
+                  <button className="btn" style={{ background: '#fff', color: '#000', padding: '14px 24px', fontSize: '1rem', display: 'flex', alignItems: 'center', gap: '10px', borderRadius: '100px' }}>
+                    <Play size={22} fill="#000" /> 
+                    <div style={{ textAlign: 'left', lineHeight: 1 }}>
+                      <span style={{ fontSize: '0.65rem', display: 'block', opacity: 0.7 }}>Disponible en</span>
+                      <span style={{ fontWeight: 800, fontSize: '1rem' }}>Google Play</span>
+                    </div>
+                  </button>
+                </div>
+                <div style={{ marginTop: '24px' }}>
+                  <Link href="/register" className="btn" style={{ background: 'transparent', color: 'var(--text-secondary)', border: '1px solid var(--border)', padding: '10px 20px', fontSize: '0.9rem' }}>
+                    o Crear una cuenta en la web
                   </Link>
                 </div>
               </motion.div>
@@ -172,11 +186,24 @@ export default function Home() {
                   Dile adiós a las comisiones abusivas. Paga una suscripción justa y quédate con todo lo que ganes. Tú eres el dueño de tu volante.
                 </p>
                 <div style={{ display: 'flex', gap: '16px', justifyContent: 'center', flexWrap: 'wrap' }}>
-                  <button className="btn" style={{ background: 'var(--accent)', color: '#000', padding: '14px 28px', fontSize: '1rem', boxShadow: 'var(--accent-glow)', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <Smartphone size={20} /> Descargar App Conductor
+                  <button className="btn" style={{ background: '#fff', color: '#000', padding: '14px 24px', fontSize: '1rem', display: 'flex', alignItems: 'center', gap: '10px', borderRadius: '100px' }}>
+                    <Apple size={22} fill="#000" /> 
+                    <div style={{ textAlign: 'left', lineHeight: 1 }}>
+                      <span style={{ fontSize: '0.65rem', display: 'block', opacity: 0.7 }}>Consíguelo en el</span>
+                      <span style={{ fontWeight: 800, fontSize: '1rem' }}>App Store</span>
+                    </div>
                   </button>
-                  <Link href="/register" className="btn" style={{ background: 'transparent', color: 'var(--text-primary)', border: '1px solid var(--border)', padding: '14px 28px', fontSize: '1rem' }}>
-                    Registro Web
+                  <button className="btn" style={{ background: '#fff', color: '#000', padding: '14px 24px', fontSize: '1rem', display: 'flex', alignItems: 'center', gap: '10px', borderRadius: '100px' }}>
+                    <Play size={22} fill="#000" /> 
+                    <div style={{ textAlign: 'left', lineHeight: 1 }}>
+                      <span style={{ fontSize: '0.65rem', display: 'block', opacity: 0.7 }}>Disponible en</span>
+                      <span style={{ fontWeight: 800, fontSize: '1rem' }}>Google Play</span>
+                    </div>
+                  </button>
+                </div>
+                <div style={{ marginTop: '24px' }}>
+                  <Link href="/register" className="btn" style={{ background: 'transparent', color: 'var(--text-secondary)', border: '1px solid var(--border)', padding: '10px 20px', fontSize: '0.9rem' }}>
+                    o Crear una cuenta de Conductor
                   </Link>
                 </div>
               </motion.div>
@@ -190,7 +217,12 @@ export default function Home() {
         <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
           
           <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, margin: '-100px' }} variants={staggerContainer} 
-            style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '32px' }}
+            className="cards-carousel"
+            style={{ 
+              display: 'flex', gap: '24px', overflowX: 'auto', scrollSnapType: 'x mandatory', 
+              paddingBottom: '24px', margin: '0 -24px', paddingLeft: '24px', paddingRight: '24px',
+              WebkitOverflowScrolling: 'touch'
+            }}
           >
             {activeView === 'passenger' ? (
               <>
@@ -199,13 +231,13 @@ export default function Home() {
                   { icon: <MapPin size={36}/>, title: 'Rutas Optimizadas', desc: 'Llega más rápido a tu destino con nuestro sistema de navegación hiper-eficiente.' },
                   { icon: <Banknote size={36}/>, title: 'Tarifas Claras', desc: 'Sin multiplicadores dinámicos absurdos. Paga lo que ves desde el primer momento.' }
                 ].map((feature, i) => (
-                  <motion.div key={i} variants={fadeInUp} className="card-glass" style={{
-                    padding: '40px', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: '24px',
-                    transition: 'all 0.3s ease', cursor: 'default'
+                  <motion.div key={i} variants={fadeInUp} className="card-glass carousel-item" style={{
+                    padding: 'clamp(24px, 5vw, 40px)', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: '24px',
+                    transition: 'all 0.3s ease', cursor: 'default', flex: '0 0 85%', maxWidth: '350px', scrollSnapAlign: 'start'
                   }} onMouseEnter={(e) => e.currentTarget.style.borderColor = 'var(--accent)'} onMouseLeave={(e) => e.currentTarget.style.borderColor = 'var(--border)'}>
                     <div style={{ color: 'var(--accent)', marginBottom: '24px' }}>{feature.icon}</div>
-                    <h3 style={{ fontSize: '1.5rem', marginBottom: '16px', fontWeight: 800 }}>{feature.title}</h3>
-                    <p style={{ color: 'var(--text-secondary)', lineHeight: 1.6 }}>{feature.desc}</p>
+                    <h3 style={{ fontSize: '1.25rem', marginBottom: '12px', fontWeight: 800 }}>{feature.title}</h3>
+                    <p style={{ color: 'var(--text-secondary)', lineHeight: 1.6, fontSize: '0.95rem' }}>{feature.desc}</p>
                   </motion.div>
                 ))}
               </>
@@ -216,13 +248,13 @@ export default function Home() {
                   { icon: <TrendingUp size={36}/>, title: 'Ganancias Exponenciales', desc: 'Paga una tarifa plana mensual (o paga por viaje si prefieres) y escala tus ingresos.' },
                   { icon: <Smartphone size={36}/>, title: 'Control Total', desc: 'Tú eliges qué viajes aceptar y qué zonas transitar. Nosotros solo ponemos la tecnología.' }
                 ].map((feature, i) => (
-                  <motion.div key={i} variants={fadeInUp} className="card-glass" style={{
-                    padding: '40px', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: '24px',
-                    transition: 'all 0.3s ease', cursor: 'default'
+                  <motion.div key={i} variants={fadeInUp} className="card-glass carousel-item" style={{
+                    padding: 'clamp(24px, 5vw, 40px)', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: '24px',
+                    transition: 'all 0.3s ease', cursor: 'default', flex: '0 0 85%', maxWidth: '350px', scrollSnapAlign: 'start'
                   }} onMouseEnter={(e) => e.currentTarget.style.borderColor = 'var(--accent)'} onMouseLeave={(e) => e.currentTarget.style.borderColor = 'var(--border)'}>
                     <div style={{ color: 'var(--accent)', marginBottom: '24px' }}>{feature.icon}</div>
-                    <h3 style={{ fontSize: '1.5rem', marginBottom: '16px', fontWeight: 800 }}>{feature.title}</h3>
-                    <p style={{ color: 'var(--text-secondary)', lineHeight: 1.6 }}>{feature.desc}</p>
+                    <h3 style={{ fontSize: '1.25rem', marginBottom: '12px', fontWeight: 800 }}>{feature.title}</h3>
+                    <p style={{ color: 'var(--text-secondary)', lineHeight: 1.6, fontSize: '0.95rem' }}>{feature.desc}</p>
                   </motion.div>
                 ))}
               </>
@@ -240,14 +272,14 @@ export default function Home() {
             exit={{ opacity: 0, height: 0 }}
             style={{ padding: '60px 24px 120px', overflow: 'hidden' }}
           >
-            <div className="card-glass" style={{ maxWidth: '1000px', margin: '0 auto', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: '32px', padding: '60px' }}>
+            <div className="card-glass" style={{ maxWidth: '1000px', margin: '0 auto', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: '32px', padding: 'clamp(24px, 5vw, 60px)' }}>
               
-              <div style={{ textAlign: 'center', marginBottom: '60px' }}>
+              <div style={{ textAlign: 'center', marginBottom: '40px' }}>
                 <h2 style={{ fontSize: 'clamp(1.8rem, 4vw, 2.8rem)', fontWeight: 900, letterSpacing: '-0.03em', marginBottom: '16px' }}>Calcula tu <span style={{ color: 'var(--accent)' }}>Pérdida Actual</span></h2>
-                <p style={{ fontSize: '1.1rem', color: 'var(--text-secondary)' }}>Descubre cuánto dinero le estás regalando a las apps tradicionales cada semana.</p>
+                <p style={{ fontSize: '1rem', color: 'var(--text-secondary)' }}>Descubre cuánto dinero le estás regalando a las apps tradicionales cada semana.</p>
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '60px', alignItems: 'center' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '40px', alignItems: 'center' }}>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '40px' }}>
                   <div>
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px' }}>
@@ -265,14 +297,14 @@ export default function Home() {
                   </div>
                 </div>
 
-                <div className="card-glass" style={{ background: 'var(--bg-secondary)', padding: '40px', borderRadius: '24px', border: '1px solid var(--border)', textAlign: 'center' }}>
-                  <p style={{ fontSize: '0.9rem', textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: 800, color: 'var(--text-muted)', marginBottom: '8px' }}>Estás perdiendo aprox.</p>
-                  <h3 style={{ fontSize: 'clamp(2.5rem, 5vw, 3.5rem)', fontWeight: 900, color: 'var(--danger)', textShadow: '0 0 40px rgba(255,69,96,0.3)', marginBottom: '8px' }}>
+                <div className="card-glass" style={{ background: 'var(--bg-secondary)', padding: 'clamp(24px, 5vw, 40px)', borderRadius: '24px', border: '1px solid var(--border)', textAlign: 'center' }}>
+                  <p style={{ fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: 800, color: 'var(--text-muted)', marginBottom: '8px' }}>Estás perdiendo aprox.</p>
+                  <h3 style={{ fontSize: 'clamp(2rem, 8vw, 3.5rem)', fontWeight: 900, color: 'var(--accent)', textShadow: 'var(--accent-glow)', marginBottom: '8px' }}>
                     {formatCLP(loss)}
                   </h3>
-                  <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)', marginBottom: '32px' }}>A la semana (Asumiendo 30% de comisión en otras apps)</p>
-                  <Link href="/register" className="btn" style={{ background: 'var(--accent)', color: '#000', width: '100%', padding: '20px', fontSize: '1.1rem', boxShadow: 'var(--accent-glow)' }}>
-                    Recuperar mi dinero <Zap size={20} />
+                  <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '24px' }}>A la semana (Asumiendo 30% de comisión en otras apps)</p>
+                  <Link href="/register" className="btn" style={{ background: 'var(--accent)', color: '#000', width: '100%', padding: '16px', fontSize: '1rem', boxShadow: 'var(--accent-glow)', display: 'flex', justifyContent: 'center', gap: '8px' }}>
+                    Recuperar mi dinero <Zap size={18} />
                   </Link>
                 </div>
               </div>
@@ -295,8 +327,15 @@ export default function Home() {
         </div>
       </footer>
       
-      {/* Global CSS Overrides for Range Sliders */}
+      {/* Global CSS Overrides */}
       <style>{`
+        .cards-carousel::-webkit-scrollbar {
+          display: none;
+        }
+        .cards-carousel {
+          -ms-overflow-style: none;
+          scrollbar-width: none;
+        }
         input[type=range] {
           -webkit-appearance: none;
           background: rgba(255,255,255,0.1);
