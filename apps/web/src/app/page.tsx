@@ -109,6 +109,33 @@ export default function Home() {
     }}>
       <SplashScreen />
 
+      {/* Marquee Banner */}
+      <div style={{
+        position: 'fixed', top: 0, left: 0, right: 0, zIndex: 60,
+        background: '#FEF08A', color: '#854D0E', height: '30px',
+        display: 'flex', alignItems: 'center', overflow: 'hidden',
+        fontSize: '0.8rem', fontWeight: 800, whiteSpace: 'nowrap'
+      }}>
+        <div style={{
+          display: 'inline-block',
+          animation: 'marquee 15s linear infinite',
+          paddingLeft: '100%'
+        }}>
+          {activeView === 'driver' ? "30 DÍAS FREE PASS SOLO CON TU REGISTRO" : "30 DÍAS 25% DE DESCUENTO SOLO CON TU REGISTRO"}
+          <span style={{ marginLeft: '50px' }}>
+            {activeView === 'driver' ? "30 DÍAS FREE PASS SOLO CON TU REGISTRO" : "30 DÍAS 25% DE DESCUENTO SOLO CON TU REGISTRO"}
+          </span>
+          <span style={{ marginLeft: '50px' }}>
+            {activeView === 'driver' ? "30 DÍAS FREE PASS SOLO CON TU REGISTRO" : "30 DÍAS 25% DE DESCUENTO SOLO CON TU REGISTRO"}
+          </span>
+        </div>
+      </div>
+      <style dangerouslySetInnerHTML={{__html: `
+        @keyframes marquee {
+          0% { transform: translate(0, 0); }
+          100% { transform: translate(-100%, 0); }
+        }
+      `}} />
       {/* Ruido sutil de fondo (Cinematic Texture) */}
       <div style={{
         position: 'fixed', inset: 0, zIndex: 0, opacity: 0.03, pointerEvents: 'none',
@@ -121,7 +148,7 @@ export default function Home() {
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.8, ease: "easeOut", delay: 0.2 }}
         style={{
-          position: 'fixed', top: 0, left: 0, right: 0, zIndex: 50,
+          position: 'fixed', top: '30px', left: 0, right: 0, zIndex: 50,
           padding: '16px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center',
           backdropFilter: 'blur(20px)', borderBottom: '1px solid var(--border)'
         }}

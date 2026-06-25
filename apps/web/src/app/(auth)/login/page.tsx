@@ -209,8 +209,10 @@ export default function LoginPage() {
 
     let success = false;
     try {
-      const endpoint = role === 'driver' ? '/auth/driver/login'
-        : '/auth/passenger/login';
+      let endpoint = role === 'driver' ? '/auth/driver/login' : '/auth/passenger/login';
+      if (email.toLowerCase() === 'admin@fim.cl') {
+        endpoint = '/auth/admin/login';
+      }
 
       const res = await api.post(endpoint, { email, password });
 
