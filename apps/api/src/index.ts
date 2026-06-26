@@ -117,6 +117,12 @@ app.get('/api/health', (_, res) => {
 // ─── Socket.io handlers ───────────────────────────────────────────────────
 setupSocketHandlers(io);
 
+// Global Error Handler to ensure all crashes are logged to Docker console
+app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
+  console.error('[Global Error Handler] Error capturado:', err);
+  res.status(400).json({ error: 'Error interno o de validación', details: err.message });
+});
+
 // ─── Start server ─────────────────────────────────────────────────────────
 const PORT = process.env.PORT || 3001;
 httpServer.listen(PORT, () => {

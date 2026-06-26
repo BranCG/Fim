@@ -5,6 +5,7 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Script from 'next/script';
 import { createWorker } from 'tesseract.js';
+import imageCompression from 'browser-image-compression';
 import api, { saveSession, getSession, uploadFile } from '@/lib/api';
 import Logo from '@/components/Logo';
 
@@ -373,8 +374,29 @@ function RegisterForm() {
     setError('');
 
     try {
-      const url = await uploadFile(file);
-      setter({ file, preview, url, loading: false, isValidated: true });
+      let fileToUpload = file;
+      
+      // Comprimir imágenes antes de subir para evitar límites de Nginx y acelerar panel
+      if (file.type.startsWith('image/')) {
+        const options = {
+          maxSizeMB: 0.5, // 500KB máximo
+          maxWidthOrHeight: 1280,
+          useWebWorker: true,
+          initialQuality: 0.8
+        };
+        try {
+          const compressedBlob = await imageCompression(file, options);
+          fileToUpload = new File([compressedBlob], file.name, {
+            type: compressedBlob.type,
+            lastModified: Date.now()
+          });
+        } catch (compressionError) {
+          console.warn('Error al comprimir, usando imagen original', compressionError);
+        }
+      }
+
+      const url = await uploadFile(fileToUpload);
+      setter({ file: fileToUpload, preview, url, loading: false, isValidated: true });
     } catch (err: any) {
       console.error('Upload Error:', err);
       setter({ file, preview, url: null, loading: false });
@@ -426,7 +448,7 @@ function RegisterForm() {
                   <div className="spinner" style={{ marginBottom: '8px' }} />
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" /></svg>
-                    <span style={{ fontSize: '0.8rem', fontWeight: 600 }}>ESCANEANDO...</span>
+                    <span style={{ fontSize: '0.8rem', fontWeight: 600 }}>SUBIENDO...</span>
                   </div>
                 </div>
               )}
