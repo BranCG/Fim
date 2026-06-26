@@ -89,24 +89,13 @@ export async function uploadFile(file: File): Promise<string> {
 
   const token = typeof window !== 'undefined' ? localStorage.getItem('fim_token') : null;
 
-  const headers: HeadersInit = {};
-  if (token) {
-    headers['Authorization'] = `Bearer ${token}`;
-  }
-
-  // Usamos fetch en lugar de axios para evitar 'Network Error' con FormData en móviles (Capacitor)
-  const res = await fetch(`${API_URL}/api/upload/single`, {
-    method: 'POST',
-    body: formData,
-    headers,
+  const res = await axios.post(`${API_URL}/api/upload/single`, formData, {
+    headers: {
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
   });
 
-  if (!res.ok) {
-    throw new Error(`Upload failed with status ${res.status}`);
-  }
-
-  const data = await res.json();
-  return data.url;
+  return res.data.url;
 }
 
 // ─── Pricing ──────────────────────────────────────────────────────────────
