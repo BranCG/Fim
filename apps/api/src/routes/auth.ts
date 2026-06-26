@@ -47,6 +47,8 @@ router.post('/passenger/register', async (req: Request, res: Response) => {
     }
 
     const passwordHash = await bcrypt.hash(password, 12);
+    const emailCode = Math.floor(100000 + Math.random() * 900000).toString();
+
     const user = await prisma.user.create({
       data: {
         email,
@@ -61,22 +63,18 @@ router.post('/passenger/register', async (req: Request, res: Response) => {
         selfieUrl,
         backgroundDocUrl,
         role: 'passenger',
-        emailVerified: true,
-        emailCode: null,
+        emailVerified: false,
+        emailCode,
       },
     });
 
-    const tokens = generateTokens({
-      id: user.id,
-      role: 'passenger',
-      email: user.email,
-      tokenVersion: user.tokenVersion,
-    });
+    // Enviar correo de validación
+    await sendVerificationEmail(email, emailCode);
 
     return res.status(201).json({
-      message: 'Registro exitoso',
+      message: 'Verificación de correo requerida',
+      status: 'verification_pending',
       user: { id: user.id, name: user.name, email: user.email, role: user.role, isVerified: user.isVerified },
-      ...tokens,
     });
   } catch (err) {
     console.error(err);

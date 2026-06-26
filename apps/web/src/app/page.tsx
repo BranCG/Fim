@@ -4,8 +4,8 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  ShieldCheck, Car, Wallet, Banknote, MapPin, 
+import {
+  ShieldCheck, Car, Wallet, Banknote, MapPin,
   TrendingUp, Smartphone, Zap, ArrowRight, ChevronRight, User, CircleDollarSign,
   Apple, Play, CreditCard, Link2, CheckCircle2, QrCode
 } from 'lucide-react';
@@ -20,16 +20,16 @@ const caveat = Caveat({ subsets: ['latin'], weight: ['700'] });
 
 const AppleBadgeIcon = () => (
   <svg width="24" height="24" viewBox="0 0 384 512" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-    <path d="M318.7 268.7c-.2-36.7 16.4-64.4 50-84.8-18.8-26.9-47.2-41.7-84.7-44.6-35.5-2.8-74.3 20.7-88.5 20.7-15 0-49.4-19.7-76.4-19.7C63.3 141.2 4 184.8 4 273.5q0 39.3 14.4 81.2c12.8 36.7 59 126.7 107.2 125.2 25.2-.6 43-17.9 75.8-17.9 31.8 0 48.3 17.9 76.4 17.3 48.6-.7 90.4-82.5 102.7-119.3-65.2-30.7-61.7-90-61.8-91.3zM243.6 86.4c16.9-20.9 28.5-50.5 25.4-80.4-25.2 1-56.1 16.9-73.6 37.9-14.7 17.6-28.5 48.2-24.8 77.4 28.5 2.1 57-14.2 73-34.9z"/>
+    <path d="M318.7 268.7c-.2-36.7 16.4-64.4 50-84.8-18.8-26.9-47.2-41.7-84.7-44.6-35.5-2.8-74.3 20.7-88.5 20.7-15 0-49.4-19.7-76.4-19.7C63.3 141.2 4 184.8 4 273.5q0 39.3 14.4 81.2c12.8 36.7 59 126.7 107.2 125.2 25.2-.6 43-17.9 75.8-17.9 31.8 0 48.3 17.9 76.4 17.3 48.6-.7 90.4-82.5 102.7-119.3-65.2-30.7-61.7-90-61.8-91.3zM243.6 86.4c16.9-20.9 28.5-50.5 25.4-80.4-25.2 1-56.1 16.9-73.6 37.9-14.7 17.6-28.5 48.2-24.8 77.4 28.5 2.1 57-14.2 73-34.9z" />
   </svg>
 );
 
 const GooglePlayBadgeIcon = () => (
   <svg width="24" height="24" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-    <path d="M3.5 2C3.1 2.4 2.8 3.1 2.8 4V20C2.8 20.9 3.1 21.6 3.5 22L3.6 22L14 11.6L14 11.5L14 11.4L3.6 2L3.5 2Z" fill="#00E676"/>
-    <path d="M17.4 15L14 11.5L14 11.4L14 11.3L17.4 7.9L17.5 8L21.7 10.4C22.9 11.1 22.9 12.2 21.7 12.9L17.5 15.3L17.4 15Z" fill="#FFCA28"/>
-    <path d="M17.5 15.3L14 11.5L3.5 22C4 22.5 4.9 22.6 5.8 22.1L17.5 15.3Z" fill="#F44336"/>
-    <path d="M17.5 8L5.8 1.3C4.9 0.8 4 0.9 3.5 1.4L14 11.4L17.5 8Z" fill="#29B6F6"/>
+    <path d="M3.5 2C3.1 2.4 2.8 3.1 2.8 4V20C2.8 20.9 3.1 21.6 3.5 22L3.6 22L14 11.6L14 11.5L14 11.4L3.6 2L3.5 2Z" fill="#00E676" />
+    <path d="M17.4 15L14 11.5L14 11.4L14 11.3L17.4 7.9L17.5 8L21.7 10.4C22.9 11.1 22.9 12.2 21.7 12.9L17.5 15.3L17.4 15Z" fill="#FFCA28" />
+    <path d="M17.5 15.3L14 11.5L3.5 22C4 22.5 4.9 22.6 5.8 22.1L17.5 15.3Z" fill="#F44336" />
+    <path d="M17.5 8L5.8 1.3C4.9 0.8 4 0.9 3.5 1.4L14 11.4L17.5 8Z" fill="#29B6F6" />
   </svg>
 );
 
@@ -59,7 +59,7 @@ export default function Home() {
       const isMobileApp = (window as any).Capacitor ||
         window.location.origin.includes('capacitor://') ||
         ((window.location.hostname === 'localhost' || window.location.hostname === '') && window.location.port === '');
-      
+
       if (isMobileApp) {
         router.replace('/mobile');
       }
@@ -136,9 +136,13 @@ export default function Home() {
           <span style={{ marginLeft: '50px' }}>
             {activeView === 'driver' ? "30 DÍAS FREE PASS SOLO CON TU REGISTRO" : "30 DÍAS 25% DE DESCUENTO SOLO CON TU REGISTRO"}
           </span>
+          <span style={{ marginLeft: '50px' }}>
+            {activeView === 'driver' ? "30 DÍAS FREE PASS SOLO CON TU REGISTRO" : "30 DÍAS 25% DE DESCUENTO SOLO CON TU REGISTRO"}
+          </span>
         </div>
       </div>
-      <style dangerouslySetInnerHTML={{__html: `
+      <style dangerouslySetInnerHTML={{
+        __html: `
         @keyframes marquee {
           0% { transform: translate(0, 0); }
           100% { transform: translate(-100%, 0); }
@@ -151,7 +155,7 @@ export default function Home() {
       }} />
 
       {/* Navbar Minimalista */}
-      <motion.nav 
+      <motion.nav
         initial={{ y: -100, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.8, ease: "easeOut", delay: 0.2 }}
@@ -166,7 +170,7 @@ export default function Home() {
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <ThemeToggle />
-          <Link href="/register" className="btn" style={{ 
+          <Link href="/register" className="btn" style={{
             background: 'var(--accent)', color: '#000', boxShadow: 'var(--accent-glow)',
             padding: '8px 16px', fontSize: '0.85rem'
           }}>Crear Cuenta</Link>
@@ -174,9 +178,9 @@ export default function Home() {
       </motion.nav>
 
       {/* ─── HERO SECTION ─── */}
-      <section style={{ 
-        position: 'relative', minHeight: '100vh', display: 'flex', flexDirection: 'column', 
-        alignItems: 'center', justifyContent: 'center', textAlign: 'center', padding: '120px 24px 60px', zIndex: 1 
+      <section style={{
+        position: 'relative', minHeight: '100vh', display: 'flex', flexDirection: 'column',
+        alignItems: 'center', justifyContent: 'center', textAlign: 'center', padding: '120px 24px 60px', zIndex: 1
       }}>
         {/* Orbe de luz de fondo */}
         <div style={{
@@ -186,10 +190,10 @@ export default function Home() {
         }} />
 
         <motion.div initial="hidden" animate="visible" variants={staggerContainer} style={{ maxWidth: '900px', zIndex: 10 }}>
-          
+
           {/* Toggle Pasajero/Conductor Apple Style */}
-          <motion.div variants={fadeInUp} style={{ 
-            background: 'var(--bg-card)', padding: '6px', borderRadius: '100px', 
+          <motion.div variants={fadeInUp} style={{
+            background: 'var(--bg-card)', padding: '6px', borderRadius: '100px',
             display: 'inline-flex', marginBottom: '40px', border: '1px solid var(--border)', backdropFilter: 'blur(20px)',
             maxWidth: '100%', overflowX: 'auto'
           }}>
@@ -253,7 +257,7 @@ export default function Home() {
                   de Chile.
                 </h1>
                 <p style={{ fontSize: '1rem', color: 'var(--text-secondary)', marginBottom: '48px', maxWidth: '600px', margin: '0 auto 48px', lineHeight: 1.6 }}>
-                  Dile adiós a las comisiones abusivas. Conduce con <strong style={{color: 'var(--accent)'}}>0% comisión</strong> y quédate con todo lo que ganes. Tú eres el dueño de tu volante.
+                  Dile adiós a las comisiones abusivas. Conduce con <strong style={{ color: 'var(--accent)' }}>0% comisión</strong> y quédate con todo lo que ganes. Tú eres el dueño de tu volante.
                 </p>
                 <div style={{ display: 'flex', gap: '16px', justifyContent: 'center', flexWrap: 'wrap' }}>
                   <button className="btn" style={{ background: '#1A1A1A', color: '#fff', padding: '10px 20px', fontSize: '1rem', display: 'flex', alignItems: 'center', gap: '12px', borderRadius: '12px', border: '1px solid #333' }}>
@@ -285,12 +289,12 @@ export default function Home() {
       {/* ─── FEATURES SECTION (Glassmorphism Cards) ─── */}
       <section style={{ padding: '100px 24px', zIndex: 2, position: 'relative' }}>
         <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
-          
-          <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, margin: '-100px' }} variants={staggerContainer} 
+
+          <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, margin: '-100px' }} variants={staggerContainer}
             className="cards-carousel"
             onScroll={handleScroll}
-            style={{ 
-              display: 'flex', gap: '24px', overflowX: 'auto', scrollSnapType: 'x mandatory', 
+            style={{
+              display: 'flex', gap: '24px', overflowX: 'auto', scrollSnapType: 'x mandatory',
               paddingBottom: '24px', margin: '0 -24px', paddingLeft: '24px', paddingRight: '24px',
               WebkitOverflowScrolling: 'touch'
             }}
@@ -298,9 +302,9 @@ export default function Home() {
             {activeView === 'passenger' ? (
               <>
                 {[
-                  { icon: <ShieldCheck size={36}/>, title: 'Seguridad Militar', desc: 'Conductores validados con antecedentes y revisión estricta para tu total tranquilidad.' },
-                  { icon: <MapPin size={36}/>, title: 'Rutas Optimizadas', desc: 'Llega más rápido a tu destino con nuestro sistema de navegación hiper-eficiente.' },
-                  { icon: <Banknote size={36}/>, title: 'Tarifas Claras', desc: 'Sin multiplicadores dinámicos absurdos. Paga lo que ves desde el primer momento.' }
+                  { icon: <ShieldCheck size={36} />, title: 'Seguridad Militar', desc: 'Conductores validados con antecedentes y revisión estricta para tu total tranquilidad.' },
+                  { icon: <MapPin size={36} />, title: 'Rutas Optimizadas', desc: 'Llega más rápido a tu destino con nuestro sistema de navegación hiper-eficiente.' },
+                  { icon: <Banknote size={36} />, title: 'Tarifas Claras', desc: 'Sin multiplicadores dinámicos absurdos. Paga lo que ves desde el primer momento.' }
                 ].map((feature, i) => (
                   <motion.div key={i} variants={fadeInUp} className="card-glass carousel-item" style={{
                     padding: 'clamp(24px, 5vw, 40px)', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: '24px',
@@ -315,9 +319,9 @@ export default function Home() {
             ) : (
               <>
                 {[
-                  { icon: <CircleDollarSign size={36}/>, title: '0% Comisión', desc: 'Por primera vez en la industria, no tocamos tu dinero. Cada viaje va íntegro a tu bolsillo.' },
-                  { icon: <TrendingUp size={36}/>, title: 'Ganancias Exponenciales', desc: 'Paga una tarifa plana mensual (o paga por viaje si prefieres) y escala tus ingresos.' },
-                  { icon: <Smartphone size={36}/>, title: 'Control Total', desc: 'Tú eliges qué viajes aceptar y qué zonas transitar. Nosotros solo ponemos la tecnología.' }
+                  { icon: <CircleDollarSign size={36} />, title: '0% Comisión', desc: 'Por primera vez en la industria, no tocamos tu dinero. Cada viaje va íntegro a tu bolsillo.' },
+                  { icon: <TrendingUp size={36} />, title: 'Ganancias Exponenciales', desc: 'Paga una tarifa plana mensual (o paga por viaje si prefieres) y escala tus ingresos.' },
+                  { icon: <Smartphone size={36} />, title: 'Control Total', desc: 'Tú eliges qué viajes aceptar y qué zonas transitar. Nosotros solo ponemos la tecnología.' }
                 ].map((feature, i) => (
                   <motion.div key={i} variants={fadeInUp} className="card-glass carousel-item" style={{
                     padding: 'clamp(24px, 5vw, 40px)', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: '24px',
@@ -335,10 +339,10 @@ export default function Home() {
           {/* Carousel Pagination Dots */}
           <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', marginTop: '16px' }}>
             {[0, 1, 2].map((i) => (
-              <div key={i} style={{ 
-                width: activeCardIndex === i ? '24px' : '8px', 
-                height: '8px', 
-                borderRadius: '4px', 
+              <div key={i} style={{
+                width: activeCardIndex === i ? '24px' : '8px',
+                height: '8px',
+                borderRadius: '4px',
                 background: activeCardIndex === i ? 'var(--accent)' : 'var(--border)',
                 transition: 'all 0.3s ease'
               }} />
@@ -350,10 +354,10 @@ export default function Home() {
       {/* ─── PASSENGER GUIDE (Only shows for Passengers) ─── */}
       <AnimatePresence>
         {activeView === 'passenger' && (
-          <motion.section 
-            initial={{ opacity: 0, height: 0 }} 
-            animate={{ opacity: 1, height: 'auto' }} 
-            exit={{ opacity: 0, height: 0 }} 
+          <motion.section
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
             style={{ padding: '40px 24px', background: 'var(--bg-card)', borderTop: '1px solid var(--border)', borderBottom: '1px solid var(--border)', overflow: 'hidden' }}
           >
             <div style={{ maxWidth: '800px', margin: '0 auto' }}>
@@ -402,16 +406,16 @@ export default function Home() {
       {/* ─── DRIVER ACTIVATION & TUTORIAL (Only shows for Drivers) ─── */}
       <AnimatePresence>
         {activeView === 'driver' && (
-          <motion.section 
-            initial={{ opacity: 0, height: 0 }} 
-            animate={{ opacity: 1, height: 'auto' }} 
-            exit={{ opacity: 0, height: 0 }} 
+          <motion.section
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
             style={{ padding: '60px 24px', background: 'var(--bg-card)', borderTop: '1px solid var(--border)', overflow: 'hidden' }}
           >
             <div style={{ maxWidth: '800px', margin: '0 auto' }}>
               <div style={{ textAlign: 'center', marginBottom: '40px' }}>
                 <span style={{ color: '#9d7cff', fontWeight: 800, fontSize: '0.85rem', letterSpacing: '0.1em', textTransform: 'uppercase' }}>Proceso de Activación</span>
-                <h2 style={{ fontSize: '2.5rem', fontWeight: 900, marginTop: '8px', marginBottom: '16px', letterSpacing: '-0.02em', lineHeight: 1.1 }}>Línea de Tiempo<br/>del Conductor</h2>
+                <h2 style={{ fontSize: '2.5rem', fontWeight: 900, marginTop: '8px', marginBottom: '16px', letterSpacing: '-0.02em', lineHeight: 1.1 }}>Línea de Tiempo<br />del Conductor</h2>
                 <p style={{ color: 'var(--text-secondary)', maxWidth: '500px', margin: '0 auto', lineHeight: 1.6 }}>Sigue estos sencillos pasos para registrarte, activar tu cuenta y comenzar a conducir con Fim.</p>
               </div>
 
@@ -420,9 +424,9 @@ export default function Home() {
                 <div style={{ position: 'absolute', height: '2px', background: 'var(--border)', width: '60%', zIndex: 0 }} />
                 {[1, 2, 3].map((step) => (
                   <div key={step} style={{ flex: 1, display: 'flex', justifyContent: 'center', zIndex: 1 }}>
-                    <button 
+                    <button
                       onClick={() => setActiveTimelineStep(step)}
-                      style={{ 
+                      style={{
                         width: '48px', height: '48px', borderRadius: '50%', fontWeight: 800, fontSize: '1.2rem',
                         background: activeTimelineStep === step ? '#9d7cff' : 'var(--bg-main)',
                         color: activeTimelineStep === step ? '#fff' : '#9d7cff',
@@ -461,11 +465,11 @@ export default function Home() {
 
               {/* Tutorial Mercado Pago Toggle */}
               <div style={{ border: '1px solid #9d7cff', borderRadius: '24px', overflow: 'hidden' }}>
-                <button 
+                <button
                   onClick={() => setShowTutorial(!showTutorial)}
                   style={{ width: '100%', padding: '20px', background: 'transparent', border: 'none', color: '#9d7cff', fontWeight: 800, fontSize: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px', cursor: 'pointer' }}
                 >
-                  TUTORIAL FIM PAGOS 
+                  TUTORIAL FIM PAGOS
                   <motion.div animate={{ rotate: showTutorial ? 180 : 0 }}><ChevronRight size={20} style={{ transform: 'rotate(-90deg)' }} /></motion.div>
                 </button>
                 <AnimatePresence>
@@ -502,14 +506,14 @@ export default function Home() {
       {/* ─── DRIVER CALCULATOR (Only shows for Drivers) ─── */}
       <AnimatePresence>
         {activeView === 'driver' && (
-          <motion.section 
-            initial={{ opacity: 0, height: 0 }} 
-            animate={{ opacity: 1, height: 'auto' }} 
+          <motion.section
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
             style={{ padding: '60px 24px 120px', overflow: 'hidden' }}
           >
             <div className="card-glass" style={{ maxWidth: '1000px', margin: '0 auto', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: '32px', padding: 'clamp(24px, 5vw, 60px)' }}>
-              
+
               <div style={{ textAlign: 'center', marginBottom: '40px' }}>
                 <h2 style={{ fontSize: 'clamp(1.8rem, 4vw, 2.8rem)', fontWeight: 900, letterSpacing: '-0.03em', marginBottom: '16px' }}>Calcula tu <span style={{ color: 'var(--accent)' }}>Pérdida Actual</span></h2>
                 <p style={{ fontSize: '1rem', color: 'var(--text-secondary)' }}>Descubre cuánto dinero le estás regalando a las apps tradicionales cada semana.</p>
@@ -596,7 +600,7 @@ export default function Home() {
                 <li><Link href="#" style={{ color: 'var(--text-secondary)' }}>Tarifas</Link></li>
               </ul>
             </div>
-            
+
             <div>
               <h4 style={{ fontWeight: 800, marginBottom: '20px', color: 'var(--text-primary)' }}>Ads</h4>
               <ul style={{ listStyle: 'none', padding: 0, display: 'flex', flexDirection: 'column', gap: '12px' }}>
@@ -665,7 +669,7 @@ export default function Home() {
           </div>
         </div>
       </footer>
-      
+
       {/* Global CSS Overrides */}
       <style>{`
         .cards-carousel::-webkit-scrollbar {

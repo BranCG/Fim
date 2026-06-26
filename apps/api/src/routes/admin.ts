@@ -259,6 +259,24 @@ router.delete('/drivers/:id', async (req: Request, res: Response) => {
   }
 });
 
+// ─── PASAJEROS PENDIENTES ─────────────────────────────────────────────────
+router.get('/passengers/pending', async (_req: Request, res: Response) => {
+  try {
+    const passengers = await prisma.user.findMany({
+      where: { role: 'passenger', isVerified: false },
+      orderBy: { createdAt: 'asc' },
+      select: {
+        id: true, name: true, email: true, phone: true,
+        rut: true, isVerified: true, createdAt: true,
+        idFrontUrl: true, idBackUrl: true, selfieUrl: true, backgroundDocUrl: true,
+      },
+    });
+    return res.json({ passengers });
+  } catch (err) {
+    return res.status(500).json({ error: 'Error interno' });
+  }
+});
+
 // ─── PASAJEROS ────────────────────────────────────────────────────────────
 router.get('/passengers', async (_req: Request, res: Response) => {
   try {
