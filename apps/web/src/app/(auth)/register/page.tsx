@@ -430,10 +430,12 @@ function RegisterForm() {
 
       const url = await uploadFile(file);
       setter({ file, preview, url, loading: false, isValidated: true });
-    } catch (err) {
+    } catch (err: any) {
       console.error('Upload Error:', err);
       setter({ file, preview, url: null, loading: false });
-      setError('Error al subir la imagen al servidor. Por favor, intenta nuevamente.');
+      const errMsg = err.response?.data?.error || err.message || 'Error desconocido';
+      const statusCode = err.response?.status || 'Sin status';
+      setError(`Error al subir la imagen (${statusCode}): ${errMsg}. Por favor, intenta nuevamente.`);
     }
   }
 

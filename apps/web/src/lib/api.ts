@@ -91,7 +91,7 @@ export async function uploadFile(file: File): Promise<string> {
 
   const res = await axios.post(`${API_URL}/api/upload/single`, formData, {
     headers: {
-      'Content-Type': 'multipart/form-data',
+      // Dejamos que el navegador/axios asigne automáticamente el boundary del multipart form-data
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
     },
   });
