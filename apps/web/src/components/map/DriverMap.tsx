@@ -100,8 +100,22 @@ export default function DriverMap({ driverPos, passengerPos, destPos, stops = []
     // Helper to generate custom divIcon with correct rotation
     
     // --- Helper matemático para "Snap to Route" ---
+    // Usamos Haversine para calcular distancia real en metros
+    const getDistanceMeters = (lat1: number, lng1: number, lat2: number, lng2: number) => {
+      const R = 6371e3; // Radio de la Tierra en metros
+      const φ1 = lat1 * Math.PI/180;
+      const φ2 = lat2 * Math.PI/180;
+      const Δφ = (lat2-lat1) * Math.PI/180;
+      const Δλ = (lng2-lng1) * Math.PI/180;
+      const a = Math.sin(Δφ/2) * Math.sin(Δφ/2) +
+                Math.cos(φ1) * Math.cos(φ2) *
+                Math.sin(Δλ/2) * Math.sin(Δλ/2);
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+      return R * c;
+    };
+
     const getClosestPointOnPath = (point: {lat: number, lng: number}, path: {lat: number, lng: number}[]) => {
-      if (!path || path.length < 2) return { point, angle: 0 };
+      if (!path || path.length < 2) return { point, angle: 0, distance: 0 };
       let minDist = Infinity;
       let closestPoint = point;
       let closestAngle = 0;
@@ -138,7 +152,9 @@ export default function DriverMap({ driverPos, passengerPos, destPos, stops = []
           closestAngle = Math.atan2(dxAB, dyAB) * (180 / Math.PI);
         }
       }
-      return { point: closestPoint, angle: closestAngle };
+      
+      const distanceToRoute = getDistanceMeters(point.lat, point.lng, closestPoint.lat, closestPoint.lng);
+      return { point: closestPoint, angle: closestAngle, distance: distanceToRoute };
     };
 
     const getDriverIcon = (angle: number) => {
@@ -202,11 +218,15 @@ export default function DriverMap({ driverPos, passengerPos, destPos, stops = []
       // Snap to route if we have a path
       if (routeCoordinatesRef.current.length > 0) {
         const snap = getClosestPointOnPath(targetPos, routeCoordinatesRef.current);
-        // Only snap if we are reasonably close to the route (e.g. within a few blocks)
-        // If GPS is completely off route, we don't snap wildly.
-        snappedTarget = snap.point;
-        targetAngle = snap.angle;
-        didSnap = true;
+        
+        // SÓLO HACER SNAP SI ESTÁ A MENOS DE 35 METROS (Smart Map Matching)
+        // Si está a más de 35 metros, el conductor probablemente tomó un atajo o desvío,
+        // no debemos "teletransportarlo" magnéticamente hacia la ruta antigua.
+        if (snap.distance < 35) {
+          snappedTarget = snap.point;
+          targetAngle = snap.angle;
+          didSnap = true;
+        }
       }
 
       const dLng = snappedTarget.lng - startPos.lng;
@@ -216,18 +236,23 @@ export default function DriverMap({ driverPos, passengerPos, destPos, stops = []
       const hasMovement = Math.abs(dLng) > 1e-6 || Math.abs(dLat) > 1e-6;
       if (hasMovement) {
         // Usa el ángulo de la calle si hicimos snap, si no, usa el vector GPS directo
-        angle = didSnap ? targetAngle : (Math.atan2(dLng, dLat) * (180 / Math.PI));
+        // Filtro de amortiguación para el ángulo (Smooth heading)
+        let rawAngle = didSnap ? targetAngle : (Math.atan2(dLng, dLat) * (180 / Math.PI));
+        
+        // Evitar que el coche dé una vuelta de 360° al cambiar de -179 a 179
+        const diff = ((rawAngle - currentAngleRef.current + 540) % 360) - 180;
+        angle = currentAngleRef.current + diff;
       }
 
       const startTime = performance.now();
       
       const step = (timestamp: number) => {
         const elapsed = timestamp - startTime;
-        // Extrapolación suave hasta 1.5x el tiempo esperado (Dead Reckoning)
-        const progress = Math.min(elapsed / dt, 1.5);
+        // Extrapolación suave hasta 1.1x el tiempo esperado (Dead Reckoning limitado para evitar patinazos)
+        const progress = Math.min(elapsed / dt, 1.1);
         
-        // Suavizado OutQuad para la interpolación inicial, lineal para extrapolación
-        const easeProgress = progress <= 1.0 ? progress * (2 - progress) : progress; 
+        // Suavizado lineal constante para movimiento continuo sin acelerones irreales
+        const easeProgress = progress; 
         
         const currentLat = startPos.lat + dLat * easeProgress;
         const currentLng = startPos.lng + dLng * easeProgress;
@@ -240,12 +265,12 @@ export default function DriverMap({ driverPos, passengerPos, destPos, stops = []
             const svg = element.querySelector('svg');
             if (svg) {
               svg.style.transform = `rotate(${angle}deg)`;
-              svg.style.transition = 'transform 0.3s ease';
+              svg.style.transition = 'transform 0.3s linear';
             }
           }
         }
 
-        if (progress < 1.5) {
+        if (progress < 1.1) {
           animationFrameRef.current = requestAnimationFrame(step);
         } else if (hasMovement) {
           currentAngleRef.current = angle;

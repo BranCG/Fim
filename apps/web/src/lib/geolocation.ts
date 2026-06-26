@@ -70,6 +70,11 @@ export async function watchPosition(
         if (err) {
           onError(err);
         } else if (position) {
+          // Filtro de ruido del GPS (Ignorar si el margen de error es > 40 metros)
+          if (position.coords.accuracy && position.coords.accuracy > 40) {
+            console.log(`[GPS] Ignorando coordenada ruidosa (precisión: ${position.coords.accuracy}m)`);
+            return;
+          }
           onSuccess({
             lat: position.coords.latitude,
             lng: position.coords.longitude,
@@ -87,7 +92,13 @@ export async function watchPosition(
       return () => {};
     }
     const watchId = navigator.geolocation.watchPosition(
-      (p) => onSuccess({ lat: p.coords.latitude, lng: p.coords.longitude }),
+      (p) => {
+        if (p.coords.accuracy && p.coords.accuracy > 40) {
+          console.log(`[GPS] Ignorando coordenada ruidosa en Web (precisión: ${p.coords.accuracy}m)`);
+          return;
+        }
+        onSuccess({ lat: p.coords.latitude, lng: p.coords.longitude });
+      },
       (err) => onError(err),
       { enableHighAccuracy: true, maximumAge: 0, timeout: 10000 }
     );
