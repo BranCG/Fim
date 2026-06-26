@@ -531,6 +531,35 @@ function RegisterForm() {
       setLoading(false);
       return;
     }
+
+    if (birthDate) {
+      const birth = new Date(birthDate);
+      const age = new Date().getFullYear() - birth.getFullYear();
+      const m = new Date().getMonth() - birth.getMonth();
+      const actualAge = m < 0 || (m === 0 && new Date().getDate() < birth.getDate()) ? age - 1 : age;
+      if (actualAge < 18) {
+        setError('Debes ser mayor de 18 años para registrarte.');
+        setLoading(false);
+        return;
+      }
+    } else {
+      setError('Debes ingresar tu fecha de nacimiento.');
+      setLoading(false);
+      return;
+    }
+
+    if (!isGoogle && role === 'passenger') {
+      if (password.length < 6) {
+        setError('La contraseña debe tener al menos 6 caracteres.');
+        setLoading(false);
+        return;
+      }
+      if (!/[a-zA-Z]/.test(password) || !/[0-9]/.test(password)) {
+        setError('La contraseña debe contener al menos una letra y un número.');
+        setLoading(false);
+        return;
+      }
+    }
     try {
       if (role === 'passenger') {
         if (isGoogle) {

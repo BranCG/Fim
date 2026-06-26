@@ -1106,7 +1106,6 @@ export default function DashboardPage() {
                   { label: 'Cédula Frontal', url: selectedPassenger.idFrontUrl },
                   { label: 'Cédula Posterior', url: selectedPassenger.idBackUrl },
                   { label: 'Selfie de Seguridad', url: selectedPassenger.selfieUrl },
-                  { label: 'Antecedentes', url: selectedPassenger.backgroundDocUrl },
                 ].map(doc => (
                   doc.url ? (
                     <button
