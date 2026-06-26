@@ -373,61 +373,6 @@ function RegisterForm() {
     setError('');
 
     try {
-      let ocrText = '';
-
-      const isOcrEligible = (docType === 'id-front' || docType === 'id-back' || docType === 'license-front' || docType === 'license-back') && file.type !== 'application/pdf';
-
-      if (isOcrEligible) {
-        try {
-          const ocrPromise = (async () => {
-            const worker = await createWorker('spa'); // Idioma español
-            const { data: { text } } = await worker.recognize(file);
-            await worker.terminate();
-            return (text || '').toUpperCase();
-          })();
-
-          const timeoutPromise = new Promise<string>((_, reject) =>
-            setTimeout(() => reject(new Error('OCR Timeout')), 3500)
-          );
-
-          // Omitir OCR en dispositivos móviles (Capacitor) para prevenir bloqueos por Web Workers/CDN
-          const isMobile = typeof window !== 'undefined' &&
-            ((window as any).Capacitor ||
-              window.location.origin.includes('capacitor://') ||
-              ((window.location.hostname === 'localhost' || window.location.hostname === '') && window.location.port === ''));
-
-          if (!isMobile) {
-            ocrText = await Promise.race([ocrPromise, timeoutPromise]);
-          } else {
-            console.log('Fim: Omitiendo validación OCR en plataforma móvil');
-          }
-        } catch (ocrErr) {
-          console.warn('La validación OCR falló, fue omitida o superó el tiempo límite:', ocrErr);
-        }
-      }
-
-      if (ocrText) {
-        let keywords: string[] = [];
-        let docName = '';
-
-        if (docType === 'id-front' || docType === 'id-back') {
-          keywords = ['CHILE', 'RUN', 'REPUBLICA', 'CEDULA', 'IDENTIDAD', 'NACIMIENTO', 'DOCUMENTO', 'ESTADO CIVIL', 'CHL', 'INCHL', 'PATERNO', 'MATERNO', '<<<<'];
-          docName = 'Cédula de Identidad';
-        } else if (docType === 'license-front' || docType === 'license-back') {
-          keywords = ['LICENCIA', 'CONDUCTOR', 'CONDUCIR', 'CHILE', 'CLASE', 'MUNICIPALIDAD', 'OTORGADA', 'FECHA'];
-          docName = 'Licencia de Conducir';
-        }
-
-        if (keywords.length > 0) {
-          const foundKeywords = keywords.filter(k => ocrText.includes(k));
-          if (foundKeywords.length === 0) {
-            setError(`No pudimos detectar una ${docName} chilena en la imagen. Por favor, asegúrate de tomar una foto nítida, bien enfocada y con buena iluminación.`);
-            setter({ file: null, preview: null, url: null, loading: false });
-            return;
-          }
-        }
-      }
-
       const url = await uploadFile(file);
       setter({ file, preview, url, loading: false, isValidated: true });
     } catch (err: any) {
