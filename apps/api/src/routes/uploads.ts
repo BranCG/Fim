@@ -23,18 +23,24 @@ const storage = multer.diskStorage({
 });
 
 const fileFilter = (_req: Request, file: Express.Multer.File, cb: multer.FileFilterCallback) => {
-  const allowed = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
-  if (allowed.includes(file.mimetype)) {
+  const allowed = [
+    'image/jpeg', 'image/jpg', 'image/png', 'image/webp',
+    'image/heic', 'image/heif', 'application/pdf',
+    'application/octet-stream' // Algunas veces los móviles envían este tipo
+  ];
+  if (allowed.includes(file.mimetype.toLowerCase())) {
     cb(null, true);
   } else {
-    cb(new Error('Solo se permiten imágenes JPG, PNG o WEBP'));
+    // Para depuración si sigue fallando
+    console.warn(`[Upload] Mimetype bloqueado: ${file.mimetype}`);
+    cb(new Error(`Tipo de archivo no permitido: ${file.mimetype}`));
   }
 };
 
 const upload = multer({
   storage,
   fileFilter,
-  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB max
+  limits: { fileSize: 25 * 1024 * 1024 }, // 25MB max para fotos de alta resolución
 });
 
 // ─── SUBIR UN ARCHIVO ─────────────────────────────────────────────────────
