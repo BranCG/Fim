@@ -2976,6 +2976,7 @@ export default function PassengerPage() {
                 }}
               />
             )}
+            </div>
 
             <div style={{ display: 'flex', gap: '12px', marginTop: '8px' }}>
               <button

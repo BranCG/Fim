@@ -393,7 +393,7 @@ export default function DriverPage() {
 
   // Auto-close chat modal during trip in progress or idle
   useEffect(() => {
-    if (tripPhase === 'in_progress' || tripPhase === 'idle' || paymentRequested) {
+    if (tripPhase === 'in_progress' || paymentRequested) {
       setShowChat(false);
     }
   }, [tripPhase, paymentRequested]);
