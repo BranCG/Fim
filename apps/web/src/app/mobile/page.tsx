@@ -1467,7 +1467,7 @@ export default function Home() {
       <footer style={{ padding: '48px 24px', borderTop: '1px solid var(--border)', textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.9rem', background: '#09090F' }}>
         <p style={{ marginBottom: '12px' }}>© 2026 Fim Platform. La red de conductores más rentable de Chile.</p>
         <p style={{ marginBottom: '20px', color: 'var(--text-muted)' }}>
-          Contacto de soporte: <a href="mailto:soporte@fim.com" style={{ color: 'var(--accent, #3b82f6)', textDecoration: 'underline', fontWeight: 600 }}>soporte@fim.com</a>
+          Contacto de soporte: <a href="mailto:contacto@fimchile.cl" style={{ color: 'var(--accent, #3b82f6)', textDecoration: 'underline', fontWeight: 600 }}>contacto@fimchile.cl</a>
         </p>
         <div style={{ display: 'flex', gap: '20px', justifyContent: 'center' }}>
           <Link href="/terms" style={{ color: 'var(--text-muted)', textDecoration: 'underline' }}>Términos y Condiciones</Link>

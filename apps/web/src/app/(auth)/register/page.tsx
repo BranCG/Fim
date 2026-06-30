@@ -1051,13 +1051,13 @@ function RegisterForm() {
               </div>
               <div className="form-group">
                 <label className="form-label">Fecha de Nacimiento</label>
-                <input className="form-input" type="date" value={birthDate} onChange={e => setBirthDate(e.target.value)} style={{ colorScheme: 'dark' }} />
+                <input className="form-input" type="date" value={birthDate} max={new Date(new Date().setFullYear(new Date().getFullYear() - 18)).toISOString().split('T')[0]} onChange={e => setBirthDate(e.target.value)} style={{ colorScheme: 'dark' }} />
               </div>
               {!isGoogle && (
                 <>
                   <div className="form-group">
                     <label className="form-label">Contraseña</label>
-                    <input className="form-input" type="password" placeholder="Mínimo 6 caracteres" value={password} onChange={e => setPassword(e.target.value)} />
+                    <input className="form-input" type="password" placeholder="Mín. 6 caracteres (letras y números)" value={password} minLength={6} onChange={e => setPassword(e.target.value)} />
                   </div>
                   <div className="form-group">
                     <label className="form-label">Confirmar Contraseña</label>

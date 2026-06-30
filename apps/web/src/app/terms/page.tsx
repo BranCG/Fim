@@ -75,7 +75,7 @@ export default function TermsPage() {
           <div>
             <h2 style={{ color: 'var(--accent)', marginBottom: '12px' }}>7. Soporte y Contacto Oficial</h2>
             <p>
-              Ante cualquier duda, reclamo o reporte de seguridad, el canal oficial y dedicado de comunicación de FIM es nuestro correo electrónico de soporte: <strong>soporte@fim.cl</strong>. Toda comunicación enviada a esta casilla será atendida a la brevedad por nuestro equipo de atención y auditoría de la plataforma.
+              Ante cualquier duda, reclamo o reporte de seguridad, el canal oficial y dedicado de comunicación de FIM es nuestro correo electrónico de soporte: <strong>contacto@fimchile.cl</strong>. Toda comunicación enviada a esta casilla será atendida a la brevedad por nuestro equipo de atención y auditoría de la plataforma.
             </p>
           </div>
 
