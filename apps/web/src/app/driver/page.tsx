@@ -230,8 +230,12 @@ export default function DriverPage() {
   }, [isOnline, driver]);
   const [pos, setPos] = useState(SANTIAGO);
   const [tripRequest, setTripRequest] = useState<TripRequest | null>(null);
-  const [activeTrip, setActiveTrip] = useState<TripRequest | null>(null);
-  const [tripPhase, setTripPhase] = useState<'idle' | 'going_to_passenger' | 'arrived' | 'in_progress'>('idle');
+  const [activeTrip, setActiveTrip] = useState<any>(null);
+  const [tripPhase, setTripPhase] = useState<'going_to_passenger' | 'arrived' | 'in_progress'>('going_to_passenger');
+  const [arrivedAt, setArrivedAt] = useState<number | null>(null);
+  const [showCancelModal, setShowCancelModal] = useState(false);
+  const [selectedCancelOption, setSelectedCancelOption] = useState('');
+  const [customCancelReason, setCustomCancelReason] = useState('');
   const [timer, setTimer] = useState(30);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -475,7 +479,7 @@ export default function DriverPage() {
 
   const resetTrip = useCallback(() => {
     setActiveTrip(null);
-    setTripPhase('idle');
+    setTripPhase('going_to_passenger');
     setPassengerConfirmed(false);
     setReceiptUrl(null);
     setPaymentRequested(false);
@@ -582,15 +586,13 @@ export default function DriverPage() {
 
   // Poll active trip state periodically as a fallback when a trip is active
   useEffect(() => {
-    if (tripPhase === 'idle') return;
-
     const intervalId = setInterval(() => {
       console.log('[Poll] Conductor: Sincronizando estado del viaje activo...');
       checkActiveTrip();
     }, 5000); // Check every 5 seconds
 
     return () => clearInterval(intervalId);
-  }, [tripPhase, checkActiveTrip]);
+  }, [checkActiveTrip]);
 
   // Cargar datos del conductor
   useEffect(() => {
@@ -979,6 +981,23 @@ export default function DriverPage() {
     const socket = connectSocket();
     socket.emit('driver:arrived', { tripId: activeTrip.id });
     setTripPhase('arrived');
+    setArrivedAt(Date.now());
+  };
+
+  const handleCancelTrip = async (reason: string) => {
+    if (!activeTrip) return;
+    try {
+      await api.post(`/trips/${activeTrip.id}/cancel`, { reason });
+      setTripPhase('going_to_passenger');
+      setActiveTrip(null);
+      setArrivedAt(null);
+      setShowCancelModal(false);
+      setSelectedCancelOption('');
+      setCustomCancelReason('');
+      showCustomAlert('Viaje cancelado', 'Información', 'info');
+    } catch (err: any) {
+      showCustomAlert(err.response?.data?.error || 'Error al cancelar', 'Error', 'error');
+    }
   };
 
   const startTrip = (code: string) => {
@@ -2634,13 +2653,16 @@ export default function DriverPage() {
           </div>
 
           {tripPhase === 'going_to_passenger' && (
-            <button className="btn btn-primary btn-block btn-lg" onClick={markArrived}>He llegado</button>
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <button className="btn btn-secondary" style={{ flex: 1 }} onClick={() => setShowCancelModal(true)}>Cancelar</button>
+              <button className="btn btn-primary btn-lg" style={{ flex: 2 }} onClick={markArrived}>He llegado</button>
+            </div>
           )}
 
           {tripPhase === 'arrived' && (
             <div>
               <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '12px', textAlign: 'center' }}>Pide el código al pasajero para iniciar:</p>
-              <div style={{ display: 'flex', gap: '10px' }}>
+              <div style={{ display: 'flex', gap: '10px', marginBottom: '12px' }}>
                 <input
                   type="text" className="form-input" placeholder="CÓDIGO"
                   value={otp} onChange={(e) => setOtp(e.target.value)}
@@ -2648,6 +2670,7 @@ export default function DriverPage() {
                 />
                 <button className="btn btn-accent" onClick={() => startTrip(otp)}>INICIAR</button>
               </div>
+              <button className="btn btn-danger btn-block" onClick={() => setShowCancelModal(true)}>Cancelar Viaje</button>
             </div>
           )}
 
@@ -2760,6 +2783,123 @@ export default function DriverPage() {
               )}
             </div>
           )}
+        </div>
+      )}
+
+      {/* MODAL CANCELAR VIAJE (CONDUCTOR) */}
+      {showCancelModal && (
+        <div style={{
+          position: 'fixed',
+          inset: 0,
+          background: 'rgba(9, 9, 15, 0.85)',
+          backdropFilter: 'blur(8px)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 9999,
+          padding: '20px',
+          animation: 'fadeIn 0.2s ease'
+        }}>
+          <div style={{
+            background: 'var(--bg-secondary)',
+            border: '1px solid var(--border)',
+            borderRadius: 'var(--radius-lg)',
+            width: '100%',
+            maxWidth: '440px',
+            padding: '24px',
+            boxShadow: 'var(--shadow-lg)',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '16px'
+          }}>
+            <h3 style={{ margin: 0, fontWeight: 900, fontSize: '1.25rem' }}>¿Por qué cancelas tu viaje?</h3>
+            
+            <div style={{ marginBottom: '20px' }}>
+              <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, color: 'var(--text-secondary)', marginBottom: '8px' }}>
+                Motivo de cancelación:
+              </label>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                {[
+                  'Cambio de ruta no acordado',
+                  'Excede capacidad legal',
+                  'Comportamiento agresivo',
+                  'Pasajero no se presentó',
+                  'Problema mecánico',
+                  'Otro motivo'
+                ].map((reasonOption) => {
+                  let isDisabled = false;
+                  if (reasonOption === 'Pasajero no se presentó') {
+                    isDisabled = tripPhase !== 'arrived' || !arrivedAt || (Date.now() - arrivedAt < 5 * 60 * 1000);
+                  }
+                  return (
+                    <button
+                      key={reasonOption}
+                      type="button"
+                      disabled={isDisabled}
+                      onClick={() => setSelectedCancelOption(reasonOption)}
+                      style={{
+                        padding: '12px',
+                        borderRadius: '8px',
+                        border: selectedCancelOption === reasonOption ? '2px solid var(--accent)' : '1px solid var(--border)',
+                        background: selectedCancelOption === reasonOption ? 'rgba(0, 229, 160, 0.1)' : 'var(--bg-primary)',
+                        color: isDisabled ? 'var(--text-muted)' : (selectedCancelOption === reasonOption ? 'var(--accent)' : 'var(--text-primary)'),
+                        textAlign: 'left',
+                        fontWeight: selectedCancelOption === reasonOption ? 700 : 500,
+                        cursor: isDisabled ? 'not-allowed' : 'pointer',
+                        transition: 'all 0.2s ease',
+                        opacity: isDisabled ? 0.5 : 1
+                      }}
+                    >
+                      {reasonOption}
+                      {isDisabled && reasonOption === 'Pasajero no se presentó' && (
+                        <span style={{ display: 'block', fontSize: '0.7rem', marginTop: '4px' }}>
+                          Disponible tras 5 minutos de espera.
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {selectedCancelOption === 'Otro motivo' && (
+                <div style={{ marginTop: '12px' }}>
+                  <textarea
+                    className="form-input"
+                    placeholder="Describe el motivo de la cancelación..."
+                    value={customCancelReason}
+                    onChange={(e) => setCustomCancelReason(e.target.value)}
+                    rows={3}
+                    style={{ width: '100%', resize: 'none' }}
+                  />
+                </div>
+              )}
+            </div>
+
+            <div style={{ display: 'flex', gap: '10px' }}>
+              <button
+                className="btn btn-secondary"
+                style={{ flex: 1 }}
+                onClick={() => {
+                  setShowCancelModal(false);
+                  setSelectedCancelOption('');
+                  setCustomCancelReason('');
+                }}
+              >
+                Volver atrás
+              </button>
+              <button
+                className="btn btn-danger"
+                style={{ flex: 1 }}
+                disabled={!selectedCancelOption || (selectedCancelOption === 'Otro motivo' && !customCancelReason.trim())}
+                onClick={async () => {
+                  const finalReason = selectedCancelOption === 'Otro motivo' ? customCancelReason : selectedCancelOption;
+                  await handleCancelTrip(finalReason);
+                }}
+              >
+                Confirmar
+              </button>
+            </div>
+          </div>
         </div>
       )}
 

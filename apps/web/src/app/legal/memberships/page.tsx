@@ -27,22 +27,22 @@ export default function MembershipsPolicyPage() {
           <div>
             <h2 style={{ color: 'var(--accent)', marginBottom: '12px', fontSize: '1.4rem' }}>2. Ciclos de Facturación y Cobros</h2>
             <p>
-              Las membresías se cobran de forma **prepagada** al inicio de cada ciclo de facturación (mensual, semanal u otro formato que elija el conductor). 
+              Las membresías se cobran de forma <strong>prepagada</strong> (mensual, semanal u otro formato que elija el conductor). 
             </p>
             <ul style={{ paddingLeft: '20px', margin: '12px 0', listStyleType: 'disc' }}>
-              <li><strong>Renovación Automática:</strong> Para evitar interrupciones en el servicio y no perder viajes, la membresía se renueva y se cobra automáticamente al finalizar el ciclo vigente, utilizando el método de pago guardado por el conductor.</li>
-              <li><strong>Pagos Fallidos:</strong> Si el método de pago declina el cargo automático, la cuenta del conductor pasará a estado suspendido y no podrá aceptar viajes nuevos hasta que se regularice la deuda. FIM realizará reintentos de cobro durante los días posteriores.</li>
+              <li><strong>Pago Manual por Enlace:</strong> FIM cobra en base a un link de pago generado automáticamente dependiendo de la membresía que elija el conductor. Este link de Mercado Pago se proporcionará una vez elegida la membresía en la aplicación.</li>
+              <li><strong>Sin Cargos Automáticos:</strong> FIM no guarda los datos de tu tarjeta de crédito ni realiza cargos automáticos sorpresas.</li>
             </ul>
           </div>
 
           <div>
-            <h2 style={{ color: 'var(--accent)', marginBottom: '12px', fontSize: '1.4rem' }}>3. Modificación y Cancelación de la Membresía</h2>
+            <h2 style={{ color: 'var(--accent)', marginBottom: '12px', fontSize: '1.4rem' }}>3. Expiración de la Membresía</h2>
             <p>
-              El conductor tiene control absoluto sobre su membresía.
+              No existen contratos forzosos ni procesos complejos de cancelación, ya que las membresías <strong>no se renuevan automáticamente</strong>.
             </p>
             <ul style={{ paddingLeft: '20px', margin: '12px 0', listStyleType: 'disc' }}>
-              <li><strong>Cancelación:</strong> El conductor puede cancelar la renovación automática de su membresía en cualquier momento directamente desde la App (Perfil &gt; Mi Membresía &gt; Cancelar). No hay contratos forzosos.</li>
-              <li>Al cancelar, el conductor seguirá teniendo acceso a la plataforma hasta el último día del ciclo que ya pagó. Una vez transcurrido este periodo, la cuenta entrará en modo inactivo.</li>
+              <li><strong>Vencimiento:</strong> Toda membresía expira automáticamente el día 30 de su ciclo a las 00:00 hrs.</li>
+              <li><strong>Renovación Voluntaria:</strong> Una vez transcurrido este periodo, la cuenta entrará en modo inactivo. El conductor tendrá la oportunidad de elegir otra membresía o seguir con la misma, pagando de forma independiente mediante un nuevo link de Mercado Pago proporcionado por la aplicación.</li>
             </ul>
           </div>
 

@@ -193,7 +193,9 @@ interface Driver {
   trips?: any[];
   ratings?: any[];
   isTrial?: boolean;
-  nextDiscount?: number;
+  nextDiscount: number;
+  giftDaysPending: number;
+  isDeleted?: boolean;
 }
 
 interface Passenger {
@@ -209,6 +211,7 @@ interface Passenger {
   idBackUrl: string | null;
   selfieUrl: string | null;
   backgroundDocUrl: string | null;
+  isDeleted?: boolean;
   trips?: {
     id: string;
     status: string;
@@ -927,17 +930,19 @@ export default function AdminDashboardPage() {
               <button className="btn btn-secondary btn-sm" onClick={() => setSelectedDriver(null)} style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                 <Icon name="arrow_left" size={13} color="currentColor" /> Volver
               </button>
-              <h2 style={{ fontSize: '1rem', fontWeight: 900 }}>{selectedDriver.name}</h2>
+              <h2 style={{ fontSize: '1rem', fontWeight: 900 }}>
+                {selectedDriver.name} {selectedDriver.isDeleted && <span style={{ color: 'var(--danger)', fontSize: '0.8rem', marginLeft: '8px' }}>[ELIMINADO]</span>}
+              </h2>
             </div>
 
             <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '0.8rem' }}>
               <h3 style={{ fontSize: '0.82rem', color: 'var(--accent)', borderBottom: '1px solid var(--border)', paddingBottom: '4px', marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '6px' }}>
                 <Icon name="id" size={14} color="var(--accent)" /> FICHA TÉCNICA
               </h3>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><Icon name="mail" size={12} color="var(--text-muted)" /><strong>Email:</strong> {selectedDriver.email}</div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><Icon name="phone" size={12} color="var(--text-muted)" /><strong>Fono:</strong> {selectedDriver.phone}</div>
-              <div><strong>RUT:</strong> {selectedDriver.rut}</div>
-              <div><strong>Dirección:</strong> {selectedDriver.address}</div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><Icon name="mail" size={12} color="var(--text-muted)" /><strong>Email:</strong> {selectedDriver.isDeleted ? '[ELIMINADO]' : selectedDriver.email}</div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><Icon name="phone" size={12} color="var(--text-muted)" /><strong>Fono:</strong> {selectedDriver.isDeleted ? '[ELIMINADO]' : selectedDriver.phone}</div>
+              <div><strong>RUT:</strong> {selectedDriver.isDeleted ? '[ELIMINADO]' : selectedDriver.rut}</div>
+              <div><strong>Dirección:</strong> {selectedDriver.isDeleted ? '[ELIMINADO]' : selectedDriver.address}</div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><Icon name="car" size={12} color="var(--text-muted)" /><strong>Vehículo:</strong> {selectedDriver.vehicleBrand} {selectedDriver.vehicleModel} ({selectedDriver.vehicleYear})</div>
               <div><strong>Patente:</strong> {selectedDriver.vehiclePlate}</div>
               <div><strong>Licencia N°:</strong> {selectedDriver.licenseNumber}</div>
@@ -1374,13 +1379,13 @@ export default function AdminDashboardPage() {
               </h3>
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                 <Icon name="mail" size={12} color="var(--text-muted)" />
-                <strong>Email:</strong> {selectedPassenger.email}
+                <strong>Email:</strong> {selectedPassenger.isDeleted ? '[ELIMINADO]' : selectedPassenger.email}
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                 <Icon name="phone" size={12} color="var(--text-muted)" />
-                <strong>Teléfono:</strong> {selectedPassenger.phone}
+                <strong>Teléfono:</strong> {selectedPassenger.isDeleted ? '[ELIMINADO]' : selectedPassenger.phone}
               </div>
-              <div><strong>RUT:</strong> {selectedPassenger.rut || '—'}</div>
+              <div><strong>RUT:</strong> {selectedPassenger.isDeleted ? '[ELIMINADO]' : (selectedPassenger.rut || '—')}</div>
               <div><strong>Rol:</strong> {selectedPassenger.role}</div>
               <div>
                 <strong>Estado:</strong>{' '}

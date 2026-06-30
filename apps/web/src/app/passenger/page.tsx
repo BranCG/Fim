@@ -32,6 +32,8 @@ type TripStatus =
 interface Trip {
   id: string;
   otpCode?: string;
+  dropoffOtpCode?: string;
+  acceptedAt?: string;
   estimatedPrice?: number;
 }
 
@@ -2514,7 +2516,7 @@ export default function PassengerPage() {
                     display: 'inline-block'
                   }}>
                     <div style={{ fontSize: '2.5rem', fontWeight: 900, letterSpacing: '8px', color: 'var(--accent)', lineHeight: 1 }}>
-                      {currentTrip?.otpCode || '----'}
+                      {currentTrip?.dropoffOtpCode || '----'}
                     </div>
                   </div>
                   <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', margin: 0 }}>
@@ -2902,11 +2904,26 @@ export default function PassengerPage() {
             gap: '16px'
           }}>
             <h3 style={{ margin: 0, fontWeight: 900, fontSize: '1.25rem' }}>¿Por qué cancelas tu viaje?</h3>
-            <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--text-muted)' }}>
-              Por favor dinos el motivo de tu cancelación. Esto ayuda a mantener la transparencia y avisar al conductor.
-            </p>
-            
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            <div style={{ marginBottom: '20px' }}>
+                <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, color: 'var(--text-secondary)', marginBottom: '8px' }}>
+                  Motivo de cancelación:
+                </label>
+                {(status === 'driver_assigned' || status === 'driver_arrived') && (
+                  <div style={{
+                    background: 'rgba(255, 69, 96, 0.1)',
+                    border: '1px solid rgba(255, 69, 96, 0.2)',
+                    padding: '12px',
+                    borderRadius: '8px',
+                    marginBottom: '16px',
+                    fontSize: '0.8rem',
+                    color: 'var(--text-primary)'
+                  }}>
+                    <strong style={{ color: 'var(--danger)', display: 'block', marginBottom: '4px' }}>⚠️ Atención:</strong>
+                    Si han pasado más de 2 minutos desde que el conductor aceptó, cancelar ahora sumará una penalización. 
+                    Acumular 3 penalizaciones suspenderá tu cuenta.
+                  </div>
+                )}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
               {[
                 'El conductor demoró demasiado',
                 'Me equivoqué de destino',

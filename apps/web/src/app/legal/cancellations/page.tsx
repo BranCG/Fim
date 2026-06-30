@@ -43,7 +43,7 @@ export default function CancellationsPolicyPage() {
             </p>
             <ul style={{ paddingLeft: '20px', margin: '12px 0', listStyleType: 'disc' }}>
               <li><strong>Cancelación Injustificada:</strong> Cancelar un viaje luego de haberlo aceptado sin una razón de fuerza mayor generará una métrica negativa en tu perfil. FIM exige mantener una tasa de cancelación por debajo del porcentaje permitido en tu zona.</li>
-              <li><strong>Cancelaciones Válidas (Excepciones):</strong> Un conductor puede cancelar sin afectar sus métricas si el pasajero solicita un cambio drástico de ruta no acordado, si la cantidad de pasajeros excede la capacidad legal del vehículo, si hay menores sin asiento especial, o si el pasajero tiene comportamiento agresivo comprobable.</li>
+              <li><strong>Cancelaciones Válidas (Excepciones):</strong> Un conductor puede cancelar sin afectar sus métricas si el pasajero solicita un cambio drástico de ruta no acordado, si la cantidad de pasajeros excede la capacidad legal del vehículo, o si el pasajero tiene comportamiento agresivo comprobable.</li>
             </ul>
           </div>
 

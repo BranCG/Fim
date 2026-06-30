@@ -35,6 +35,8 @@ model User {
   fcmToken         String?   @map("token_fcm")
   tokenVersion     Int       @default(0) @map("version_token")
   isDeleted        Boolean   @default(false) @map("esta_eliminado")
+  status           String    @default("active") @map("estado")
+  cancellationCount Int      @default(0) @map("cantidad_cancelaciones")
 
   @@map("usuarios")
 }
@@ -99,6 +101,7 @@ model Driver {
   giftDaysPending     Int       @default(0) @map("dias_regalo_pendientes")
   tokenVersion        Int       @default(0) @map("version_token")
   isDeleted           Boolean   @default(false) @map("esta_eliminado")
+  cancellationCount   Int       @default(0) @map("cantidad_cancelaciones")
 
   // Fim Finanzas Config
   fuelEfficiency      Float?    @default(12.0) @map("rendimiento_combustible")

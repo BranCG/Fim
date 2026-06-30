@@ -55,6 +55,7 @@ export default function PrivacyPage() {
             <ul style={{ paddingLeft: '20px', margin: '12px 0', listStyleType: 'disc' }}>
               <li>Hora exacta y ubicación (GPS) del inicio del viaje.</li>
               <li>Hora exacta y ubicación (GPS) del término del viaje.</li>
+              <li>Códigos de seguridad: Código de subida y código de bajada del vehículo generados por el sistema.</li>
               <li>Identificación cruzada: Datos del pasajero, datos del conductor y placa patente del vehículo utilizado.</li>
             </ul>
             <p>Esta información estará a disposición de las autoridades chilenas mediante una orden judicial en caso de incidentes de seguridad.</p>

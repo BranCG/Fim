@@ -261,6 +261,51 @@ router.post('/:id/cancel', requireAuth, async (req: Request, res: Response) => {
       cancelActiveSearch(id);
     }
 
+    // ── LÓGICA DE PENALIZACIONES POR CANCELACIÓN ──
+    let passengerPenalty = false;
+    let driverPenalty = false;
+
+    if (role === 'passenger' && trip.status !== 'searching' && trip.acceptedAt) {
+      const msSinceAccepted = Date.now() - trip.acceptedAt.getTime();
+      if (msSinceAccepted > 2 * 60 * 1000) {
+        passengerPenalty = true; // Pasaron más de 2 min de gracia
+      }
+    } else if (role === 'driver') {
+      // Excepciones válidas para el conductor (No penalizan al conductor)
+      const validReasons = [
+        'Cambio de ruta no acordado', 
+        'Excede capacidad legal', 
+        'Comportamiento agresivo',
+        'Pasajero no se presentó' // Esta penaliza al pasajero, no al conductor
+      ];
+      
+      if (reason === 'Pasajero no se presentó') {
+        passengerPenalty = true; // "No-show" penaliza gravemente al pasajero
+      } else if (!validReasons.includes(reason)) {
+        driverPenalty = true; // Cualquier otro motivo injustificado penaliza al conductor
+      }
+    }
+
+    // Aplicar penalizaciones a la BD
+    if (passengerPenalty) {
+      const p = await prisma.user.update({
+        where: { id: trip.passengerId },
+        data: { cancellationCount: { increment: 1 } }
+      });
+      if (p.cancellationCount >= 3) {
+        await prisma.user.update({ where: { id: p.id }, data: { status: 'suspended' } });
+      }
+    }
+    if (driverPenalty && trip.driverId) {
+      const d = await prisma.driver.update({
+        where: { id: trip.driverId },
+        data: { cancellationCount: { increment: 1 } }
+      });
+      if (d.cancellationCount >= 3) {
+        await prisma.driver.update({ where: { id: d.id }, data: { status: 'suspended' } });
+      }
+    }
+
     const updated = await prisma.trip.update({
       where: { id },
       data: {
