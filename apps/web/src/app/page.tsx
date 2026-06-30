@@ -571,7 +571,7 @@ export default function Home() {
               <button className="btn" style={{ background: '#1A1A1A', color: '#fff', padding: '10px 16px', display: 'flex', alignItems: 'center', gap: '10px', borderRadius: '8px', border: '1px solid #333' }}>
                 <GooglePlayBadgeIcon />
                 <div style={{ textAlign: 'left', lineHeight: 1 }}>
-                  <span style={{ fontSize: '0.6rem', display: 'block', opacity: 0.8 }}>DISPONIBLE EN</span>
+                    <div style={{ fontSize: '0.6rem', display: 'block', opacity: 0.8 }}>DISPONIBLE EN</div>
                   <span style={{ fontWeight: 600, fontSize: '1rem', letterSpacing: '-0.02em' }}>Google Play</span>
                 </div>
               </button>
@@ -580,65 +580,30 @@ export default function Home() {
 
           <div style={{ width: '100%', height: '1px', background: 'var(--border)', marginBottom: '40px', opacity: 0.5 }} />
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '40px', marginBottom: '60px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '40px', marginBottom: '60px' }}>
             <div>
-              <h4 style={{ fontWeight: 800, marginBottom: '20px', color: 'var(--text-primary)' }}>Conductores</h4>
+              <h4 style={{ fontWeight: 800, marginBottom: '20px', color: 'var(--text-primary)' }}>Plataforma</h4>
               <ul style={{ listStyle: 'none', padding: 0, display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                <li><Link href="#" style={{ color: 'var(--text-secondary)' }}>Conductores</Link></li>
-              </ul>
-              <h4 style={{ fontWeight: 800, margin: '30px 0 20px', color: 'var(--text-primary)' }}>Empresas</h4>
-              <ul style={{ listStyle: 'none', padding: 0, display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                <li><Link href="#" style={{ color: 'var(--text-secondary)' }}>Fim para empresas</Link></li>
-                <li><Link href="#" style={{ color: 'var(--text-secondary)' }}>Soluciones</Link></li>
-                <li><Link href="#" style={{ color: 'var(--text-secondary)' }}>Plataforma</Link></li>
-                <li><Link href="#" style={{ color: 'var(--text-secondary)' }}>Recursos</Link></li>
-              </ul>
-              <h4 style={{ fontWeight: 800, margin: '30px 0 20px', color: 'var(--text-primary)' }}>Pasajeros</h4>
-              <ul style={{ listStyle: 'none', padding: 0, display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                <li><Link href="#" style={{ color: 'var(--text-secondary)' }}>Viaja en Fim</Link></li>
-                <li><Link href="#" style={{ color: 'var(--text-secondary)' }}>Envíos</Link></li>
-                <li><Link href="#" style={{ color: 'var(--text-secondary)' }}>Tarifas</Link></li>
+                <li><Link href="/" style={{ color: 'var(--text-secondary)' }}>Inicio</Link></li>
+                <li><a href="mailto:contacto@fimchile.cl" style={{ color: 'var(--text-secondary)' }}>Contacto</a></li>
+                <li><a href="mailto:contacto@fimchile.cl" style={{ color: 'var(--text-secondary)' }}>Centro de ayuda</a></li>
               </ul>
             </div>
-
             <div>
-              <h4 style={{ fontWeight: 800, marginBottom: '20px', color: 'var(--text-primary)' }}>Ads</h4>
+              <h4 style={{ fontWeight: 800, marginBottom: '20px', color: 'var(--text-primary)' }}>Términos y Condiciones</h4>
               <ul style={{ listStyle: 'none', padding: 0, display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                <li><Link href="#" style={{ color: 'var(--text-secondary)' }}>Fim Ads</Link></li>
-                <li><Link href="#" style={{ color: 'var(--text-secondary)' }}>Online</Link></li>
-                <li><Link href="#" style={{ color: 'var(--text-secondary)' }}>Offline</Link></li>
-              </ul>
-              <h4 style={{ fontWeight: 800, margin: '30px 0 20px', color: 'var(--text-primary)' }}>Centros de ayuda</h4>
-              <ul style={{ listStyle: 'none', padding: 0, display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                <li><Link href="#" style={{ color: 'var(--text-secondary)' }}>Pasajeros</Link></li>
-                <li><Link href="#" style={{ color: 'var(--text-secondary)' }}>Empresas</Link></li>
-                <li><Link href="#" style={{ color: 'var(--text-secondary)' }}>Flotas</Link></li>
-                <li><Link href="#" style={{ color: 'var(--text-secondary)' }}>Conductores</Link></li>
+                <li><Link href="/legal/terms-passenger" style={{ color: 'var(--text-secondary)' }}>Términos del Pasajero</Link></li>
+                <li><Link href="/legal/terms-driver" style={{ color: 'var(--text-secondary)' }}>Términos del Conductor</Link></li>
+                <li><Link href="/legal/memberships" style={{ color: 'var(--text-secondary)' }}>Política de Membresías</Link></li>
+                <li><Link href="/legal/cancellations" style={{ color: 'var(--text-secondary)' }}>Política de Cancelaciones</Link></li>
               </ul>
             </div>
-
             <div>
-              <h4 style={{ fontWeight: 800, marginBottom: '20px', color: 'var(--text-primary)' }}>Nosotros</h4>
+              <h4 style={{ fontWeight: 800, marginBottom: '20px', color: 'var(--text-primary)' }}>Privacidad y Seguridad</h4>
               <ul style={{ listStyle: 'none', padding: 0, display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                <li><Link href="#" style={{ color: 'var(--text-secondary)' }}>Sobre nosotros</Link></li>
-                <li><Link href="#" style={{ color: 'var(--text-secondary)' }}>Portal de Marca</Link></li>
-                <li><Link href="#" style={{ color: 'var(--text-secondary)' }}>Sostenibilidad</Link></li>
-                <li><Link href="#" style={{ color: 'var(--text-secondary)' }}>Seguridad</Link></li>
-                <li><Link href="#" style={{ color: 'var(--text-secondary)' }}>Gobierno Corporativo</Link></li>
-                <li><Link href="#" style={{ color: 'var(--text-secondary)' }}>Accesibilidad</Link></li>
-                <li><Link href="#" style={{ color: 'var(--text-secondary)' }}>Únete al equipo</Link></li>
-                <li><Link href="#" style={{ color: 'var(--text-secondary)' }}>Prensa</Link></li>
-                <li><Link href="#" style={{ color: 'var(--text-secondary)' }}>Blog</Link></li>
-              </ul>
-            </div>
-
-            <div>
-              <h4 style={{ fontWeight: 800, marginBottom: '20px', color: 'var(--text-primary)' }}>Legal</h4>
-              <ul style={{ listStyle: 'none', padding: 0, display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                <li><Link href="#" style={{ color: 'var(--text-secondary)' }}>Términos y condiciones</Link></li>
-                <li><Link href="#" style={{ color: 'var(--text-secondary)' }}>Privacidad</Link></li>
-                <li><Link href="#" style={{ color: 'var(--text-secondary)' }}>Políticas de cookies</Link></li>
-                <li><Link href="#" style={{ color: 'var(--text-secondary)' }}>Declaración de accesibilidad</Link></li>
+                <li><Link href="/legal/privacy" style={{ color: 'var(--text-secondary)' }}>Política de Privacidad</Link></li>
+                <li><Link href="/legal/community" style={{ color: 'var(--text-secondary)' }}>Comunidad y Seguridad</Link></li>
+                <li><Link href="/legal/account-deletion" style={{ color: 'var(--text-secondary)' }}>Eliminación de Cuenta</Link></li>
               </ul>
             </div>
           </div>
