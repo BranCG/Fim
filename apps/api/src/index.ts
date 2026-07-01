@@ -38,7 +38,7 @@ const corsOptions = {
     // 2. Si es Producción, ser muy estricto
     if (process.env.NODE_ENV === 'production') {
       // Las apps híbridas (Capacitor/Ionic) en móviles o pruebas web locales a veces envían estos origenes
-      const isMobileApp = origin === 'capacitor://localhost' || origin === 'http://localhost' || (origin && origin.startsWith('http://localhost:'));
+      const isMobileApp = origin === 'capacitor://localhost' || origin === 'http://localhost' || origin === 'null' || (origin && origin.startsWith('http://localhost:'));
       const isFimChile = origin === 'https://fimchile.cl' || origin === 'https://www.fimchile.cl' || origin === 'https://admin.fimchile.cl';
       
       if (matchesEnv || isMobileApp || isFimChile) {

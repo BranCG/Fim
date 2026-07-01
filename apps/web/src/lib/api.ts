@@ -16,6 +16,7 @@ const getApiUrl = () => {
 };
 
 export const API_URL = getApiUrl();
+console.log('🔗 FIM API URL Configurada:', API_URL);
 
 const api = axios.create({
   baseURL: `${API_URL}/api`,
