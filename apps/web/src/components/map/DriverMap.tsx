@@ -128,6 +128,9 @@ export default function DriverMap({ driverPos, passengerPos, destPos, centerTrig
 
     // ── Interpolación para movimiento fluido ──────────────────
     const animateMarker = (marker: any, start: { lat: number; lng: number }, end: { lat: number; lng: number }, duration = 1200) => {
+      if (marker._animId) {
+        cancelAnimationFrame(marker._animId);
+      }
       const startTime = performance.now();
       
       const dLng = end.lng - start.lng;
@@ -161,13 +164,13 @@ export default function DriverMap({ driverPos, passengerPos, destPos, centerTrig
         }
 
         if (progress < 1) {
-          requestAnimationFrame(step);
+          marker._animId = requestAnimationFrame(step);
         } else if (hasMovement) {
           currentAngleRef.current = angle;
           marker.setIcon(getDriverIcon(angle));
         }
       };
-      requestAnimationFrame(step);
+      marker._animId = requestAnimationFrame(step);
     };
 
     // ── 1. Marcador Conductor (Con interpolación suave) ───────────────────

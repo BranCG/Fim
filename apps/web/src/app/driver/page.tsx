@@ -228,6 +228,7 @@ export default function DriverPage() {
   const [pos, setPos] = useState(SANTIAGO);
   const [tripRequest, setTripRequest] = useState<TripRequest | null>(null);
   const [activeTrip, setActiveTrip] = useState<TripRequest | null>(null);
+  const [nextTrip, setNextTrip] = useState<TripRequest | null>(null);
   const [tripPhase, setTripPhase] = useState<'idle' | 'going_to_passenger' | 'arrived' | 'in_progress'>('idle');
   const [timer, setTimer] = useState(30);
   const [loading, setLoading] = useState(false);
@@ -276,6 +277,11 @@ export default function DriverPage() {
   useEffect(() => {
     tripRequestRef.current = tripRequest;
   }, [tripRequest]);
+
+  const nextTripRef = useRef(nextTrip);
+  useEffect(() => {
+    nextTripRef.current = nextTrip;
+  }, [nextTrip]);
 
   const [passengerConfirmed, setPassengerConfirmed] = useState(false);
   const [showMpTutorial, setShowMpTutorial] = useState(false);
@@ -472,6 +478,7 @@ export default function DriverPage() {
 
   const resetTrip = useCallback(() => {
     setActiveTrip(null);
+    setNextTrip(null);
     setTripPhase('idle');
     setPassengerConfirmed(false);
     setReceiptUrl(null);
@@ -534,6 +541,15 @@ export default function DriverPage() {
         if (activeTripRef.current) {
           resetTrip();
         }
+      }
+
+      if (res.data.nextTrip) {
+        const nextT = res.data.nextTrip;
+        setNextTrip(nextT);
+        const socket = connectSocket();
+        socket.emit('passenger:join-trip', { tripId: nextT.id });
+      } else {
+        setNextTrip(null);
       }
     } catch (err) {
       console.error('Error fetching active trip in checkActiveTrip:', err);
@@ -803,10 +819,16 @@ export default function DriverPage() {
     });
 
     socket.on('trip:confirmed', ({ trip }: { trip: TripRequest }) => {
-      setActiveTrip(trip);
-      setTripPhase('going_to_passenger');
-      setTripRequest(null);
-      sendLocalNotification("¡Viaje Confirmado!", `Vas en camino a recoger a ${trip.passenger.name}.`);
+      if (activeTripRef.current) {
+        setNextTrip(trip);
+        setTripRequest(null);
+        sendLocalNotification("¡Viaje en cola!", `Has aceptado un viaje consecutivo de ${trip.passenger.name}.`);
+      } else {
+        setActiveTrip(trip);
+        setTripPhase('going_to_passenger');
+        setTripRequest(null);
+        sendLocalNotification("¡Viaje Confirmado!", `Vas en camino a recoger a ${trip.passenger.name}.`);
+      }
     });
 
     socket.on('trip:started', (data?: { trip?: any }) => {
@@ -841,6 +863,7 @@ export default function DriverPage() {
       console.log('[Socket] Viaje cancelado por pasajero', data);
       const activeTripId = activeTripRef.current?.id;
       const requestTripId = tripRequestRef.current?.id;
+      const queuedTripId = nextTripRef.current?.id;
 
       sendLocalNotification("Viaje Cancelado", `El pasajero canceló la solicitud: "${data.reason}".`);
 
@@ -849,7 +872,30 @@ export default function DriverPage() {
           reason: data.reason,
           wasAccepted: true
         });
-        resetTrip();
+        const queuedTrip = nextTripRef.current;
+        if (queuedTrip) {
+          setActiveTrip(queuedTrip);
+          setTripPhase('going_to_passenger');
+          setPassengerConfirmed(false);
+          setReceiptUrl(null);
+          setPaymentRequested(false);
+          setCompletionOtp('');
+          setCompletionOtpVerified(false);
+          setChatMessages([]);
+          setShowChat(false);
+          setUnreadCount(0);
+          setShowNavModal(false);
+          setNextTrip(null);
+          socket.emit('passenger:join-trip', { tripId: queuedTrip.id });
+        } else {
+          resetTrip();
+        }
+      } else if (data.tripId && data.tripId === queuedTripId) {
+        setCancellationNotice({
+          reason: data.reason,
+          wasAccepted: true
+        });
+        setNextTrip(null);
       } else if (data.tripId && data.tripId === requestTripId) {
         setCancellationNotice({
           reason: data.reason,
@@ -870,9 +916,26 @@ export default function DriverPage() {
           clearInterval(timerRef.current);
           timerRef.current = null;
         }
-        resetTrip();
+        const queuedTrip = nextTripRef.current;
+        if (queuedTrip) {
+          setActiveTrip(queuedTrip);
+          setTripPhase('going_to_passenger');
+          setPassengerConfirmed(false);
+          setReceiptUrl(null);
+          setPaymentRequested(false);
+          setCompletionOtp('');
+          setCompletionOtpVerified(false);
+          setChatMessages([]);
+          setShowChat(false);
+          setUnreadCount(0);
+          setShowNavModal(false);
+          setNextTrip(null);
+          socket.emit('passenger:join-trip', { tripId: queuedTrip.id });
+        } else {
+          resetTrip();
+        }
       } else {
-        console.log(`[Socket] Cancelación de viaje ${data.tripId} ignorada por no corresponder al viaje activo (${activeTripId}) o solicitud (${requestTripId})`);
+        console.log(`[Socket] Cancelación de viaje ${data.tripId} ignorada por no corresponder al viaje activo (${activeTripId}), solicitud (${requestTripId}) o en cola (${queuedTripId})`);
       }
     });
 
@@ -1021,7 +1084,26 @@ export default function DriverPage() {
     const tripPrice = activeTrip.estimatedPrice;
     setTotalEarnings(prev => (prev !== null ? prev + tripPrice : tripPrice));
 
-    resetTrip();
+    const queuedTrip = nextTripRef.current;
+    if (queuedTrip) {
+      setActiveTrip(queuedTrip);
+      setTripPhase('going_to_passenger');
+      setPassengerConfirmed(false);
+      setReceiptUrl(null);
+      setPaymentRequested(false);
+      setCompletionOtp('');
+      setCompletionOtpVerified(false);
+      setChatMessages([]);
+      setShowChat(false);
+      setUnreadCount(0);
+      setShowNavModal(false);
+      setNextTrip(null);
+      
+      socket.emit('passenger:join-trip', { tripId: queuedTrip.id });
+      showCustomAlert(`Iniciando viaje en cola con ${queuedTrip.passenger.name}`, 'Viaje en Cola', 'success');
+    } else {
+      resetTrip();
+    }
 
     // Refetch driver details and full trip list in background to sync with DB
     setTimeout(async () => {
@@ -2558,6 +2640,38 @@ export default function DriverPage() {
               )}
             </div>
           </div>
+
+          {nextTrip && (
+            <div style={{
+              background: 'rgba(0, 229, 160, 0.08)',
+              border: '1.5px dashed var(--accent)',
+              borderRadius: '14px',
+              padding: '12px 16px',
+              marginBottom: '16px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              animation: 'fadeIn 0.3s ease'
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <span style={{ fontSize: '1.3rem' }}>🚗</span>
+                <div style={{ textAlign: 'left' }}>
+                  <div style={{ fontSize: '0.7rem', color: 'var(--accent)', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                    Siguiente Viaje en Cola
+                  </div>
+                  <div style={{ fontSize: '0.85rem', fontWeight: 700, color: '#fff' }}>
+                    Pasajero: {nextTrip.passenger.name}
+                  </div>
+                  <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', maxWidth: '220px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                    Hacia: {nextTrip.destAddress}
+                  </div>
+                </div>
+              </div>
+              <div style={{ textAlign: 'right', fontWeight: 900, color: 'var(--accent)', fontSize: '0.95rem' }}>
+                {formatCLP(nextTrip.estimatedPrice)}
+              </div>
+            </div>
+          )}
 
           <div style={{ background: 'var(--bg-secondary)', padding: '16px', borderRadius: 'var(--radius)', marginBottom: '20px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>

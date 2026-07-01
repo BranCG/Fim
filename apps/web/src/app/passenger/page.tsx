@@ -256,6 +256,7 @@ export default function PassengerPage() {
   const [passengerCount, setPassengerCount] = useState(1);
   const [currentTrip, setCurrentTrip] = useState<Trip | null>(null);
   const [driver, setDriver] = useState<Driver | null>(null);
+  const [driverIsBusy, setDriverIsBusy] = useState(false);
   const [driverPos, setDriverPos] = useState<{ lat: number; lng: number } | null>(null);
   const [finalPrice, setFinalPrice] = useState(0);
   const [rating, setRating] = useState(0);
@@ -422,6 +423,7 @@ export default function PassengerPage() {
     setStatus('idle');
     setCurrentTrip(null);
     setDriver(null);
+    setDriverIsBusy(false);
     setDriverPos(null);
     setDest(null);
     setSearchQuery('');
@@ -476,9 +478,10 @@ export default function PassengerPage() {
         if (trip.driver) {
           setDriver(trip.driver);
           if (trip.driver.lastLat && trip.driver.lastLng) {
-            setDriverPos({ lat: trip.driver.lastLat, lng: trip.driver.lastLng });
+            setDriverPos(prev => prev ? prev : { lat: trip.driver.lastLat, lng: trip.driver.lastLng });
           }
         }
+        setDriverIsBusy(!!trip.driverIsBusy);
         if (trip.paymentStatus === 'requested') {
           setPaymentRequested(true);
           setCompletionOtpVerified(false);
@@ -2015,6 +2018,32 @@ export default function PassengerPage() {
             <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '6px' }}>
               <IconCar /> Tu conductor está en camino...
             </p>
+          )}
+
+          {driverIsBusy && (
+            <div style={{
+              background: 'rgba(255, 193, 7, 0.1)',
+              border: '1px solid rgba(255, 193, 7, 0.3)',
+              borderRadius: '12px',
+              padding: '12px 16px',
+              marginBottom: '16px',
+              color: '#FFC107',
+              fontSize: '0.85rem',
+              fontWeight: 650,
+              display: 'flex',
+              alignItems: 'center',
+              gap: '10px',
+              animation: 'fadeIn 0.3s ease',
+              textAlign: 'left'
+            }}>
+              <span style={{ fontSize: '1.2rem', flexShrink: 0 }}>🚗</span>
+              <div>
+                <strong>Tu conductor está finalizando un viaje cerca de ti</strong>
+                <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', marginTop: '2px', fontWeight: 'normal' }}>
+                  Una vez finalizado, se dirigirá de inmediato a tu punto de recogida. Puedes seguir su avance en el mapa.
+                </div>
+              </div>
+            </div>
           )}
 
           <div className="driver-card" style={{ marginBottom: '16px' }}>

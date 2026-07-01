@@ -133,17 +133,30 @@ router.get('/active', requireAuth, async (req: Request, res: Response) => {
     const role = req.user!.role;
 
     if (role === 'driver') {
-      const trip = await prisma.trip.findFirst({
+      const activeTrips = await prisma.trip.findMany({
         where: {
           driverId: userId,
           status: { in: ['driver_assigned', 'driver_arrived', 'in_progress'] },
         },
-        orderBy: { createdAt: 'desc' },
+        orderBy: { createdAt: 'asc' },
         include: {
           passenger: { select: { id: true, name: true, phone: true } },
         },
       });
-      return res.json({ trip });
+
+      let currentTrip = activeTrips.find(t => t.status === 'in_progress' || t.status === 'driver_arrived');
+      if (!currentTrip && activeTrips.length > 0) {
+        currentTrip = activeTrips[0];
+      }
+
+      const nextTrip = currentTrip
+        ? activeTrips.find(t => t.id !== currentTrip!.id && t.status === 'driver_assigned')
+        : null;
+
+      return res.json({
+        trip: currentTrip || null,
+        nextTrip: nextTrip || null
+      });
     } else {
       const trip = await prisma.trip.findFirst({
         where: {
@@ -173,7 +186,24 @@ router.get('/active', requireAuth, async (req: Request, res: Response) => {
           rating: true,
         },
       });
-      return res.json({ trip });
+
+      let driverIsBusy = false;
+      if (trip && trip.driverId && trip.status === 'driver_assigned') {
+        const busyTrip = await prisma.trip.findFirst({
+          where: {
+            driverId: trip.driverId,
+            status: { in: ['driver_arrived', 'in_progress'] },
+            id: { not: trip.id }
+          }
+        }).catch(() => null);
+        if (busyTrip) {
+          driverIsBusy = true;
+        }
+      }
+
+      return res.json({
+        trip: trip ? { ...trip, driverIsBusy } : null
+      });
     }
   } catch (err) {
     console.error(err);

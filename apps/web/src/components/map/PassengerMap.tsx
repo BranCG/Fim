@@ -19,6 +19,56 @@ const getDistanceMeters = (lat1: number, lng1: number, lat2: number, lng2: numbe
   return Math.sqrt(dx * dx + dy * dy);
 };
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const getPoiIcon = (L: any, type: string, name: string) => {
+  let svgIcon = '<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/></svg>';
+  let bg = '#555';
+  
+  if (type === 'station') {
+    svgIcon = '<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="16" rx="2"/><path d="M4 11h16"/><path d="M12 3v8"/><path d="m8 19-2 3"/><path d="m18 22-2-3"/><path d="M8 15h0"/><path d="M16 15h0"/></svg>';
+    bg = '#E53935';
+  } else if (type === 'hospital') {
+    svgIcon = '<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M12 8v8"/><path d="M8 12h8"/></svg>';
+    bg = '#1E88E5';
+  } else if (type === 'mall') {
+    svgIcon = '<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>';
+    bg = '#8E24AA';
+  } else if (type === 'restaurant') {
+    svgIcon = '<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"/><path d="M7 2v20"/><path d="M21 15V2v0a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7"/></svg>';
+    bg = '#FFB300';
+  } else if (type === 'bar') {
+    svgIcon = '<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 22h8"/><path d="M12 11v11"/><path d="m19 3-7 8-7-8Z"/></svg>';
+    bg = '#7CB342';
+  }
+
+  return L.divIcon({
+    className: 'custom-poi-marker',
+    html: `
+      <div style="
+        background: rgba(20,20,30, 0.7);
+        border: 1px solid ${bg}50;
+        border-radius: 12px;
+        padding: 3px 6px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        backdrop-filter: blur(4px);
+        box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+        white-space: nowrap;
+        transform: translate(-50%, -50%);
+        pointer-events: none;
+      ">
+        <div style="background: ${bg}; border-radius: 50%; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center;">
+          ${svgIcon}
+        </div>
+        ${name ? `<span style="color: #ddd; font-size: 0.65rem; font-weight: 600; max-width: 80px; overflow: hidden; text-overflow: ellipsis; font-family: sans-serif;">${name}</span>` : ''}
+      </div>
+    `,
+    iconSize: [0, 0],
+  });
+};
+
+
 export default function PassengerMap({
   origin,
   dest,
@@ -49,6 +99,13 @@ export default function PassengerMap({
   const currentAngleRef = useRef<number>(0);
   const nearbyMarkersRef = useRef<Map<string, any>>(new Map());
   const nearbyAnglesRef = useRef<Map<string, number>>(new Map());
+
+  // Estado y Referencias para Puntos de Interés (POIs)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [pois, setPois] = useState<any[]>([]);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const poiMarkersRef = useRef<Map<number, any>>(new Map());
+  const lastFetchCenter = useRef<{lat: number, lng: number} | null>(null);
 
   // Inicializar el mapa una sola vez
   useEffect(() => {
@@ -93,6 +150,7 @@ export default function PassengerMap({
       }
       nearbyMarkersRef.current.clear();
       nearbyAnglesRef.current.clear();
+      poiMarkersRef.current.clear();
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -154,6 +212,9 @@ export default function PassengerMap({
 
     // ── Interpolación para movimiento fluido ──────────────────
     const animateMarker = (marker: any, start: { lat: number; lng: number }, end: { lat: number; lng: number }, driverId?: string, duration = 1200) => {
+      if (marker._animId) {
+        cancelAnimationFrame(marker._animId);
+      }
       const startTime = performance.now();
       
       const dLng = end.lng - start.lng;
@@ -187,7 +248,7 @@ export default function PassengerMap({
         }
 
         if (progress < 1) {
-          requestAnimationFrame(step);
+          marker._animId = requestAnimationFrame(step);
         } else if (hasMovement) {
           if (driverId) {
             nearbyAnglesRef.current.set(driverId, angle);
@@ -197,7 +258,7 @@ export default function PassengerMap({
           marker.setIcon(getDriverIcon(angle));
         }
       };
-      requestAnimationFrame(step);
+      marker._animId = requestAnimationFrame(step);
     };
 
     // ── 1. Origen ──────────────────────────────────────────────────────────
@@ -405,7 +466,10 @@ export default function PassengerMap({
       } else {
         const prevPos = prevMarker.getLatLng();
         if (prevPos.lat !== driver.lat || prevPos.lng !== driver.lng) {
-          animateMarker(prevMarker, prevPos, { lat: driver.lat, lng: driver.lng }, driver.id, 1200);
+          const dist = getDistanceMeters(prevPos.lat, prevPos.lng, driver.lat, driver.lng);
+          // Velocidad simulada de ~35 km/h (10 metros/segundo) para no dar saltos bruscos
+          const dynamicDuration = Math.min(Math.max((dist / 10) * 1000, 1200), 8000);
+          animateMarker(prevMarker, prevPos, { lat: driver.lat, lng: driver.lng }, driver.id, dynamicDuration);
         }
       }
     });
@@ -433,6 +497,103 @@ export default function PassengerMap({
       map.off('moveend', handleMoveEnd);
     };
   }, [isSelectingLocation, mapLoaded, onMapCenterChange]);
+
+  // Cargar POIs desde Overpass API
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !mapLoaded) return;
+
+    const fetchPOIs = async () => {
+      if (map.getZoom() < 14) return; // No cargar de muy lejos
+      
+      const center = map.getCenter();
+      if (lastFetchCenter.current) {
+        const dist = getDistanceMeters(lastFetchCenter.current.lat, lastFetchCenter.current.lng, center.lat, center.lng);
+        if (dist < 400) return; // Si no se ha movido mucho, ignorar
+      }
+      lastFetchCenter.current = center;
+
+      const bounds = map.getBounds();
+      const s = bounds.getSouth();
+      const w = bounds.getWest();
+      const n = bounds.getNorth();
+      const e = bounds.getEast();
+
+      const query = `
+        [out:json][timeout:10];
+        (
+          nwr["railway"="station"](${s},${w},${n},${e});
+          nwr["amenity"="hospital"](${s},${w},${n},${e});
+          nwr["shop"="mall"](${s},${w},${n},${e});
+          nwr["amenity"="restaurant"](${s},${w},${n},${e});
+          nwr["amenity"="bar"](${s},${w},${n},${e});
+        );
+        out center 100;
+      `;
+      try {
+        const res = await fetch(\`https://overpass-api.de/api/interpreter?data=\${encodeURIComponent(query)}\`);
+        const data = await res.json();
+        if (data && data.elements) {
+          setPois(data.elements);
+        }
+      } catch (err) {
+        console.error('Error fetching POIs from Overpass', err);
+      }
+    };
+
+    let debounceTimer: NodeJS.Timeout;
+    const handleMoveEnd = () => {
+      clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(fetchPOIs, 1000); // 1 segundo de debounce
+    };
+
+    map.on('moveend', handleMoveEnd);
+    handleMoveEnd(); // Llamada inicial
+
+    return () => {
+      map.off('moveend', handleMoveEnd);
+      clearTimeout(debounceTimer);
+    };
+  }, [mapLoaded]);
+
+  // Dibujar POIs en el mapa
+  useEffect(() => {
+    const map = mapRef.current;
+    const L = LRef.current;
+    if (!map || !L) return;
+
+    const currentPoiIds = new Set(pois.map(p => p.id));
+
+    // Eliminar los que ya no están en vista o en el límite
+    for (const [id, marker] of poiMarkersRef.current.entries()) {
+      if (!currentPoiIds.has(id)) {
+        marker.remove();
+        poiMarkersRef.current.delete(id);
+      }
+    }
+
+    // Dibujar nuevos
+    pois.forEach(poi => {
+      if (!poiMarkersRef.current.has(poi.id)) {
+        let type = 'unknown';
+        if (poi.tags?.railway === 'station') type = 'station';
+        else if (poi.tags?.amenity === 'hospital') type = 'hospital';
+        else if (poi.tags?.shop === 'mall') type = 'mall';
+        else if (poi.tags?.amenity === 'restaurant') type = 'restaurant';
+        else if (poi.tags?.amenity === 'bar') type = 'bar';
+
+        const lat = poi.center ? poi.center.lat : poi.lat;
+        const lng = poi.center ? poi.center.lon : poi.lon;
+        const name = poi.tags?.name || '';
+
+        if (lat && lng) {
+          const icon = getPoiIcon(L, type, name);
+          const marker = L.marker([lat, lng], { icon, interactive: false }).addTo(map);
+          poiMarkersRef.current.set(poi.id, marker);
+        }
+      }
+    });
+  }, [pois]);
 
   return (
     <div style={{ width: '100%', height: '100%', position: 'relative' }}>

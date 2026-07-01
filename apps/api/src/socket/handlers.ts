@@ -36,18 +36,17 @@ export async function updateDriverLocation(driverId: string, lat: number, lng: n
   // 3. Persistencia amortiguada en PostgreSQL (máx. cada 5 min)
   await updateDriverLocationDbThrottled(driverId, lat, lng);
 
-  // 4. Si tiene un viaje activo, notificar al pasajero en tiempo real
+  // 4. Si tiene viajes activos, notificar a los pasajeros en tiempo real (tanto en curso como en cola)
   if (ioInstance) {
-    const activeTrip = await prisma.trip.findFirst({
+    const activeTrips = await prisma.trip.findMany({
       where: {
         driverId,
         status: { in: ['driver_assigned', 'driver_arrived', 'in_progress'] },
       },
-      orderBy: { createdAt: 'desc' },
-    }).catch(() => null);
+    }).catch(() => []);
 
-    if (activeTrip) {
-      ioInstance.to(`trip:${activeTrip.id}`).emit('driver:moved', { lat, lng });
+    for (const trip of activeTrips) {
+      ioInstance.to(`trip:${trip.id}`).emit('driver:moved', { lat, lng });
     }
   }
 
@@ -683,15 +682,55 @@ async function findAndNotifyDriver(
   if (!search) return;
 
   // Obtener conductores activos no notificados aún
-  const availableDrivers = Array.from(onlineDrivers.entries())
-    .filter(([dId]) => !search.driversNotified.has(dId))
-    .map(([dId, data]) => ({
-      driverId: dId,
-      socketId: data.socketId,
-      distance: calculateDistance(originLat, originLng, data.lat, data.lng),
-      lat: data.lat,
-      lng: data.lng,
-    }))
+  const onlineDriversList = Array.from(onlineDrivers.entries()).filter(([dId]) => !search.driversNotified.has(dId));
+  const availableDriversWithCheck = await Promise.all(
+    onlineDriversList.map(async ([dId, data]) => {
+      const activeTrips = await prisma.trip.findMany({
+        where: {
+          driverId: dId,
+          status: { in: ['driver_assigned', 'driver_arrived', 'in_progress'] }
+        }
+      }).catch(() => []);
+
+      if (activeTrips.length === 0) {
+        return {
+          driverId: dId,
+          socketId: data.socketId,
+          distance: calculateDistance(originLat, originLng, data.lat, data.lng),
+          lat: data.lat,
+          lng: data.lng,
+          eligible: true
+        };
+      }
+
+      if (activeTrips.length === 1 && activeTrips[0].status === 'in_progress') {
+        const currentTrip = activeTrips[0];
+        const distToDest = calculateDistance(data.lat, data.lng, currentTrip.destLat, currentTrip.destLng);
+        if (distToDest <= 1.5) {
+          return {
+            driverId: dId,
+            socketId: data.socketId,
+            distance: calculateDistance(originLat, originLng, data.lat, data.lng),
+            lat: data.lat,
+            lng: data.lng,
+            eligible: true
+          };
+        }
+      }
+
+      return {
+        driverId: dId,
+        socketId: data.socketId,
+        distance: calculateDistance(originLat, originLng, data.lat, data.lng),
+        lat: data.lat,
+        lng: data.lng,
+        eligible: false
+      };
+    })
+  );
+
+  const availableDrivers = availableDriversWithCheck
+    .filter(d => d.eligible)
     .sort((a, b) => a.distance - b.distance);
 
   console.log(`[Socket] Conductores disponibles filtrados: ${availableDrivers.length}`);
