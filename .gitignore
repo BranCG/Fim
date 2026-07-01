@@ -20,6 +20,10 @@ build/
 .env.production.local
 .env*.local
 
+# Secret JSON Credentials
+firebase-service-account.json
+google-services.json
+
 # SQLite local databases
 *.db
 *.db-journal

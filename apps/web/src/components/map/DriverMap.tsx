@@ -6,10 +6,11 @@ interface Props {
   driverPos: { lat: number; lng: number };
   passengerPos: { lat: number; lng: number } | null;
   destPos: { lat: number; lng: number } | null;
+  stops?: { lat: number; lng: number }[];
   centerTrigger?: number;
 }
 
-export default function DriverMap({ driverPos, passengerPos, destPos, centerTrigger }: Props) {
+export default function DriverMap({ driverPos, passengerPos, destPos, stops = [], centerTrigger }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const mapRef = useRef<any>(null);
@@ -24,11 +25,15 @@ export default function DriverMap({ driverPos, passengerPos, destPos, centerTrig
   const passengerMarkerRef = useRef<any>(null);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const destMarkerRef = useRef<any>(null);
+  const stopsMarkersRef = useRef<any[]>([]);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const routeLineRef = useRef<any>(null);
+  const routeCoordinatesRef = useRef<{lat: number, lng: number}[]>([]);
   const currentRouteEndpoints = useRef<string>('');
   const hasFittedBounds = useRef<string>('');
   const currentAngleRef = useRef<number>(0);
+  const animationFrameRef = useRef<number | null>(null);
+  const lastUpdateTimestampRef = useRef<number>(performance.now());
 
   // Inicializar el mapa una sola vez
   useEffect(() => {
@@ -55,12 +60,18 @@ export default function DriverMap({ driverPos, passengerPos, destPos, centerTrig
         attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors © <a href="https://carto.com/attributions">CARTO</a>',
         maxZoom: 20,
         subdomains: 'abcd',
+        keepBuffer: 4,
+        updateWhenZooming: false,
+        updateWhenIdle: true
       }).addTo(map);
 
       L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_only_labels/{z}/{x}/{y}{r}.png', {
         maxZoom: 20,
         subdomains: 'abcd',
         className: 'map-labels-layer',
+        keepBuffer: 4,
+        updateWhenZooming: false,
+        updateWhenIdle: true
       }).addTo(map);
 
       setTimeout(() => map.invalidateSize(true), 200);
@@ -74,6 +85,7 @@ export default function DriverMap({ driverPos, passengerPos, destPos, centerTrig
         mapRef.current.remove();
         mapRef.current = null;
       }
+      stopsMarkersRef.current = [];
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -86,6 +98,65 @@ export default function DriverMap({ driverPos, passengerPos, destPos, centerTrig
     const map = mapRef.current;
 
     // Helper to generate custom divIcon with correct rotation
+    
+    // --- Helper matemático para "Snap to Route" ---
+    // Usamos Haversine para calcular distancia real en metros
+    const getDistanceMeters = (lat1: number, lng1: number, lat2: number, lng2: number) => {
+      const R = 6371e3; // Radio de la Tierra en metros
+      const φ1 = lat1 * Math.PI/180;
+      const φ2 = lat2 * Math.PI/180;
+      const Δφ = (lat2-lat1) * Math.PI/180;
+      const Δλ = (lng2-lng1) * Math.PI/180;
+      const a = Math.sin(Δφ/2) * Math.sin(Δφ/2) +
+                Math.cos(φ1) * Math.cos(φ2) *
+                Math.sin(Δλ/2) * Math.sin(Δλ/2);
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+      return R * c;
+    };
+
+    const getClosestPointOnPath = (point: {lat: number, lng: number}, path: {lat: number, lng: number}[]) => {
+      if (!path || path.length < 2) return { point, angle: 0, distance: 0 };
+      let minDist = Infinity;
+      let closestPoint = point;
+      let closestAngle = 0;
+
+      const dist2 = (p1: any, p2: any) => {
+        const dy = (p2.lat - p1.lat);
+        const dx = (p2.lng - p1.lng) * Math.cos(p1.lat * Math.PI / 180);
+        return dx*dx + dy*dy;
+      };
+
+      for (let i = 0; i < path.length - 1; i++) {
+        const A = path[i];
+        const B = path[i+1];
+        
+        const dyAB = B.lat - A.lat;
+        const dxAB = (B.lng - A.lng) * Math.cos(A.lat * Math.PI / 180);
+        const lenAB2 = dxAB*dxAB + dyAB*dyAB;
+        
+        let t = 0;
+        if (lenAB2 > 0) {
+          const dyAP = point.lat - A.lat;
+          const dxAP = (point.lng - A.lng) * Math.cos(A.lat * Math.PI / 180);
+          t = (dxAP * dxAB + dyAP * dyAB) / lenAB2;
+          t = Math.max(0, Math.min(1, t));
+        }
+        
+        const projLat = A.lat + t * dyAB;
+        const projLng = A.lng + (t * dxAB) / (Math.cos(A.lat * Math.PI / 180) || 1);
+        
+        const d = dist2(point, { lat: projLat, lng: projLng });
+        if (d < minDist) {
+          minDist = d;
+          closestPoint = { lat: projLat, lng: projLng };
+          closestAngle = Math.atan2(dxAB, dyAB) * (180 / Math.PI);
+        }
+      }
+      
+      const distanceToRoute = getDistanceMeters(point.lat, point.lng, closestPoint.lat, closestPoint.lng);
+      return { point: closestPoint, angle: closestAngle, distance: distanceToRoute };
+    };
+
     const getDriverIcon = (angle: number) => {
       return L.divIcon({
         className: 'transparent-icon',
@@ -126,29 +197,65 @@ export default function DriverMap({ driverPos, passengerPos, destPos, centerTrig
       });
     };
 
-    // ── Interpolación para movimiento fluido ──────────────────
-    const animateMarker = (marker: any, start: { lat: number; lng: number }, end: { lat: number; lng: number }, duration = 1200) => {
-      if (marker._animId) {
-        cancelAnimationFrame(marker._animId);
+    // ── Interpolación para movimiento fluido dinámico ──────────────────
+    const animateMarker = (marker: any, targetPos: { lat: number; lng: number }) => {
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
       }
-      const startTime = performance.now();
       
-      const dLng = end.lng - start.lng;
-      const dLat = end.lat - start.lat;
+      const now = performance.now();
+      let dt = now - lastUpdateTimestampRef.current;
+      lastUpdateTimestampRef.current = now;
+      
+      // Limitar dt para evitar saltos locos si la app estuvo en background
+      if (dt < 500 || dt > 10000) dt = 2000;
+      
+      const startPos = marker.getLatLng();
+      let snappedTarget = targetPos;
+      let targetAngle = currentAngleRef.current;
+      let didSnap = false;
+      
+      // Snap to route if we have a path
+      if (routeCoordinatesRef.current.length > 0) {
+        const snap = getClosestPointOnPath(targetPos, routeCoordinatesRef.current);
+        
+        // SÓLO HACER SNAP SI ESTÁ A MENOS DE 35 METROS (Smart Map Matching)
+        // Si está a más de 35 metros, el conductor probablemente tomó un atajo o desvío,
+        // no debemos "teletransportarlo" magnéticamente hacia la ruta antigua.
+        if (snap.distance < 35) {
+          snappedTarget = snap.point;
+          targetAngle = snap.angle;
+          didSnap = true;
+        }
+      }
+
+      const dLng = snappedTarget.lng - startPos.lng;
+      const dLat = snappedTarget.lat - startPos.lat;
+      
       let angle = currentAngleRef.current;
       const hasMovement = Math.abs(dLng) > 1e-6 || Math.abs(dLat) > 1e-6;
       if (hasMovement) {
-        angle = Math.atan2(dLng, dLat) * (180 / Math.PI);
+        // Usa el ángulo de la calle si hicimos snap, si no, usa el vector GPS directo
+        // Filtro de amortiguación para el ángulo (Smooth heading)
+        let rawAngle = didSnap ? targetAngle : (Math.atan2(dLng, dLat) * (180 / Math.PI));
+        
+        // Evitar que el coche dé una vuelta de 360° al cambiar de -179 a 179
+        const diff = ((rawAngle - currentAngleRef.current + 540) % 360) - 180;
+        angle = currentAngleRef.current + diff;
       }
 
-      const step = (now: number) => {
-        const elapsed = now - startTime;
-        const progress = Math.min(elapsed / duration, 1);
+      const startTime = performance.now();
+      
+      const step = (timestamp: number) => {
+        const elapsed = timestamp - startTime;
+        // Extrapolación suave hasta 1.1x el tiempo esperado (Dead Reckoning limitado para evitar patinazos)
+        const progress = Math.min(elapsed / dt, 1.1);
         
-        // Easing OutQuad
-        const easeProgress = progress * (2 - progress); 
-        const currentLat = start.lat + (end.lat - start.lat) * easeProgress;
-        const currentLng = start.lng + (end.lng - start.lng) * easeProgress;
+        // Suavizado lineal constante para movimiento continuo sin acelerones irreales
+        const easeProgress = progress; 
+        
+        const currentLat = startPos.lat + dLat * easeProgress;
+        const currentLng = startPos.lng + dLng * easeProgress;
         
         marker.setLatLng([currentLat, currentLng]);
 
@@ -158,30 +265,32 @@ export default function DriverMap({ driverPos, passengerPos, destPos, centerTrig
             const svg = element.querySelector('svg');
             if (svg) {
               svg.style.transform = `rotate(${angle}deg)`;
-              svg.style.transition = 'transform 0.3s ease';
+              svg.style.transition = 'transform 0.3s linear';
             }
           }
         }
 
-        if (progress < 1) {
-          marker._animId = requestAnimationFrame(step);
+        if (progress < 1.1) {
+          animationFrameRef.current = requestAnimationFrame(step);
         } else if (hasMovement) {
           currentAngleRef.current = angle;
           marker.setIcon(getDriverIcon(angle));
         }
       };
-      marker._animId = requestAnimationFrame(step);
+      
+      animationFrameRef.current = requestAnimationFrame(step);
     };
 
-    // ── 1. Marcador Conductor (Con interpolación suave) ───────────────────
+    // ── 1. Marcador Conductor (Con interpolación suave dinámica) ───────────────
     if (!driverMarkerRef.current) {
       const driverIcon = getDriverIcon(currentAngleRef.current);
       driverMarkerRef.current = L.marker([driverPos.lat, driverPos.lng], { icon: driverIcon }).addTo(map);
       driverMarkerRef.current.bindTooltip('Tu posición', { permanent: false, direction: 'top', className: 'fim-tooltip' });
+      lastUpdateTimestampRef.current = performance.now();
     } else {
       const prevPos = driverMarkerRef.current.getLatLng();
       if (prevPos.lat !== driverPos.lat || prevPos.lng !== driverPos.lng) {
-        animateMarker(driverMarkerRef.current, prevPos, driverPos, 1200);
+        animateMarker(driverMarkerRef.current, driverPos);
       }
     }
 
@@ -238,6 +347,34 @@ export default function DriverMap({ driverPos, passengerPos, destPos, centerTrig
       destMarkerRef.current = null;
     }
 
+    // ── 3.5 Marcadores Paradas ────────────────────────────────────────────────
+    if (destPos && stops && stops.length > 0) {
+      stops.forEach((stop, idx) => {
+        if (!stopsMarkersRef.current[idx]) {
+           const stopIcon = L.divIcon({
+              className: 'transparent-icon',
+              html: `<div style="background:#FFA500;width:14px;height:14px;border-radius:50%;border:2px solid white;box-shadow:0 0 5px rgba(255,165,0,0.6)"></div>`,
+              iconSize: [14, 14],
+              iconAnchor: [7, 7]
+           });
+           const m = L.marker([stop.lat, stop.lng], { icon: stopIcon }).addTo(map);
+           m.bindTooltip(`Parada ${idx+1}`, { permanent: false, direction: 'top', className: 'fim-tooltip' });
+           stopsMarkersRef.current[idx] = m;
+        } else {
+           stopsMarkersRef.current[idx].setLatLng([stop.lat, stop.lng]);
+        }
+      });
+      while (stopsMarkersRef.current.length > stops.length) {
+         const m = stopsMarkersRef.current.pop();
+         if (m) m.remove();
+      }
+    } else {
+      while (stopsMarkersRef.current.length > 0) {
+         const m = stopsMarkersRef.current.pop();
+         if (m) m.remove();
+      }
+    }
+
     // ── 4. Ruta Dinámica OSRM ─────────────────────────────────────────────
     // Origen de la ruta: conductor (redondeado a 3 decimales para evitar recreaciones y saltos continuos)
     const activeRouteTarget = passengerPos ? passengerPos : destPos;
@@ -256,29 +393,70 @@ export default function DriverMap({ driverPos, passengerPos, destPos, centerTrig
         }
 
         const fetchRoute = async () => {
-          const color = passengerPos ? '#00E5A0' : '#FF4560'; // Verde para buscar al pasajero, rojo para ir al destino
+          const points = [{ lat: driverPos.lat, lng: driverPos.lng }];
+          if (!passengerPos && stops && stops.length > 0 && activeRouteTarget === destPos) {
+            points.push(...stops);
+          }
+          points.push({ lat: activeRouteTarget.lat, lng: activeRouteTarget.lng });
+
           try {
-            const res = await fetch(`https://router.project-osrm.org/route/v1/driving/${driverPos.lng},${driverPos.lat};${activeRouteTarget.lng},${activeRouteTarget.lat}?overview=full&geometries=geojson`);
-            const data = await res.json();
+            const promises = [];
+            for (let i = 0; i < points.length - 1; i++) {
+              const wp = `${points[i].lng},${points[i].lat};${points[i+1].lng},${points[i+1].lat}`;
+              promises.push(fetch(`https://router.project-osrm.org/route/v1/driving/${wp}?overview=full&geometries=geojson`).then(res => res.json()));
+            }
+            const results = await Promise.all(promises);
             
             if (!mapRef.current) return;
             if (routeLineRef.current) { routeLineRef.current.remove(); }
 
-            if (data.routes && data.routes[0]) {
-              const route = L.geoJSON(data.routes[0].geometry, {
-                style: { color: color, weight: 5, opacity: 0.85, lineCap: 'round', lineJoin: 'round' }
-              }).addTo(map);
-              routeLineRef.current = route;
-            } else {
-              throw new Error('Sin ruta');
-            }
+            const routeGroup = L.featureGroup().addTo(map);
+            routeLineRef.current = routeGroup;
+            let hasRoute = false;
+            let newPath: {lat: number, lng: number}[] = [];
+
+            results.forEach((data, idx) => {
+              if (data.routes && data.routes[0] && data.routes[0].geometry) {
+                 const coords = data.routes[0].geometry.coordinates; // [lng, lat]
+                 if (coords) {
+                   newPath.push(...coords.map((c: any) => ({ lat: c[1], lng: c[0] })));
+                 }
+              }
+              if (data.routes && data.routes[0]) {
+                hasRoute = true;
+                const isLast = idx === results.length - 1;
+                let color = passengerPos ? '#00E5A0' : (isLast ? '#FF4560' : '#FFA500');
+                const line = L.geoJSON(data.routes[0].geometry, {
+                  style: { className: 'animated-route-line', color: color, weight: 5, opacity: 0.85, lineCap: 'round', lineJoin: 'round' }
+                }).addTo(routeGroup);
+                
+                setTimeout(() => {
+                  line.eachLayer((layer: any) => {
+                    if (layer._path && layer._path.getTotalLength) {
+                      const length = layer._path.getTotalLength();
+                      layer._path.style.strokeDasharray = `${length} ${length}`;
+                      layer._path.style.strokeDashoffset = `${length}`;
+                      layer._path.getBoundingClientRect();
+                      layer._path.style.transition = 'stroke-dashoffset 1.8s ease-out';
+                      layer._path.style.strokeDashoffset = '0';
+                    }
+                  });
+                }, 50);
+              }
+            });
+            routeCoordinatesRef.current = newPath;
+            if (!hasRoute) throw new Error('Sin ruta');
           } catch (e) {
             if (!mapRef.current) return;
-            const route = L.polyline(
-              [[driverPos.lat, driverPos.lng], [activeRouteTarget.lat, activeRouteTarget.lng]],
-              { color: color, weight: 4, opacity: 0.85, dashArray: '10 6', lineCap: 'round' }
-            ).addTo(map);
-            routeLineRef.current = route;
+            if (routeLineRef.current) { routeLineRef.current.remove(); }
+            const routeGroup = L.featureGroup().addTo(map);
+            routeLineRef.current = routeGroup;
+            routeCoordinatesRef.current = points; // fallback a línea recta
+            for (let i = 0; i < points.length - 1; i++) {
+              const isLast = i === points.length - 1;
+              let color = passengerPos ? '#00E5A0' : (isLast ? '#FF4560' : '#FFA500');
+              L.polyline([[points[i].lat, points[i].lng], [points[i+1].lat, points[i+1].lng]], { color: color, weight: 4, opacity: 0.85, dashArray: '10 6', lineCap: 'round' }).addTo(routeGroup);
+            }
           }
 
           // Ajustar vista del mapa una sola vez por fase para no desorientar con zooms repetidos
@@ -300,6 +478,7 @@ export default function DriverMap({ driverPos, passengerPos, destPos, centerTrig
       // Limpiar estados de ruta
       currentRouteEndpoints.current = '';
       hasFittedBounds.current = '';
+      routeCoordinatesRef.current = [];
       if (routeLineRef.current) {
         routeLineRef.current.remove();
         routeLineRef.current = null;

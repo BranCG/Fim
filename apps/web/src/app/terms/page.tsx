@@ -75,8 +75,19 @@ export default function TermsPage() {
           <div>
             <h2 style={{ color: 'var(--accent)', marginBottom: '12px' }}>7. Soporte y Contacto Oficial</h2>
             <p>
-              Ante cualquier duda, reclamo o reporte de seguridad, el canal oficial y dedicado de comunicación de FIM es nuestro correo electrónico de soporte: <strong>soporte@fim.cl</strong>. Toda comunicación enviada a esta casilla será atendida a la brevedad por nuestro equipo de atención y auditoría de la plataforma.
+              Ante cualquier duda, reclamo o reporte de seguridad, el canal oficial y dedicado de comunicación de FIM es nuestro correo electrónico de soporte: <strong>contacto@fimchile.cl</strong>. Toda comunicación enviada a esta casilla será atendida a la brevedad por nuestro equipo de atención y auditoría de la plataforma.
             </p>
+          </div>
+
+          <div>
+            <h2 style={{ color: 'var(--accent)', marginBottom: '12px' }}>8. Eliminación de Cuentas, Retención de Datos y Prevención de Abusos</h2>
+            <p>
+              FIM está comprometido con la seguridad y la integridad de su ecosistema:
+            </p>
+            <ul style={{ paddingLeft: '20px', margin: '12px 0', display: 'flex', flexDirection: 'column', gap: '8px', listStyleType: 'disc' }}>
+              <li><strong>Retención de Datos por Seguridad:</strong> Cuando un usuario (pasajero o conductor) solicita la eliminación de su cuenta, la plataforma ejecuta una "eliminación lógica". Esto desactiva el acceso a la cuenta de forma permanente, pero FIM retiene los registros de identidad, historial de viajes y reportes de seguridad en sus bases de datos internas por un periodo de tiempo conforme a la ley. Esta medida tiene como propósito facilitar posibles investigaciones legales o policiales frente a delitos o incidentes de seguridad ocurridos durante el uso de la app.</li>
+              <li><strong>Abuso de Promociones y Periodos de Prueba:</strong> Las promociones, como los días de prueba gratuita para conductores, son de un único uso por persona, RUT y vehículo. FIM prohíbe terminantemente la práctica de eliminar una cuenta y crear otra con los mismos datos para beneficiarse repetidamente de dichas promociones. FIM se reserva el derecho absoluto e inapelable de deshabilitar, bloquear permanentemente o eliminar cuentas de usuarios que incurran en cualquier tipo de fraude, abuso de promociones o intento de evasión de pagos de membresía.</li>
+            </ul>
           </div>
         </section>
 

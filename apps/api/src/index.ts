@@ -2,6 +2,7 @@ import express from 'express';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
 import cors from 'cors';
+import helmet from 'helmet';
 import dotenv from 'dotenv';
 import path from 'path';
 
@@ -14,6 +15,9 @@ import tripRoutes from './routes/trips';
 import adminRoutes from './routes/admin';
 import uploadRoutes from './routes/uploads';
 import paymentRoutes from './routes/payments.routes';
+import configRoutes from './routes/config';
+import agentRoutes from './routes/agent';
+import financeRoutes from './routes/finances';
 
 // Socket handler
 import { setupSocketHandlers } from './socket/handlers';
@@ -21,24 +25,36 @@ import { setupSocketHandlers } from './socket/handlers';
 const app = express();
 const httpServer = createServer(app);
 
-// ─── CORS configuration for local network testing ──────────────────────────
+// ─── CORS configuration ───────────────────────────────────────────────────
 const corsOptions = {
   origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
+    // 1. Siempre permitir peticiones sin origen (Nativas Móviles / Postman / Servidor a Servidor)
     if (!origin) return callback(null, true);
-    // Allow http:// and capacitor:// origins for local dev subnets
-    const isLocal = /^(http|capacitor):\/\/(localhost|127\.0\.0\.1|10\.\d+\.\d+\.\d+|192\.168\.\d+\.\d+|172\.(1[6-9]|2\d|3[0-1])\.\d+\.\d+)(:\d+)?$/.test(origin);
-    // Allow Vercel deployments (production/preview)
-    const isVercel = /\.vercel\.app$/.test(origin);
     
-    // Check if it matches CLIENT_URL or ADMIN_URL from env
     const clientUrl = process.env.CLIENT_URL;
     const adminUrl = process.env.ADMIN_URL;
     const matchesEnv = (clientUrl && origin === clientUrl) || (adminUrl && origin === adminUrl);
+
+    // 2. Si es Producción, ser muy estricto
+    if (process.env.NODE_ENV === 'production') {
+      // Las apps híbridas (Capacitor/Ionic) en móviles a veces envían estos origenes
+      const isMobileApp = origin === 'capacitor://localhost' || origin === 'http://localhost';
+      
+      if (matchesEnv || isMobileApp) {
+        callback(null, true);
+      } else {
+        callback(new Error(`Origen no permitido por CORS en Producción: ${origin}`));
+      }
+      return;
+    }
+
+    // 3. Si es Desarrollo (Local), ser más flexible
+    const isLocal = /^(http|capacitor):\/\/(localhost|127\.0\.0\.1|10\.\d+\.\d+\.\d+|192\.168\.\d+\.\d+|172\.(1[6-9]|2\d|3[0-1])\.\d+\.\d+)(:\d+)?$/.test(origin);
     
-    if (isLocal || isVercel || matchesEnv) {
+    if (isLocal || matchesEnv) {
       callback(null, true);
     } else {
-      callback(new Error(`Not allowed by CORS: ${origin}`));
+      callback(new Error(`Origen no permitido por CORS: ${origin}`));
     }
   },
   credentials: true,
@@ -57,6 +73,10 @@ app.set('io', io);
 import fs from 'fs';
 
 // ─── Middleware ────────────────────────────────────────────────────────────
+app.use(helmet({
+  crossOriginResourcePolicy: { policy: "cross-origin" } // Permite que tus imágenes en /uploads carguen en tu app
+}));
+
 // Logger middleware to write requests to a file for mobile debugging
 app.use((req, res, next) => {
   const logFile = path.join(__dirname, '..', 'api-debug.log');
@@ -77,9 +97,6 @@ app.use(cors(corsOptions));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-// Serve uploaded files
-import configRoutes from './routes/config';
-
 app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads')));
 
 // ─── Routes ───────────────────────────────────────────────────────────────
@@ -90,6 +107,8 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/payments', paymentRoutes);
 app.use('/api/config', configRoutes);
+app.use('/api/agent', agentRoutes);
+app.use('/api/finances', financeRoutes);
 
 // Health check
 app.get('/api/health', (_, res) => {
@@ -97,6 +116,12 @@ app.get('/api/health', (_, res) => {
 });
 // ─── Socket.io handlers ───────────────────────────────────────────────────
 setupSocketHandlers(io);
+
+// Global Error Handler to ensure all crashes are logged to Docker console
+app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
+  console.error('[Global Error Handler] Error capturado:', err);
+  res.status(400).json({ error: 'Error interno o de validación', details: err.message });
+});
 
 // ─── Start server ─────────────────────────────────────────────────────────
 const PORT = process.env.PORT || 3001;

@@ -1,26 +1,18 @@
 import axios from 'axios';
 
 const getApiUrl = () => {
-  if (typeof window !== 'undefined') {
-    // Under Capacitor on device/emulator, hostname is 'localhost' (Android) or empty, and port is empty (no dev server)
-    const isMobileApp = (window.location.hostname === 'localhost' || window.location.hostname === '') && window.location.port === '';
-    const isCapacitor = (window as any).Capacitor || window.location.origin.includes('capacitor://') || isMobileApp;
-    if (isCapacitor) {
-      return 'https://fim-api.duckdns.org';
-    }
+  // 1. Usar variable de entorno si existe (Next.js lo inyecta al compilar)
+  if (process.env.NEXT_PUBLIC_API_URL) {
+    return process.env.NEXT_PUBLIC_API_URL;
   }
-
-  if (process.env.NEXT_PUBLIC_API_URL) return process.env.NEXT_PUBLIC_API_URL;
   
-  if (typeof window !== 'undefined') {
-    // If we are on localhost in a web browser, use local API
-    if (window.location.hostname === 'localhost') {
-      return 'http://localhost:3001';
-    }
-    
-    return 'https://fim-api.duckdns.org';
+  // 2. Si estamos en desarrollo local en la web
+  if (typeof window !== 'undefined' && window.location.hostname === 'localhost' && window.location.port !== '') {
+    return 'http://localhost:3001';
   }
-  return 'https://fim-api.duckdns.org';
+  
+  // 3. Fallback final al dominio oficial de producción
+  return 'https://api.fimchile.cl';
 };
 
 export const API_URL = getApiUrl();
@@ -99,7 +91,6 @@ export async function uploadFile(file: File): Promise<string> {
 
   const res = await axios.post(`${API_URL}/api/upload/single`, formData, {
     headers: {
-      'Content-Type': 'multipart/form-data',
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
     },
   });
@@ -117,14 +108,7 @@ export const FIM_PRICING = {
 };
 
 export function roundCLP(amount: number): number {
-  const rounded = Math.round(amount);
-  const lastDigit = rounded % 10;
-  if (lastDigit >= 1 && lastDigit <= 5) {
-    return rounded - lastDigit;
-  } else if (lastDigit >= 6 && lastDigit <= 9) {
-    return rounded + (10 - lastDigit);
-  }
-  return rounded;
+  return Math.round(amount / 10) * 10;
 }
 
 export function calculatePrice(distanceKm: number, durationMin: number): number {

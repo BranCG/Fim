@@ -5,6 +5,7 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Script from 'next/script';
 import { createWorker } from 'tesseract.js';
+import imageCompression from 'browser-image-compression';
 import api, { saveSession, getSession, uploadFile } from '@/lib/api';
 import Logo from '@/components/Logo';
 
@@ -373,67 +374,35 @@ function RegisterForm() {
     setError('');
 
     try {
-      let ocrText = '';
-
-      const isOcrEligible = (docType === 'id-front' || docType === 'id-back' || docType === 'license-front' || docType === 'license-back') && file.type !== 'application/pdf';
-
-      if (isOcrEligible) {
+      let fileToUpload = file;
+      
+      // Comprimir imágenes antes de subir para evitar límites de Nginx y acelerar panel
+      if (file.type.startsWith('image/')) {
+        const options = {
+          maxSizeMB: 0.5, // 500KB máximo
+          maxWidthOrHeight: 1280,
+          useWebWorker: true,
+          initialQuality: 0.8
+        };
         try {
-          const ocrPromise = (async () => {
-            const worker = await createWorker('spa'); // Idioma español
-            const { data: { text } } = await worker.recognize(file);
-            await worker.terminate();
-            return (text || '').toUpperCase();
-          })();
-
-          const timeoutPromise = new Promise<string>((_, reject) =>
-            setTimeout(() => reject(new Error('OCR Timeout')), 3500)
-          );
-
-          // Omitir OCR en dispositivos móviles (Capacitor) para prevenir bloqueos por Web Workers/CDN
-          const isMobile = typeof window !== 'undefined' &&
-            ((window as any).Capacitor ||
-              window.location.origin.includes('capacitor://') ||
-              ((window.location.hostname === 'localhost' || window.location.hostname === '') && window.location.port === ''));
-
-          if (!isMobile) {
-            ocrText = await Promise.race([ocrPromise, timeoutPromise]);
-          } else {
-            console.log('Fim: Omitiendo validación OCR en plataforma móvil');
-          }
-        } catch (ocrErr) {
-          console.warn('La validación OCR falló, fue omitida o superó el tiempo límite:', ocrErr);
+          const compressedBlob = await imageCompression(file, options);
+          fileToUpload = new File([compressedBlob], file.name, {
+            type: compressedBlob.type,
+            lastModified: Date.now()
+          });
+        } catch (compressionError) {
+          console.warn('Error al comprimir, usando imagen original', compressionError);
         }
       }
 
-      if (ocrText) {
-        let keywords: string[] = [];
-        let docName = '';
-
-        if (docType === 'id-front' || docType === 'id-back') {
-          keywords = ['CHILE', 'RUN', 'REPUBLICA', 'CEDULA', 'IDENTIDAD', 'NACIMIENTO', 'DOCUMENTO', 'ESTADO CIVIL', 'CHL', 'INCHL', 'PATERNO', 'MATERNO', '<<<<'];
-          docName = 'Cédula de Identidad';
-        } else if (docType === 'license-front' || docType === 'license-back') {
-          keywords = ['LICENCIA', 'CONDUCTOR', 'CONDUCIR', 'CHILE', 'CLASE', 'MUNICIPALIDAD', 'OTORGADA', 'FECHA'];
-          docName = 'Licencia de Conducir';
-        }
-
-        if (keywords.length > 0) {
-          const foundKeywords = keywords.filter(k => ocrText.includes(k));
-          if (foundKeywords.length === 0) {
-            setError(`No pudimos detectar una ${docName} chilena en la imagen. Por favor, asegúrate de tomar una foto nítida, bien enfocada y con buena iluminación.`);
-            setter({ file: null, preview: null, url: null, loading: false });
-            return;
-          }
-        }
-      }
-
-      const url = await uploadFile(file);
-      setter({ file, preview, url, loading: false, isValidated: true });
-    } catch (err) {
+      const url = await uploadFile(fileToUpload);
+      setter({ file: fileToUpload, preview, url, loading: false, isValidated: true });
+    } catch (err: any) {
       console.error('Upload Error:', err);
       setter({ file, preview, url: null, loading: false });
-      setError('Error al subir la imagen al servidor. Por favor, intenta nuevamente.');
+      const errMsg = err.response?.data?.error || err.message || 'Error desconocido';
+      const statusCode = err.response?.status || 'Sin status';
+      setError(`Error al subir la imagen (${statusCode}): ${errMsg}. Por favor, intenta nuevamente.`);
     }
   }
 
@@ -479,7 +448,7 @@ function RegisterForm() {
                   <div className="spinner" style={{ marginBottom: '8px' }} />
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" /></svg>
-                    <span style={{ fontSize: '0.8rem', fontWeight: 600 }}>ESCANEANDO...</span>
+                    <span style={{ fontSize: '0.8rem', fontWeight: 600 }}>SUBIENDO...</span>
                   </div>
                 </div>
               )}
@@ -561,6 +530,35 @@ function RegisterForm() {
       setError('Debes aceptar los Términos y Condiciones.');
       setLoading(false);
       return;
+    }
+
+    if (birthDate) {
+      const birth = new Date(birthDate);
+      const age = new Date().getFullYear() - birth.getFullYear();
+      const m = new Date().getMonth() - birth.getMonth();
+      const actualAge = m < 0 || (m === 0 && new Date().getDate() < birth.getDate()) ? age - 1 : age;
+      if (actualAge < 18) {
+        setError('Debes ser mayor de 18 años para registrarte.');
+        setLoading(false);
+        return;
+      }
+    } else {
+      setError('Debes ingresar tu fecha de nacimiento.');
+      setLoading(false);
+      return;
+    }
+
+    if (!isGoogle && role === 'passenger') {
+      if (password.length < 6) {
+        setError('La contraseña debe tener al menos 6 caracteres.');
+        setLoading(false);
+        return;
+      }
+      if (!/[a-zA-Z]/.test(password) || !/[0-9]/.test(password)) {
+        setError('La contraseña debe contener al menos una letra y un número.');
+        setLoading(false);
+        return;
+      }
     }
     try {
       if (role === 'passenger') {
@@ -752,7 +750,7 @@ function RegisterForm() {
       if (!selfie.url) { setError(selfie.preview ? 'La foto Selfie con Cédula no pudo subirse. Inténtalo de nuevo.' : 'Por favor, sube la foto de tu Selfie con la Cédula.'); return; }
       if (!idFront.url) { setError(idFront.preview ? 'La foto frontal de tu Cédula no pudo subirse. Inténtalo de nuevo.' : 'Por favor, sube la foto frontal de tu Cédula.'); return; }
       if (!idBack.url) { setError(idBack.preview ? 'La foto posterior de tu Cédula no pudo subirse. Inténtalo de nuevo.' : 'Por favor, sube la foto posterior de tu Cédula.'); return; }
-      if (!backgroundDoc.url) { setError(backgroundDoc.preview ? 'El Certificado de Antecedentes no pudo subirse. Inténtalo de nuevo.' : 'Por favor, sube tu Certificado de Antecedentes.'); return; }
+      if (!backgroundDoc.url && role === 'driver') { setError(backgroundDoc.preview ? 'El Certificado de Antecedentes no pudo subirse. Inténtalo de nuevo.' : 'Por favor, sube tu Certificado de Antecedentes.'); return; }
     }
     if (step === 3 && role === 'driver') {
       if (licenseFront.loading || licenseBack.loading || vehiclePhoto.loading) { setError('Espera a que terminen de subirse todas las fotos.'); return; }
@@ -1053,13 +1051,13 @@ function RegisterForm() {
               </div>
               <div className="form-group">
                 <label className="form-label">Fecha de Nacimiento</label>
-                <input className="form-input" type="date" value={birthDate} onChange={e => setBirthDate(e.target.value)} style={{ colorScheme: 'dark' }} />
+                <input className="form-input" type="date" value={birthDate} max={new Date(new Date().setFullYear(new Date().getFullYear() - 18)).toISOString().split('T')[0]} onChange={e => setBirthDate(e.target.value)} style={{ colorScheme: 'dark' }} />
               </div>
               {!isGoogle && (
                 <>
                   <div className="form-group">
                     <label className="form-label">Contraseña</label>
-                    <input className="form-input" type="password" placeholder="Mínimo 6 caracteres" value={password} onChange={e => setPassword(e.target.value)} />
+                    <input className="form-input" type="password" placeholder="Mín. 6 caracteres (letras y números)" value={password} minLength={6} onChange={e => setPassword(e.target.value)} />
                   </div>
                   <div className="form-group">
                     <label className="form-label">Confirmar Contraseña</label>
@@ -1072,11 +1070,16 @@ function RegisterForm() {
 
           {step === 2 && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', textAlign: 'center', marginBottom: '8px' }}>Necesitamos validar tu identidad y antecedentes para continuar.</p>
+              <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', textAlign: 'center', marginBottom: '8px' }}>
+                Necesitamos validar tu identidad {role === 'driver' && 'y antecedentes '}para continuar.
+              </p>
               {renderUploadArea('Selfie con Cédula', selfie, setSelfie, 'selfie-file')}
               {renderUploadArea('Cédula (Frontal)', idFront, setIdFront, 'id-front')}
               {renderUploadArea('Cédula (Posterior)', idBack, setIdBack, 'id-back')}
-              {renderUploadArea('Certificado de Antecedentes', backgroundDoc, setBackgroundDoc, 'background-doc', undefined, 'image/*,application/pdf', false)}
+              
+              {role === 'driver' && (
+                <>
+                  {renderUploadArea('Certificado de Antecedentes', backgroundDoc, setBackgroundDoc, 'background-doc', undefined, 'image/*,application/pdf', false)}
               <div style={{
                 background: 'rgba(255, 255, 255, 0.03)',
                 border: '1px solid var(--border)',
@@ -1151,6 +1154,8 @@ function RegisterForm() {
                   </svg>
                 </a>
               </div>
+              </>
+              )}
             </div>
           )}
 

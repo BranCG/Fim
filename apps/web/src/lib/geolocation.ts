@@ -28,7 +28,8 @@ export async function getCurrentPosition(): Promise<{ lat: number; lng: number }
     }
     const pos = await Geolocation.getCurrentPosition({
       enableHighAccuracy: true,
-      timeout: 10000,
+      timeout: 15000,
+      maximumAge: 10000,
     });
     return {
       lat: pos.coords.latitude,
@@ -40,7 +41,7 @@ export async function getCurrentPosition(): Promise<{ lat: number; lng: number }
       navigator.geolocation.getCurrentPosition(
         (p) => resolve({ lat: p.coords.latitude, lng: p.coords.longitude }),
         (err) => reject(err),
-        { enableHighAccuracy: true, timeout: 10000 }
+        { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 }
       );
     });
   }
@@ -63,12 +64,17 @@ export async function watchPosition(
       {
         enableHighAccuracy: true,
         timeout: 10000,
-        maximumAge: 5000,
+        maximumAge: 0,
       },
       (position, err) => {
         if (err) {
           onError(err);
         } else if (position) {
+          // Filtro de ruido del GPS (Ignorar si el margen de error es > 40 metros)
+          if (position.coords.accuracy && position.coords.accuracy > 40) {
+            console.log(`[GPS] Ignorando coordenada ruidosa (precisión: ${position.coords.accuracy}m)`);
+            return;
+          }
           onSuccess({
             lat: position.coords.latitude,
             lng: position.coords.longitude,
@@ -86,9 +92,15 @@ export async function watchPosition(
       return () => {};
     }
     const watchId = navigator.geolocation.watchPosition(
-      (p) => onSuccess({ lat: p.coords.latitude, lng: p.coords.longitude }),
+      (p) => {
+        if (p.coords.accuracy && p.coords.accuracy > 40) {
+          console.log(`[GPS] Ignorando coordenada ruidosa en Web (precisión: ${p.coords.accuracy}m)`);
+          return;
+        }
+        onSuccess({ lat: p.coords.latitude, lng: p.coords.longitude });
+      },
       (err) => onError(err),
-      { enableHighAccuracy: true, maximumAge: 5000, timeout: 10000 }
+      { enableHighAccuracy: true, maximumAge: 0, timeout: 10000 }
     );
     return () => {
       navigator.geolocation.clearWatch(watchId);

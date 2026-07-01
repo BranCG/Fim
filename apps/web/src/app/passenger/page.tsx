@@ -32,6 +32,8 @@ type TripStatus =
 interface Trip {
   id: string;
   otpCode?: string;
+  dropoffOtpCode?: string;
+  acceptedAt?: string;
   estimatedPrice?: number;
 }
 
@@ -43,6 +45,7 @@ interface Driver {
   lastLat: number; lastLng: number;
   mercadoPagoLink: string | null;
   membershipPlan?: 'BLACK' | 'COMFORT' | 'FLEX';
+  topQualities?: string[];
 }
 
 // Santiago, Chile centro
@@ -243,12 +246,14 @@ export default function PassengerPage() {
   const [estimatedPrice, setEstimatedPrice] = useState(0);
   const [distanceKm, setDistanceKm] = useState(0);
   const [durationMin, setDurationMin] = useState(0);
+  const [isEstimatingPrice, setIsEstimatingPrice] = useState(false);
 
   // Búsqueda de direcciones
   const [searchQuery, setSearchQuery] = useState('');
   const [originQuery, setOriginQuery] = useState('');
   const [destQuery, setDestQuery] = useState('');
-  const [activeField, setActiveField] = useState<'origin' | 'dest' | null>(null);
+  const [stopsData, setStopsData] = useState<{ loc: Location | null; query: string }[]>([]);
+  const [activeField, setActiveField] = useState<'origin' | 'dest' | 'stop_0' | 'stop_1' | null>(null);
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [currentCommune, setCurrentCommune] = useState<string>('');
@@ -269,6 +274,7 @@ export default function PassengerPage() {
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [selectedCancelOption, setSelectedCancelOption] = useState('');
   const [customCancelReason, setCustomCancelReason] = useState('');
+  const isUsingLocalGpsRef = useRef(false);
 
   const [isMinimized, setIsMinimized] = useState(false);
 
@@ -295,8 +301,9 @@ export default function PassengerPage() {
   // Helper styles to support collapsing/minimizing bottom sheets smoothly
   const bottomSheetStyle = (customStyle: React.CSSProperties = {}): React.CSSProperties => ({
     transform: isMinimized ? 'translateY(calc(100% - 62px))' : 'translateY(0)',
-    transition: 'transform 0.35s cubic-bezier(0.4, 0, 0.2, 1)',
+    transition: 'transform 0.35s cubic-bezier(0.4, 0, 0.2, 1), height 0.35s ease',
     maxHeight: '85vh',
+    height: activeField ? '80vh' : 'auto',
     overflowY: 'auto',
     ...customStyle
   });
@@ -449,6 +456,62 @@ export default function PassengerPage() {
     statusRef.current = status;
   }, [status]);
 
+  // Auto-fill origin location on initial load if idle
+  useEffect(() => {
+    let mounted = true;
+    const autoFetchLoc = async () => {
+      try {
+        const { requestLocationPermissions, getCurrentPosition } = await import('@/lib/geolocation');
+        const hasPermission = await requestLocationPermissions();
+        if (!hasPermission) return; // Silent return for auto-fetch
+        
+        const pos = await getCurrentPosition();
+        if (!mounted || statusRef.current !== 'idle') return;
+        
+        setOrigin(prev => {
+          if (prev) return prev; 
+          return { lat: pos.lat, lng: pos.lng, address: 'Obteniendo dirección...' };
+        });
+        setOriginQuery(prev => prev ? prev : 'Obteniendo dirección...');
+        setCenterTrigger(prev => prev + 1);
+        
+        try {
+          const res = await api.get(`/trips/reverse-geocode?lat=${pos.lat}&lng=${pos.lng}`);
+          if (!mounted || statusRef.current !== 'idle') return;
+          if (res.data.address) {
+            setOrigin(prev => {
+              if (prev && prev.address !== 'Obteniendo dirección...' && prev.address !== 'Mi ubicación actual') return prev;
+              return { lat: pos.lat, lng: pos.lng, address: res.data.address };
+            });
+            setOriginQuery(prev => {
+              if (prev && prev !== 'Obteniendo dirección...' && prev !== 'Mi ubicación actual') return prev;
+              return res.data.address;
+            });
+          }
+        } catch (e) {
+          if (!mounted || statusRef.current !== 'idle') return;
+          setOrigin(prev => {
+            if (prev && prev.address !== 'Obteniendo dirección...') return prev;
+            return { lat: pos.lat, lng: pos.lng, address: 'Mi ubicación actual' };
+          });
+          setOriginQuery(prev => {
+            if (prev && prev !== 'Obteniendo dirección...') return prev;
+            return 'Mi ubicación actual';
+          });
+        }
+      } catch (err) {
+        console.error('Auto fetch location failed:', err);
+      }
+    };
+    
+    // Solo auto-detectar si el origen está vacío inicialmente
+    autoFetchLoc();
+    
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
   const checkActiveTrip = useCallback(async () => {
     try {
       const res = await api.get('/trips/active');
@@ -474,6 +537,9 @@ export default function PassengerPage() {
             lng: trip.destLng,
             address: trip.destAddress || 'Destino',
           });
+        }
+        if (trip.stops && Array.isArray(trip.stops)) {
+          setStopsData(trip.stops.map((s: any) => ({ loc: s, query: s.address || '' })));
         }
         if (trip.driver) {
           setDriver(trip.driver);
@@ -674,28 +740,30 @@ export default function PassengerPage() {
   useEffect(() => {
     if (origin && dest && (status === 'selecting_dest' || status === 'confirm')) {
       setError('');
+      setIsEstimatingPrice(true);
       api.post('/trips/estimate', {
         originLat: origin.lat,
         originLng: origin.lng,
         destLat: dest.lat,
-        destLng: dest.lng
+        destLng: dest.lng,
+        stops: stopsData.map(s => s.loc).filter(Boolean)
       })
       .then(res => {
         const { distanceKm, durationMin, estimatedPrice } = res.data;
         setEstimatedPrice(estimatedPrice);
         setDistanceKm(distanceKm);
         setDurationMin(durationMin);
-        if (status === 'selecting_dest') {
-          setStatus('confirm');
-        }
       })
       .catch(err => {
         console.error('Error al estimar viaje:', err);
         setError('Error al calcular el precio estimado.');
         setStatus('idle');
+      })
+      .finally(() => {
+        setIsEstimatingPrice(false);
       });
     }
-  }, [origin, dest, status]);
+  }, [origin, dest, status, stopsData]);
 
   // Autocomplete con Google Maps / Geoproxy
   useEffect(() => {
@@ -800,18 +868,24 @@ export default function PassengerPage() {
         setSearchResults([]);
         setActiveField(null);
         setSearchQuery('');
-        if (dest) {
-          setStatus('selecting_dest');
-        }
-      } else {
+      } else if (activeField === 'dest') {
         setDest(loc);
         setDestQuery(loc.address.split(',')[0]);
         setSearchResults([]);
         setActiveField(null);
         setSearchQuery('');
-        if (origin) {
-          setStatus('selecting_dest');
-        }
+      } else if (activeField && activeField.startsWith('stop_')) {
+        const idx = parseInt(activeField.split('_')[1], 10);
+        setStopsData(prev => {
+          const newStops = [...prev];
+          if (!newStops[idx]) newStops[idx] = { loc: null, query: '' };
+          newStops[idx].loc = loc;
+          newStops[idx].query = loc.address.split(',')[0];
+          return newStops;
+        });
+        setSearchResults([]);
+        setActiveField(null);
+        setSearchQuery('');
       }
     } catch (err) {
       console.error('Error selecting address:', err);
@@ -893,6 +967,10 @@ export default function PassengerPage() {
     });
 
     socket.on('driver:moved', ({ lat, lng }: { lat: number; lng: number }) => {
+      // Ignoramos la actualización por red si estamos usando el GPS local del pasajero (viaje en curso)
+      // para evitar saltos o jitter.
+      if (isUsingLocalGpsRef.current) return;
+      
       setDriverPos({ lat, lng });
     });
 
@@ -974,6 +1052,44 @@ export default function PassengerPage() {
     return `${parsed + 60}px`;
   };
 
+  // ── Seguir la posición del pasajero en viaje activo para navegación fluida ──
+  useEffect(() => {
+    let cleanupFn: (() => void) | undefined;
+    
+    if (status === 'in_progress') {
+      console.log('[GPS Local] Iniciando watchPosition local del pasajero...');
+      const startWatching = async () => {
+        try {
+          const { watchPosition } = await import('@/lib/geolocation');
+          cleanupFn = await watchPosition(
+            (pos) => {
+              isUsingLocalGpsRef.current = true;
+              // NOTA: Se eliminó setDriverPos aquí para que la ubicación del coche
+              // dependa EXCLUSIVAMENTE del GPS del conductor recibido por Socket (driver:moved).
+              // Esto evita que el icono salte hacia atrás si el GPS del pasajero tiene lag.
+            },
+            (err) => {
+              console.warn('[GPS Local] Passenger watchPosition error:', err);
+              isUsingLocalGpsRef.current = false;
+            }
+          );
+        } catch (e) {
+          console.error('[GPS Local] Error al iniciar watchPosition:', e);
+          isUsingLocalGpsRef.current = false;
+        }
+      };
+      startWatching();
+    }
+
+    return () => {
+      if (cleanupFn) {
+        console.log('[GPS Local] Deteniendo watchPosition.');
+        cleanupFn();
+      }
+      isUsingLocalGpsRef.current = false;
+    };
+  }, [status]);
+
   useEffect(() => {
     let timer: NodeJS.Timeout;
     if (showSafetyModal && safetyCountdown > 0 && !safetySent) {
@@ -1028,10 +1144,15 @@ export default function PassengerPage() {
 
     try {
       const res = await api.post('/trips/request', {
-        originLat: origin.lat, originLng: origin.lng, originAddress: origin.address,
-        destLat: dest.lat, destLng: dest.lng, destAddress: dest.address,
-        paymentMethod,
-        passengerCount,
+        originLat: origin.lat,
+        originLng: origin.lng,
+        originAddress: origin.address,
+        destLat: dest.lat,
+        destLng: dest.lng,
+        destAddress: dest.address,
+        paymentMethod: paymentMethod,
+        passengerCount: passengerCount,
+        stops: stopsData.map(s => s.loc).filter(Boolean)
       });
 
       const trip = res.data.trip;
@@ -1305,6 +1426,39 @@ export default function PassengerPage() {
       </div>
     );
   }
+  const renderSearchResults = (forField: string) => {
+    if (activeField !== forField || searchResults.length === 0) return null;
+    return (
+      <div className="search-results" style={{ 
+        position: 'absolute', 
+        top: 'calc(100% + 4px)', 
+        left: 0, 
+        right: 0, 
+        zIndex: 100, 
+        background: '#1A1A28', 
+        border: '1px solid var(--border)', 
+        borderRadius: '12px',
+        boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
+        maxHeight: '220px',
+        overflowY: 'auto'
+      }}>
+        {searchResults.map((item, idx) => {
+          const parts = item.description.split(',');
+          const title = parts[0].trim();
+          const subtitle = parts.slice(1).join(',').trim();
+          return (
+            <div key={idx} className="search-item" onClick={() => handleSelectAddress(item)} style={{ padding: '12px 16px', borderBottom: '1px solid var(--border)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <div className="search-item-icon" style={{ display: 'flex', alignItems: 'center', color: 'var(--accent)' }}><IconPin /></div>
+              <div className="search-item-text" style={{ flex: 1, overflow: 'hidden' }}>
+                <div className="search-item-title" style={{ fontWeight: 700, fontSize: '0.9rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{title}</div>
+                {subtitle && <div className="search-item-sub" style={{ fontSize: '0.75rem', color: 'var(--text-muted)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{subtitle}</div>}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    );
+  };
 
   return (
     <div className="app-container">
@@ -1469,6 +1623,7 @@ export default function PassengerPage() {
         <PassengerMap
           origin={origin}
           dest={dest}
+          stops={stopsData.map(s => s.loc).filter((loc): loc is Location => loc !== null)}
           driverPos={driverPos}
           centerTrigger={centerTrigger}
           nearbyDrivers={nearbyDrivers}
@@ -1481,7 +1636,7 @@ export default function PassengerPage() {
         {gpsError && (
           <div style={{
             position: 'absolute',
-            top: '16px',
+            top: '84px',
             left: '16px',
             right: '76px',
             background: 'rgba(239, 68, 68, 0.95)',
@@ -1496,7 +1651,7 @@ export default function PassengerPage() {
             alignItems: 'center',
             gap: '8px',
             boxShadow: 'var(--shadow-lg)',
-            zIndex: 999,
+            zIndex: 9999,
             animation: 'fadeIn 0.3s ease'
           }}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
@@ -1520,7 +1675,7 @@ export default function PassengerPage() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', position: 'relative' }}>
             
             {/* Input Origen */}
-            <div className="form-group" style={{ position: 'relative' }}>
+            <div className="form-group" style={{ position: 'relative', zIndex: activeField === 'origin' ? 200 : 10 }}>
               <div style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: 'var(--accent)', zIndex: 10, display: 'flex', alignItems: 'center' }}>
                 <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: 'var(--accent)', boxShadow: '0 0 8px var(--accent)' }}></div>
               </div>
@@ -1576,10 +1731,78 @@ export default function PassengerPage() {
                   </button>
                 )
               )}
+              {renderSearchResults('origin')}
             </div>
 
+            {/* Paradas intermedias */}
+            {stopsData.map((stop, idx) => (
+              <div key={`stop_${idx}`} className="form-group" style={{ position: 'relative', zIndex: activeField === `stop_${idx}` ? 200 : 9 - idx }}>
+                <div style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: '#FFA500', zIndex: 10, display: 'flex', alignItems: 'center' }}>
+                  <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#FFA500', boxShadow: '0 0 8px #FFA500' }}></div>
+                </div>
+                <input 
+                  className="form-input" 
+                  placeholder={`Parada ${idx + 1}`} 
+                  style={{ paddingLeft: '44px', paddingRight: '40px' }}
+                  value={stop.query}
+                  onFocus={() => {
+                    setActiveField(`stop_${idx}` as any);
+                    setSearchQuery(stop.query);
+                  }}
+                  onChange={(e) => {
+                    const newQuery = e.target.value;
+                    setStopsData(prev => {
+                      const newStops = [...prev];
+                      newStops[idx].query = newQuery;
+                      return newStops;
+                    });
+                    setSearchQuery(newQuery);
+                  }}
+                />
+                {isSearching && activeField === `stop_${idx}` ? (
+                  <div style={{ position: 'absolute', right: '16px', top: '50%', transform: 'translateY(-50%)' }}>
+                    <div className="spinner" style={{ width: '16px', height: '16px', borderWidth: '2px' }} />
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setStopsData(prev => prev.filter((_, i) => i !== idx));
+                      if (activeField === `stop_${idx}`) {
+                        setSearchQuery('');
+                        setActiveField(null);
+                      }
+                    }}
+                    style={{
+                      position: 'absolute',
+                      right: '12px',
+                      top: '50%',
+                      transform: 'translateY(-50%)',
+                      background: 'rgba(255, 255, 255, 0.08)',
+                      border: 'none',
+                      color: 'var(--text-secondary)',
+                      fontSize: '1rem',
+                      fontWeight: 'bold',
+                      borderRadius: '50%',
+                      width: '22px',
+                      height: '22px',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      zIndex: 15,
+                      transition: 'background 0.2s'
+                    }}
+                  >
+                    ×
+                  </button>
+                )}
+                {renderSearchResults(`stop_${idx}`)}
+              </div>
+            ))}
+
             {/* Input Destino */}
-            <div className="form-group" style={{ position: 'relative' }}>
+            <div className="form-group" style={{ position: 'relative', zIndex: activeField === 'dest' ? 200 : 5 }}>
               <div style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: 'var(--danger)', zIndex: 10, display: 'flex', alignItems: 'center' }}>
                 <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: 'var(--danger)', boxShadow: '0 0 8px var(--danger)' }}></div>
               </div>
@@ -1635,26 +1858,36 @@ export default function PassengerPage() {
                   </button>
                 )
               )}
+              {renderSearchResults('dest')}
             </div>
 
-            {/* Search Results */}
-            {searchResults.length > 0 && activeField && (
-              <div className="search-results" style={{ marginTop: '4px' }}>
-                {searchResults.map((item, idx) => {
-                  const parts = item.description.split(',');
-                  const title = parts[0].trim();
-                  const subtitle = parts.slice(1).join(',').trim();
-                  return (
-                    <div key={idx} className="search-item" onClick={() => handleSelectAddress(item)}>
-                      <div className="search-item-icon" style={{ display: 'flex', alignItems: 'center', color: 'var(--accent)' }}><IconPin /></div>
-                      <div className="search-item-text">
-                        <div className="search-item-title">{title}</div>
-                        {subtitle && <div className="search-item-sub">{subtitle}</div>}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
+            {/* Añadir Parada Button */}
+            {stopsData.length < 2 && (
+              <button 
+                type="button" 
+                onClick={() => setStopsData(prev => [...prev, { loc: null, query: '' }])}
+                style={{ alignSelf: 'flex-start', background: 'none', border: 'none', color: 'var(--accent)', fontSize: '0.85rem', fontWeight: 700, cursor: 'pointer', padding: '0 8px', marginTop: '-4px' }}
+              >
+                + Añadir Parada
+              </button>
+            )}
+
+            {/* Pedir Viaje Button */}
+            {origin && dest && (
+              <button 
+                type="button"
+                className="btn btn-primary btn-block btn-lg" 
+                style={{ marginTop: '8px' }}
+                onClick={() => {
+                  if (activeField) {
+                    setActiveField(null);
+                    setSearchQuery('');
+                  }
+                  setStatus('confirm');
+                }}
+              >
+                Pedir Viaje
+              </button>
             )}
           </div>
           
@@ -1892,7 +2125,11 @@ export default function PassengerPage() {
             </div>
             <div style={{ textAlign: 'right' }}>
               <div className="price-display">
-                {formatCLP(estimatedPrice)}
+                {isEstimatingPrice ? (
+                  <div className="spinner" style={{ width: '24px', height: '24px', borderWidth: '3px', borderColor: 'var(--accent)', borderTopColor: 'transparent' }} />
+                ) : (
+                  estimatedPrice ? formatCLP(estimatedPrice) : '$0'
+                )}
               </div>
             </div>
           </div>
@@ -1992,8 +2229,13 @@ export default function PassengerPage() {
             </div>
           </div>
 
-          <button className="btn btn-accent btn-block btn-lg" onClick={handleRequestTrip}>
-            Confirmar y pedir viaje
+          <button 
+            className="btn btn-accent btn-block btn-lg" 
+            onClick={handleRequestTrip}
+            disabled={isEstimatingPrice || !estimatedPrice}
+            style={{ opacity: (isEstimatingPrice || !estimatedPrice) ? 0.7 : 1 }}
+          >
+            {isEstimatingPrice ? 'Calculando...' : 'Confirmar y pedir viaje'}
           </button>
           <button 
             className="btn btn-secondary btn-block" 
@@ -2303,7 +2545,7 @@ export default function PassengerPage() {
                     display: 'inline-block'
                   }}>
                     <div style={{ fontSize: '2.5rem', fontWeight: 900, letterSpacing: '8px', color: 'var(--accent)', lineHeight: 1 }}>
-                      {currentTrip?.otpCode || '----'}
+                      {currentTrip?.dropoffOtpCode || '----'}
                     </div>
                   </div>
                   <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', margin: 0 }}>
@@ -2691,11 +2933,26 @@ export default function PassengerPage() {
             gap: '16px'
           }}>
             <h3 style={{ margin: 0, fontWeight: 900, fontSize: '1.25rem' }}>¿Por qué cancelas tu viaje?</h3>
-            <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--text-muted)' }}>
-              Por favor dinos el motivo de tu cancelación. Esto ayuda a mantener la transparencia y avisar al conductor.
-            </p>
-            
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            <div style={{ marginBottom: '20px' }}>
+                <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, color: 'var(--text-secondary)', marginBottom: '8px' }}>
+                  Motivo de cancelación:
+                </label>
+                {(status === 'driver_assigned' || status === 'driver_arrived') && (
+                  <div style={{
+                    background: 'rgba(255, 69, 96, 0.1)',
+                    border: '1px solid rgba(255, 69, 96, 0.2)',
+                    padding: '12px',
+                    borderRadius: '8px',
+                    marginBottom: '16px',
+                    fontSize: '0.8rem',
+                    color: 'var(--text-primary)'
+                  }}>
+                    <strong style={{ color: 'var(--danger)', display: 'block', marginBottom: '4px' }}>⚠️ Atención:</strong>
+                    Si han pasado más de 2 minutos desde que el conductor aceptó, cancelar ahora sumará una penalización. 
+                    Acumular 3 penalizaciones suspenderá tu cuenta.
+                  </div>
+                )}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
               {[
                 'El conductor demoró demasiado',
                 'Me equivoqué de destino',
@@ -2748,6 +3005,7 @@ export default function PassengerPage() {
                 }}
               />
             )}
+            </div>
 
             <div style={{ display: 'flex', gap: '12px', marginTop: '8px' }}>
               <button
@@ -3229,7 +3487,7 @@ export default function PassengerPage() {
             </p>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', position: 'relative' }}>
-              <div className="form-group" style={{ position: 'relative', margin: 0 }}>
+              <div className="form-group" style={{ position: 'relative', margin: 0, zIndex: 200 }}>
                 <input 
                   type="text" 
                   className="form-input" 

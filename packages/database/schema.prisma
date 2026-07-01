@@ -34,6 +34,9 @@ model User {
   trips            Trip[]    @relation("PassengerTrips")
   fcmToken         String?   @map("token_fcm")
   tokenVersion     Int       @default(0) @map("version_token")
+  isDeleted        Boolean   @default(false) @map("esta_eliminado")
+  status           String    @default("active") @map("estado")
+  cancellationCount Int      @default(0) @map("cantidad_cancelaciones")
 
   @@map("usuarios")
 }
@@ -97,6 +100,13 @@ model Driver {
   fcmToken            String?   @map("token_fcm")
   giftDaysPending     Int       @default(0) @map("dias_regalo_pendientes")
   tokenVersion        Int       @default(0) @map("version_token")
+  isDeleted           Boolean   @default(false) @map("esta_eliminado")
+  cancellationCount   Int       @default(0) @map("cantidad_cancelaciones")
+
+  // Fim Finanzas Config
+  fuelEfficiency      Float?    @default(12.0) @map("rendimiento_combustible")
+  fuelPrice           Int?      @default(1300) @map("precio_combustible")
+  netIncomeGoal       Int?      @default(1000000) @map("meta_ingreso_neto")
 
   @@map("conductores")
 }
@@ -111,6 +121,7 @@ model Trip {
   destLat         Float          @map("latitud_destino")
   destLng         Float          @map("longitud_destino")
   destAddress     String         @map("direccion_destino")
+  stops           Json?          @map("paradas")
   distanceKm      Float          @map("distancia_km")
   durationMin     Int            @map("duracion_min")
   estimatedPrice  Int            @map("precio_estimado")

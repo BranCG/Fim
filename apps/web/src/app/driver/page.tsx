@@ -9,6 +9,7 @@ import { sendLocalNotification, initializePushNotifications } from '@/lib/notifi
 
 const DriverMap = dynamic(() => import('@/components/map/DriverMap'), { ssr: false });
 import BiometricModal from '@/components/BiometricModal';
+import FinancesDashboard from '@/components/FinancesDashboard';
 
 type DriverStatus = 'pending' | 'approved' | 'active' | 'rejected' | 'suspended';
 
@@ -16,6 +17,7 @@ interface TripRequest {
   id: string;
   originLat: number; originLng: number; originAddress: string;
   destLat: number; destLng: number; destAddress: string;
+  stops?: any[];
   distanceKm: number; durationMin: number; estimatedPrice: number;
   paymentMethod: string;
   passenger: { id: string; name: string; phone: string };
@@ -198,6 +200,7 @@ export default function DriverPage() {
   const [session, setSession] = useState<any>(null);
   const [centerTrigger, setCenterTrigger] = useState(0);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState<'map' | 'finances'>('map');
 
   const formatDuration = (min: number) => {
     if (min < 60) return `${min} min aprox.`;
@@ -227,9 +230,12 @@ export default function DriverPage() {
   }, [isOnline, driver]);
   const [pos, setPos] = useState(SANTIAGO);
   const [tripRequest, setTripRequest] = useState<TripRequest | null>(null);
-  const [activeTrip, setActiveTrip] = useState<TripRequest | null>(null);
-  const [nextTrip, setNextTrip] = useState<TripRequest | null>(null);
-  const [tripPhase, setTripPhase] = useState<'idle' | 'going_to_passenger' | 'arrived' | 'in_progress'>('idle');
+  const [activeTrip, setActiveTrip] = useState<any>(null);
+  const [tripPhase, setTripPhase] = useState<'going_to_passenger' | 'arrived' | 'in_progress'>('going_to_passenger');
+  const [arrivedAt, setArrivedAt] = useState<number | null>(null);
+  const [showCancelModal, setShowCancelModal] = useState(false);
+  const [selectedCancelOption, setSelectedCancelOption] = useState('');
+  const [customCancelReason, setCustomCancelReason] = useState('');
   const [timer, setTimer] = useState(30);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -277,11 +283,6 @@ export default function DriverPage() {
   useEffect(() => {
     tripRequestRef.current = tripRequest;
   }, [tripRequest]);
-
-  const nextTripRef = useRef(nextTrip);
-  useEffect(() => {
-    nextTripRef.current = nextTrip;
-  }, [nextTrip]);
 
   const [passengerConfirmed, setPassengerConfirmed] = useState(false);
   const [showMpTutorial, setShowMpTutorial] = useState(false);
@@ -392,7 +393,7 @@ export default function DriverPage() {
 
   // Auto-close chat modal during trip in progress or idle
   useEffect(() => {
-    if (tripPhase === 'in_progress' || tripPhase === 'idle' || paymentRequested) {
+    if (tripPhase === 'in_progress' || paymentRequested) {
       setShowChat(false);
     }
   }, [tripPhase, paymentRequested]);
@@ -478,8 +479,7 @@ export default function DriverPage() {
 
   const resetTrip = useCallback(() => {
     setActiveTrip(null);
-    setNextTrip(null);
-    setTripPhase('idle');
+    setTripPhase('going_to_passenger');
     setPassengerConfirmed(false);
     setReceiptUrl(null);
     setPaymentRequested(false);
@@ -542,15 +542,6 @@ export default function DriverPage() {
           resetTrip();
         }
       }
-
-      if (res.data.nextTrip) {
-        const nextT = res.data.nextTrip;
-        setNextTrip(nextT);
-        const socket = connectSocket();
-        socket.emit('passenger:join-trip', { tripId: nextT.id });
-      } else {
-        setNextTrip(null);
-      }
     } catch (err) {
       console.error('Error fetching active trip in checkActiveTrip:', err);
     }
@@ -595,15 +586,13 @@ export default function DriverPage() {
 
   // Poll active trip state periodically as a fallback when a trip is active
   useEffect(() => {
-    if (tripPhase === 'idle') return;
-
     const intervalId = setInterval(() => {
       console.log('[Poll] Conductor: Sincronizando estado del viaje activo...');
       checkActiveTrip();
     }, 5000); // Check every 5 seconds
 
     return () => clearInterval(intervalId);
-  }, [tripPhase, checkActiveTrip]);
+  }, [checkActiveTrip]);
 
   // Cargar datos del conductor
   useEffect(() => {
@@ -819,16 +808,10 @@ export default function DriverPage() {
     });
 
     socket.on('trip:confirmed', ({ trip }: { trip: TripRequest }) => {
-      if (activeTripRef.current) {
-        setNextTrip(trip);
-        setTripRequest(null);
-        sendLocalNotification("¡Viaje en cola!", `Has aceptado un viaje consecutivo de ${trip.passenger.name}.`);
-      } else {
-        setActiveTrip(trip);
-        setTripPhase('going_to_passenger');
-        setTripRequest(null);
-        sendLocalNotification("¡Viaje Confirmado!", `Vas en camino a recoger a ${trip.passenger.name}.`);
-      }
+      setActiveTrip(trip);
+      setTripPhase('going_to_passenger');
+      setTripRequest(null);
+      sendLocalNotification("¡Viaje Confirmado!", `Vas en camino a recoger a ${trip.passenger.name}.`);
     });
 
     socket.on('trip:started', (data?: { trip?: any }) => {
@@ -863,7 +846,6 @@ export default function DriverPage() {
       console.log('[Socket] Viaje cancelado por pasajero', data);
       const activeTripId = activeTripRef.current?.id;
       const requestTripId = tripRequestRef.current?.id;
-      const queuedTripId = nextTripRef.current?.id;
 
       sendLocalNotification("Viaje Cancelado", `El pasajero canceló la solicitud: "${data.reason}".`);
 
@@ -872,30 +854,7 @@ export default function DriverPage() {
           reason: data.reason,
           wasAccepted: true
         });
-        const queuedTrip = nextTripRef.current;
-        if (queuedTrip) {
-          setActiveTrip(queuedTrip);
-          setTripPhase('going_to_passenger');
-          setPassengerConfirmed(false);
-          setReceiptUrl(null);
-          setPaymentRequested(false);
-          setCompletionOtp('');
-          setCompletionOtpVerified(false);
-          setChatMessages([]);
-          setShowChat(false);
-          setUnreadCount(0);
-          setShowNavModal(false);
-          setNextTrip(null);
-          socket.emit('passenger:join-trip', { tripId: queuedTrip.id });
-        } else {
-          resetTrip();
-        }
-      } else if (data.tripId && data.tripId === queuedTripId) {
-        setCancellationNotice({
-          reason: data.reason,
-          wasAccepted: true
-        });
-        setNextTrip(null);
+        resetTrip();
       } else if (data.tripId && data.tripId === requestTripId) {
         setCancellationNotice({
           reason: data.reason,
@@ -916,26 +875,9 @@ export default function DriverPage() {
           clearInterval(timerRef.current);
           timerRef.current = null;
         }
-        const queuedTrip = nextTripRef.current;
-        if (queuedTrip) {
-          setActiveTrip(queuedTrip);
-          setTripPhase('going_to_passenger');
-          setPassengerConfirmed(false);
-          setReceiptUrl(null);
-          setPaymentRequested(false);
-          setCompletionOtp('');
-          setCompletionOtpVerified(false);
-          setChatMessages([]);
-          setShowChat(false);
-          setUnreadCount(0);
-          setShowNavModal(false);
-          setNextTrip(null);
-          socket.emit('passenger:join-trip', { tripId: queuedTrip.id });
-        } else {
-          resetTrip();
-        }
+        resetTrip();
       } else {
-        console.log(`[Socket] Cancelación de viaje ${data.tripId} ignorada por no corresponder al viaje activo (${activeTripId}), solicitud (${requestTripId}) o en cola (${queuedTripId})`);
+        console.log(`[Socket] Cancelación de viaje ${data.tripId} ignorada por no corresponder al viaje activo (${activeTripId}) o solicitud (${requestTripId})`);
       }
     });
 
@@ -1039,6 +981,23 @@ export default function DriverPage() {
     const socket = connectSocket();
     socket.emit('driver:arrived', { tripId: activeTrip.id });
     setTripPhase('arrived');
+    setArrivedAt(Date.now());
+  };
+
+  const handleCancelTrip = async (reason: string) => {
+    if (!activeTrip) return;
+    try {
+      await api.post(`/trips/${activeTrip.id}/cancel`, { reason });
+      setTripPhase('going_to_passenger');
+      setActiveTrip(null);
+      setArrivedAt(null);
+      setShowCancelModal(false);
+      setSelectedCancelOption('');
+      setCustomCancelReason('');
+      showCustomAlert('Viaje cancelado', 'Información', 'info');
+    } catch (err: any) {
+      showCustomAlert(err.response?.data?.error || 'Error al cancelar', 'Error', 'error');
+    }
   };
 
   const startTrip = (code: string) => {
@@ -1084,26 +1043,7 @@ export default function DriverPage() {
     const tripPrice = activeTrip.estimatedPrice;
     setTotalEarnings(prev => (prev !== null ? prev + tripPrice : tripPrice));
 
-    const queuedTrip = nextTripRef.current;
-    if (queuedTrip) {
-      setActiveTrip(queuedTrip);
-      setTripPhase('going_to_passenger');
-      setPassengerConfirmed(false);
-      setReceiptUrl(null);
-      setPaymentRequested(false);
-      setCompletionOtp('');
-      setCompletionOtpVerified(false);
-      setChatMessages([]);
-      setShowChat(false);
-      setUnreadCount(0);
-      setShowNavModal(false);
-      setNextTrip(null);
-      
-      socket.emit('passenger:join-trip', { tripId: queuedTrip.id });
-      showCustomAlert(`Iniciando viaje en cola con ${queuedTrip.passenger.name}`, 'Viaje en Cola', 'success');
-    } else {
-      resetTrip();
-    }
+    resetTrip();
 
     // Refetch driver details and full trip list in background to sync with DB
     setTimeout(async () => {
@@ -1569,7 +1509,7 @@ export default function DriverPage() {
                 {driver.name}
               </span>
             )}
-            {driver?.membershipPlan && (
+            {activeTab !== 'finances' && driver?.membershipPlan && (
               <div
                 className={`seal-${driver.membershipPlan.toLowerCase()}`}
                 style={{
@@ -1610,7 +1550,7 @@ export default function DriverPage() {
                 )}
               </div>
             )}
-            {driver?.isPromoActive && (
+            {activeTab !== 'finances' && driver?.isPromoActive && (
               <div
                 onClick={handleFreePassClick}
                 style={{
@@ -1765,6 +1705,22 @@ export default function DriverPage() {
             {/* Dropdown menu */}
             {isMenuOpen && (
               <div className="header-menu-dropdown">
+                {activeTab === 'finances' ? (
+                  <button className="header-nav-btn" onClick={() => { setActiveTab('map'); setIsMenuOpen(false); }}>
+                    <div className="icon-circle">
+                      <IconCompass />
+                    </div>
+                    <span className="btn-label">Volver al Mapa</span>
+                  </button>
+                ) : (
+                  <button className="header-nav-btn" onClick={() => { setActiveTab('finances'); setIsMenuOpen(false); }}>
+                    <div className="icon-circle">
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2" /><line x1="8" y1="21" x2="16" y2="21" /><line x1="12" y1="17" x2="12" y2="21" /></svg>
+                    </div>
+                    <span className="btn-label">Finanzas</span>
+                  </button>
+                )}
+
                 <button className="header-nav-btn" onClick={() => { openProfileModal(); setIsMenuOpen(false); }}>
                   <div className="icon-circle">
                     <IconUser />
@@ -1837,7 +1793,8 @@ export default function DriverPage() {
       )}
 
       {/* Botón flotante de GPS de alta prioridad fuera de main-content */}
-      <button
+      {activeTab !== 'finances' && (
+        <button
         onClick={() => {
           setCenterTrigger(prev => prev + 1);
         }}
@@ -1846,6 +1803,7 @@ export default function DriverPage() {
       >
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><circle cx="12" cy="12" r="3" /><line x1="12" y1="1" x2="12" y2="3" /><line x1="12" y1="21" x2="12" y2="23" /><line x1="1" y1="12" x2="3" y2="12" /><line x1="21" y1="12" x2="23" y2="12" /></svg>
       </button>
+      )}
 
       <main className="main-content">
 
@@ -1886,12 +1844,28 @@ export default function DriverPage() {
           driverPos={pos}
           passengerPos={(activeTrip && (tripPhase === 'going_to_passenger' || tripPhase === 'arrived')) ? { lat: activeTrip.originLat, lng: activeTrip.originLng } : null}
           destPos={(activeTrip && tripPhase === 'in_progress') ? { lat: activeTrip.destLat, lng: activeTrip.destLng } : null}
+          stops={activeTrip?.stops || []}
           centerTrigger={centerTrigger}
         />
+
+        {activeTab === 'finances' && (
+          <div style={{ position: 'absolute', inset: 0, zIndex: 100, background: 'var(--bg-primary)', overflowY: 'auto', paddingTop: '80px' }}>
+            <div style={{ padding: '0 20px', marginBottom: '-10px' }}>
+              <button 
+                onClick={() => setActiveTab('map')}
+                style={{ background: 'transparent', border: 'none', color: 'var(--accent)', fontWeight: 700, fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', padding: 0 }}
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+                Volver al mapa
+              </button>
+            </div>
+            <FinancesDashboard />
+          </div>
+        )}
       </main>
 
       {/* DASHBOARD INFERIOR */}
-      {!tripRequest && !activeTrip && (
+      {!tripRequest && !activeTrip && activeTab === 'map' && (
         <div className="bottom-sheet" style={bottomSheetStyle()}>
           <BottomSheetHandle />
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
@@ -1956,10 +1930,7 @@ export default function DriverPage() {
               </p>
             </div>
             <div style={{ textAlign: 'right' }}>
-              <div style={{ fontSize: '1.4rem', fontWeight: 900, color: 'var(--accent)' }}>
-                {formatCLP(totalEarnings !== null ? totalEarnings : 0)}
-              </div>
-              <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>RECAUDACIÓN TOTAL</div>
+              {/* Recaudación removida: Ahora se muestra en Fim Finanzas */}
             </div>
           </div>
 
@@ -2488,6 +2459,20 @@ export default function DriverPage() {
                   </div>
                 </div>
 
+                {/* Paradas (si existen) */}
+                {tripRequest.stops && tripRequest.stops.length > 0 && (
+                  <div style={{ marginTop: '8px', marginBottom: '8px' }}>
+                    <div style={{ fontSize: '0.75rem', color: '#A0AEC0', fontWeight: 600, marginBottom: '2px' }}>
+                      Paradas Intermedias ({tripRequest.stops.length})
+                    </div>
+                    {tripRequest.stops.map((stop: any, idx: number) => (
+                      <div key={idx} style={{ fontSize: '0.85rem', fontWeight: 500, color: '#F6AD55', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '250px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                        <span style={{ fontSize: '10px' }}>🟠</span> {stop.address || `Parada ${idx + 1}`}
+                      </div>
+                    ))}
+                  </div>
+                )}
+
                 {/* Destination Address */}
                 <div>
                   <div style={{ fontSize: '0.8rem', color: '#A0AEC0', fontWeight: 600, marginBottom: '2px' }}>
@@ -2641,38 +2626,6 @@ export default function DriverPage() {
             </div>
           </div>
 
-          {nextTrip && (
-            <div style={{
-              background: 'rgba(0, 229, 160, 0.08)',
-              border: '1.5px dashed var(--accent)',
-              borderRadius: '14px',
-              padding: '12px 16px',
-              marginBottom: '16px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              animation: 'fadeIn 0.3s ease'
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <span style={{ fontSize: '1.3rem' }}>🚗</span>
-                <div style={{ textAlign: 'left' }}>
-                  <div style={{ fontSize: '0.7rem', color: 'var(--accent)', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                    Siguiente Viaje en Cola
-                  </div>
-                  <div style={{ fontSize: '0.85rem', fontWeight: 700, color: '#fff' }}>
-                    Pasajero: {nextTrip.passenger.name}
-                  </div>
-                  <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', maxWidth: '220px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                    Hacia: {nextTrip.destAddress}
-                  </div>
-                </div>
-              </div>
-              <div style={{ textAlign: 'right', fontWeight: 900, color: 'var(--accent)', fontSize: '0.95rem' }}>
-                {formatCLP(nextTrip.estimatedPrice)}
-              </div>
-            </div>
-          )}
-
           <div style={{ background: 'var(--bg-secondary)', padding: '16px', borderRadius: 'var(--radius)', marginBottom: '20px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
               <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>
@@ -2685,16 +2638,31 @@ export default function DriverPage() {
             <div style={{ fontSize: '0.95rem', fontWeight: 600 }}>
               {tripPhase === 'going_to_passenger' ? activeTrip.originAddress : activeTrip.destAddress}
             </div>
+
+            {/* Paradas */}
+            {tripPhase === 'in_progress' && activeTrip.stops && activeTrip.stops.length > 0 && (
+              <div style={{ marginTop: '12px', paddingTop: '12px', borderTop: '1px dashed var(--border)' }}>
+                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '6px' }}>Paradas</div>
+                {activeTrip.stops.map((stop: any, idx: number) => (
+                  <div key={idx} style={{ fontSize: '0.85rem', fontWeight: 600, color: '#FFA500', display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}>
+                     <span style={{ fontSize: '10px' }}>🟠</span> {stop.address || `Parada ${idx + 1}`}
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           {tripPhase === 'going_to_passenger' && (
-            <button className="btn btn-primary btn-block btn-lg" onClick={markArrived}>He llegado</button>
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <button className="btn btn-secondary" style={{ flex: 1 }} onClick={() => setShowCancelModal(true)}>Cancelar</button>
+              <button className="btn btn-primary btn-lg" style={{ flex: 2 }} onClick={markArrived}>He llegado</button>
+            </div>
           )}
 
           {tripPhase === 'arrived' && (
             <div>
               <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '12px', textAlign: 'center' }}>Pide el código al pasajero para iniciar:</p>
-              <div style={{ display: 'flex', gap: '10px' }}>
+              <div style={{ display: 'flex', gap: '10px', marginBottom: '12px' }}>
                 <input
                   type="text" className="form-input" placeholder="CÓDIGO"
                   value={otp} onChange={(e) => setOtp(e.target.value)}
@@ -2702,6 +2670,7 @@ export default function DriverPage() {
                 />
                 <button className="btn btn-accent" onClick={() => startTrip(otp)}>INICIAR</button>
               </div>
+              <button className="btn btn-danger btn-block" onClick={() => setShowCancelModal(true)}>Cancelar Viaje</button>
             </div>
           )}
 
@@ -2814,6 +2783,123 @@ export default function DriverPage() {
               )}
             </div>
           )}
+        </div>
+      )}
+
+      {/* MODAL CANCELAR VIAJE (CONDUCTOR) */}
+      {showCancelModal && (
+        <div style={{
+          position: 'fixed',
+          inset: 0,
+          background: 'rgba(9, 9, 15, 0.85)',
+          backdropFilter: 'blur(8px)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 9999,
+          padding: '20px',
+          animation: 'fadeIn 0.2s ease'
+        }}>
+          <div style={{
+            background: 'var(--bg-secondary)',
+            border: '1px solid var(--border)',
+            borderRadius: 'var(--radius-lg)',
+            width: '100%',
+            maxWidth: '440px',
+            padding: '24px',
+            boxShadow: 'var(--shadow-lg)',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '16px'
+          }}>
+            <h3 style={{ margin: 0, fontWeight: 900, fontSize: '1.25rem' }}>¿Por qué cancelas tu viaje?</h3>
+            
+            <div style={{ marginBottom: '20px' }}>
+              <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, color: 'var(--text-secondary)', marginBottom: '8px' }}>
+                Motivo de cancelación:
+              </label>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                {[
+                  'Cambio de ruta no acordado',
+                  'Excede capacidad legal',
+                  'Comportamiento agresivo',
+                  'Pasajero no se presentó',
+                  'Problema mecánico',
+                  'Otro motivo'
+                ].map((reasonOption) => {
+                  let isDisabled = false;
+                  if (reasonOption === 'Pasajero no se presentó') {
+                    isDisabled = tripPhase !== 'arrived' || !arrivedAt || (Date.now() - arrivedAt < 5 * 60 * 1000);
+                  }
+                  return (
+                    <button
+                      key={reasonOption}
+                      type="button"
+                      disabled={isDisabled}
+                      onClick={() => setSelectedCancelOption(reasonOption)}
+                      style={{
+                        padding: '12px',
+                        borderRadius: '8px',
+                        border: selectedCancelOption === reasonOption ? '2px solid var(--accent)' : '1px solid var(--border)',
+                        background: selectedCancelOption === reasonOption ? 'rgba(0, 229, 160, 0.1)' : 'var(--bg-primary)',
+                        color: isDisabled ? 'var(--text-muted)' : (selectedCancelOption === reasonOption ? 'var(--accent)' : 'var(--text-primary)'),
+                        textAlign: 'left',
+                        fontWeight: selectedCancelOption === reasonOption ? 700 : 500,
+                        cursor: isDisabled ? 'not-allowed' : 'pointer',
+                        transition: 'all 0.2s ease',
+                        opacity: isDisabled ? 0.5 : 1
+                      }}
+                    >
+                      {reasonOption}
+                      {isDisabled && reasonOption === 'Pasajero no se presentó' && (
+                        <span style={{ display: 'block', fontSize: '0.7rem', marginTop: '4px' }}>
+                          Disponible tras 5 minutos de espera.
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {selectedCancelOption === 'Otro motivo' && (
+                <div style={{ marginTop: '12px' }}>
+                  <textarea
+                    className="form-input"
+                    placeholder="Describe el motivo de la cancelación..."
+                    value={customCancelReason}
+                    onChange={(e) => setCustomCancelReason(e.target.value)}
+                    rows={3}
+                    style={{ width: '100%', resize: 'none' }}
+                  />
+                </div>
+              )}
+            </div>
+
+            <div style={{ display: 'flex', gap: '10px' }}>
+              <button
+                className="btn btn-secondary"
+                style={{ flex: 1 }}
+                onClick={() => {
+                  setShowCancelModal(false);
+                  setSelectedCancelOption('');
+                  setCustomCancelReason('');
+                }}
+              >
+                Volver atrás
+              </button>
+              <button
+                className="btn btn-danger"
+                style={{ flex: 1 }}
+                disabled={!selectedCancelOption || (selectedCancelOption === 'Otro motivo' && !customCancelReason.trim())}
+                onClick={async () => {
+                  const finalReason = selectedCancelOption === 'Otro motivo' ? customCancelReason : selectedCancelOption;
+                  await handleCancelTrip(finalReason);
+                }}
+              >
+                Confirmar
+              </button>
+            </div>
+          </div>
         </div>
       )}
 

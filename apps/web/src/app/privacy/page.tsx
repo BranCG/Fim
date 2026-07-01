@@ -88,7 +88,7 @@ export default function PrivacyPage() {
           <div>
             <h2 style={{ color: 'var(--accent)', marginBottom: '12px' }}>6. Derechos y Eliminación de Cuentas</h2>
             <p>
-              Cualquier usuario (pasajero o conductor) tiene derecho a solicitar la eliminación definitiva de su cuenta y de todos sus datos personales. Para ello, o para cualquier consulta sobre privacidad, puedes contactarnos a través de nuestra dirección de correo electrónico dedicada de soporte: <strong>soporte@fim.cl</strong>. FIM responderá a tu solicitud en un plazo máximo de 10 días hábiles. Los datos estrictamente contables o fiscales exigidos por las leyes tributarias chilenas serán retenidos por el plazo legal mínimo requerido antes de su eliminación definitiva.
+              Cualquier usuario (pasajero o conductor) tiene derecho a solicitar la eliminación definitiva de su cuenta y de todos sus datos personales. Para ello, o para cualquier consulta sobre privacidad, puedes contactarnos a través de nuestra dirección de correo electrónico dedicada de soporte: <strong>contacto@fimchile.cl</strong>. FIM responderá a tu solicitud en un plazo máximo de 10 días hábiles. Los datos estrictamente contables o fiscales exigidos por las leyes tributarias chilenas serán retenidos por el plazo legal mínimo requerido antes de su eliminación definitiva.
             </p>
           </div>
         </section>

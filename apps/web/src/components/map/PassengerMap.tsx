@@ -11,6 +11,7 @@ interface Props {
   isSelectingLocation?: 'origin' | 'dest' | null;
   onMapCenterChange?: (coords: { lat: number; lng: number }) => void;
   tripStatus?: string | null;
+  stops?: { lat: number; lng: number; address: string }[];
 }
 
 const getDistanceMeters = (lat1: number, lng1: number, lat2: number, lng2: number) => {
@@ -77,7 +78,8 @@ export default function PassengerMap({
   nearbyDrivers = [],
   isSelectingLocation = null,
   onMapCenterChange,
-  tripStatus = null
+  tripStatus = null,
+  stops = []
 }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -93,12 +95,16 @@ export default function PassengerMap({
   const destMarkerRef = useRef<any>(null);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const driverMarkerRef = useRef<any>(null);
+  const stopsMarkersRef = useRef<any[]>([]);
   const routeLineRef = useRef<any>(null);
+  const routeCoordinatesRef = useRef<{lat: number, lng: number}[]>([]);
   const currentRouteEndpoints = useRef<string>('');
   const hasFittedBounds = useRef<string>('');
   const currentAngleRef = useRef<number>(0);
   const nearbyMarkersRef = useRef<Map<string, any>>(new Map());
   const nearbyAnglesRef = useRef<Map<string, number>>(new Map());
+  const animationFramesRef = useRef<Map<string, number>>(new Map());
+  const lastUpdateTimestampsRef = useRef<Map<string, number>>(new Map());
 
   // Estado y Referencias para Puntos de Interés (POIs)
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -129,12 +135,18 @@ export default function PassengerMap({
         attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors © <a href="https://carto.com/attributions">CARTO</a>',
         maxZoom: 20,
         subdomains: 'abcd',
+        keepBuffer: 4,
+        updateWhenZooming: false,
+        updateWhenIdle: true
       }).addTo(map);
 
       L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_only_labels/{z}/{x}/{y}{r}.png', {
         maxZoom: 20,
         subdomains: 'abcd',
         className: 'map-labels-layer',
+        keepBuffer: 4,
+        updateWhenZooming: false,
+        updateWhenIdle: true
       }).addTo(map);
 
       setTimeout(() => map.invalidateSize(true), 200);
@@ -150,6 +162,7 @@ export default function PassengerMap({
       }
       nearbyMarkersRef.current.clear();
       nearbyAnglesRef.current.clear();
+      stopsMarkersRef.current = [];
       poiMarkersRef.current.clear();
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -170,6 +183,65 @@ export default function PassengerMap({
     const map = mapRef.current;
 
     // Helper to generate custom divIcon with correct rotation
+    
+    // --- Helper matemático para "Snap to Route" ---
+    // Usamos Haversine para calcular distancia real en metros
+    const getDistanceMeters = (lat1: number, lng1: number, lat2: number, lng2: number) => {
+      const R = 6371e3; // Radio de la Tierra en metros
+      const φ1 = lat1 * Math.PI/180;
+      const φ2 = lat2 * Math.PI/180;
+      const Δφ = (lat2-lat1) * Math.PI/180;
+      const Δλ = (lng2-lng1) * Math.PI/180;
+      const a = Math.sin(Δφ/2) * Math.sin(Δφ/2) +
+                Math.cos(φ1) * Math.cos(φ2) *
+                Math.sin(Δλ/2) * Math.sin(Δλ/2);
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+      return R * c;
+    };
+
+    const getClosestPointOnPath = (point: {lat: number, lng: number}, path: {lat: number, lng: number}[]) => {
+      if (!path || path.length < 2) return { point, angle: 0, distance: 0 };
+      let minDist = Infinity;
+      let closestPoint = point;
+      let closestAngle = 0;
+
+      const dist2 = (p1: any, p2: any) => {
+        const dy = (p2.lat - p1.lat);
+        const dx = (p2.lng - p1.lng) * Math.cos(p1.lat * Math.PI / 180);
+        return dx*dx + dy*dy;
+      };
+
+      for (let i = 0; i < path.length - 1; i++) {
+        const A = path[i];
+        const B = path[i+1];
+        
+        const dyAB = B.lat - A.lat;
+        const dxAB = (B.lng - A.lng) * Math.cos(A.lat * Math.PI / 180);
+        const lenAB2 = dxAB*dxAB + dyAB*dyAB;
+        
+        let t = 0;
+        if (lenAB2 > 0) {
+          const dyAP = point.lat - A.lat;
+          const dxAP = (point.lng - A.lng) * Math.cos(A.lat * Math.PI / 180);
+          t = (dxAP * dxAB + dyAP * dyAB) / lenAB2;
+          t = Math.max(0, Math.min(1, t));
+        }
+        
+        const projLat = A.lat + t * dyAB;
+        const projLng = A.lng + (t * dxAB) / (Math.cos(A.lat * Math.PI / 180) || 1);
+        
+        const d = dist2(point, { lat: projLat, lng: projLng });
+        if (d < minDist) {
+          minDist = d;
+          closestPoint = { lat: projLat, lng: projLng };
+          closestAngle = Math.atan2(dxAB, dyAB) * (180 / Math.PI);
+        }
+      }
+      
+      const distanceToRoute = getDistanceMeters(point.lat, point.lng, closestPoint.lat, closestPoint.lng);
+      return { point: closestPoint, angle: closestAngle, distance: distanceToRoute };
+    };
+
     const getDriverIcon = (angle: number) => {
       return L.divIcon({
         className: 'transparent-icon',
@@ -210,29 +282,60 @@ export default function PassengerMap({
       });
     };
 
-    // ── Interpolación para movimiento fluido ──────────────────
-    const animateMarker = (marker: any, start: { lat: number; lng: number }, end: { lat: number; lng: number }, driverId?: string, duration = 1200) => {
-      if (marker._animId) {
-        cancelAnimationFrame(marker._animId);
+    // ── Interpolación para movimiento fluido dinámico ──────────────────
+    const animateMarker = (marker: any, targetPos: { lat: number; lng: number }, driverId: string = 'main') => {
+      const prevFrame = animationFramesRef.current.get(driverId);
+      if (prevFrame) {
+        cancelAnimationFrame(prevFrame);
       }
-      const startTime = performance.now();
       
-      const dLng = end.lng - start.lng;
-      const dLat = end.lat - start.lat;
-      let angle = driverId ? (nearbyAnglesRef.current.get(driverId) || 0) : currentAngleRef.current;
-      const hasMovement = Math.abs(dLng) > 1e-6 || Math.abs(dLat) > 1e-6;
-      if (hasMovement) {
-        angle = Math.atan2(dLng, dLat) * (180 / Math.PI);
+      const now = performance.now();
+      let dt = now - (lastUpdateTimestampsRef.current.get(driverId) || now);
+      lastUpdateTimestampsRef.current.set(driverId, now);
+      
+      if (dt < 500 || dt > 10000) dt = 2000;
+      
+      const startPos = marker.getLatLng();
+      
+      let snappedTarget = targetPos;
+      let targetAngle = driverId === 'main' ? currentAngleRef.current : (nearbyAnglesRef.current.get(driverId) || 0);
+      let didSnap = false;
+      
+      // En PassengerMap, solo hacer snap al driverId 'main' para no afectar a conductores cercanos
+      if (driverId === 'main' && routeCoordinatesRef.current.length > 0) {
+        const snap = getClosestPointOnPath(targetPos, routeCoordinatesRef.current);
+        
+        // SÓLO HACER SNAP SI ESTÁ A MENOS DE 35 METROS
+        if (snap.distance < 35) {
+          snappedTarget = snap.point;
+          targetAngle = snap.angle;
+          didSnap = true;
+        }
       }
 
-      const step = (now: number) => {
-        const elapsed = now - startTime;
-        const progress = Math.min(elapsed / duration, 1);
+      const dLng = snappedTarget.lng - startPos.lng;
+      const dLat = snappedTarget.lat - startPos.lat;
+      
+      let angle = driverId === 'main' ? currentAngleRef.current : (nearbyAnglesRef.current.get(driverId) || 0);
+      const hasMovement = Math.abs(dLng) > 1e-6 || Math.abs(dLat) > 1e-6;
+      if (hasMovement) {
+        let rawAngle = didSnap ? targetAngle : (Math.atan2(dLng, dLat) * (180 / Math.PI));
+        const currentA = driverId === 'main' ? currentAngleRef.current : (nearbyAnglesRef.current.get(driverId) || 0);
         
-        // Easing OutQuad
-        const easeProgress = progress * (2 - progress); 
-        const currentLat = start.lat + (end.lat - start.lat) * easeProgress;
-        const currentLng = start.lng + (end.lng - start.lng) * easeProgress;
+        // Evitar que el coche dé una vuelta de 360° al cambiar de -179 a 179
+        const diff = ((rawAngle - currentA + 540) % 360) - 180;
+        angle = currentA + diff;
+      }
+
+      const startTime = performance.now();
+      
+      const step = (timestamp: number) => {
+        const elapsed = timestamp - startTime;
+        const progress = Math.min(elapsed / dt, 1.1);
+        const easeProgress = progress; 
+        
+        const currentLat = startPos.lat + dLat * easeProgress;
+        const currentLng = startPos.lng + dLng * easeProgress;
         
         marker.setLatLng([currentLat, currentLng]);
 
@@ -242,23 +345,24 @@ export default function PassengerMap({
             const svg = element.querySelector('svg');
             if (svg) {
               svg.style.transform = `rotate(${angle}deg)`;
-              svg.style.transition = 'transform 0.3s ease';
+              svg.style.transition = 'transform 0.3s linear';
             }
           }
         }
 
-        if (progress < 1) {
-          marker._animId = requestAnimationFrame(step);
+        if (progress < 1.1) {
+          animationFramesRef.current.set(driverId, requestAnimationFrame(step));
         } else if (hasMovement) {
-          if (driverId) {
-            nearbyAnglesRef.current.set(driverId, angle);
-          } else {
+          if (driverId === 'main') {
             currentAngleRef.current = angle;
+          } else {
+            nearbyAnglesRef.current.set(driverId, angle);
           }
           marker.setIcon(getDriverIcon(angle));
         }
       };
-      marker._animId = requestAnimationFrame(step);
+      
+      animationFramesRef.current.set(driverId, requestAnimationFrame(step));
     };
 
     // ── 1. Origen ──────────────────────────────────────────────────────────
@@ -313,6 +417,36 @@ export default function PassengerMap({
       destMarkerRef.current = null;
     }
 
+    // ── 2.5 Paradas ────────────────────────────────────────────────────────
+    const showStops = stops && stops.length > 0 && (!isTripActive || tripStatus === 'in_progress');
+    
+    if (showStops) {
+      stops.forEach((stop, idx) => {
+        if (!stopsMarkersRef.current[idx]) {
+           const stopIcon = L.divIcon({
+              className: 'transparent-icon',
+              html: `<div style="background:#FFA500;width:14px;height:14px;border-radius:50%;border:2px solid white;box-shadow:0 0 5px rgba(255,165,0,0.6)"></div>`,
+              iconSize: [14, 14],
+              iconAnchor: [7, 7]
+           });
+           const m = L.marker([stop.lat, stop.lng], { icon: stopIcon }).addTo(map);
+           m.bindTooltip(`Parada ${idx+1}`, { permanent: false, direction: 'top', className: 'fim-tooltip' });
+           stopsMarkersRef.current[idx] = m;
+        } else {
+           stopsMarkersRef.current[idx].setLatLng([stop.lat, stop.lng]);
+        }
+      });
+      while (stopsMarkersRef.current.length > stops.length) {
+         const m = stopsMarkersRef.current.pop();
+         if (m) m.remove();
+      }
+    } else {
+      while (stopsMarkersRef.current.length > 0) {
+         const m = stopsMarkersRef.current.pop();
+         if (m) m.remove();
+      }
+    }
+
     // ── 3. Ruta OSRM ───────────────────────────────────────────────────────
     const activeRouteTarget = isTripActive
       ? ((tripStatus === 'driver_assigned' || tripStatus === 'driver_arrived') ? origin : dest)
@@ -327,35 +461,78 @@ export default function PassengerMap({
       if (currentRouteEndpoints.current !== endpointsKey) {
         currentRouteEndpoints.current = endpointsKey;
 
+        routeCoordinatesRef.current = [];
         if (routeLineRef.current) {
           routeLineRef.current.remove();
           routeLineRef.current = null;
         }
 
         const fetchRoute = async () => {
-          const color = (tripStatus === 'driver_assigned' || tripStatus === 'driver_arrived') ? '#00E5A0' : '#FF4560'; // Verde para buscar al pasajero, rojo para ir al destino
+          const isGoingToPassenger = (tripStatus === 'driver_assigned' || tripStatus === 'driver_arrived');
+          const points = [{ lat: driverPos.lat, lng: driverPos.lng }];
+          if (stops && stops.length > 0 && activeRouteTarget === dest) {
+            points.push(...stops);
+          }
+          points.push({ lat: activeRouteTarget.lat, lng: activeRouteTarget.lng });
+
           try {
-            const res = await fetch(`https://router.project-osrm.org/route/v1/driving/${driverPos.lng},${driverPos.lat};${activeRouteTarget.lng},${activeRouteTarget.lat}?overview=full&geometries=geojson`);
-            const data = await res.json();
+            const promises = [];
+            for (let i = 0; i < points.length - 1; i++) {
+              const wp = `${points[i].lng},${points[i].lat};${points[i+1].lng},${points[i+1].lat}`;
+              promises.push(fetch(`https://router.project-osrm.org/route/v1/driving/${wp}?overview=full&geometries=geojson`).then(res => res.json()));
+            }
+            const results = await Promise.all(promises);
             
             if (!mapRef.current) return;
             if (routeLineRef.current) { routeLineRef.current.remove(); }
 
-            if (data.routes && data.routes[0]) {
-              const route = L.geoJSON(data.routes[0].geometry, {
-                style: { color: color, weight: 5, opacity: 0.85, lineCap: 'round', lineJoin: 'round' }
-              }).addTo(map);
-              routeLineRef.current = route;
-            } else {
-              throw new Error('Sin ruta');
-            }
+            const routeGroup = L.featureGroup().addTo(map);
+            routeLineRef.current = routeGroup;
+            let hasRoute = false;
+            let newPath: {lat: number, lng: number}[] = [];
+
+            results.forEach((data, idx) => {
+              if (data.routes && data.routes[0] && data.routes[0].geometry) {
+                 const coords = data.routes[0].geometry.coordinates; // [lng, lat]
+                 if (coords) {
+                   newPath.push(...coords.map((c: any) => ({ lat: c[1], lng: c[0] })));
+                 }
+              }
+              if (data.routes && data.routes[0]) {
+                hasRoute = true;
+                const isLast = idx === results.length - 1;
+                let color = isGoingToPassenger ? '#00E5A0' : (isLast ? '#FF4560' : '#FFA500');
+                const line = L.geoJSON(data.routes[0].geometry, {
+                  style: { className: 'animated-route-line', color: color, weight: 5, opacity: 0.85, lineCap: 'round', lineJoin: 'round' }
+                }).addTo(routeGroup);
+                
+                setTimeout(() => {
+                  line.eachLayer((layer: any) => {
+                    if (layer._path && layer._path.getTotalLength) {
+                      const length = layer._path.getTotalLength();
+                      layer._path.style.strokeDasharray = `${length} ${length}`;
+                      layer._path.style.strokeDashoffset = `${length}`;
+                      layer._path.getBoundingClientRect();
+                      layer._path.style.transition = 'stroke-dashoffset 1.8s ease-out';
+                      layer._path.style.strokeDashoffset = '0';
+                    }
+                  });
+                }, 50);
+              }
+            });
+            routeCoordinatesRef.current = newPath;
+            if (!hasRoute) throw new Error('Sin ruta');
           } catch (e) {
             if (!mapRef.current) return;
-            const route = L.polyline(
-              [[driverPos.lat, driverPos.lng], [activeRouteTarget.lat, activeRouteTarget.lng]],
-              { color: color, weight: 4, opacity: 0.85, dashArray: '10 6', lineCap: 'round' }
-            ).addTo(map);
-            routeLineRef.current = route;
+            if (routeLineRef.current) { routeLineRef.current.remove(); }
+            const routeGroup = L.featureGroup().addTo(map);
+            routeLineRef.current = routeGroup;
+            routeCoordinatesRef.current = points; // fallback a línea recta
+            for (let i = 0; i < points.length - 1; i++) {
+              const isLast = i === points.length - 1;
+              let color = isGoingToPassenger ? '#00E5A0' : (isLast ? '#FF4560' : '#FFA500');
+              L.polyline([[points[i].lat, points[i].lng], [points[i+1].lat, points[i+1].lng]], { color: color, weight: 4, opacity: 0.85, dashArray: '10 6', lineCap: 'round' }).addTo(routeGroup);
+            }
           }
 
           // Ajustar vista del mapa una sola vez por fase
@@ -379,34 +556,77 @@ export default function PassengerMap({
         currentRouteEndpoints.current = endpointsKey;
         hasFittedBounds.current = '';
         
+        routeCoordinatesRef.current = [];
         if (routeLineRef.current) {
           routeLineRef.current.remove();
           routeLineRef.current = null;
         }
 
         const fetchRoute = async () => {
+          const points = [{ lat: origin.lat, lng: origin.lng }];
+          if (stops && stops.length > 0) {
+            points.push(...stops);
+          }
+          points.push({ lat: dest.lat, lng: dest.lng });
+
           try {
-            const res = await fetch(`https://router.project-osrm.org/route/v1/driving/${origin.lng},${origin.lat};${dest.lng},${dest.lat}?overview=full&geometries=geojson`);
-            const data = await res.json();
+            const promises = [];
+            for (let i = 0; i < points.length - 1; i++) {
+              const wp = `${points[i].lng},${points[i].lat};${points[i+1].lng},${points[i+1].lat}`;
+              promises.push(fetch(`https://router.project-osrm.org/route/v1/driving/${wp}?overview=full&geometries=geojson`).then(res => res.json()));
+            }
+            const results = await Promise.all(promises);
             
             if (!mapRef.current) return;
             if (routeLineRef.current) { routeLineRef.current.remove(); }
 
-            if (data.routes && data.routes[0]) {
-              const routeLine = L.geoJSON(data.routes[0].geometry, {
-                style: { color: '#00E5A0', weight: 5, opacity: 0.85, lineCap: 'round', lineJoin: 'round' }
-              }).addTo(map);
-              routeLineRef.current = routeLine;
-            } else {
-              throw new Error('Sin ruta');
-            }
-          } catch (error) {
+            const routeGroup = L.featureGroup().addTo(map);
+            routeLineRef.current = routeGroup;
+            let hasRoute = false;
+            let newPath: {lat: number, lng: number}[] = [];
+
+            results.forEach((data, idx) => {
+              if (data.routes && data.routes[0] && data.routes[0].geometry) {
+                 const coords = data.routes[0].geometry.coordinates; // [lng, lat]
+                 if (coords) {
+                   newPath.push(...coords.map((c: any) => ({ lat: c[1], lng: c[0] })));
+                 }
+              }
+              if (data.routes && data.routes[0]) {
+                hasRoute = true;
+                const isLast = idx === results.length - 1;
+                let color = isLast ? '#00E5A0' : '#FFA500'; // Naranjo para paradas, verde para destino final
+                const line = L.geoJSON(data.routes[0].geometry, {
+                  style: { className: 'animated-route-line', color: color, weight: 5, opacity: 0.85, lineCap: 'round', lineJoin: 'round' }
+                }).addTo(routeGroup);
+                
+                setTimeout(() => {
+                  line.eachLayer((layer: any) => {
+                    if (layer._path && layer._path.getTotalLength) {
+                      const length = layer._path.getTotalLength();
+                      layer._path.style.strokeDasharray = `${length} ${length}`;
+                      layer._path.style.strokeDashoffset = `${length}`;
+                      layer._path.getBoundingClientRect();
+                      layer._path.style.transition = 'stroke-dashoffset 1.8s ease-out';
+                      layer._path.style.strokeDashoffset = '0';
+                    }
+                  });
+                }, 50);
+              }
+            });
+            routeCoordinatesRef.current = newPath;
+            if (!hasRoute) throw new Error('Sin ruta');
+          } catch (e) {
             if (!mapRef.current) return;
-            const routeLine = L.polyline(
-              [[origin.lat, origin.lng], [dest.lat, dest.lng]],
-              { color: '#00E5A0', weight: 4, opacity: 0.85, dashArray: '10 6', lineCap: 'round' }
-            ).addTo(map);
-            routeLineRef.current = routeLine;
+            if (routeLineRef.current) { routeLineRef.current.remove(); }
+            const routeGroup = L.featureGroup().addTo(map);
+            routeLineRef.current = routeGroup;
+            routeCoordinatesRef.current = points; // fallback a línea recta
+            for (let i = 0; i < points.length - 1; i++) {
+              const isLast = i === points.length - 1;
+              let color = isLast ? '#00E5A0' : '#FFA500';
+              L.polyline([[points[i].lat, points[i].lng], [points[i+1].lat, points[i+1].lng]], { color: color, weight: 4, opacity: 0.85, dashArray: '10 6', lineCap: 'round' }).addTo(routeGroup);
+            }
           }
 
           // Ajustar vista del mapa
@@ -418,6 +638,7 @@ export default function PassengerMap({
     } else {
       currentRouteEndpoints.current = '';
       hasFittedBounds.current = '';
+      routeCoordinatesRef.current = [];
       if (routeLineRef.current) {
         routeLineRef.current.remove();
         routeLineRef.current = null;
@@ -430,11 +651,12 @@ export default function PassengerMap({
         const driverIcon = getDriverIcon(currentAngleRef.current);
         driverMarkerRef.current = L.marker([driverPos.lat, driverPos.lng], { icon: driverIcon }).addTo(map);
         driverMarkerRef.current.bindTooltip('Tu conductor', { permanent: false, direction: 'top', className: 'fim-tooltip' });
+        lastUpdateTimestampsRef.current.set('main', performance.now());
       } else {
         // Si ya existe, animar suavemente a la nueva ubicación
         const prevPos = driverMarkerRef.current.getLatLng();
         if (prevPos.lat !== driverPos.lat || prevPos.lng !== driverPos.lng) {
-          animateMarker(driverMarkerRef.current, prevPos, driverPos, undefined, 1200);
+          animateMarker(driverMarkerRef.current, driverPos, 'main');
         }
       }
     } else if (driverMarkerRef.current) {
@@ -446,7 +668,7 @@ export default function PassengerMap({
     const currentNearbyIds = new Set(nearbyDrivers.map(d => d.id));
 
     // Eliminar conductores que ya no están online o ya no están en la lista
-    for (const [id, marker] of nearbyMarkersRef.current.entries()) {
+    for (const [id, marker] of Array.from(nearbyMarkersRef.current.entries())) {
       if (!currentNearbyIds.has(id)) {
         marker.remove();
         nearbyMarkersRef.current.delete(id);
@@ -463,13 +685,11 @@ export default function PassengerMap({
         const marker = L.marker([driver.lat, driver.lng], { icon: driverIcon }).addTo(map);
         marker.bindTooltip('Conductor disponible', { permanent: false, direction: 'top', className: 'fim-tooltip' });
         nearbyMarkersRef.current.set(driver.id, marker);
+        lastUpdateTimestampsRef.current.set(driver.id, performance.now());
       } else {
         const prevPos = prevMarker.getLatLng();
         if (prevPos.lat !== driver.lat || prevPos.lng !== driver.lng) {
-          const dist = getDistanceMeters(prevPos.lat, prevPos.lng, driver.lat, driver.lng);
-          // Velocidad simulada de ~35 km/h (10 metros/segundo) para no dar saltos bruscos
-          const dynamicDuration = Math.min(Math.max((dist / 10) * 1000, 1200), 8000);
-          animateMarker(prevMarker, prevPos, { lat: driver.lat, lng: driver.lng }, driver.id, dynamicDuration);
+          animateMarker(prevMarker, { lat: driver.lat, lng: driver.lng }, driver.id);
         }
       }
     });

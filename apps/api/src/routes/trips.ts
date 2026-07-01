@@ -24,6 +24,7 @@ router.post('/request', requireAuth, requireRole('passenger'), async (req: Reque
       destLat, destLng, destAddress,
       paymentMethod,
       passengerCount,
+      stops,
     } = req.body;
 
     // Validar área de cobertura geográfica (Origen)
@@ -39,7 +40,18 @@ router.post('/request', requireAuth, requireRole('passenger'), async (req: Reque
       return res.status(400).json({ error: 'El número de pasajeros debe estar entre 1 y 4.' });
     }
 
-    const distanceKm = calculateDistance(originLat, originLng, destLat, destLng) * 1.3;
+    let distanceKm = 0;
+    const points = [{ lat: Number(originLat), lng: Number(originLng) }];
+    if (Array.isArray(stops)) {
+      stops.forEach((s: any) => points.push({ lat: Number(s.lat), lng: Number(s.lng) }));
+    }
+    points.push({ lat: Number(destLat), lng: Number(destLng) });
+
+    for (let i = 0; i < points.length - 1; i++) {
+      distanceKm += calculateDistance(points[i].lat, points[i].lng, points[i+1].lat, points[i+1].lng);
+    }
+    distanceKm *= 1.3;
+    
     const durationMin = estimateDuration(distanceKm);
     let estimatedPrice = calculateTripPrice(distanceKm, durationMin);
 
@@ -75,6 +87,7 @@ router.post('/request', requireAuth, requireRole('passenger'), async (req: Reque
         paymentMethod: paymentMethod || 'cash',
         status: 'searching',
         passengerCount: count,
+        stops: Array.isArray(stops) ? stops : undefined,
       },
       include: { passenger: { select: { id: true, name: true, phone: true } } },
     });
@@ -89,7 +102,7 @@ router.post('/request', requireAuth, requireRole('passenger'), async (req: Reque
 // ─── PRECIO ESTIMADO (SIN CREAR VIAJE) ───────────────────────────────────
 router.post('/estimate', requireAuth, async (req: Request, res: Response) => {
   try {
-    const { originLat, originLng, destLat, destLng } = req.body;
+    const { originLat, originLng, destLat, destLng, stops } = req.body;
 
     // Validar área de cobertura geográfica (Origen)
     const originCheck = await checkCoordinateInAllowedRegion(Number(originLat), Number(originLng));
@@ -98,7 +111,19 @@ router.post('/estimate', requireAuth, async (req: Request, res: Response) => {
         error: `Fim no opera en este sector aún. Actualmente cubrimos: ${originCheck.activeZonesText}.`
       });
     }
-    const distanceKm = calculateDistance(originLat, originLng, destLat, destLng) * 1.3;
+    
+    let distanceKm = 0;
+    const points = [{ lat: Number(originLat), lng: Number(originLng) }];
+    if (Array.isArray(stops)) {
+      stops.forEach((s: any) => points.push({ lat: Number(s.lat), lng: Number(s.lng) }));
+    }
+    points.push({ lat: Number(destLat), lng: Number(destLng) });
+
+    for (let i = 0; i < points.length - 1; i++) {
+      distanceKm += calculateDistance(points[i].lat, points[i].lng, points[i+1].lat, points[i+1].lng);
+    }
+    distanceKm *= 1.3;
+    
     const durationMin = estimateDuration(distanceKm);
     let estimatedPrice = calculateTripPrice(distanceKm, durationMin);
 
@@ -264,6 +289,51 @@ router.post('/:id/cancel', requireAuth, async (req: Request, res: Response) => {
 
     if (trip.status === 'searching') {
       cancelActiveSearch(id);
+    }
+
+    // ── LÓGICA DE PENALIZACIONES POR CANCELACIÓN ──
+    let passengerPenalty = false;
+    let driverPenalty = false;
+
+    if (role === 'passenger' && trip.status !== 'searching' && trip.acceptedAt) {
+      const msSinceAccepted = Date.now() - trip.acceptedAt.getTime();
+      if (msSinceAccepted > 2 * 60 * 1000) {
+        passengerPenalty = true; // Pasaron más de 2 min de gracia
+      }
+    } else if (role === 'driver') {
+      // Excepciones válidas para el conductor (No penalizan al conductor)
+      const validReasons = [
+        'Cambio de ruta no acordado', 
+        'Excede capacidad legal', 
+        'Comportamiento agresivo',
+        'Pasajero no se presentó' // Esta penaliza al pasajero, no al conductor
+      ];
+      
+      if (reason === 'Pasajero no se presentó') {
+        passengerPenalty = true; // "No-show" penaliza gravemente al pasajero
+      } else if (!validReasons.includes(reason)) {
+        driverPenalty = true; // Cualquier otro motivo injustificado penaliza al conductor
+      }
+    }
+
+    // Aplicar penalizaciones a la BD
+    if (passengerPenalty) {
+      const p = await prisma.user.update({
+        where: { id: trip.passengerId },
+        data: { cancellationCount: { increment: 1 } }
+      });
+      if (p.cancellationCount >= 3) {
+        await prisma.user.update({ where: { id: p.id }, data: { status: 'suspended' } });
+      }
+    }
+    if (driverPenalty && trip.driverId) {
+      const d = await prisma.driver.update({
+        where: { id: trip.driverId },
+        data: { cancellationCount: { increment: 1 } }
+      });
+      if (d.cancellationCount >= 3) {
+        await prisma.driver.update({ where: { id: d.id }, data: { status: 'suspended' } });
+      }
     }
 
     const updated = await prisma.trip.update({

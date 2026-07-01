@@ -244,18 +244,48 @@ router.delete('/drivers/:id', async (req: Request, res: Response) => {
     const driverId = req.params.id;
     const driver = await prisma.driver.findUnique({ where: { id: driverId } });
     if (!driver) return res.status(404).json({ error: 'Conductor no encontrado' });
-
-    await prisma.$transaction([
-      prisma.rating.deleteMany({ where: { OR: [{ driverId }, { trip: { driverId } }] } }),
-      prisma.trip.deleteMany({ where: { driverId } }),
-      prisma.refreshToken.deleteMany({ where: { driverId } }),
-      prisma.driver.delete({ where: { id: driverId } }),
-    ]);
+      await prisma.$transaction([
+        prisma.refreshToken.deleteMany({ where: { driverId } }),
+        prisma.driver.update({ 
+          where: { id: driverId },
+          data: {
+            isDeleted: true,
+            email: `[eliminado_${driverId}]`,
+            phone: `[eliminado_${driverId}]`,
+            rut: `[eliminado_${driverId}]`,
+            idFrontUrl: '',
+            idBackUrl: '',
+            selfieUrl: null,
+            backgroundDocUrl: null,
+            licenseUrl: '',
+            licenseBackUrl: '',
+            vehiclePhotoUrl: '',
+          }
+        }),
+      ]);
 
     return res.json({ message: 'Conductor eliminado permanentemente' });
   } catch (err) {
     console.error('Error al eliminar conductor:', err);
     return res.status(500).json({ error: 'Error al eliminar conductor' });
+  }
+});
+
+// ─── PASAJEROS PENDIENTES ─────────────────────────────────────────────────
+router.get('/passengers/pending', async (_req: Request, res: Response) => {
+  try {
+    const passengers = await prisma.user.findMany({
+      where: { role: 'passenger', isVerified: false },
+      orderBy: { createdAt: 'asc' },
+      select: {
+        id: true, name: true, email: true, phone: true,
+        rut: true, isVerified: true, createdAt: true,
+        idFrontUrl: true, idBackUrl: true, selfieUrl: true, backgroundDocUrl: true,
+      },
+    });
+    return res.json({ passengers });
+  } catch (err) {
+    return res.status(500).json({ error: 'Error interno' });
   }
 });
 
@@ -350,10 +380,20 @@ router.delete('/passengers/:id', async (req: Request, res: Response) => {
     }
 
     await prisma.$transaction([
-      prisma.rating.deleteMany({ where: { OR: [{ passengerId }, { trip: { passengerId } }] } }),
-      prisma.trip.deleteMany({ where: { passengerId } }),
       prisma.refreshToken.deleteMany({ where: { userId: passengerId } }),
-      prisma.user.delete({ where: { id: passengerId } }),
+      prisma.user.update({
+        where: { id: passengerId },
+        data: {
+          isDeleted: true,
+          email: `[eliminado_${passengerId}]`,
+          phone: `[eliminado_${passengerId}]`,
+          rut: null,
+          idFrontUrl: null,
+          idBackUrl: null,
+          selfieUrl: null,
+          backgroundDocUrl: null,
+        }
+      }),
     ]);
 
     return res.json({ message: 'Pasajero eliminado permanentemente' });

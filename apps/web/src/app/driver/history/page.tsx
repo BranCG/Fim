@@ -34,6 +34,13 @@ export default function DriverHistoryPage() {
   const [trips, setTrips] = useState<Trip[]>([]);
   const [loading, setLoading] = useState(true);
   const [showTaxGuide, setShowTaxGuide] = useState(false);
+  
+  // Pagination states
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+  
+  const paginatedTrips = trips.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+  const totalPages = Math.ceil(trips.length / itemsPerPage);
 
   useEffect(() => {
     const s = getSession();
@@ -149,7 +156,7 @@ export default function DriverHistoryPage() {
         </div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          {trips.map(trip => (
+          {paginatedTrips.map(trip => (
             <div key={trip.id} className="card" style={{ border: '1px solid var(--border)', background: 'var(--bg-secondary)' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
                 <div>
@@ -189,6 +196,30 @@ export default function DriverHistoryPage() {
               )}
             </div>
           ))}
+          
+          {totalPages > 1 && (
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '16px', background: 'var(--bg-secondary)', padding: '16px', borderRadius: 'var(--radius)', border: '1px solid var(--border)' }}>
+              <button 
+                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                disabled={currentPage === 1}
+                className="btn btn-secondary"
+                style={{ opacity: currentPage === 1 ? 0.5 : 1, padding: '8px 16px' }}
+              >
+                ← Anteriores
+              </button>
+              <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: 600 }}>
+                Página {currentPage} de {totalPages}
+              </span>
+              <button 
+                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                disabled={currentPage === totalPages}
+                className="btn btn-secondary"
+                style={{ opacity: currentPage === totalPages ? 0.5 : 1, padding: '8px 16px' }}
+              >
+                Siguientes →
+              </button>
+            </div>
+          )}
         </div>
       )}
       {/* MODAL DE GUÍA TRIBUTARIA SII */}

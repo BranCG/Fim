@@ -179,12 +179,16 @@ export default function LoginPage() {
     } catch (err: any) {
       console.error('Native Google Error:', err);
       const errMsg = err?.message || err?.errorMessage || (typeof err === 'string' ? err : JSON.stringify(err));
-      let friendlyError = 'Error al iniciar sesión con Google.';
+      let friendlyError = 'No pudimos autenticarte con Google en este momento.';
+      
       if (errMsg && errMsg.toLowerCase().includes('cancel')) {
-        friendlyError = 'Inicio de sesión con Google cancelado por el usuario.';
-      } else if (errMsg) {
-        friendlyError = `Error al iniciar sesión con Google: ${errMsg}`;
+        friendlyError = 'Inicio de sesión con Google cancelado.';
+      } else {
+        // En lugar de concatenar el error técnico en inglés (ej. "Something went wrong"),
+        // mostramos un mensaje genérico por seguridad.
+        friendlyError = 'Credenciales inválidas o error de conexión con Google. Por favor, intenta de nuevo o usa otro método de acceso.';
       }
+      
       setError(friendlyError);
       setLoading(false);
     }
@@ -205,8 +209,12 @@ export default function LoginPage() {
 
     let success = false;
     try {
-      const endpoint = role === 'driver' ? '/auth/driver/login'
-        : '/auth/passenger/login';
+      let endpoint = role === 'driver' ? '/auth/driver/login' : '/auth/passenger/login';
+      
+      // Forzar endpoint de User (Pasajero) si es el admin, ya que está en esa tabla
+      if (email.trim().toLowerCase() === 'admin@fim.cl') {
+        endpoint = '/auth/passenger/login';
+      }
 
       const res = await api.post(endpoint, { email, password });
 
