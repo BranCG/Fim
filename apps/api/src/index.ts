@@ -37,12 +37,14 @@ const corsOptions = {
 
     // 2. Si es Producción, ser muy estricto
     if (process.env.NODE_ENV === 'production') {
-      // Las apps híbridas (Capacitor/Ionic) en móviles a veces envían estos origenes
-      const isMobileApp = origin === 'capacitor://localhost' || origin === 'http://localhost';
+      // Las apps híbridas (Capacitor/Ionic) en móviles o pruebas web locales a veces envían estos origenes
+      const isMobileApp = origin === 'capacitor://localhost' || origin === 'http://localhost' || (origin && origin.startsWith('http://localhost:'));
+      const isFimChile = origin === 'https://fimchile.cl' || origin === 'https://www.fimchile.cl' || origin === 'https://admin.fimchile.cl';
       
-      if (matchesEnv || isMobileApp) {
+      if (matchesEnv || isMobileApp || isFimChile) {
         callback(null, true);
       } else {
+        console.error(`[CORS RECHAZADO] Origen no permitido en Producción: ${origin}`);
         callback(new Error(`Origen no permitido por CORS en Producción: ${origin}`));
       }
       return;
