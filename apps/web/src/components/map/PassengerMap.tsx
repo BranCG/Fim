@@ -751,7 +751,7 @@ export default function PassengerMap({
         out center 100;
       `;
       try {
-        const res = await fetch(\`https://overpass-api.de/api/interpreter?data=\${encodeURIComponent(query)}\`);
+        const res = await fetch(`https://overpass-api.de/api/interpreter?data=${encodeURIComponent(query)}`);
         const data = await res.json();
         if (data && data.elements) {
           setPois(data.elements);
