@@ -58,6 +58,12 @@ export default function BiometricModal({ isOpen, onClose, onSuccess, selfieUrl }
       setStream(mediaStream);
       if (videoRef.current) {
         videoRef.current.srcObject = mediaStream;
+        // Forzar reproducción en Android WebViews que muestran el ícono de Play
+        setTimeout(() => {
+          if (videoRef.current) {
+             videoRef.current.play().catch(e => console.error('Error auto-playing video:', e));
+          }
+        }, 100);
       }
       setStatus('camera_active');
     } catch (err: any) {
