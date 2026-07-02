@@ -37,6 +37,7 @@ model User {
   isDeleted        Boolean   @default(false) @map("esta_eliminado")
   status           String    @default("active") @map("estado")
   cancellationCount Int      @default(0) @map("cantidad_cancelaciones")
+  lastBiometricAuth DateTime? @map("ultima_autenticacion_biometrica")
 
   @@map("usuarios")
 }
@@ -102,6 +103,7 @@ model Driver {
   tokenVersion        Int       @default(0) @map("version_token")
   isDeleted           Boolean   @default(false) @map("esta_eliminado")
   cancellationCount   Int       @default(0) @map("cantidad_cancelaciones")
+  lastBiometricAuth   DateTime? @map("ultima_autenticacion_biometrica")
 
   // Fim Finanzas Config
   fuelEfficiency      Float?    @default(12.0) @map("rendimiento_combustible")

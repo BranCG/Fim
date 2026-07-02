@@ -85,12 +85,19 @@ router.post('/toggle-online', requireAuth, requireRole('driver'), async (req: Re
     const driver = await prisma.driver.findUnique({ where: { id: req.user!.id } });
     if (!driver) return res.status(404).json({ error: 'No encontrado' });
 
-    if (driver.status !== 'active' && driver.status !== 'approved') {
-      return res.status(403).json({ error: 'Debes estar aprobado por un administrador' });
-    }
-
-    // ── Validaciones por plan ─────────────────────────────────────────────
     if (isOnline) {
+      // 1. Verificación Biométrica estricta (Cada 8 horas)
+      const eightHoursAgo = new Date(Date.now() - 8 * 60 * 60 * 1000);
+      if (!driver.lastBiometricAuth || driver.lastBiometricAuth < eightHoursAgo) {
+        return res.status(403).json({ error: 'Biometric Required' });
+      }
+
+      // 2. Otras validaciones antes de conectar
+      if (driver.status !== 'active' && driver.status !== 'approved') {
+        return res.status(403).json({ error: 'Debes estar aprobado por un administrador' });
+      }
+
+      // ── Validaciones por plan ─────────────────────────────────────────────
       // Validar área de cobertura geográfica (últimas coordenadas del conductor)
       if (driver.lastLat !== null && driver.lastLng !== null) {
         const locationCheck = await checkCoordinateInAllowedRegion(driver.lastLat, driver.lastLng);

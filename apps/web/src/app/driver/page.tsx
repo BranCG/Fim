@@ -1134,6 +1134,10 @@ export default function DriverPage() {
         socket.emit('driver:offline', { driverId: session?.user?.id });
       }
     } catch (err: any) {
+      if (err.response?.data?.error === 'Biometric Required') {
+        setShowBiometricModal(true);
+        return;
+      }
       showCustomAlert(err.response?.data?.error || 'Error al cambiar estado', 'Error', 'error');
     } finally {
       setLoading(false);
@@ -4344,12 +4348,11 @@ export default function DriverPage() {
         isOpen={showBiometricModal}
         onClose={() => {
           setShowBiometricModal(false);
-          rejectTrip();
         }}
         onSuccess={() => {
           localStorage.setItem('driver_biometric_last_verified', String(Date.now()));
           setShowBiometricModal(false);
-          executeAcceptTrip();
+          handleToggleOnline();
         }}
         selfieUrl={driver?.selfieUrl}
       />

@@ -399,6 +399,12 @@ router.post('/biometric-verify', requireAuth, async (req: Request, res: Response
     console.log(`ℹ️ [Biometría] Similitud obtenida: ${similarity.toFixed(2)}% para usuario ID: ${userId}`);
 
     if (similarity >= 92) {
+      const now = new Date();
+      if (role === 'driver') {
+        await prisma.driver.update({ where: { id: userId }, data: { lastBiometricAuth: now } });
+      } else {
+        await prisma.user.update({ where: { id: userId }, data: { lastBiometricAuth: now } });
+      }
       return res.json({ success: true, similarity, message: 'Verificación biométrica exitosa.' });
     } else {
       return res.status(400).json({ 

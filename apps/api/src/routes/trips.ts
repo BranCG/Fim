@@ -10,13 +10,19 @@ const router = Router();
 // ─── SOLICITAR VIAJE ──────────────────────────────────────────────────────
 router.post('/request', requireAuth, requireRole('passenger'), async (req: Request, res: Response) => {
   try {
-    // Verificar si el pasajero está aprobado/verificado
+    // Verificar si el pasajero está aprobado/verificado y su biometría
     const user = await prisma.user.findUnique({
       where: { id: req.user!.id },
-      select: { isVerified: true }
+      select: { isVerified: true, lastBiometricAuth: true }
     });
     if (!user || !user.isVerified) {
       return res.status(403).json({ error: 'Tu cuenta aún no ha sido verificada por el administrador. Debes esperar la validación de tus documentos para pedir viajes.' });
+    }
+
+    // Verificación biométrica obligatoria (válida por 30 minutos)
+    const thirtyMinutesAgo = new Date(Date.now() - 30 * 60 * 1000);
+    if (!user.lastBiometricAuth || user.lastBiometricAuth < thirtyMinutesAgo) {
+      return res.status(403).json({ error: 'Biometric Required' });
     }
 
     const {

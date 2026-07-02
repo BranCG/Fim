@@ -1195,13 +1195,16 @@ export default function PassengerPage() {
 
     } catch (err: unknown) {
       const e = err as { response?: { data?: { error?: string } } };
+      if (e.response?.data?.error === 'Biometric Required') {
+        setShowBiometricModal(true);
+        return;
+      }
       setError(e.response?.data?.error || 'Error al solicitar el viaje');
       setStatus('confirm');
     }
   }, [origin, dest, paymentMethod, passengerCount, session, checkActiveTrip]);
 
   const handleRequestTrip = useCallback(async () => {
-    // Verificación biométrica desactivada temporalmente (bypass de cámara)
     await executeRequestTrip();
   }, [executeRequestTrip]);
 
