@@ -16,7 +16,7 @@ interface Driver {
   idFrontUrl: string; idBackUrl: string; licenseNumber: string; licenseUrl: string; licenseBackUrl: string;
   vehicleBrand: string; vehicleModel: string; vehicleYear: number;
   vehiclePlate: string; vehiclePhotoUrl: string; tagNumber: string;
-  totalRating: number; totalTrips: number; createdAt: string; adminNotes?: string;
+  totalRating: number; totalTrips: number; createdAt: string; updatedAt: string; adminNotes?: string;
   isDeleted?: boolean;
   selfieUrl?: string;
   backgroundDocUrl?: string;
@@ -91,6 +91,7 @@ export default function DashboardPage() {
     isDeleted?: boolean;
     role: string;
     createdAt: string;
+    updatedAt: string;
     idFrontUrl: string | null;
     idBackUrl: string | null;
     selfieUrl: string | null;
@@ -214,6 +215,8 @@ export default function DashboardPage() {
       else if (action === 'reject') await api.post(`/admin/drivers/${driverId}/reject`, { reason });
       else if (action === 'membership') await api.post(`/admin/drivers/${driverId}/membership-paid`);
       else if (action === 'suspend') await api.post(`/admin/drivers/${driverId}/suspend`, { reason });
+      else if (action === 'delete_permanent') await api.delete(`/admin/drivers/${driverId}`);
+      else if (action === 'restore') await api.post(`/admin/drivers/${driverId}/restore`);
 
       setActionMsg('✅ Acción realizada');
       loadStats();
@@ -256,6 +259,8 @@ export default function DashboardPage() {
     try {
       if (action === 'approve') await api.post(`/admin/passengers/${passengerId}/approve`);
       else if (action === 'reject') await api.post(`/admin/passengers/${passengerId}/reject`);
+      else if (action === 'delete_permanent') await api.delete(`/admin/passengers/${passengerId}`);
+      else if (action === 'restore') await api.post(`/admin/passengers/${passengerId}/restore`);
 
       setActionMsg('✅ Acción realizada');
       loadStats();
@@ -583,13 +588,23 @@ export default function DashboardPage() {
                   <tr>
                     <th>Conductor</th>
                     <th>Vehículo</th>
-                    <th>Estado</th>
-                    <th>Membresía</th>
-                    {driverPlanTab === 'COMFORT' && <th>Deuda</th>}
-                    {(driverPlanTab === 'BLACK' || driverPlanTab === 'FLEX') && <th>Vence</th>}
-                    <th>Rating</th>
-                    <th>Viajes</th>
-                    <th>Acciones</th>
+                    {driverPlanTab === 'ELIMINADOS' ? (
+                      <>
+                        <th>Eliminación Final (90 días)</th>
+                        <th>Estado</th>
+                        <th>Acciones Especiales</th>
+                      </>
+                    ) : (
+                      <>
+                        <th>Estado</th>
+                        <th>Membresía</th>
+                        {driverPlanTab === 'COMFORT' && <th>Deuda</th>}
+                        {(driverPlanTab === 'BLACK' || driverPlanTab === 'FLEX') && <th>Vence</th>}
+                        <th>Rating</th>
+                        <th>Viajes</th>
+                        <th>Acciones</th>
+                      </>
+                    )}
                   </tr>
                 </thead>
                 <tbody>
@@ -625,46 +640,70 @@ export default function DashboardPage() {
                           <div>{d.vehicleBrand} {d.vehicleModel}</div>
                           <div style={{ fontWeight: 700, color: 'var(--accent)' }}>{d.vehiclePlate}</div>
                         </td>
-                        <td>{statusBadge(d.status)}</td>
-                        <td>
-                          {d.membershipPaid
-                            ? <span className="badge badge-success">✅ Pagada</span>
-                            : <span className="badge badge-danger">Sin pagar</span>}
-                        </td>
-                        {driverPlanTab === 'COMFORT' && (
-                          <td style={{ fontWeight: 700, color: (d.comfortDebt || 0) > 0 ? 'var(--danger)' : 'var(--success)' }}>
-                            <div>{(d.comfortDebt || 0) > 0 ? `⚠️ $${(d.comfortDebt || 0).toLocaleString('es-CL')}` : '✅ Al día'}</div>
-                            {d.comfortReceiptUrl && (
-                              <button
-                                onClick={() => setImgModal(getImageUrl(d.comfortReceiptUrl))}
-                                className="btn btn-secondary btn-sm"
-                                style={{ marginTop: '4px', fontSize: '0.7rem', padding: '2px 6px', height: 'auto', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
-                              >
-                                📄 Ver Comprobante
-                              </button>
+                        {driverPlanTab === 'ELIMINADOS' ? (
+                          <>
+                            <td>
+                              <span style={{ fontWeight: 800, color: 'var(--danger)' }}>
+                                {(() => {
+                                  const updated = new Date(d.updatedAt);
+                                  updated.setDate(updated.getDate() + 90);
+                                  const diff = Math.ceil((updated.getTime() - new Date().getTime()) / (1000 * 3600 * 24));
+                                  return `${updated.toLocaleDateString('es-CL')} (${diff > 0 ? `en ${diff} días` : 'Vencido'})`;
+                                })()}
+                              </span>
+                            </td>
+                            <td>{statusBadge(d.status)}</td>
+                            <td>
+                              <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                                <button className="btn btn-success btn-sm" disabled={loading} onClick={() => doAction(d.id, 'restore')}>🔄 Reintegrar</button>
+                                <button className="btn btn-danger btn-sm" disabled={loading} onClick={() => { if(window.confirm('¿Eliminar y ofuscar de forma permanente e irreversible?')) doAction(d.id, 'delete_permanent'); }}>🗑️ Permanente</button>
+                              </div>
+                            </td>
+                          </>
+                        ) : (
+                          <>
+                            <td>{statusBadge(d.status)}</td>
+                            <td>
+                              {d.membershipPaid
+                                ? <span className="badge badge-success">✅ Pagada</span>
+                                : <span className="badge badge-danger">Sin pagar</span>}
+                            </td>
+                            {driverPlanTab === 'COMFORT' && (
+                              <td style={{ fontWeight: 700, color: (d.comfortDebt || 0) > 0 ? 'var(--danger)' : 'var(--success)' }}>
+                                <div>{(d.comfortDebt || 0) > 0 ? `⚠️ $${(d.comfortDebt || 0).toLocaleString('es-CL')}` : '✅ Al día'}</div>
+                                {d.comfortReceiptUrl && (
+                                  <button
+                                    onClick={() => setImgModal(getImageUrl(d.comfortReceiptUrl))}
+                                    className="btn btn-secondary btn-sm"
+                                    style={{ marginTop: '4px', fontSize: '0.7rem', padding: '2px 6px', height: 'auto', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
+                                  >
+                                    📄 Ver Comprobante
+                                  </button>
+                                )}
+                              </td>
                             )}
-                          </td>
+                            {(driverPlanTab === 'BLACK' || driverPlanTab === 'FLEX') && (
+                              <td style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                                {d.membershipExpiresAt ? new Date(d.membershipExpiresAt).toLocaleDateString('es-CL') : '—'}
+                              </td>
+                            )}
+                            <td style={{ fontWeight: 700, color: d.totalRating > 0 ? 'var(--warning)' : 'var(--text-muted)' }}>
+                              {d.totalRating > 0 ? `⭐ ${d.totalRating.toFixed(1)}` : '—'}
+                            </td>
+                            <td style={{ fontWeight: 600 }}>{d.totalTrips}</td>
+                            <td>
+                              <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                                <button className="btn btn-secondary btn-sm" onClick={() => openDriverDetail(d.id)}>Ver</button>
+                                {d.status === 'approved' && !d.membershipPaid && (
+                                  <button className="btn btn-warning btn-sm" disabled={loading} onClick={() => doAction(d.id, 'membership')}>💳 Activar</button>
+                                )}
+                                {d.status === 'active' && (
+                                  <button className="btn btn-danger btn-sm" disabled={loading} onClick={() => { const r = prompt('Motivo de suspensión:'); if (r) doAction(d.id, 'suspend', r); }}>Suspender</button>
+                                )}
+                              </div>
+                            </td>
+                          </>
                         )}
-                        {(driverPlanTab === 'BLACK' || driverPlanTab === 'FLEX') && (
-                          <td style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-                            {d.membershipExpiresAt ? new Date(d.membershipExpiresAt).toLocaleDateString('es-CL') : '—'}
-                          </td>
-                        )}
-                        <td style={{ fontWeight: 700, color: d.totalRating > 0 ? 'var(--warning)' : 'var(--text-muted)' }}>
-                          {d.totalRating > 0 ? `⭐ ${d.totalRating.toFixed(1)}` : '—'}
-                        </td>
-                        <td style={{ fontWeight: 600 }}>{d.totalTrips}</td>
-                        <td>
-                          <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
-                            <button className="btn btn-secondary btn-sm" onClick={() => openDriverDetail(d.id)}>Ver</button>
-                            {d.status === 'approved' && !d.membershipPaid && (
-                              <button className="btn btn-warning btn-sm" disabled={loading} onClick={() => doAction(d.id, 'membership')}>💳 Activar</button>
-                            )}
-                            {d.status === 'active' && (
-                              <button className="btn btn-danger btn-sm" disabled={loading} onClick={() => { const r = prompt('Motivo de suspensión:'); if (r) doAction(d.id, 'suspend', r); }}>Suspender</button>
-                            )}
-                          </div>
-                        </td>
                       </tr>
                     ));
                   })()}
@@ -1036,9 +1075,18 @@ export default function DashboardPage() {
                     <th>Nombre</th>
                     <th>Contacto</th>
                     <th>RUT</th>
-                    <th>Estado</th>
-                    <th>Fecha Registro</th>
-                    <th>Acciones</th>
+                    {passengerTab === 'ELIMINADOS' ? (
+                      <>
+                        <th>Eliminación Final (90 días)</th>
+                        <th>Acciones Especiales</th>
+                      </>
+                    ) : (
+                      <>
+                        <th>Estado</th>
+                        <th>Fecha Registro</th>
+                        <th>Acciones</th>
+                      </>
+                    )}
                   </tr>
                 </thead>
                 <tbody>
@@ -1071,27 +1119,50 @@ export default function DashboardPage() {
                           <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>{p.phone}</div>
                         </td>
                         <td style={{ fontWeight: 600 }}>{p.rut || '—'}</td>
-                        <td>
-                          {p.isVerified ? (
-                            <span className="badge badge-success">✅ Verificado</span>
-                          ) : (
-                            <span className="badge badge-warning">⏳ Pendiente</span>
-                          )}
-                        </td>
-                        <td style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-                          {new Date(p.createdAt).toLocaleDateString('es-CL')}
-                        </td>
-                        <td>
-                          <div style={{ display: 'flex', gap: '6px' }}>
-                            <button className="btn btn-secondary btn-sm" onClick={() => openPassengerDetail(p.id)}>Ver</button>
-                            {!p.isVerified && passengerTab !== 'ELIMINADOS' && (
-                              <button className="btn btn-success btn-sm" onClick={() => doPassengerAction(p.id, 'approve')}>✓ Aprobar</button>
-                            )}
-                            {p.isVerified && passengerTab !== 'ELIMINADOS' && (
-                              <button className="btn btn-danger btn-sm" onClick={() => doPassengerAction(p.id, 'reject')}>✕ Deshacer</button>
-                            )}
-                          </div>
-                        </td>
+                        {passengerTab === 'ELIMINADOS' ? (
+                          <>
+                            <td>
+                              <span style={{ fontWeight: 800, color: 'var(--danger)' }}>
+                                {(() => {
+                                  const updated = new Date(p.updatedAt);
+                                  updated.setDate(updated.getDate() + 90);
+                                  const diff = Math.ceil((updated.getTime() - new Date().getTime()) / (1000 * 3600 * 24));
+                                  return `${updated.toLocaleDateString('es-CL')} (${diff > 0 ? `en ${diff} días` : 'Vencido'})`;
+                                })()}
+                              </span>
+                            </td>
+                            <td>
+                              <div style={{ display: 'flex', gap: '6px' }}>
+                                <button className="btn btn-success btn-sm" disabled={loading} onClick={() => doPassengerAction(p.id, 'restore')}>🔄 Reintegrar</button>
+                                <button className="btn btn-danger btn-sm" disabled={loading} onClick={() => { if(window.confirm('¿Eliminar y ofuscar de forma permanente e irreversible?')) doPassengerAction(p.id, 'delete_permanent'); }}>🗑️ Permanente</button>
+                              </div>
+                            </td>
+                          </>
+                        ) : (
+                          <>
+                            <td>
+                              {p.isVerified ? (
+                                <span className="badge badge-success">✅ Verificado</span>
+                              ) : (
+                                <span className="badge badge-warning">⏳ Pendiente</span>
+                              )}
+                            </td>
+                            <td style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                              {new Date(p.createdAt).toLocaleDateString('es-CL')}
+                            </td>
+                            <td>
+                              <div style={{ display: 'flex', gap: '6px' }}>
+                                <button className="btn btn-secondary btn-sm" onClick={() => openPassengerDetail(p.id)}>Ver</button>
+                                {!p.isVerified && (
+                                  <button className="btn btn-success btn-sm" onClick={() => doPassengerAction(p.id, 'approve')}>✓ Aprobar</button>
+                                )}
+                                {p.isVerified && (
+                                  <button className="btn btn-danger btn-sm" onClick={() => doPassengerAction(p.id, 'reject')}>✕ Deshacer</button>
+                                )}
+                              </div>
+                            </td>
+                          </>
+                        )}
                       </tr>
                     ));
                   })()}

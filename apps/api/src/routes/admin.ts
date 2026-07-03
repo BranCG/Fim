@@ -87,7 +87,7 @@ router.get('/drivers', async (req: Request, res: Response) => {
         comfortDebt: true, comfortReceiptUrl: true, comfortLastPaidAt: true,
         vehicleBrand: true, vehicleModel: true, vehiclePlate: true, vehicleColor: true,
         totalRating: true, totalTrips: true, isOnline: true, isDeleted: true,
-        createdAt: true,
+        createdAt: true, updatedAt: true,
       },
     });
     return res.json({ drivers });
@@ -271,6 +271,21 @@ router.delete('/drivers/:id', async (req: Request, res: Response) => {
   }
 });
 
+// ─── REINTEGRAR CONDUCTOR (RESTAURAR) ─────────────────────────────────────
+router.post('/drivers/:id/restore', async (req: Request, res: Response) => {
+  try {
+    const driverId = req.params.id;
+    const driver = await prisma.driver.update({
+      where: { id: driverId },
+      data: { isDeleted: false }
+    });
+    return res.json({ message: 'Conductor reintegrado con éxito', driver });
+  } catch (err) {
+    console.error('Error al reintegrar conductor:', err);
+    return res.status(500).json({ error: 'Error al reintegrar conductor' });
+  }
+});
+
 // ─── PASAJEROS PENDIENTES ─────────────────────────────────────────────────
 router.get('/passengers/pending', async (_req: Request, res: Response) => {
   try {
@@ -297,7 +312,7 @@ router.get('/passengers', async (_req: Request, res: Response) => {
       orderBy: { createdAt: 'desc' },
       select: {
         id: true, name: true, email: true, phone: true,
-        rut: true, isVerified: true, isDeleted: true, createdAt: true,
+        rut: true, isVerified: true, isDeleted: true, createdAt: true, updatedAt: true,
         idFrontUrl: true, idBackUrl: true, selfieUrl: true, backgroundDocUrl: true,
       },
     });
@@ -400,6 +415,21 @@ router.delete('/passengers/:id', async (req: Request, res: Response) => {
   } catch (err) {
     console.error('Error al eliminar pasajero:', err);
     return res.status(500).json({ error: 'Error al eliminar pasajero' });
+  }
+});
+
+// ─── REINTEGRAR PASAJERO (RESTAURAR) ──────────────────────────────────────
+router.post('/passengers/:id/restore', async (req: Request, res: Response) => {
+  try {
+    const passengerId = req.params.id;
+    const passenger = await prisma.user.update({
+      where: { id: passengerId },
+      data: { isDeleted: false }
+    });
+    return res.json({ message: 'Pasajero reintegrado con éxito', passenger });
+  } catch (err) {
+    console.error('Error al reintegrar pasajero:', err);
+    return res.status(500).json({ error: 'Error al reintegrar pasajero' });
   }
 });
 
