@@ -503,13 +503,40 @@ router.post('/delete-account', requireAuth, async (req: Request, res: Response) 
     if (role === 'driver') {
       await prisma.$transaction([
         prisma.refreshToken.deleteMany({ where: { driverId: userId } }),
-        prisma.driver.update({ where: { id: userId }, data: { isDeleted: true } }),
+        prisma.driver.update({ 
+          where: { id: userId }, 
+          data: { 
+            isDeleted: true,
+            email: `[eliminado_${userId}]`,
+            phone: `[eliminado_${userId}]`,
+            rut: `[eliminado_${userId}]`,
+            idFrontUrl: '',
+            idBackUrl: '',
+            selfieUrl: null,
+            backgroundDocUrl: null,
+            licenseUrl: '',
+            licenseBackUrl: '',
+            vehiclePhotoUrl: ''
+          } 
+        }),
       ]);
       console.log(`❌ Conductor ${userId} eliminado de forma lógica (Soft Delete).`);
     } else {
       await prisma.$transaction([
         prisma.refreshToken.deleteMany({ where: { userId: userId } }),
-        prisma.user.update({ where: { id: userId }, data: { isDeleted: true } }),
+        prisma.user.update({ 
+          where: { id: userId }, 
+          data: { 
+            isDeleted: true,
+            email: `[eliminado_${userId}]`,
+            phone: `[eliminado_${userId}]`,
+            rut: null,
+            idFrontUrl: null,
+            idBackUrl: null,
+            selfieUrl: null,
+            backgroundDocUrl: null
+          } 
+        }),
       ]);
       console.log(`❌ Pasajero ${userId} eliminado de forma lógica (Soft Delete).`);
     }
