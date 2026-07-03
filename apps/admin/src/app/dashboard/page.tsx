@@ -73,7 +73,7 @@ export default function DashboardPage() {
   const [actionMsg, setActionMsg] = useState('');
   const [imgModal, setImgModal] = useState<string | null>(null);
   const [historyPayment, setHistoryPayment] = useState<string>('all');
-  const [driverPlanTab, setDriverPlanTab] = useState<'BLACK' | 'COMFORT' | 'FLEX'>('BLACK');
+  const [driverPlanTab, setDriverPlanTab] = useState<'BLACK' | 'COMFORT' | 'FLEX' | 'ELIMINADOS'>('BLACK');
   const [config, setConfig] = useState<Record<string, string>>({});
   const [giftDays, setGiftDays] = useState(5);
   const [gifting, setGifting] = useState(false);
@@ -98,6 +98,7 @@ export default function DashboardPage() {
 
   const [passengers, setPassengers] = useState<Passenger[]>([]);
   const [selectedPassenger, setSelectedPassenger] = useState<Passenger | null>(null);
+  const [passengerTab, setPassengerTab] = useState<'ACTIVOS' | 'ELIMINADOS'>('ACTIVOS');
 
   const loadPassengers = useCallback(async () => {
     const r = await api.get('/admin/passengers');
@@ -543,12 +544,16 @@ export default function DashboardPage() {
 
             {/* Tabs por plan */}
             <div style={{ display: 'flex', gap: '8px', marginBottom: '24px', flexWrap: 'wrap' }}>
-              {(['BLACK', 'COMFORT', 'FLEX'] as const).map(plan => {
-                const count = allDrivers.filter(d => d.membershipPlan === plan).length;
+              {(['BLACK', 'COMFORT', 'FLEX', 'ELIMINADOS'] as const).map(plan => {
+                const isDeletedDriver = (d: Driver) => d.email?.startsWith('[eliminado_') || d.phone?.startsWith('[eliminado_');
+                const count = plan === 'ELIMINADOS' 
+                  ? allDrivers.filter(isDeletedDriver).length 
+                  : allDrivers.filter(d => d.membershipPlan === plan && !isDeletedDriver(d)).length;
                 const colors: Record<string, { active: string; bg: string; border: string }> = {
                   BLACK: { active: '#D4AF37', bg: 'rgba(212,175,55,0.1)', border: 'rgba(212,175,55,0.3)' },
                   COMFORT: { active: '#60A5FA', bg: 'rgba(59,130,246,0.1)', border: 'rgba(59,130,246,0.3)' },
                   FLEX: { active: '#34D399', bg: 'rgba(16,185,129,0.1)', border: 'rgba(16,185,129,0.3)' },
+                  ELIMINADOS: { active: '#F87171', bg: 'rgba(248,113,113,0.1)', border: 'rgba(248,113,113,0.3)' },
                 };
                 const c = colors[plan];
                 const isActive = driverPlanTab === plan;
@@ -563,7 +568,7 @@ export default function DashboardPage() {
                       display: 'flex', alignItems: 'center', gap: '8px',
                     }}
                   >
-                    {plan === 'BLACK' ? '🖤' : plan === 'COMFORT' ? '🟡' : '🟢'} {plan}
+                    {plan === 'BLACK' ? '🖤' : plan === 'COMFORT' ? '🟡' : plan === 'FLEX' ? '🟢' : '🗑️'} {plan}
                     <span style={{ background: isActive ? c.active : 'rgba(255,255,255,0.1)', color: isActive ? '#000' : 'var(--text-muted)', borderRadius: '20px', padding: '2px 8px', fontSize: '0.72rem', fontWeight: 900 }}>{count}</span>
                   </button>
                 );
@@ -586,71 +591,81 @@ export default function DashboardPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {allDrivers.filter(d => d.membershipPlan === driverPlanTab).map(d => (
-                    <tr key={d.id}>
-                      <td>
-                        <div
-                          style={{ fontWeight: 700, color: driverPlanTab === 'BLACK' ? '#D4AF37' : driverPlanTab === 'COMFORT' ? '#60A5FA' : '#34D399', cursor: 'pointer', textDecoration: 'underline' }}
-                          onClick={() => openDriverDetail(d.id)}
-                        >
-                          {d.name}
-                        </div>
-                        <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>{d.email}</div>
-                        <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>RUT: {d.rut}</div>
-                      </td>
-                      <td style={{ fontSize: '0.85rem' }}>
-                        <div>{d.vehicleBrand} {d.vehicleModel}</div>
-                        <div style={{ fontWeight: 700, color: 'var(--accent)' }}>{d.vehiclePlate}</div>
-                      </td>
-                      <td>{statusBadge(d.status)}</td>
-                      <td>
-                        {d.membershipPaid
-                          ? <span className="badge badge-success">✅ Pagada</span>
-                          : <span className="badge badge-danger">Sin pagar</span>}
-                      </td>
-                      {driverPlanTab === 'COMFORT' && (
-                        <td style={{ fontWeight: 700, color: (d.comfortDebt || 0) > 0 ? 'var(--danger)' : 'var(--success)' }}>
-                          <div>{(d.comfortDebt || 0) > 0 ? `⚠️ $${(d.comfortDebt || 0).toLocaleString('es-CL')}` : '✅ Al día'}</div>
-                          {d.comfortReceiptUrl && (
-                            <button
-                              onClick={() => setImgModal(getImageUrl(d.comfortReceiptUrl))}
-                              className="btn btn-secondary btn-sm"
-                              style={{ marginTop: '4px', fontSize: '0.7rem', padding: '2px 6px', height: 'auto', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
-                            >
-                              📄 Ver Comprobante
-                            </button>
-                          )}
+                  {(() => {
+                    const isDeletedDriver = (d: Driver) => d.email?.startsWith('[eliminado_') || d.phone?.startsWith('[eliminado_');
+                    const displayDrivers = driverPlanTab === 'ELIMINADOS' 
+                      ? allDrivers.filter(isDeletedDriver) 
+                      : allDrivers.filter(d => d.membershipPlan === driverPlanTab && !isDeletedDriver(d));
+                    
+                    if (displayDrivers.length === 0) {
+                      return (
+                        <tr>
+                          <td colSpan={8} style={{ textAlign: 'center', padding: '40px', color: 'var(--text-muted)' }}>
+                            No hay conductores en la pestaña {driverPlanTab}.
+                          </td>
+                        </tr>
+                      );
+                    }
+
+                    return displayDrivers.map(d => (
+                      <tr key={d.id}>
+                        <td>
+                          <div
+                            style={{ fontWeight: 700, color: driverPlanTab === 'BLACK' ? '#D4AF37' : driverPlanTab === 'COMFORT' ? '#60A5FA' : driverPlanTab === 'ELIMINADOS' ? '#F87171' : '#34D399', cursor: 'pointer', textDecoration: 'underline' }}
+                            onClick={() => openDriverDetail(d.id)}
+                          >
+                            {d.name}
+                          </div>
+                          <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>{d.email}</div>
+                          <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>RUT: {d.rut}</div>
                         </td>
-                      )}
-                      {(driverPlanTab === 'BLACK' || driverPlanTab === 'FLEX') && (
-                        <td style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-                          {d.membershipExpiresAt ? new Date(d.membershipExpiresAt).toLocaleDateString('es-CL') : '—'}
+                        <td style={{ fontSize: '0.85rem' }}>
+                          <div>{d.vehicleBrand} {d.vehicleModel}</div>
+                          <div style={{ fontWeight: 700, color: 'var(--accent)' }}>{d.vehiclePlate}</div>
                         </td>
-                      )}
-                      <td style={{ fontWeight: 700, color: d.totalRating > 0 ? 'var(--warning)' : 'var(--text-muted)' }}>
-                        {d.totalRating > 0 ? `⭐ ${d.totalRating.toFixed(1)}` : '—'}
-                      </td>
-                      <td style={{ fontWeight: 600 }}>{d.totalTrips}</td>
-                      <td>
-                        <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
-                          <button className="btn btn-secondary btn-sm" onClick={() => openDriverDetail(d.id)}>Ver</button>
-                          {d.status === 'approved' && !d.membershipPaid && (
-                            <button className="btn btn-warning btn-sm" disabled={loading} onClick={() => doAction(d.id, 'membership')}>💳 Activar</button>
-                          )}
-                          {d.status === 'active' && (
-                            <button className="btn btn-danger btn-sm" disabled={loading} onClick={() => { const r = prompt('Motivo de suspensión:'); if (r) doAction(d.id, 'suspend', r); }}>Suspender</button>
-                          )}
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                  {allDrivers.filter(d => d.membershipPlan === driverPlanTab).length === 0 && (
-                    <tr>
-                      <td colSpan={8} style={{ textAlign: 'center', padding: '40px', color: 'var(--text-muted)' }}>
-                        No hay conductores con el plan {driverPlanTab} registrados aún.
-                      </td>
-                    </tr>
-                  )}
+                        <td>{statusBadge(d.status)}</td>
+                        <td>
+                          {d.membershipPaid
+                            ? <span className="badge badge-success">✅ Pagada</span>
+                            : <span className="badge badge-danger">Sin pagar</span>}
+                        </td>
+                        {driverPlanTab === 'COMFORT' && (
+                          <td style={{ fontWeight: 700, color: (d.comfortDebt || 0) > 0 ? 'var(--danger)' : 'var(--success)' }}>
+                            <div>{(d.comfortDebt || 0) > 0 ? `⚠️ $${(d.comfortDebt || 0).toLocaleString('es-CL')}` : '✅ Al día'}</div>
+                            {d.comfortReceiptUrl && (
+                              <button
+                                onClick={() => setImgModal(getImageUrl(d.comfortReceiptUrl))}
+                                className="btn btn-secondary btn-sm"
+                                style={{ marginTop: '4px', fontSize: '0.7rem', padding: '2px 6px', height: 'auto', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
+                              >
+                                📄 Ver Comprobante
+                              </button>
+                            )}
+                          </td>
+                        )}
+                        {(driverPlanTab === 'BLACK' || driverPlanTab === 'FLEX') && (
+                          <td style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                            {d.membershipExpiresAt ? new Date(d.membershipExpiresAt).toLocaleDateString('es-CL') : '—'}
+                          </td>
+                        )}
+                        <td style={{ fontWeight: 700, color: d.totalRating > 0 ? 'var(--warning)' : 'var(--text-muted)' }}>
+                          {d.totalRating > 0 ? `⭐ ${d.totalRating.toFixed(1)}` : '—'}
+                        </td>
+                        <td style={{ fontWeight: 600 }}>{d.totalTrips}</td>
+                        <td>
+                          <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                            <button className="btn btn-secondary btn-sm" onClick={() => openDriverDetail(d.id)}>Ver</button>
+                            {d.status === 'approved' && !d.membershipPaid && (
+                              <button className="btn btn-warning btn-sm" disabled={loading} onClick={() => doAction(d.id, 'membership')}>💳 Activar</button>
+                            )}
+                            {d.status === 'active' && (
+                              <button className="btn btn-danger btn-sm" disabled={loading} onClick={() => { const r = prompt('Motivo de suspensión:'); if (r) doAction(d.id, 'suspend', r); }}>Suspender</button>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    ));
+                  })()}
                 </tbody>
               </table>
             </div>
@@ -984,8 +999,32 @@ export default function DashboardPage() {
         {/* ── LISTADO PASAJEROS ─────────────────────────────── */}
         {view === 'passengers' && (
           <div className="animate-in">
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-              <h1 style={{ fontSize: '1.5rem', margin: 0 }}>👥 Pasajeros Registrados ({passengers.length})</h1>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', flexWrap: 'wrap', gap: '16px' }}>
+              <h1 style={{ fontSize: '1.5rem', margin: 0 }}>👥 Pasajeros Registrados</h1>
+              
+              <div style={{ display: 'flex', gap: '8px' }}>
+                {(['ACTIVOS', 'ELIMINADOS'] as const).map(tab => {
+                  const isDeleted = (p: Passenger) => p.email?.startsWith('[eliminado_') || p.phone?.startsWith('[eliminado_');
+                  const count = tab === 'ELIMINADOS' ? passengers.filter(isDeleted).length : passengers.filter(p => !isDeleted(p)).length;
+                  const isActive = passengerTab === tab;
+                  const color = tab === 'ELIMINADOS' ? '#F87171' : '#34D399';
+                  
+                  return (
+                    <button
+                      key={tab}
+                      onClick={() => setPassengerTab(tab)}
+                      style={{
+                        padding: '8px 16px', borderRadius: '8px', border: `1px solid ${isActive ? color : 'var(--border)'}`,
+                        background: isActive ? `rgba(${tab === 'ELIMINADOS' ? '248,113,113' : '52,211,153'}, 0.1)` : 'transparent', 
+                        color: isActive ? color : 'var(--text-muted)',
+                        fontWeight: 700, fontSize: '0.85rem', cursor: 'pointer', transition: 'all 0.2s ease',
+                      }}
+                    >
+                      {tab} ({count})
+                    </button>
+                  );
+                })}
+              </div>
             </div>
 
             <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
@@ -1001,51 +1040,59 @@ export default function DashboardPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {passengers.map(p => (
-                    <tr key={p.id}>
-                      <td>
-                        <div
-                          style={{ fontWeight: 700, color: 'var(--accent)', cursor: 'pointer', textDecoration: 'underline' }}
-                          onClick={() => openPassengerDetail(p.id)}
-                        >
-                          {p.name}
-                        </div>
-                      </td>
-                      <td>
-                        <div>{p.email}</div>
-                        <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>{p.phone}</div>
-                      </td>
-                      <td style={{ fontWeight: 600 }}>{p.rut || '—'}</td>
-                      <td>
-                        {p.isVerified ? (
-                          <span className="badge badge-success">✅ Verificado</span>
-                        ) : (
-                          <span className="badge badge-warning">⏳ Pendiente</span>
-                        )}
-                      </td>
-                      <td style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-                        {new Date(p.createdAt).toLocaleDateString('es-CL')}
-                      </td>
-                      <td>
-                        <div style={{ display: 'flex', gap: '6px' }}>
-                          <button className="btn btn-secondary btn-sm" onClick={() => openPassengerDetail(p.id)}>Ver</button>
-                          {!p.isVerified && (
-                            <button className="btn btn-success btn-sm" onClick={() => doPassengerAction(p.id, 'approve')}>✓ Aprobar</button>
+                  {(() => {
+                    const isDeleted = (p: Passenger) => p.email?.startsWith('[eliminado_') || p.phone?.startsWith('[eliminado_');
+                    const displayPassengers = passengerTab === 'ELIMINADOS' ? passengers.filter(isDeleted) : passengers.filter(p => !isDeleted(p));
+                    
+                    if (displayPassengers.length === 0) {
+                      return (
+                        <tr>
+                          <td colSpan={6} style={{ textAlign: 'center', padding: '40px', color: 'var(--text-muted)' }}>
+                            No hay pasajeros en esta categoría.
+                          </td>
+                        </tr>
+                      );
+                    }
+                    
+                    return displayPassengers.map(p => (
+                      <tr key={p.id}>
+                        <td>
+                          <div
+                            style={{ fontWeight: 700, color: 'var(--accent)', cursor: 'pointer', textDecoration: 'underline' }}
+                            onClick={() => openPassengerDetail(p.id)}
+                          >
+                            {p.name}
+                          </div>
+                        </td>
+                        <td>
+                          <div>{p.email}</div>
+                          <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>{p.phone}</div>
+                        </td>
+                        <td style={{ fontWeight: 600 }}>{p.rut || '—'}</td>
+                        <td>
+                          {p.isVerified ? (
+                            <span className="badge badge-success">✅ Verificado</span>
+                          ) : (
+                            <span className="badge badge-warning">⏳ Pendiente</span>
                           )}
-                          {p.isVerified && (
-                            <button className="btn btn-danger btn-sm" onClick={() => doPassengerAction(p.id, 'reject')}>✕ Deshacer</button>
-                          )}
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                  {passengers.length === 0 && (
-                    <tr>
-                      <td colSpan={6} style={{ textAlign: 'center', padding: '40px', color: 'var(--text-muted)' }}>
-                        No hay pasajeros registrados aún.
-                      </td>
-                    </tr>
-                  )}
+                        </td>
+                        <td style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                          {new Date(p.createdAt).toLocaleDateString('es-CL')}
+                        </td>
+                        <td>
+                          <div style={{ display: 'flex', gap: '6px' }}>
+                            <button className="btn btn-secondary btn-sm" onClick={() => openPassengerDetail(p.id)}>Ver</button>
+                            {!p.isVerified && passengerTab !== 'ELIMINADOS' && (
+                              <button className="btn btn-success btn-sm" onClick={() => doPassengerAction(p.id, 'approve')}>✓ Aprobar</button>
+                            )}
+                            {p.isVerified && passengerTab !== 'ELIMINADOS' && (
+                              <button className="btn btn-danger btn-sm" onClick={() => doPassengerAction(p.id, 'reject')}>✕ Deshacer</button>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    ));
+                  })()}
                 </tbody>
               </table>
             </div>

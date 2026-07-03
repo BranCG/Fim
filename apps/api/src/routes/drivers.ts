@@ -86,10 +86,13 @@ router.post('/toggle-online', requireAuth, requireRole('driver'), async (req: Re
     if (!driver) return res.status(404).json({ error: 'No encontrado' });
 
     if (isOnline) {
-      // 1. Verificación Biométrica estricta (Cada 8 horas)
-      const eightHoursAgo = new Date(Date.now() - 8 * 60 * 60 * 1000);
-      if (!driver.lastBiometricAuth || driver.lastBiometricAuth < eightHoursAgo) {
-        return res.status(403).json({ error: 'Biometric Required' });
+      // 1. Verificación Biométrica estricta (Cada 8 horas), omitida para cuentas sin foto (devs)
+      const isPlaceholder = !driver.selfieUrl || driver.selfieUrl.trim() === '' || driver.selfieUrl.includes('placehold');
+      if (!isPlaceholder) {
+        const eightHoursAgo = new Date(Date.now() - 8 * 60 * 60 * 1000);
+        if (!driver.lastBiometricAuth || driver.lastBiometricAuth < eightHoursAgo) {
+          return res.status(403).json({ error: 'Biometric Required' });
+        }
       }
 
       // 2. Otras validaciones antes de conectar

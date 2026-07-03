@@ -10,19 +10,21 @@ const router = Router();
 // ─── SOLICITAR VIAJE ──────────────────────────────────────────────────────
 router.post('/request', requireAuth, requireRole('passenger'), async (req: Request, res: Response) => {
   try {
-    // Verificar si el pasajero está aprobado/verificado y su biometría
     const user = await prisma.user.findUnique({
       where: { id: req.user!.id },
-      select: { isVerified: true, lastBiometricAuth: true }
+      select: { isVerified: true, lastBiometricAuth: true, selfieUrl: true }
     });
     if (!user || !user.isVerified) {
       return res.status(403).json({ error: 'Tu cuenta aún no ha sido verificada por el administrador. Debes esperar la validación de tus documentos para pedir viajes.' });
     }
 
-    // Verificación biométrica obligatoria (válida por 30 minutos)
-    const thirtyMinutesAgo = new Date(Date.now() - 30 * 60 * 1000);
-    if (!user.lastBiometricAuth || user.lastBiometricAuth < thirtyMinutesAgo) {
-      return res.status(403).json({ error: 'Biometric Required' });
+    // Verificación biométrica obligatoria (válida por 30 minutos), omitida para cuentas sin foto de perfil (devs)
+    const isPlaceholder = !user.selfieUrl || user.selfieUrl.trim() === '' || user.selfieUrl.includes('placehold');
+    if (!isPlaceholder) {
+      const thirtyMinutesAgo = new Date(Date.now() - 30 * 60 * 1000);
+      if (!user.lastBiometricAuth || user.lastBiometricAuth < thirtyMinutesAgo) {
+        return res.status(403).json({ error: 'Biometric Required' });
+      }
     }
 
     const {
@@ -61,14 +63,8 @@ router.post('/request', requireAuth, requireRole('passenger'), async (req: Reque
     const durationMin = estimateDuration(distanceKm);
     let estimatedPrice = calculateTripPrice(distanceKm, durationMin);
 
-    // 50% de Descuento en el PRIMER viaje del pasajero (Tope $8.000)
-    const pastTripsCount = await prisma.trip.count({ where: { passengerId: req.user!.id } });
+    // 50% de Descuento deshabilitado por solicitud
     let isDiscounted = false;
-    if (pastTripsCount === 0) {
-      const discount = Math.min(roundCLP(estimatedPrice * 0.5), 8000);
-      estimatedPrice = roundCLP(estimatedPrice - discount);
-      isDiscounted = true;
-    }
 
     // Cobro de TAG automático si el viaje es de más de 5.0 km reales
     const isTagApplied = distanceKm > 5.0;
@@ -133,14 +129,8 @@ router.post('/estimate', requireAuth, async (req: Request, res: Response) => {
     const durationMin = estimateDuration(distanceKm);
     let estimatedPrice = calculateTripPrice(distanceKm, durationMin);
 
-    // 50% de Descuento en el PRIMER viaje del pasajero (Tope $8.000)
-    const pastTripsCount = await prisma.trip.count({ where: { passengerId: req.user!.id } });
+    // 50% de Descuento deshabilitado por solicitud
     let isDiscounted = false;
-    if (pastTripsCount === 0) {
-      const discount = Math.min(roundCLP(estimatedPrice * 0.5), 8000);
-      estimatedPrice = roundCLP(estimatedPrice - discount);
-      isDiscounted = true;
-    }
 
     // Cobro de TAG automático si el viaje es de más de 5.0 km reales
     const isTagApplied = distanceKm > 5.0;
