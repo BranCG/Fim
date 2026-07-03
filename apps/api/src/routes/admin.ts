@@ -86,7 +86,7 @@ router.get('/drivers', async (req: Request, res: Response) => {
         membershipPlan: true, membershipExpiresAt: true,
         comfortDebt: true, comfortReceiptUrl: true, comfortLastPaidAt: true,
         vehicleBrand: true, vehicleModel: true, vehiclePlate: true, vehicleColor: true,
-        totalRating: true, totalTrips: true, isOnline: true,
+        totalRating: true, totalTrips: true, isOnline: true, isDeleted: true,
         createdAt: true,
       },
     });
@@ -297,7 +297,7 @@ router.get('/passengers', async (_req: Request, res: Response) => {
       orderBy: { createdAt: 'desc' },
       select: {
         id: true, name: true, email: true, phone: true,
-        rut: true, isVerified: true, createdAt: true,
+        rut: true, isVerified: true, isDeleted: true, createdAt: true,
         idFrontUrl: true, idBackUrl: true, selfieUrl: true, backgroundDocUrl: true,
       },
     });

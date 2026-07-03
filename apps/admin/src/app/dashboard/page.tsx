@@ -17,6 +17,7 @@ interface Driver {
   vehicleBrand: string; vehicleModel: string; vehicleYear: number;
   vehiclePlate: string; vehiclePhotoUrl: string; tagNumber: string;
   totalRating: number; totalTrips: number; createdAt: string; adminNotes?: string;
+  isDeleted?: boolean;
   selfieUrl?: string;
   backgroundDocUrl?: string;
   membershipPlan: 'BLACK' | 'COMFORT' | 'FLEX';
@@ -87,6 +88,7 @@ export default function DashboardPage() {
     phone: string;
     rut: string | null;
     isVerified: boolean;
+    isDeleted?: boolean;
     role: string;
     createdAt: string;
     idFrontUrl: string | null;
@@ -545,7 +547,7 @@ export default function DashboardPage() {
             {/* Tabs por plan */}
             <div style={{ display: 'flex', gap: '8px', marginBottom: '24px', flexWrap: 'wrap' }}>
               {(['BLACK', 'COMFORT', 'FLEX', 'ELIMINADOS'] as const).map(plan => {
-                const isDeletedDriver = (d: Driver) => d.email?.startsWith('[eliminado_') || d.phone?.startsWith('[eliminado_');
+                const isDeletedDriver = (d: Driver) => d.isDeleted || d.email?.startsWith('[eliminado_');
                 const count = plan === 'ELIMINADOS' 
                   ? allDrivers.filter(isDeletedDriver).length 
                   : allDrivers.filter(d => d.membershipPlan === plan && !isDeletedDriver(d)).length;
@@ -592,7 +594,7 @@ export default function DashboardPage() {
                 </thead>
                 <tbody>
                   {(() => {
-                    const isDeletedDriver = (d: Driver) => d.email?.startsWith('[eliminado_') || d.phone?.startsWith('[eliminado_');
+                    const isDeletedDriver = (d: Driver) => d.isDeleted || d.email?.startsWith('[eliminado_');
                     const displayDrivers = driverPlanTab === 'ELIMINADOS' 
                       ? allDrivers.filter(isDeletedDriver) 
                       : allDrivers.filter(d => d.membershipPlan === driverPlanTab && !isDeletedDriver(d));
@@ -1004,7 +1006,7 @@ export default function DashboardPage() {
               
               <div style={{ display: 'flex', gap: '8px' }}>
                 {(['ACTIVOS', 'ELIMINADOS'] as const).map(tab => {
-                  const isDeleted = (p: Passenger) => p.email?.startsWith('[eliminado_') || p.phone?.startsWith('[eliminado_');
+                  const isDeleted = (p: Passenger) => p.isDeleted || p.email?.startsWith('[eliminado_');
                   const count = tab === 'ELIMINADOS' ? passengers.filter(isDeleted).length : passengers.filter(p => !isDeleted(p)).length;
                   const isActive = passengerTab === tab;
                   const color = tab === 'ELIMINADOS' ? '#F87171' : '#34D399';
@@ -1041,7 +1043,7 @@ export default function DashboardPage() {
                 </thead>
                 <tbody>
                   {(() => {
-                    const isDeleted = (p: Passenger) => p.email?.startsWith('[eliminado_') || p.phone?.startsWith('[eliminado_');
+                    const isDeleted = (p: Passenger) => p.isDeleted || p.email?.startsWith('[eliminado_');
                     const displayPassengers = passengerTab === 'ELIMINADOS' ? passengers.filter(isDeleted) : passengers.filter(p => !isDeleted(p));
                     
                     if (displayPassengers.length === 0) {

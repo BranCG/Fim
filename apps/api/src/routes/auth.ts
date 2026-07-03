@@ -505,40 +505,19 @@ router.post('/delete-account', requireAuth, async (req: Request, res: Response) 
         prisma.refreshToken.deleteMany({ where: { driverId: userId } }),
         prisma.driver.update({ 
           where: { id: userId }, 
-          data: { 
-            isDeleted: true,
-            email: `[eliminado_${userId}]`,
-            phone: `[eliminado_${userId}]`,
-            rut: `[eliminado_${userId}]`,
-            idFrontUrl: '',
-            idBackUrl: '',
-            selfieUrl: null,
-            backgroundDocUrl: null,
-            licenseUrl: '',
-            licenseBackUrl: '',
-            vehiclePhotoUrl: ''
-          } 
+          data: { isDeleted: true }
         }),
       ]);
-      console.log(`❌ Conductor ${userId} eliminado de forma lógica (Soft Delete).`);
+      console.log(`❌ Conductor ${userId} eliminado de forma lógica (Soft Delete). Se retienen datos por 30-90 días por seguridad.`);
     } else {
       await prisma.$transaction([
         prisma.refreshToken.deleteMany({ where: { userId: userId } }),
         prisma.user.update({ 
           where: { id: userId }, 
-          data: { 
-            isDeleted: true,
-            email: `[eliminado_${userId}]`,
-            phone: `[eliminado_${userId}]`,
-            rut: null,
-            idFrontUrl: null,
-            idBackUrl: null,
-            selfieUrl: null,
-            backgroundDocUrl: null
-          } 
+          data: { isDeleted: true }
         }),
       ]);
-      console.log(`❌ Pasajero ${userId} eliminado de forma lógica (Soft Delete).`);
+      console.log(`❌ Pasajero ${userId} eliminado de forma lógica (Soft Delete). Se retienen datos por 30-90 días por seguridad.`);
     }
 
     return res.json({ message: 'Tu cuenta ha sido eliminada permanentemente.' });
