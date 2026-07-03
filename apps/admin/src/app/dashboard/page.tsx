@@ -881,7 +881,9 @@ export default function DashboardPage() {
                             <td>
                               {d.membershipPaid
                                 ? <span className="badge badge-success">✅ Pagada</span>
-                                : <span className="badge badge-danger">Sin pagar</span>}
+                                : d.isTrial
+                                  ? <span className="badge" style={{ background: 'var(--accent)', color: '#09090F' }}>🎁 Free Pass</span>
+                                  : <span className="badge badge-danger">Sin pagar</span>}
                             </td>
                             {driverPlanTab === 'COMFORT' && (
                               <td style={{ fontWeight: 700, color: (d.comfortDebt || 0) > 0 ? 'var(--danger)' : 'var(--success)' }}>

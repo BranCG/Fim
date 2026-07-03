@@ -669,13 +669,18 @@ router.post('/gift-free-days', async (req: Request, res: Response) => {
       const newExpiresAt = new Date(baseExpiresDate.getTime());
       newExpiresAt.setDate(newExpiresAt.getDate() + daysNum);
 
+      const updateData: any = {
+        membershipExpiresAt: newExpiresAt,
+        giftDaysPending: { increment: daysNum }
+      };
+
+      if (!d.membershipPaid) {
+        updateData.isTrial = true;
+      }
+
       await prisma.driver.update({
         where: { id: d.id },
-        data: {
-          membershipExpiresAt: newExpiresAt,
-          giftDaysPending: { increment: daysNum },
-          membershipPaid: true // Se activa o extiende su membresía pagada
-        }
+        data: updateData
       });
 
       updatedCount++;
