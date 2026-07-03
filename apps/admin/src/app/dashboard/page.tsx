@@ -319,6 +319,19 @@ export default function DashboardPage() {
     }
   };
 
+  async function resolveSafetyReport(reportId: string) {
+    const notes = window.prompt('Notas de resolución (Opcional):');
+    if (notes === null) return; // Se canceló el prompt
+    setLoading(true); setActionMsg('');
+    try {
+      await api.post(`/admin/safety-reports/${reportId}/resolve`, { adminNotes: notes });
+      setActionMsg('✅ Reporte Resuelto');
+      loadSafetyReports();
+    } catch {
+      setActionMsg('❌ Error al resolver reporte');
+    } finally { setLoading(false); setTimeout(() => setActionMsg(''), 3000); }
+  }
+
   async function doPassengerAction(passengerId: string, action: string) {
     setLoading(true); setActionMsg('');
     const originalPassengers = [...passengers];
