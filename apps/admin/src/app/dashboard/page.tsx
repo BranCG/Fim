@@ -124,11 +124,11 @@ export default function DashboardPage() {
     createdAt: string;
     trip: {
       passenger: { id: string; name: string; phone: string; };
-      driver?: { 
-        id: string; 
-        name: string; 
-        phone: string; 
-        vehiclePlate: string; 
+      driver?: {
+        id: string;
+        name: string;
+        phone: string;
+        vehiclePlate: string;
         vehicleBrand: string;
         vehicleModel: string;
         vehicleColor: string;
@@ -158,7 +158,7 @@ export default function DashboardPage() {
       gain.connect(ctx.destination);
       osc.start();
       setTimeout(() => osc.stop(), 1200);
-    } catch(e) { console.error('Audio API no soportada', e); }
+    } catch (e) { console.error('Audio API no soportada', e); }
   }, []);
 
   const loadSafetyReports = useCallback(async () => {
@@ -173,7 +173,7 @@ export default function DashboardPage() {
         }
         return unresolved;
       });
-    } catch (e) {}
+    } catch (e) { }
   }, [playSiren]);
 
   // Polling de seguridad global en segundo plano cada 15 segundos
@@ -487,7 +487,7 @@ export default function DashboardPage() {
               <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginBottom: '20px', lineHeight: 1.5 }}>
                 Ingresa una nota administrativa con la acción tomada (ej. "Pasajero fue contactado", "Se suspendió al conductor"). Esto quedará en el historial.
               </p>
-              
+
               <textarea
                 value={resolveNotes}
                 onChange={e => setResolveNotes(e.target.value)}
@@ -495,7 +495,7 @@ export default function DashboardPage() {
                 className="input"
                 style={{ width: '100%', minHeight: '120px', marginBottom: '24px', resize: 'vertical' }}
               />
-              
+
               <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
                 <button className="btn btn-secondary" onClick={() => setResolvingReportId(null)} disabled={loading}>Cancelar</button>
                 <button className="btn btn-warning" onClick={submitResolveReport} disabled={loading}>
@@ -559,7 +559,7 @@ export default function DashboardPage() {
                           )}
                         </td>
                         <td style={{ fontSize: '0.8rem' }}>
-                          <div><strong>Viaje:</strong> {r.tripId.slice(0,8)}...</div>
+                          <div><strong>Viaje:</strong> {r.tripId.slice(0, 8)}...</div>
                           {r.trip && (
                             <div style={{ marginTop: '4px' }}>
                               <div><strong>Pasajero:</strong> {r.trip.passenger.name} ({r.trip.passenger.phone})</div>
@@ -768,8 +768,8 @@ export default function DashboardPage() {
             <div style={{ display: 'flex', gap: '8px', marginBottom: '24px', flexWrap: 'wrap' }}>
               {(['BLACK', 'COMFORT', 'FLEX', 'ELIMINADOS'] as const).map(plan => {
                 const isDeletedDriver = (d: Driver) => d.isDeleted || d.email?.startsWith('[eliminado_');
-                const count = plan === 'ELIMINADOS' 
-                  ? allDrivers.filter(isDeletedDriver).length 
+                const count = plan === 'ELIMINADOS'
+                  ? allDrivers.filter(isDeletedDriver).length
                   : allDrivers.filter(d => d.membershipPlan === plan && !isDeletedDriver(d)).length;
                 const colors: Record<string, { active: string; bg: string; border: string }> = {
                   BLACK: { active: '#D4AF37', bg: 'rgba(212,175,55,0.1)', border: 'rgba(212,175,55,0.3)' },
@@ -825,10 +825,10 @@ export default function DashboardPage() {
                 <tbody>
                   {(() => {
                     const isDeletedDriver = (d: Driver) => d.isDeleted || d.email?.startsWith('[eliminado_');
-                    const displayDrivers = driverPlanTab === 'ELIMINADOS' 
-                      ? allDrivers.filter(isDeletedDriver) 
+                    const displayDrivers = driverPlanTab === 'ELIMINADOS'
+                      ? allDrivers.filter(isDeletedDriver)
                       : allDrivers.filter(d => d.membershipPlan === driverPlanTab && !isDeletedDriver(d));
-                    
+
                     if (displayDrivers.length === 0) {
                       return (
                         <tr>
@@ -871,7 +871,7 @@ export default function DashboardPage() {
                             <td>
                               <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
                                 <button className="btn btn-success btn-sm" disabled={loading} onClick={() => doAction(d.id, 'restore')}>🔄 Reintegrar</button>
-                                <button className="btn btn-danger btn-sm" disabled={loading} onClick={() => { if(window.confirm('¿Eliminar y ofuscar de forma permanente e irreversible?')) doAction(d.id, 'delete_permanent'); }}>🗑️ Permanente</button>
+                                <button className="btn btn-danger btn-sm" disabled={loading} onClick={() => { if (window.confirm('¿Eliminar y ofuscar de forma permanente e irreversible?')) doAction(d.id, 'delete_permanent'); }}>🗑️ Permanente</button>
                               </div>
                             </td>
                           </>
@@ -917,7 +917,7 @@ export default function DashboardPage() {
                                 {d.status === 'active' && (
                                   <button className="btn btn-warning btn-sm" disabled={loading} onClick={() => { const r = prompt('Motivo de suspensión:'); if (r) doAction(d.id, 'suspend', r); }}>Suspender</button>
                                 )}
-                                <button className="btn btn-danger btn-sm" disabled={loading} onClick={() => { if(window.confirm('¿Estás seguro de eliminar permanentemente esta cuenta? Esta acción ofuscará todos sus datos y es irreversible.')) doAction(d.id, 'delete_permanent'); }}>🗑️ Eliminar</button>
+                                <button className="btn btn-danger btn-sm" disabled={loading} onClick={() => { if (window.confirm('¿Estás seguro de eliminar permanentemente esta cuenta? Esta acción ofuscará todos sus datos y es irreversible.')) doAction(d.id, 'delete_permanent'); }}>🗑️ Eliminar</button>
                               </div>
                             </td>
                           </>
@@ -1058,8 +1058,8 @@ export default function DashboardPage() {
                     <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem' }}>
                       <span style={{ color: 'var(--text-muted)' }}>📅 Membresía Estimada (+30 días)</span>
                       <span style={{ fontWeight: 700, color: '#ffffff' }}>
-                        {selectedDriver.membershipExpiresAt 
-                          ? new Date(new Date(selectedDriver.membershipExpiresAt).getTime() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString('es-CL') 
+                        {selectedDriver.membershipExpiresAt
+                          ? new Date(new Date(selectedDriver.membershipExpiresAt).getTime() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString('es-CL')
                           : 'Sin fecha'}
                       </span>
                     </div>
@@ -1246,7 +1246,7 @@ export default function DashboardPage() {
                 {selectedDriver.status === 'suspended' && (
                   <button className="btn btn-success" disabled={loading} onClick={() => doAction(selectedDriver.id, 'approve')}>Reactivar</button>
                 )}
-                <button className="btn btn-danger" disabled={loading} onClick={() => { if(window.confirm('¿Estás seguro de eliminar permanentemente esta cuenta? Esta acción ofuscará todos sus datos y es irreversible.')) doAction(selectedDriver.id, 'delete_permanent'); }}>🗑️ Eliminar Permanentemente</button>
+                <button className="btn btn-danger" disabled={loading} onClick={() => { if (window.confirm('¿Estás seguro de eliminar permanentemente esta cuenta? Esta acción ofuscará todos sus datos y es irreversible.')) doAction(selectedDriver.id, 'delete_permanent'); }}>🗑️ Eliminar Permanentemente</button>
               </div>
             </div>
           </div>
@@ -1257,21 +1257,21 @@ export default function DashboardPage() {
           <div className="animate-in">
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', flexWrap: 'wrap', gap: '16px' }}>
               <h1 style={{ fontSize: '1.5rem', margin: 0 }}>👥 Pasajeros Registrados</h1>
-              
+
               <div style={{ display: 'flex', gap: '8px' }}>
                 {(['ACTIVOS', 'ELIMINADOS'] as const).map(tab => {
                   const isDeleted = (p: Passenger) => p.isDeleted || p.email?.startsWith('[eliminado_');
                   const count = tab === 'ELIMINADOS' ? passengers.filter(isDeleted).length : passengers.filter(p => !isDeleted(p)).length;
                   const isActive = passengerTab === tab;
                   const color = tab === 'ELIMINADOS' ? '#F87171' : '#34D399';
-                  
+
                   return (
                     <button
                       key={tab}
                       onClick={() => setPassengerTab(tab)}
                       style={{
                         padding: '8px 16px', borderRadius: '8px', border: `1px solid ${isActive ? color : 'var(--border)'}`,
-                        background: isActive ? `rgba(${tab === 'ELIMINADOS' ? '248,113,113' : '52,211,153'}, 0.1)` : 'transparent', 
+                        background: isActive ? `rgba(${tab === 'ELIMINADOS' ? '248,113,113' : '52,211,153'}, 0.1)` : 'transparent',
                         color: isActive ? color : 'var(--text-muted)',
                         fontWeight: 700, fontSize: '0.85rem', cursor: 'pointer', transition: 'all 0.2s ease',
                       }}
@@ -1308,7 +1308,7 @@ export default function DashboardPage() {
                   {(() => {
                     const isDeleted = (p: Passenger) => p.isDeleted || p.email?.startsWith('[eliminado_');
                     const displayPassengers = passengerTab === 'ELIMINADOS' ? passengers.filter(isDeleted) : passengers.filter(p => !isDeleted(p));
-                    
+
                     if (displayPassengers.length === 0) {
                       return (
                         <tr>
@@ -1318,7 +1318,7 @@ export default function DashboardPage() {
                         </tr>
                       );
                     }
-                    
+
                     return displayPassengers.map(p => (
                       <tr key={p.id}>
                         <td>
@@ -1349,7 +1349,7 @@ export default function DashboardPage() {
                             <td>
                               <div style={{ display: 'flex', gap: '6px' }}>
                                 <button className="btn btn-success btn-sm" disabled={loading} onClick={() => doPassengerAction(p.id, 'restore')}>🔄 Reintegrar</button>
-                                <button className="btn btn-danger btn-sm" disabled={loading} onClick={() => { if(window.confirm('¿Eliminar y ofuscar de forma permanente e irreversible?')) doPassengerAction(p.id, 'delete_permanent'); }}>🗑️ Permanente</button>
+                                <button className="btn btn-danger btn-sm" disabled={loading} onClick={() => { if (window.confirm('¿Eliminar y ofuscar de forma permanente e irreversible?')) doPassengerAction(p.id, 'delete_permanent'); }}>🗑️ Permanente</button>
                               </div>
                             </td>
                           </>
@@ -1357,9 +1357,9 @@ export default function DashboardPage() {
                           <>
                             <td>
                               {p.isVerified ? (
-                                <span className="badge badge-success">✅ Verificado</span>
+                                <span className="badge badge-success">Verificado</span>
                               ) : (
-                                <span className="badge badge-warning">⏳ Pendiente</span>
+                                <span className="badge badge-warning">Pendiente</span>
                               )}
                             </td>
                             <td style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
@@ -1373,7 +1373,7 @@ export default function DashboardPage() {
                                 ) : (
                                   <button className="btn btn-success btn-sm" onClick={() => doPassengerAction(p.id, 'approve')}>Aprobar</button>
                                 )}
-                                <button className="btn btn-danger btn-sm" disabled={loading} onClick={() => { if(window.confirm('¿Estás seguro de eliminar permanentemente esta cuenta? Esta acción ofuscará todos sus datos y es irreversible.')) doPassengerAction(p.id, 'delete_permanent'); }}>🗑️ Eliminar</button>
+                                <button className="btn btn-danger btn-sm" disabled={loading} onClick={() => { if (window.confirm('¿Estás seguro de eliminar permanentemente esta cuenta? Esta acción ofuscará todos sus datos y es irreversible.')) doPassengerAction(p.id, 'delete_permanent'); }}>🗑️ Eliminar</button>
                               </div>
                             </td>
                           </>
@@ -1394,9 +1394,9 @@ export default function DashboardPage() {
               <button className="btn btn-secondary btn-sm" onClick={() => setView('passengers')}>← Volver</button>
               <h1 style={{ fontSize: '1.4rem', margin: 0 }}>{selectedPassenger.name}</h1>
               {selectedPassenger.isVerified ? (
-                <span className="badge badge-success">✅ Verificado</span>
+                <span className="badge badge-success">Verificado</span>
               ) : (
-                <span className="badge badge-warning">⏳ Pendiente de Aprobación</span>
+                <span className="badge badge-warning">Pendiente de Aprobación</span>
               )}
             </div>
 
@@ -1422,15 +1422,15 @@ export default function DashboardPage() {
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', maxWidth: '300px', margin: '0 auto', width: '100%' }}>
                   {!selectedPassenger.isVerified ? (
                     <button className="btn btn-success btn-lg" onClick={() => doPassengerAction(selectedPassenger.id, 'approve')} style={{ width: '100%', fontWeight: 700 }}>
-                      ✅ Aprobar Pasajero
+                      Aprobar Pasajero
                     </button>
                   ) : (
                     <button className="btn btn-warning btn-lg" onClick={() => doPassengerAction(selectedPassenger.id, 'reject')} style={{ width: '100%', fontWeight: 700 }}>
-                      ⚠️ Suspender Pasajero
+                      Suspender Pasajero
                     </button>
                   )}
-                  <button className="btn btn-danger btn-lg" onClick={() => { if(window.confirm('¿Estás seguro de eliminar permanentemente esta cuenta? Esta acción ofuscará todos sus datos y es irreversible.')) doPassengerAction(selectedPassenger.id, 'delete_permanent'); }} style={{ width: '100%', fontWeight: 700 }}>
-                    🗑️ Eliminar Permanentemente
+                  <button className="btn btn-danger btn-lg" onClick={() => { if (window.confirm('¿Estás seguro de eliminar permanentemente esta cuenta? Esta acción ofuscará todos sus datos y es irreversible.')) doPassengerAction(selectedPassenger.id, 'delete_permanent'); }} style={{ width: '100%', fontWeight: 700 }}>
+                    Eliminar Permanentemente
                   </button>
                 </div>
               </div>
@@ -1588,7 +1588,7 @@ export default function DashboardPage() {
               <div className="card">
                 <h3 style={{ fontSize: '1.1rem', marginBottom: '8px', color: 'var(--accent)' }}>🎁 Días de Membresía de Regalo (Free Pass Fim)</h3>
                 <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem', marginBottom: '16px' }}>
-                  Añade días de membresía gratis a todos los conductores con estado <strong>Activo</strong> o <strong>Aprobado</strong> simultáneamente. 
+                  Añade días de membresía gratis a todos los conductores con estado <strong>Activo</strong> o <strong>Aprobado</strong> simultáneamente.
                   Si un conductor ya tiene su membresía pagada y vigente, su fecha de expiración se extenderá automáticamente por esta cantidad de días. Si está vencido, se le activará desde hoy por esa cantidad de días.
                 </p>
 
