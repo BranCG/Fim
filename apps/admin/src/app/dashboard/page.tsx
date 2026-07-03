@@ -762,7 +762,7 @@ export default function DashboardPage() {
         {/* ── TODOS LOS CONDUCTORES ─────────────────────────── */}
         {view === 'all_drivers' && (
           <div className="animate-in">
-            <h1 style={{ fontSize: '1.5rem', marginBottom: '24px' }}>🚗 Conductores por Plan</h1>
+            <h1 style={{ fontSize: '1.5rem', marginBottom: '24px' }}>Conductores por Plan</h1>
 
             {/* Tabs por plan */}
             <div style={{ display: 'flex', gap: '8px', marginBottom: '24px', flexWrap: 'wrap' }}>
@@ -880,14 +880,14 @@ export default function DashboardPage() {
                             <td>{statusBadge(d.status)}</td>
                             <td>
                               {d.membershipPaid
-                                ? <span className="badge badge-success">✅ Pagada</span>
+                                ? <span className="badge badge-success">Pagada</span>
                                 : d.isTrial
                                   ? <span className="badge" style={{ background: 'var(--accent)', color: '#09090F' }}>🎁 Free Pass</span>
                                   : <span className="badge badge-danger">Sin pagar</span>}
                             </td>
                             {driverPlanTab === 'COMFORT' && (
                               <td style={{ fontWeight: 700, color: (d.comfortDebt || 0) > 0 ? 'var(--danger)' : 'var(--success)' }}>
-                                <div>{(d.comfortDebt || 0) > 0 ? `⚠️ $${(d.comfortDebt || 0).toLocaleString('es-CL')}` : '✅ Al día'}</div>
+                                <div>{(d.comfortDebt || 0) > 0 ? `⚠️ $${(d.comfortDebt || 0).toLocaleString('es-CL')}` : 'Al día'}</div>
                                 {d.comfortReceiptUrl && (
                                   <button
                                     onClick={() => setImgModal(getImageUrl(d.comfortReceiptUrl))}
@@ -984,7 +984,7 @@ export default function DashboardPage() {
                   {revenueData.map((row, i) => (
                     <tr key={i}>
                       <td style={{ fontWeight: 700 }}>{row.driverName}</td>
-                      <td>{row.paymentMethod === 'card' ? '💳 Mercado Pago' : '💵 Efectivo'}</td>
+                      <td>{row.paymentMethod === 'card' ? ' Mercado Pago' : ' Efectivo'}</td>
                       <td style={{ fontWeight: 600 }}>{row.tripCount}</td>
                       <td style={{ fontWeight: 800, color: 'var(--accent)' }}>{formatCLP(row.totalAmount)}</td>
                       <td>{formatCLP(row.totalAmount / row.tripCount)}</td>
@@ -1056,7 +1056,7 @@ export default function DashboardPage() {
                       </span>
                     </div>
                     <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem' }}>
-                      <span style={{ color: 'var(--text-muted)' }}>📅 Membresía Estimada (+30 días)</span>
+                      <span style={{ color: 'var(--text-muted)' }}>Membresía Estimada (+30 días)</span>
                       <span style={{ fontWeight: 700, color: '#ffffff' }}>
                         {selectedDriver.membershipExpiresAt
                           ? new Date(new Date(selectedDriver.membershipExpiresAt).getTime() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString('es-CL')
