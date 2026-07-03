@@ -915,8 +915,9 @@ export default function DashboardPage() {
                                   <button className="btn btn-warning btn-sm" disabled={loading} onClick={() => doAction(d.id, 'membership')}>💳 Activar</button>
                                 )}
                                 {d.status === 'active' && (
-                                  <button className="btn btn-danger btn-sm" disabled={loading} onClick={() => { const r = prompt('Motivo de suspensión:'); if (r) doAction(d.id, 'suspend', r); }}>Suspender</button>
+                                  <button className="btn btn-warning btn-sm" disabled={loading} onClick={() => { const r = prompt('Motivo de suspensión:'); if (r) doAction(d.id, 'suspend', r); }}>Suspender</button>
                                 )}
+                                <button className="btn btn-danger btn-sm" disabled={loading} onClick={() => { if(window.confirm('¿Estás seguro de eliminar permanentemente esta cuenta? Esta acción ofuscará todos sus datos y es irreversible.')) doAction(d.id, 'delete_permanent'); }}>🗑️ Eliminar</button>
                               </div>
                             </td>
                           </>
@@ -1232,23 +1233,20 @@ export default function DashboardPage() {
             {/* Acciones */}
             <div className="card">
               <h3 style={{ fontSize: '1rem', marginBottom: '14px', color: 'var(--text-muted)' }}>ACCIONES</h3>
-              <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', alignItems: 'center' }}>
-                {selectedDriver.status === 'pending' && <>
-                  <button className="btn btn-success" disabled={loading} onClick={() => doAction(selectedDriver.id, 'approve')}>Aprobar</button>
-                  <button className="btn btn-warning" disabled={loading} onClick={() => doAction(selectedDriver.id, 'membership')}>Aprobar + Activar</button>
-                </>}
-                {selectedDriver.status === 'approved' && !selectedDriver.membershipPaid && (
-                  <button className="btn btn-primary" disabled={loading} onClick={() => doAction(selectedDriver.id, 'membership')}>Confirmar membresía pagada</button>
+              <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end', marginTop: '24px', flexWrap: 'wrap' }}>
+                {selectedDriver.status === 'pending' && (
+                  <>
+                    <button className="btn btn-success" disabled={loading} onClick={() => doAction(selectedDriver.id, 'approve')}>Aprobar</button>
+                    <button className="btn btn-danger" disabled={loading} onClick={() => { const r = prompt('Motivo de rechazo:'); if (r) doAction(selectedDriver.id, 'reject', r); }}>Rechazar</button>
+                  </>
                 )}
                 {selectedDriver.status === 'active' && (
-                  <button className="btn btn-danger" disabled={loading} onClick={() => { const r = prompt('Motivo de suspensión:'); if (r) doAction(selectedDriver.id, 'suspend', r); }}>Suspender</button>
+                  <button className="btn btn-warning" disabled={loading} onClick={() => { const r = prompt('Motivo de suspensión:'); if (r) doAction(selectedDriver.id, 'suspend', r); }}>Suspender</button>
                 )}
-                {(selectedDriver.status === 'pending' || selectedDriver.status === 'approved') && (
-                  <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                    <input placeholder="Motivo de rechazo..." value={rejectReason} onChange={e => setRejectReason(e.target.value)} style={{ width: '220px' }} />
-                    <button className="btn btn-danger btn-sm" disabled={loading || !rejectReason} onClick={() => doAction(selectedDriver.id, 'reject', rejectReason)}>Rechazar</button>
-                  </div>
+                {selectedDriver.status === 'suspended' && (
+                  <button className="btn btn-success" disabled={loading} onClick={() => doAction(selectedDriver.id, 'approve')}>Reactivar</button>
                 )}
+                <button className="btn btn-danger" disabled={loading} onClick={() => { if(window.confirm('¿Estás seguro de eliminar permanentemente esta cuenta? Esta acción ofuscará todos sus datos y es irreversible.')) doAction(selectedDriver.id, 'delete_permanent'); }}>🗑️ Eliminar Permanentemente</button>
               </div>
             </div>
           </div>
@@ -1368,14 +1366,14 @@ export default function DashboardPage() {
                               {new Date(p.createdAt).toLocaleDateString('es-CL')}
                             </td>
                             <td>
-                              <div style={{ display: 'flex', gap: '6px' }}>
-                                <button className="btn btn-secondary btn-sm" onClick={() => openPassengerDetail(p.id)}>Ver</button>
-                                {!p.isVerified && (
-                                  <button className="btn btn-success btn-sm" onClick={() => doPassengerAction(p.id, 'approve')}>✓ Aprobar</button>
+                              <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                                <button className="btn btn-secondary btn-sm" onClick={() => openPassengerDetail(p.id)}>Ver detalle</button>
+                                {p.isVerified ? (
+                                  <button className="btn btn-warning btn-sm" onClick={() => doPassengerAction(p.id, 'reject')}>Suspender</button>
+                                ) : (
+                                  <button className="btn btn-success btn-sm" onClick={() => doPassengerAction(p.id, 'approve')}>Aprobar</button>
                                 )}
-                                {p.isVerified && (
-                                  <button className="btn btn-danger btn-sm" onClick={() => doPassengerAction(p.id, 'reject')}>✕ Deshacer</button>
-                                )}
+                                <button className="btn btn-danger btn-sm" disabled={loading} onClick={() => { if(window.confirm('¿Estás seguro de eliminar permanentemente esta cuenta? Esta acción ofuscará todos sus datos y es irreversible.')) doPassengerAction(p.id, 'delete_permanent'); }}>🗑️ Eliminar</button>
                               </div>
                             </td>
                           </>
@@ -1424,13 +1422,16 @@ export default function DashboardPage() {
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', maxWidth: '300px', margin: '0 auto', width: '100%' }}>
                   {!selectedPassenger.isVerified ? (
                     <button className="btn btn-success btn-lg" onClick={() => doPassengerAction(selectedPassenger.id, 'approve')} style={{ width: '100%', fontWeight: 700 }}>
-                      ✓ Aprobar
+                      ✅ Aprobar Pasajero
                     </button>
                   ) : (
-                    <button className="btn btn-danger btn-lg" onClick={() => doPassengerAction(selectedPassenger.id, 'reject')} style={{ width: '100%', fontWeight: 700 }}>
-                      ✕ Deshacer
+                    <button className="btn btn-warning btn-lg" onClick={() => doPassengerAction(selectedPassenger.id, 'reject')} style={{ width: '100%', fontWeight: 700 }}>
+                      ⚠️ Suspender Pasajero
                     </button>
                   )}
+                  <button className="btn btn-danger btn-lg" onClick={() => { if(window.confirm('¿Estás seguro de eliminar permanentemente esta cuenta? Esta acción ofuscará todos sus datos y es irreversible.')) doPassengerAction(selectedPassenger.id, 'delete_permanent'); }} style={{ width: '100%', fontWeight: 700 }}>
+                    🗑️ Eliminar Permanentemente
+                  </button>
                 </div>
               </div>
             </div>
