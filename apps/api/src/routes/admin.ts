@@ -244,6 +244,16 @@ router.delete('/drivers/:id', async (req: Request, res: Response) => {
     const driverId = req.params.id;
     const driver = await prisma.driver.findUnique({ where: { id: driverId } });
     if (!driver) return res.status(404).json({ error: 'Conductor no encontrado' });
+    if (driver.isDeleted) {
+      // Hard delete: desvincular viajes, borrar calificaciones, tokens y el conductor
+      await prisma.$transaction([
+        prisma.trip.updateMany({ where: { driverId }, data: { driverId: null } }),
+        prisma.rating.deleteMany({ where: { driverId } }),
+        prisma.refreshToken.deleteMany({ where: { driverId } }),
+        prisma.driver.delete({ where: { id: driverId } }),
+      ]);
+    } else {
+      // Soft delete: ofuscar datos y marcar como eliminado (90 días)
       await prisma.$transaction([
         prisma.refreshToken.deleteMany({ where: { driverId } }),
         prisma.driver.update({ 
@@ -263,6 +273,7 @@ router.delete('/drivers/:id', async (req: Request, res: Response) => {
           }
         }),
       ]);
+    }
 
     return res.json({ message: 'Conductor eliminado permanentemente' });
   } catch (err) {
@@ -394,22 +405,37 @@ router.delete('/passengers/:id', async (req: Request, res: Response) => {
       return res.status(404).json({ error: 'Pasajero no encontrado' });
     }
 
-    await prisma.$transaction([
-      prisma.refreshToken.deleteMany({ where: { userId: passengerId } }),
-      prisma.user.update({
-        where: { id: passengerId },
-        data: {
-          isDeleted: true,
-          email: `[eliminado_${passengerId}]`,
-          phone: `[eliminado_${passengerId}]`,
-          rut: null,
-          idFrontUrl: null,
-          idBackUrl: null,
-          selfieUrl: null,
-          backgroundDocUrl: null,
-        }
-      }),
-    ]);
+    if (passenger.isDeleted) {
+      // Hard delete: borrar dependencias en cascada manual
+      const trips = await prisma.trip.findMany({ where: { passengerId } });
+      const tripIds = trips.map(t => t.id);
+
+      await prisma.$transaction([
+        prisma.safetyReport.deleteMany({ where: { tripId: { in: tripIds } } }),
+        prisma.rating.deleteMany({ where: { passengerId } }),
+        prisma.trip.deleteMany({ where: { passengerId } }),
+        prisma.refreshToken.deleteMany({ where: { userId: passengerId } }),
+        prisma.user.delete({ where: { id: passengerId } }),
+      ]);
+    } else {
+      // Soft delete: ofuscar datos y marcar como eliminado (90 días)
+      await prisma.$transaction([
+        prisma.refreshToken.deleteMany({ where: { userId: passengerId } }),
+        prisma.user.update({
+          where: { id: passengerId },
+          data: {
+            isDeleted: true,
+            email: `[eliminado_${passengerId}]`,
+            phone: `[eliminado_${passengerId}]`,
+            rut: null,
+            idFrontUrl: null,
+            idBackUrl: null,
+            selfieUrl: null,
+            backgroundDocUrl: null,
+          }
+        }),
+      ]);
+    }
 
     return res.json({ message: 'Pasajero eliminado permanentemente' });
   } catch (err) {

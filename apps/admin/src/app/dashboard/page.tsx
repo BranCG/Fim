@@ -871,7 +871,7 @@ export default function DashboardPage() {
                             <td>
                               <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
                                 <button className="btn btn-success btn-sm" disabled={loading} onClick={() => doAction(d.id, 'restore')}>🔄 Reintegrar</button>
-                                <button className="btn btn-danger btn-sm" disabled={loading} onClick={() => { if (window.confirm('¿Eliminar y ofuscar de forma permanente e irreversible?')) doAction(d.id, 'delete_permanent'); }}>🗑️ Permanente</button>
+                                <button className="btn btn-danger btn-sm" disabled={loading} onClick={() => { if (window.confirm('🚨 ¿ELIMINAR DEFINITIVAMENTE DE LA BASE DE DATOS? Esta acción destruirá completamente la cuenta de forma inmediata, borrando sus viajes, calificaciones y registros. NO se puede deshacer.')) doAction(d.id, 'delete_permanent'); }}>🗑️ Hard Delete</button>
                               </div>
                             </td>
                           </>
@@ -1349,7 +1349,7 @@ export default function DashboardPage() {
                             <td>
                               <div style={{ display: 'flex', gap: '6px' }}>
                                 <button className="btn btn-success btn-sm" disabled={loading} onClick={() => doPassengerAction(p.id, 'restore')}>🔄 Reintegrar</button>
-                                <button className="btn btn-danger btn-sm" disabled={loading} onClick={() => { if (window.confirm('¿Eliminar y ofuscar de forma permanente e irreversible?')) doPassengerAction(p.id, 'delete_permanent'); }}>🗑️ Permanente</button>
+                                <button className="btn btn-danger btn-sm" disabled={loading} onClick={() => { if (window.confirm('🚨 ¿ELIMINAR DEFINITIVAMENTE DE LA BASE DE DATOS? Esta acción destruirá completamente la cuenta de forma inmediata, borrando sus viajes, calificaciones y registros. NO se puede deshacer.')) doPassengerAction(p.id, 'delete_permanent'); }}>🗑️ Hard Delete</button>
                               </div>
                             </td>
                           </>
