@@ -124,7 +124,15 @@ export default function DashboardPage() {
     createdAt: string;
     trip: {
       passenger: { id: string; name: string; phone: string; };
-      driver?: { id: string; name: string; phone: string; vehiclePlate: string; };
+      driver?: { 
+        id: string; 
+        name: string; 
+        phone: string; 
+        vehiclePlate: string; 
+        vehicleBrand: string;
+        vehicleModel: string;
+        vehicleColor: string;
+      };
     };
   }
 
@@ -503,7 +511,18 @@ export default function DashboardPage() {
                           {r.trip && (
                             <div style={{ marginTop: '4px' }}>
                               <div><strong>Pasajero:</strong> {r.trip.passenger.name} ({r.trip.passenger.phone})</div>
-                              {r.trip.driver && <div><strong>Conductor:</strong> {r.trip.driver.name} ({r.trip.driver.phone}) - {r.trip.driver.vehiclePlate}</div>}
+                              {r.trip.driver && (
+                                <div style={{ marginTop: '6px', padding: '6px', background: 'var(--bg-secondary)', borderRadius: '4px', border: '1px solid var(--border)' }}>
+                                  <div><strong>Conductor:</strong> {r.trip.driver.name} ({r.trip.driver.phone})</div>
+                                  <div style={{ marginTop: '4px', fontSize: '0.8rem', color: 'var(--text-primary)', fontWeight: 600 }}>
+                                    🚗 {r.trip.driver.vehicleBrand} {r.trip.driver.vehicleModel}
+                                    <span style={{ margin: '0 6px', color: 'var(--text-muted)' }}>•</span>
+                                    Color {r.trip.driver.vehicleColor}
+                                    <span style={{ margin: '0 6px', color: 'var(--text-muted)' }}>•</span>
+                                    Patente: <span style={{ color: 'var(--accent)', fontWeight: 800 }}>{r.trip.driver.vehiclePlate}</span>
+                                  </div>
+                                </div>
+                              )}
                             </div>
                           )}
                         </td>
