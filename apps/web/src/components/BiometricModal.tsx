@@ -57,13 +57,20 @@ export default function BiometricModal({ isOpen, onClose, onSuccess, selfieUrl }
       });
       setStream(mediaStream);
       if (videoRef.current) {
-        videoRef.current.srcObject = mediaStream;
-        // Forzar reproducción en Android WebViews que muestran el ícono de Play
-        setTimeout(() => {
-          if (videoRef.current) {
-             videoRef.current.play().catch(e => console.error('Error auto-playing video:', e));
-          }
-        }, 100);
+        const video = videoRef.current;
+        video.srcObject = mediaStream;
+        video.muted = true;
+        video.defaultMuted = true;
+        video.playsInline = true;
+        
+        // Forzar reproducción en WebViews
+        const playPromise = video.play();
+        if (playPromise !== undefined) {
+          playPromise.catch(e => {
+            console.error('Error auto-playing video:', e);
+            // Algunos WebViews requieren interacción manual si esto falla.
+          });
+        }
       }
       setStatus('camera_active');
     } catch (err: any) {
