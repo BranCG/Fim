@@ -138,6 +138,8 @@ export default function DashboardPage() {
 
   const [safetyReports, setSafetyReports] = useState<SafetyReport[]>([]);
   const [unresolvedSafetyCount, setUnresolvedSafetyCount] = useState(0);
+  const [resolvingReportId, setResolvingReportId] = useState<string | null>(null);
+  const [resolveNotes, setResolveNotes] = useState('');
 
   const playSiren = useCallback(() => {
     try {
@@ -319,14 +321,19 @@ export default function DashboardPage() {
     }
   };
 
-  async function resolveSafetyReport(reportId: string) {
-    const notes = window.prompt('Notas de resolución (Opcional):');
-    if (notes === null) return; // Se canceló el prompt
+  const openResolveModal = (reportId: string) => {
+    setResolvingReportId(reportId);
+    setResolveNotes('');
+  };
+
+  async function submitResolveReport() {
+    if (!resolvingReportId) return;
     setLoading(true); setActionMsg('');
     try {
-      await api.post(`/admin/safety-reports/${reportId}/resolve`, { adminNotes: notes });
+      await api.post(`/admin/safety-reports/${resolvingReportId}/resolve`, { adminNotes: resolveNotes });
       setActionMsg('✅ Reporte Resuelto');
       loadSafetyReports();
+      setResolvingReportId(null);
     } catch {
       setActionMsg('❌ Error al resolver reporte');
     } finally { setLoading(false); setTimeout(() => setActionMsg(''), 3000); }
@@ -467,6 +474,38 @@ export default function DashboardPage() {
           </div>
         )}
 
+        {/* RESOLVE S.O.S MODAL */}
+        {resolvingReportId && (
+          <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px', backdropFilter: 'blur(4px)' }}>
+            <div className="card animate-in" style={{ width: '100%', maxWidth: '400px', background: 'var(--bg-card)', padding: '24px', border: '1px solid var(--border)', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
+                <div style={{ color: 'var(--warning)' }}>
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10" /></svg>
+                </div>
+                <h2 style={{ fontSize: '1.25rem', margin: 0 }}>Cerrar Caso de Seguridad</h2>
+              </div>
+              <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginBottom: '20px', lineHeight: 1.5 }}>
+                Ingresa una nota administrativa con la acción tomada (ej. "Pasajero fue contactado", "Se suspendió al conductor"). Esto quedará en el historial.
+              </p>
+              
+              <textarea
+                value={resolveNotes}
+                onChange={e => setResolveNotes(e.target.value)}
+                placeholder="Escribe las notas de resolución..."
+                className="input"
+                style={{ width: '100%', minHeight: '120px', marginBottom: '24px', resize: 'vertical' }}
+              />
+              
+              <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
+                <button className="btn btn-secondary" onClick={() => setResolvingReportId(null)} disabled={loading}>Cancelar</button>
+                <button className="btn btn-warning" onClick={submitResolveReport} disabled={loading}>
+                  Confirmar Resolución
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* ── REPORTES DE SEGURIDAD ──────────────────────────── */}
         {view === 'safety_reports' && (
           <div className="animate-in">
@@ -541,7 +580,7 @@ export default function DashboardPage() {
                         </td>
                         <td>
                           {!r.resolved && (
-                            <button className="btn btn-warning btn-sm" disabled={loading} onClick={() => resolveSafetyReport(r.id)}>
+                            <button className="btn btn-warning btn-sm" disabled={loading} onClick={() => openResolveModal(r.id)}>
                               Marcar Resuelto
                             </button>
                           )}
