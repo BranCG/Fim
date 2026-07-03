@@ -117,6 +117,8 @@ export default function DashboardPage() {
     reportedUserId: string;
     reason: string;
     description: string | null;
+    lat: number | null;
+    lng: number | null;
     resolved: boolean;
     adminNotes: string | null;
     createdAt: string;
@@ -127,10 +129,49 @@ export default function DashboardPage() {
   }
 
   const [safetyReports, setSafetyReports] = useState<SafetyReport[]>([]);
-  const loadSafetyReports = useCallback(async () => {
-    const r = await api.get('/admin/safety-reports');
-    setSafetyReports(r.data.reports);
+  const [unresolvedSafetyCount, setUnresolvedSafetyCount] = useState(0);
+
+  const playSiren = useCallback(() => {
+    try {
+      const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
+      if (!AudioContext) return;
+      const ctx = new AudioContext();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'square';
+      osc.frequency.setValueAtTime(400, ctx.currentTime);
+      osc.frequency.linearRampToValueAtTime(800, ctx.currentTime + 0.3);
+      osc.frequency.linearRampToValueAtTime(400, ctx.currentTime + 0.6);
+      osc.frequency.linearRampToValueAtTime(800, ctx.currentTime + 0.9);
+      gain.gain.setValueAtTime(0.1, ctx.currentTime); // Volumen moderado
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start();
+      setTimeout(() => osc.stop(), 1200);
+    } catch(e) { console.error('Audio API no soportada', e); }
   }, []);
+
+  const loadSafetyReports = useCallback(async () => {
+    try {
+      const r = await api.get('/admin/safety-reports');
+      const reports = r.data.reports;
+      setSafetyReports(reports);
+      const unresolved = reports.filter((x: any) => !x.resolved).length;
+      setUnresolvedSafetyCount(prev => {
+        if (unresolved > prev) {
+          playSiren(); // Sonar si hay más reportes sin resolver que antes
+        }
+        return unresolved;
+      });
+    } catch (e) {}
+  }, [playSiren]);
+
+  // Polling de seguridad global en segundo plano cada 15 segundos
+  useEffect(() => {
+    loadSafetyReports();
+    const interval = setInterval(loadSafetyReports, 15000);
+    return () => clearInterval(interval);
+  }, [loadSafetyReports]);
 
   // Análisis de Ingresos
   const [revenueData, setRevenueData] = useState<any[]>([]);
@@ -323,7 +364,7 @@ export default function DashboardPage() {
     { key: 'all_drivers', icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2" /><circle cx="7" cy="17" r="2" /><path d="M9 17h6" /><circle cx="17" cy="17" r="2" /></svg>, label: 'Conductores' },
     { key: 'passengers', icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M23 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" /></svg>, label: 'Pasajeros' },
     { key: 'revenue_analysis', icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="20" x2="12" y2="10" /><line x1="18" y1="20" x2="18" y2="4" /><line x1="6" y1="20" x2="6" y2="16" /></svg>, label: 'Estudios de Mercado' },
-    { key: 'safety_reports', icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="7.86 2 16.14 2 22 7.86 22 16.14 16.14 22 7.86 22 2 16.14 2 7.86 7.86 2" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" /></svg>, label: 'Seguridad (S.O.S)', badge: safetyReports.filter(r => !r.resolved).length > 0 ? safetyReports.filter(r => !r.resolved).length : undefined },
+    { key: 'safety_reports', icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="7.86 2 16.14 2 22 7.86 22 16.14 16.14 22 7.86 22 2 16.14 2 7.86 7.86 2" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" /></svg>, label: 'Seguridad (S.O.S)', badge: unresolvedSafetyCount > 0 ? unresolvedSafetyCount : undefined },
     { key: 'settings', icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" /></svg>, label: 'Configuración' },
   ];
 
@@ -438,6 +479,12 @@ export default function DashboardPage() {
                         <td>
                           <div style={{ fontWeight: 700, color: 'var(--danger)' }}>{r.reason}</div>
                           {r.description && <div style={{ fontSize: '0.8rem', marginTop: '4px' }}>{r.description}</div>}
+                          {r.lat && r.lng && (
+                            <a href={`https://maps.google.com/?q=${r.lat},${r.lng}`} target="_blank" rel="noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', marginTop: '8px', fontSize: '0.75rem', padding: '4px 8px', background: 'var(--bg-secondary)', borderRadius: '4px', color: 'var(--accent)', textDecoration: 'none', fontWeight: 600 }}>
+                              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+                              Ver Ubicación S.O.S
+                            </a>
+                          )}
                           {r.adminNotes && (
                             <div style={{ fontSize: '0.8rem', marginTop: '8px', padding: '6px', background: 'var(--bg-secondary)', borderRadius: '4px' }}>
                               <strong style={{ color: 'var(--accent)' }}>Notas:</strong> {r.adminNotes}
