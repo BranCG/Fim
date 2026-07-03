@@ -1002,9 +1002,11 @@ export default function PassengerPage() {
       setPaymentRequested(true);
       setCompletionOtpVerified(false);
       if (data?.otpCode) {
-        setCurrentTrip(prev => ({
+        setCurrentTrip((prev: any) => ({
+          ...(prev || currentTrip || {}),
           id: prev?.id || currentTrip?.id || '',
           estimatedPrice: prev?.estimatedPrice || currentTrip?.estimatedPrice || 0,
+          dropoffOtpCode: data.otpCode,
           otpCode: data.otpCode
         }));
       }
