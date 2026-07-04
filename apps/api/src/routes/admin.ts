@@ -260,16 +260,6 @@ router.delete('/drivers/:id', async (req: Request, res: Response) => {
           where: { id: driverId },
           data: {
             isDeleted: true,
-            email: `[eliminado_${driverId}]`,
-            phone: `[eliminado_${driverId}]`,
-            rut: `[eliminado_${driverId}]`,
-            idFrontUrl: '',
-            idBackUrl: '',
-            selfieUrl: null,
-            backgroundDocUrl: null,
-            licenseUrl: '',
-            licenseBackUrl: '',
-            vehiclePhotoUrl: '',
           }
         }),
       ]);
@@ -425,13 +415,6 @@ router.delete('/passengers/:id', async (req: Request, res: Response) => {
           where: { id: passengerId },
           data: {
             isDeleted: true,
-            email: `[eliminado_${passengerId}]`,
-            phone: `[eliminado_${passengerId}]`,
-            rut: null,
-            idFrontUrl: null,
-            idBackUrl: null,
-            selfieUrl: null,
-            backgroundDocUrl: null,
           }
         }),
       ]);
