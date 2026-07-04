@@ -3,6 +3,7 @@ import prisma from '../utils/prisma';
 import { requireAuth, requireRole } from '../middleware/auth';
 import { updateDriverLocation } from '../socket/handlers';
 import { checkCoordinateInAllowedRegion } from '../utils/location';
+import { sendAdminPaymentNotification } from '../utils/mailer';
 
 const router = Router();
 
@@ -277,6 +278,10 @@ router.post('/pay-comfort-daily', requireAuth, requireRole('driver'), async (req
     });
 
     console.log(`✅ COMFORT: Conductor ${driver.id} pagó cuota diaria $20.000. Deuda restante: $${newDebt.toLocaleString('es-CL')}`);
+    
+    // Notificar al admin
+    sendAdminPaymentNotification(driver.name, driver.id, 'COMFORT (Cuota Diaria)', '$20.000').catch(e => console.error(e));
+
     return res.json({ ok: true, message: 'Pago diario registrado. Ahora puedes activarte.', comfortDebt: newDebt });
   } catch (err) {
     return res.status(500).json({ error: 'Error al registrar pago diario' });

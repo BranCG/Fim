@@ -3,6 +3,7 @@ import prisma from '../utils/prisma';
 import { preapproval } from '../utils/mercadopago';
 import { MercadoPagoConfig, Preference } from 'mercadopago';
 import { roundCLP } from '../utils/pricing';
+import { sendAdminPaymentNotification } from '../utils/mailer';
 import dotenv from 'dotenv';
 dotenv.config();
 
@@ -36,13 +37,20 @@ router.post('/membership/create-preference', async (req, res) => {
     };
 
     const config = planConfig[plan];
-    if (!config) return res.status(400).json({ error: 'Plan no válido para pago automático' });
+    let finalAmount = config.amount;
+    const goal = plan === 'BLACK' ? 150 : (plan === 'FLEX' ? 40 : 0);
+    const hasDiscount = (driver.nextDiscount !== undefined && driver.nextDiscount > 0) || (driver.membershipProgress >= goal);
+    
+    if (hasDiscount) {
+      if (plan === 'BLACK') finalAmount = 120000; // 20% dcto
+      if (plan === 'FLEX') finalAmount = 51000; // 15% dcto
+    }
 
     const baseUrl = process.env.NEXT_PUBLIC_WEB_URL || 'http://localhost:3000';
 
     const response = await preference.create({
       body: {
-        items: [{ id: driverId, title: config.title, quantity: 1, unit_price: config.amount, currency_id: 'CLP' }],
+        items: [{ id: driverId, title: config.title, quantity: 1, unit_price: finalAmount, currency_id: 'CLP' }],
         payer: { email },
         back_urls: {
           success: `${baseUrl}/driver/membership-success?plan=${plan}`,
@@ -95,6 +103,9 @@ router.post('/membership-webhook', async (req, res) => {
                 }
               });
               console.log(`✅ COMFORT: Conductor ${driverId} pagó cuota diaria vía Mercado Pago. Deuda restante: $${newDebt}`);
+              
+              // Notificar al admin
+              sendAdminPaymentNotification(driver.name, driver.id, plan, '$20.000').catch(e => console.error(e));
             } else {
               const baseDate = (driver.isTrial && driver.membershipExpiresAt && driver.membershipExpiresAt > now)
                 ? new Date(driver.membershipExpiresAt)
@@ -120,6 +131,10 @@ router.post('/membership-webhook', async (req, res) => {
                 }
               });
               console.log(`✅ Membresía ${plan} activada para conductor ${driverId} hasta ${expiresAt.toLocaleDateString('es-CL')}`);
+              
+              // Notificar al admin
+              const amount = plan === 'BLACK' ? '$150.000' : '$60.000';
+              sendAdminPaymentNotification(driver.name, driver.id, plan, amount).catch(e => console.error(e));
             }
           }
         }

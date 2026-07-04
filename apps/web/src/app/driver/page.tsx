@@ -408,31 +408,6 @@ export default function DriverPage() {
     if (!driver) return;
     const selectedPlan = (plan && typeof plan === 'string') ? plan : driver.membershipPlan;
 
-    // Links estáticos de Mercado Pago provistos por el usuario (Estándar y con Descuento)
-    const links: Record<string, { standard: string; discounted: string }> = {
-      BLACK: {
-        standard: 'https://mpago.la/2GQQM65', // $150.000
-        discounted: 'https://mpago.la/12yMRoF', // $120.000 (20% dcto por meta)
-      },
-      FLEX: {
-        standard: 'https://mpago.la/2kxLWNy', // $60.000
-        discounted: 'https://mpago.la/2ShcYUk', // $51.000 (15% dcto por meta)
-      },
-      COMFORT: {
-        standard: 'https://mpago.la/1geQas2', // $20.000 diario
-        discounted: 'https://mpago.la/1geQas2', // COMFORT no tiene descuentos automáticos
-      },
-    };
-
-    const planConfig = links[selectedPlan];
-    if (planConfig) {
-      const goal = selectedPlan === 'BLACK' ? 150 : (selectedPlan === 'FLEX' ? 40 : 0);
-      const hasDiscount = (selectedPlan === driver.membershipPlan && ((driver.nextDiscount !== undefined && driver.nextDiscount > 0) || (driver.membershipProgress >= driver.membershipGoal))) || (driver.membershipProgress >= goal);
-      const url = hasDiscount ? planConfig.discounted : planConfig.standard;
-      window.location.href = url;
-      return;
-    }
-
     setPayingMembership(true);
     try {
       const res = await api.post('/payments/membership/create-preference', {

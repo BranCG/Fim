@@ -133,4 +133,43 @@ export async function sendPasswordResetEmail(email: string, code: string): Promi
   }
 }
 
+export async function sendAdminPaymentNotification(driverName: string, driverId: string, plan: string, amount?: string): Promise<void> {
+  const transporter = getTransporter();
+  const adminEmail = process.env.ADMIN_EMAIL || process.env.SMTP_USER || 'contacto@fim.cl';
 
+  if (!transporter) {
+    console.log(`[NOTIFICACIÓN ADMIN] El conductor ${driverName} (${driverId}) ha pagado su membresía ${plan}.`);
+    return;
+  }
+
+  const mailOptions = {
+    from: smtpFrom,
+    to: adminEmail,
+    subject: `💰 Nuevo pago de membresía: ${driverName} (${plan})`,
+    text: `El conductor ${driverName} (ID: ${driverId}) ha pagado su membresía de plan ${plan}.${amount ? ' Monto pagado: ' + amount : ''}`,
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e5e7eb; border-radius: 8px; background-color: #ffffff;">
+        <div style="text-align: center; margin-bottom: 24px;">
+          <h2 style="color: #111827; margin: 0; font-size: 24px; font-weight: 800;">Notificación Admin Fim</h2>
+        </div>
+        <div style="margin-bottom: 24px;">
+          <h3 style="color: #1f2937; margin-top: 0;">¡Nuevo pago recibido! 💰</h3>
+          <p style="color: #4b5563; font-size: 16px; line-height: 1.5;">El conductor <strong>${driverName}</strong> (ID: ${driverId}) acaba de pagar su membresía correspondiente al plan <strong>${plan}</strong>.</p>
+          ${amount ? `<p style="color: #4b5563; font-size: 16px;">Monto procesado: <strong>${amount}</strong></p>` : ''}
+          <p style="color: #6b7280; font-size: 14px; margin-top: 24px;">El sistema ha actualizado su estado a "Pagado" automáticamente en la base de datos.</p>
+        </div>
+        <hr style="border: 0; border-top: 1px solid #e5e7eb; margin: 24px 0;" />
+        <div style="text-align: center;">
+          <p style="color: #9ca3af; font-size: 12px; margin: 0;">Mensaje generado automáticamente por Fim App.</p>
+        </div>
+      </div>
+    `,
+  };
+
+  try {
+    await transporter.sendMail(mailOptions);
+    console.log(`[Mailer] Notificación de pago enviada al administrador (${adminEmail})`);
+  } catch (error) {
+    console.error(`[Mailer] Error al enviar notificación de pago al administrador:`, error);
+  }
+}

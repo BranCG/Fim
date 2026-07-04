@@ -743,7 +743,7 @@ export default function DashboardPage() {
                         ✓ Aprobar conductor
                       </button>
                       <button className="btn btn-warning" disabled={loading} onClick={() => doAction(driver.id, 'membership')}>
-                        💳 Aprobar + Marcar membresía pagada
+                        ✅ Aprobar Pago Manual
                       </button>
                       <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                         <input placeholder="Motivo de rechazo..." value={rejectReason} onChange={e => setRejectReason(e.target.value)} style={{ width: '200px', padding: '8px 12px' }} />
@@ -912,7 +912,7 @@ export default function DashboardPage() {
                               <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
                                 <button className="btn btn-secondary btn-sm" onClick={() => openDriverDetail(d.id)}>Ver</button>
                                 {d.status === 'approved' && !d.membershipPaid && (
-                                  <button className="btn btn-warning btn-sm" disabled={loading} onClick={() => doAction(d.id, 'membership')}>💳 Activar</button>
+                                  <button className="btn btn-warning btn-sm" disabled={loading} onClick={() => doAction(d.id, 'membership')}>✅ Aprobar Pago Manual</button>
                                 )}
                                 {d.status === 'active' && (
                                   <button className="btn btn-warning btn-sm" disabled={loading} onClick={() => { const r = prompt('Motivo de suspensión:'); if (r) doAction(d.id, 'suspend', r); }}>Suspender</button>
