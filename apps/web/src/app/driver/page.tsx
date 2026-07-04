@@ -2008,7 +2008,7 @@ export default function DriverPage() {
                   Término de membresía estimado (+30 días): <strong style={{ color: '#fff' }}>{getEstimatedPaidExpirationDate()}</strong>
                 </div>
                 <div style={{ marginTop: '8px', fontSize: '0.72rem', color: '#D4AF37', lineHeight: '1.45' }}>
-                  * Una vez finalizado tu periodo de FREE PASS de 14 días, podrás pagar y renovar tu membresía directamente en este panel.
+                  * Una vez finalizado tu periodo de FREE PASS, podrás pagar y renovar tu membresía directamente en este panel.
                 </div>
               </div>
             </div>
