@@ -152,27 +152,39 @@ router.get('/finances', async (req: Request, res: Response) => {
         status: 'completed',
         completedAt: { gte: startOfMonth }
       },
-      select: { completedAt: true, finalPrice: true }
+      select: { completedAt: true, finalPrice: true, estimatedPrice: true }
     });
 
     let dayTotal = 0;
     let weekTotal = 0;
     let monthTotal = 0;
+    
+    let dayTrips = 0;
+    let weekTrips = 0;
+    let monthTrips = 0;
 
     trips.forEach(t => {
-      const price = t.finalPrice || 0;
+      const price = t.finalPrice ?? t.estimatedPrice ?? 0;
       if (!t.completedAt) return;
       
       const tripDate = t.completedAt.getTime();
-      if (tripDate >= startOfDay.getTime()) dayTotal += price;
-      if (tripDate >= startOfWeek.getTime()) weekTotal += price;
-      if (tripDate >= startOfMonth.getTime()) monthTotal += price;
+      if (tripDate >= startOfDay.getTime()) { dayTotal += price; dayTrips++; }
+      if (tripDate >= startOfWeek.getTime()) { weekTotal += price; weekTrips++; }
+      if (tripDate >= startOfMonth.getTime()) { monthTotal += price; monthTrips++; }
+    });
+
+    const activeDriversCount = await prisma.driver.count({
+      where: { status: 'active', isDeleted: false }
     });
 
     return res.json({
       dayTotal,
       weekTotal,
-      monthTotal
+      monthTotal,
+      dayTrips,
+      weekTrips,
+      monthTrips,
+      activeDriversCount
     });
   } catch (err) {
     console.error('Error en /api/agent/finances:', err);
