@@ -183,13 +183,13 @@ router.post('/drivers/:id/membership-paid', async (req: Request, res: Response) 
       : now;
 
     if (driver.membershipPlan === 'BLACK') {
-      basePrice = parseInt(configMap.membership_black_promo_price || '49990', 10);
+      basePrice = parseInt((configMap.membership_black_promo_price || '49990').toString().replace(/\D/g, ''), 10);
       membershipGoal = 150;
       const expires = new Date(baseDate);
       expires.setDate(expires.getDate() + 30);
       membershipExpiresAt = expires;
     } else if (driver.membershipPlan === 'FLEX') {
-      basePrice = parseInt(configMap.membership_flex_promo_price || '19990', 10);
+      basePrice = parseInt((configMap.membership_flex_promo_price || '19990').toString().replace(/\D/g, ''), 10);
       membershipGoal = 0;
       const expires = new Date(baseDate);
       const daysUntilMonday = (8 - expires.getDay()) % 7 || 7;
@@ -197,7 +197,7 @@ router.post('/drivers/:id/membership-paid', async (req: Request, res: Response) 
       expires.setHours(7, 0, 0, 0); // Lunes a las 7 AM
       membershipExpiresAt = expires;
     } else if (driver.membershipPlan === 'COMFORT') {
-      basePrice = parseInt(configMap.membership_comfort_promo_price || '8990', 10); // Cuota diaria
+      basePrice = parseInt((configMap.membership_comfort_promo_price || '8990').toString().replace(/\D/g, ''), 10); // Cuota diaria
       membershipGoal = 0;
       comfortLastPaidAt = now;
       comfortDebt = 0; // Se pone al día al confirmar pago inicial
@@ -664,7 +664,7 @@ router.post('/gift-free-days', async (req: Request, res: Response) => {
 
     for (const d of drivers) {
       // Calcular periodo de registro free pass (14 días desde su creación)
-      const freeDays = parseInt(config.free_pass_days || '14', 10);
+      const freeDays = parseInt((config.free_pass_days || '14').toString().replace(/\D/g, ''), 10);
       const trialExpirationDate = new Date(d.createdAt);
       trialExpirationDate.setDate(trialExpirationDate.getDate() + freeDays);
 

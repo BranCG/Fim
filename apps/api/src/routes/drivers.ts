@@ -45,7 +45,7 @@ router.get('/me', requireAuth, requireRole('driver'), async (req: Request, res: 
       startDate.setHours(0, 0, 0, 0);
       const endDate = new Date(config.free_pass_end_date);
       endDate.setHours(23, 59, 59, 999);
-      freePassDays = parseInt(config.free_pass_days || '0', 10);
+      freePassDays = parseInt((config.free_pass_days || '0').toString().replace(/\D/g, ''), 10);
 
       const driverCreatedAt = new Date(driver.createdAt);
       if (driverCreatedAt >= startDate && driverCreatedAt <= endDate) {
@@ -126,7 +126,7 @@ router.post('/toggle-online', requireAuth, requireRole('driver'), async (req: Re
         startDate.setHours(0, 0, 0, 0);
         const endDate = new Date(config.free_pass_end_date);
         endDate.setHours(23, 59, 59, 999);
-        const freeDays = parseInt(config.free_pass_days || '0', 10);
+        const freeDays = parseInt((config.free_pass_days || '0').toString().replace(/\D/g, ''), 10);
 
         const driverCreatedAt = new Date(driver.createdAt);
         

@@ -35,9 +35,9 @@ router.post('/membership/create-preference', async (req, res) => {
     });
     const configMap = configs.reduce((acc: any, curr: any) => ({ ...acc, [curr.key]: curr.value }), {});
     
-    const blackPrice = parseInt(configMap.membership_black_promo_price || '49990', 10);
-    const flexPrice = parseInt(configMap.membership_flex_promo_price || '19990', 10);
-    const comfortPrice = parseInt(configMap.membership_comfort_promo_price || '8990', 10);
+    const blackPrice = parseInt((configMap.membership_black_promo_price || '49990').toString().replace(/\D/g, ''), 10);
+    const flexPrice = parseInt((configMap.membership_flex_promo_price || '19990').toString().replace(/\D/g, ''), 10);
+    const comfortPrice = parseInt((configMap.membership_comfort_promo_price || '8990').toString().replace(/\D/g, ''), 10);
 
     const planConfig: Record<string, { title: string; amount: number }> = {
       BLACK: { title: 'Membresía BLACK Fim — Acceso Mensual Ilimitado', amount: blackPrice },
@@ -113,7 +113,7 @@ router.post('/membership-webhook', async (req, res) => {
               console.log(`✅ COMFORT: Conductor ${driverId} pagó cuota diaria vía Mercado Pago. Deuda restante: $${newDebt}`);
               
               const comfortConfig = await prisma.systemConfig.findUnique({ where: { key: 'membership_comfort_promo_price' } });
-              const comfortPromoPrice = parseInt(comfortConfig?.value || '8990', 10);
+              const comfortPromoPrice = parseInt((comfortConfig?.value || '8990').toString().replace(/\D/g, ''), 10);
               const formattedComfortAmount = new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP' }).format(comfortPromoPrice);
               sendAdminPaymentNotification(driver.name, driver.id, plan, formattedComfortAmount).catch(e => console.error(e));
             } else {
@@ -148,8 +148,8 @@ router.post('/membership-webhook', async (req, res) => {
               });
               const configMap = configs.reduce((acc: any, curr: any) => ({ ...acc, [curr.key]: curr.value }), {});
               const hasBlackDiscount = (plan === 'BLACK' && ((driver.nextDiscount !== null && driver.nextDiscount > 0) || (driver.membershipProgress >= 150)));
-              const blackPromoPrice = parseInt(configMap.membership_black_promo_price || '49990', 10);
-              const flexPromoPrice = parseInt(configMap.membership_flex_promo_price || '19990', 10);
+              const blackPromoPrice = parseInt((configMap.membership_black_promo_price || '49990').toString().replace(/\D/g, ''), 10);
+              const flexPromoPrice = parseInt((configMap.membership_flex_promo_price || '19990').toString().replace(/\D/g, ''), 10);
               const blackFinalPrice = hasBlackDiscount ? blackPromoPrice * 0.8 : blackPromoPrice;
               
               const amountValue = plan === 'BLACK' ? blackFinalPrice : flexPromoPrice;

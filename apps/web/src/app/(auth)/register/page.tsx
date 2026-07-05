@@ -1297,10 +1297,10 @@ function RegisterForm() {
                   </div>
                   <div style={{ textAlign: 'right', flexShrink: 0 }}>
                     <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.9rem', textDecoration: 'line-through' }}>
-                      {formatCLP(parseInt(config.membership_black_normal_price || '199990', 10))}
+                      {formatCLP(parseInt((config.membership_black_normal_price || '199990').toString().replace(/\D/g, ''), 10))}
                     </div>
                     <div style={{ color: '#D4AF37', fontWeight: 900, fontSize: '1.4rem', lineHeight: 1 }}>
-                      {formatCLP(parseInt(config.membership_black_promo_price || '39990', 10))}
+                      {formatCLP(parseInt((config.membership_black_promo_price || '39990').toString().replace(/\D/g, ''), 10))}
                     </div>
                     <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.72rem' }}>/mes</div>
                   </div>
@@ -1322,16 +1322,16 @@ function RegisterForm() {
                   </div>
                   <div style={{ textAlign: 'right', flexShrink: 0 }}>
                     <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.9rem', textDecoration: 'line-through' }}>
-                      {formatCLP(parseInt(config.membership_comfort_normal_price || '15990', 10))}
+                      {formatCLP(parseInt((config.membership_comfort_normal_price || '15990').toString().replace(/\D/g, ''), 10))}
                     </div>
                     <div style={{ color: '#FBBF24', fontWeight: 900, fontSize: '1.4rem', lineHeight: 1 }}>
-                      {formatCLP(parseInt(config.membership_comfort_promo_price || '8990', 10))}
+                      {formatCLP(parseInt((config.membership_comfort_promo_price || '8990').toString().replace(/\D/g, ''), 10))}
                     </div>
                     <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.72rem' }}>/día</div>
                   </div>
                 </div>
                 <p style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.6)', lineHeight: 1.5 }}>
-                  PRECIO LANZAMIENTO. Conduce solo cuando quieras. Recupera el costo del día con pocos viajes y el resto de tus ganancias son tuyas. Pagas {formatCLP(parseInt(config.membership_comfort_promo_price || '8990', 10))} por día operado.
+                  PRECIO LANZAMIENTO. Conduce solo cuando quieras. Recupera el costo del día con pocos viajes y el resto de tus ganancias son tuyas. Pagas {formatCLP(parseInt((config.membership_comfort_promo_price || '8990').toString().replace(/\D/g, ''), 10))} por día operado.
                 </p>
               </div>
 
@@ -1348,10 +1348,10 @@ function RegisterForm() {
                   </div>
                   <div style={{ textAlign: 'right', flexShrink: 0 }}>
                     <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.9rem', textDecoration: 'line-through' }}>
-                      {formatCLP(parseInt(config.membership_flex_normal_price || '60000', 10))}
+                      {formatCLP(parseInt((config.membership_flex_normal_price || '60000').toString().replace(/\D/g, ''), 10))}
                     </div>
                     <div style={{ color: '#34D399', fontWeight: 900, fontSize: '1.4rem', lineHeight: 1 }}>
-                      {formatCLP(parseInt(config.membership_flex_promo_price || '14990', 10))}
+                      {formatCLP(parseInt((config.membership_flex_promo_price || '14990').toString().replace(/\D/g, ''), 10))}
                     </div>
                     <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.72rem' }}>/fin de semana</div>
                   </div>
@@ -1367,9 +1367,9 @@ function RegisterForm() {
                   {membershipPlan === 'FLEX' && <IconZap />}
                 </div>
                 <div>
-                  {membershipPlan === 'BLACK' && `Seleccionaste BLACK. Después del registro, serás redirigido a Mercado Pago para pagar ${formatCLP(parseInt(config.membership_black_promo_price || '39990', 10))}. Tu cuenta se activa automáticamente al confirmar el pago.`}
-                  {membershipPlan === 'COMFORT' && `Seleccionaste COMFORT. Pagas ${formatCLP(parseInt(config.membership_comfort_promo_price || '8990', 10))} cada mañana por transferencia y subes el comprobante en la app para activar el día. El admin valida el primer comprobante.`}
-                  {membershipPlan === 'FLEX' && `Seleccionaste FLEX. Después del registro, pagas ${formatCLP(parseInt(config.membership_flex_promo_price || '14990', 10))} con Mercado Pago. Tu cuenta queda activa los Viernes, Sábados y Domingos automáticamente.`}
+                  {membershipPlan === 'BLACK' && `Seleccionaste BLACK. Después del registro, serás redirigido a Mercado Pago para pagar ${formatCLP(parseInt((config.membership_black_promo_price || '39990').toString().replace(/\D/g, ''), 10))}. Tu cuenta se activa automáticamente al confirmar el pago.`}
+                  {membershipPlan === 'COMFORT' && `Seleccionaste COMFORT. Pagas ${formatCLP(parseInt((config.membership_comfort_promo_price || '8990').toString().replace(/\D/g, ''), 10))} cada mañana por transferencia y subes el comprobante en la app para activar el día. El admin valida el primer comprobante.`}
+                  {membershipPlan === 'FLEX' && `Seleccionaste FLEX. Después del registro, pagas ${formatCLP(parseInt((config.membership_flex_promo_price || '14990').toString().replace(/\D/g, ''), 10))} con Mercado Pago. Tu cuenta queda activa los Viernes, Sábados y Domingos automáticamente.`}
                 </div>
               </div>
             </div>
