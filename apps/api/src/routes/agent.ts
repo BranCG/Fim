@@ -6,7 +6,7 @@ const router = Router();
 
 // Middleware de seguridad para validar el secreto del agente
 const requireAgentAuth = (req: Request, res: Response, next: NextFunction) => {
-  const secret = req.headers['x-agent-secret'];
+  const secret = req.headers['x-agent-secret'] || req.query.secret || req.body.secret;
   
   // Contraseña de seguridad estricta para el agente
   if (secret !== 'fim_agent_secret_123') {
