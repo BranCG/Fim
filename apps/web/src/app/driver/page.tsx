@@ -4369,19 +4369,7 @@ export default function DriverPage() {
         selfieUrl={driver?.selfieUrl}
       />
       
-      {/* VERSIÓN PARA DEPURACIÓN */}
-      <div style={{ position: 'fixed', bottom: '10px', right: '10px', fontSize: '10px', color: '#0f0', zIndex: 99999, background: 'rgba(0,0,0,0.85)', padding: '8px', borderRadius: '8px', pointerEvents: 'none', maxWidth: '80%', display: 'flex', flexDirection: 'column', gap: '4px' }}>
-        <div style={{ borderBottom: '1px solid #333', paddingBottom: '4px', marginBottom: '4px', fontWeight: 'bold' }}>
-          v1.0.4 | Req: {tripRequest ? 'YES' : 'NO'} | T: {timer}
-        </div>
-        <div style={{ color: '#ff0' }}>
-          {reqHistory.map((h, i) => <div key={i}>{h}</div>)}
-        </div>
-        <div style={{ borderTop: '1px solid #333', paddingTop: '4px', marginTop: '4px' }}>
-          {socketLogs.map((log, i) => <div key={i}>{log}</div>)}
-          {socketLogs.length === 0 && <div>No events yet</div>}
-        </div>
-      </div>
+
     </div>
   );
 }
