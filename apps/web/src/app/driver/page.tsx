@@ -4345,6 +4345,11 @@ export default function DriverPage() {
         }}
         selfieUrl={driver?.selfieUrl}
       />
+      
+      {/* VERSIÓN PARA DEPURACIÓN */}
+      <div style={{ position: 'fixed', bottom: '10px', right: '10px', fontSize: '12px', color: 'rgba(255,255,255,0.8)', zIndex: 99999, background: 'rgba(0,0,0,0.5)', padding: '4px 8px', borderRadius: '4px' }}>
+        v1.0.1 (Socket Fix)
+      </div>
     </div>
   );
 }
