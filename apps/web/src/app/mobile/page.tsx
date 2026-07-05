@@ -896,6 +896,9 @@ export default function Home() {
                       </div>
 
                       <div>
+                        <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: '1.2rem', textDecoration: 'line-through', marginBottom: '4px' }}>
+                          $59.990
+                        </div>
                         <div style={{ fontSize: 'clamp(2.5rem, 5vw, 3.5rem)', fontWeight: 900, color: '#D4AF37', letterSpacing: '-0.03em', lineHeight: 1 }}>
                           $39.990
                         </div>
@@ -1009,6 +1012,9 @@ export default function Home() {
                       </div>
 
                       <div>
+                        <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: '1.2rem', textDecoration: 'line-through', marginBottom: '4px' }}>
+                          $12.990
+                        </div>
                         <div style={{ display: 'flex', alignItems: 'flex-end', gap: '8px' }}>
                           <div style={{ fontSize: 'clamp(2.5rem, 5vw, 3.5rem)', fontWeight: 900, color: '#FBBF24', letterSpacing: '-0.03em', lineHeight: 1 }}>
                             $8.990
@@ -1104,6 +1110,9 @@ export default function Home() {
                       </div>
 
                       <div>
+                        <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: '1.2rem', textDecoration: 'line-through', marginBottom: '4px' }}>
+                          $24.990
+                        </div>
                         <div style={{ fontSize: 'clamp(2.5rem, 5vw, 3.5rem)', fontWeight: 900, color: '#34D399', letterSpacing: '-0.03em', lineHeight: 1 }}>
                           $14.990
                         </div>
