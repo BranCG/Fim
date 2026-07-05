@@ -252,6 +252,11 @@ export default function DriverPage() {
   const [customCancelReason, setCustomCancelReason] = useState('');
   const [timer, setTimer] = useState(0);
   const [socketLogs, setSocketLogs] = useState<string[]>([]);
+  const [reqHistory, setReqHistory] = useState<string[]>([]);
+
+  useEffect(() => {
+    setReqHistory(prev => [`${new Date().toLocaleTimeString('es-CL')} - Req: ${tripRequest ? 'YES' : 'NO'}`, ...prev].slice(0, 3));
+  }, [tripRequest]);
 
   useEffect(() => {
     const updateLogs = () => {
@@ -792,6 +797,7 @@ export default function DriverPage() {
     socket.on('trip:request', ({ trip }: { trip: TripRequest }) => {
       setTripRequest(trip);
       setTimer(30);
+      try { window.alert(`NUEVO VIAJE RECIBIDO por ${formatCLP(trip.estimatedPrice)}`); } catch(e){}
       sendLocalNotification("¡Nueva Solicitud de Viaje!", `Tienes un viaje disponible por ${formatCLP(trip.estimatedPrice)}.`);
       if (timerRef.current) clearInterval(timerRef.current);
       timerRef.current = setInterval(() => {
@@ -2273,10 +2279,15 @@ export default function DriverPage() {
       {tripRequest && (
         <div style={{
           position: 'fixed',
-          inset: 0,
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          width: '100%',
+          height: '100%',
           background: 'rgba(9, 9, 15, 0.85)',
           backdropFilter: 'blur(10px)',
-          zIndex: 9999,
+          zIndex: 999999,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
@@ -4361,10 +4372,15 @@ export default function DriverPage() {
       {/* VERSIÓN PARA DEPURACIÓN */}
       <div style={{ position: 'fixed', bottom: '10px', right: '10px', fontSize: '10px', color: '#0f0', zIndex: 99999, background: 'rgba(0,0,0,0.85)', padding: '8px', borderRadius: '8px', pointerEvents: 'none', maxWidth: '80%', display: 'flex', flexDirection: 'column', gap: '4px' }}>
         <div style={{ borderBottom: '1px solid #333', paddingBottom: '4px', marginBottom: '4px', fontWeight: 'bold' }}>
-          v1.0.3 | Req: {tripRequest ? 'YES' : 'NO'} | T: {timer}
+          v1.0.4 | Req: {tripRequest ? 'YES' : 'NO'} | T: {timer}
         </div>
-        {socketLogs.map((log, i) => <div key={i}>{log}</div>)}
-        {socketLogs.length === 0 && <div>No events yet</div>}
+        <div style={{ color: '#ff0' }}>
+          {reqHistory.map((h, i) => <div key={i}>{h}</div>)}
+        </div>
+        <div style={{ borderTop: '1px solid #333', paddingTop: '4px', marginTop: '4px' }}>
+          {socketLogs.map((log, i) => <div key={i}>{log}</div>)}
+          {socketLogs.length === 0 && <div>No events yet</div>}
+        </div>
       </div>
     </div>
   );
