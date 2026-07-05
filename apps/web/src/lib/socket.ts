@@ -12,18 +12,27 @@ export function getSocket(): Socket {
       transports: ['websocket', 'polling'],
     });
     
-    // Log all incoming events for debugging on mobile devices
-    socket.onAny((eventName, ...args) => {
-      console.log(`[Socket Debug] Event: ${eventName}`);
+    const logEvent = (eventName: string, details?: any) => {
+      console.log(`[Socket Debug] ${eventName}`, details);
       try {
         const logs = JSON.parse(localStorage.getItem('socket_logs') || '[]');
-        logs.unshift(`${new Date().toLocaleTimeString('es-CL')} - ${eventName}`);
-        localStorage.setItem('socket_logs', JSON.stringify(logs.slice(0, 5)));
-        // Dispatch custom event to update UI immediately
+        const time = new Date().toLocaleTimeString('es-CL');
+        const detailStr = details ? ` (${details})` : '';
+        logs.unshift(`${time} - ${eventName}${detailStr}`);
+        localStorage.setItem('socket_logs', JSON.stringify(logs.slice(0, 8)));
         if (typeof window !== 'undefined') {
           window.dispatchEvent(new Event('socket_logs_updated'));
         }
       } catch (e) {}
+    };
+
+    socket.on('connect', () => logEvent('connect', socket?.id));
+    socket.on('disconnect', (reason) => logEvent('disconnect', reason));
+    socket.on('connect_error', (err) => logEvent('connect_error', err.message));
+
+    // Log all incoming custom events for debugging on mobile devices
+    socket.onAny((eventName, ...args) => {
+      logEvent(`onAny: ${eventName}`);
     });
   }
   return socket;
