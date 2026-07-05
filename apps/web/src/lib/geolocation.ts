@@ -93,7 +93,7 @@ export async function watchPosition(
     }
     const watchId = navigator.geolocation.watchPosition(
       (p) => {
-        if (p.coords.accuracy && p.coords.accuracy > 40) {
+        if (p.coords.accuracy && p.coords.accuracy > 2000) {
           console.log(`[GPS] Ignorando coordenada ruidosa en Web (precisión: ${p.coords.accuracy}m)`);
           return;
         }
