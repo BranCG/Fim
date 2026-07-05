@@ -1177,7 +1177,7 @@ export default function Home() {
                       <ul style={{ listStyle: 'none', padding: 0, display: 'flex', flexDirection: 'column', gap: '10px' }}>
                         {[
                           '✓  Activo solo Viernes, Sábado y Domingo',
-                          '✓  Pago único semanal $60.000',
+                          '✓  Pago único semanal $14.990',
                           '✓  100% de cada carrera directo a ti',
                           '✓  Pago vía Mercado Pago (automático)',
                           '✓  Sin sorpresas ni cobros extras',

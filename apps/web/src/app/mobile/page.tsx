@@ -937,7 +937,7 @@ export default function Home() {
                           20% DCTO
                         </div>
                         <div style={{ fontSize: '0.85rem', fontWeight: 800, color: '#D4AF37', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17" /><polyline points="16 7 22 7 22 13" /></svg>
                           Meta: 150 viajes al mes
                         </div>
                         <p style={{ margin: 0, fontSize: '0.78rem', color: 'rgba(255,255,255,0.65)', lineHeight: '1.4' }}>
@@ -1150,7 +1150,7 @@ export default function Home() {
                       <ul style={{ listStyle: 'none', padding: 0, display: 'flex', flexDirection: 'column', gap: '10px' }}>
                         {[
                           '✓  Activo solo Viernes, Sábado y Domingo',
-                          '✓  Pago único semanal $60.000',
+                          '✓  Pago único semanal $14.990',
                           '✓  100% de cada carrera directo a ti',
                           '✓  Pago vía Mercado Pago (automático)',
                           '✓  Sin sorpresas ni cobros extras',
