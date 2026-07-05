@@ -772,7 +772,7 @@ async function findAndNotifyDriver(
   if (!trip) return;
 
   // Notificar al conductor con timer de 30 segundos
-  io.to(nearest.socketId).emit('trip:request', {
+  io.to(`driver:${nearest.driverId}`).emit('trip:request', {
     trip: {
       ...trip,
       driverDistance: nearest.distance,
