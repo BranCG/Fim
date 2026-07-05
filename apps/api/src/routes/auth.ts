@@ -175,7 +175,7 @@ router.post('/driver/register', async (req: Request, res: Response) => {
         vehiclePlate, vehiclePhotoUrl, tagNumber: tagNumber || "",
         vehicleColor: vehicleColor || "",
         membershipPlan,
-        membershipGoal: membershipPlan === 'PROGRESSIVE' ? 120000 : 100000,
+        membershipGoal: membershipPlan === 'BLACK' ? 150 : 0,
         status: 'pending',
         emailVerified: true,
         emailCode: null,
@@ -752,7 +752,7 @@ router.post('/google/register', async (req: Request, res: Response) => {
           vehiclePlate, vehiclePhotoUrl, tagNumber: tagNumber || "",
           vehicleColor: vehicleColor || "",
           membershipPlan,
-          membershipGoal: membershipPlan === 'PROGRESSIVE' ? 120000 : 100000,
+          membershipGoal: membershipPlan === 'BLACK' ? 150 : 0,
           status: 'pending',
           emailVerified: true, // Google ya está verificado
         }

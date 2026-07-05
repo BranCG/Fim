@@ -170,6 +170,11 @@ router.post('/drivers/:id/membership-paid', async (req: Request, res: Response) 
     let membershipExpiresAt: Date | null = null;
     let comfortLastPaidAt: Date | null = driver.comfortLastPaidAt;
     let comfortDebt = driver.comfortDebt;
+    const configs = await prisma.systemConfig.findMany({
+      where: { key: { in: ['membership_black_promo_price', 'membership_flex_promo_price', 'membership_comfort_promo_price'] } }
+    });
+    const configMap = configs.reduce((acc: any, curr: any) => ({ ...acc, [curr.key]: curr.value }), {});
+    
     let basePrice = 0;
     let membershipGoal = 0;
 
@@ -178,26 +183,27 @@ router.post('/drivers/:id/membership-paid', async (req: Request, res: Response) 
       : now;
 
     if (driver.membershipPlan === 'BLACK') {
-      basePrice = 150000;
+      basePrice = parseInt(configMap.membership_black_promo_price || '49990', 10);
       membershipGoal = 150;
       const expires = new Date(baseDate);
       expires.setDate(expires.getDate() + 30);
       membershipExpiresAt = expires;
     } else if (driver.membershipPlan === 'FLEX') {
-      basePrice = 60000;
-      membershipGoal = 40;
+      basePrice = parseInt(configMap.membership_flex_promo_price || '19990', 10);
+      membershipGoal = 0;
       const expires = new Date(baseDate);
       const daysUntilMonday = (8 - expires.getDay()) % 7 || 7;
       expires.setDate(expires.getDate() + daysUntilMonday);
       expires.setHours(7, 0, 0, 0); // Lunes a las 7 AM
       membershipExpiresAt = expires;
     } else if (driver.membershipPlan === 'COMFORT') {
-      basePrice = 20000; // Cuota diaria
+      basePrice = parseInt(configMap.membership_comfort_promo_price || '8990', 10); // Cuota diaria
+      membershipGoal = 0;
       comfortLastPaidAt = now;
       comfortDebt = 0; // Se pone al día al confirmar pago inicial
     }
 
-    const discountPercent = driver.nextDiscount || 0;
+    const discountPercent = driver.membershipPlan === 'BLACK' ? (driver.nextDiscount || 0) : 0;
     const finalPricePaid = basePrice * (1 - discountPercent / 100);
 
     const updated = await prisma.driver.update({
@@ -603,8 +609,8 @@ router.post('/drivers/:id/adjust-membership', async (req: Request, res: Response
       data.membershipPlan = membershipPlan;
       if (membershipPlan === 'BLACK') {
         data.membershipGoal = 150;
-      } else if (membershipPlan === 'FLEX') {
-        data.membershipGoal = 40;
+      } else {
+        data.membershipGoal = 0;
       }
     }
 

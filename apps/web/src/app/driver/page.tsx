@@ -209,6 +209,20 @@ export default function DriverPage() {
     return mins > 0 ? `${hrs} h ${mins} min aprox.` : `${hrs} h aprox.`;
   };
 
+  const [config, setConfig] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    const fetchConfig = async () => {
+      try {
+        const res = await api.get('/config/public');
+        setConfig(res.data.config || {});
+      } catch (err) {
+        console.error('Error fetching config', err);
+      }
+    };
+    fetchConfig();
+  }, []);
+
   const [driver, setDriver] = useState<DriverInfo | null>(null);
   const [isOnline, setIsOnline] = useState(false);
   const [hasActivatedOnline, setHasActivatedOnline] = useState(false);
@@ -3277,9 +3291,15 @@ export default function DriverPage() {
               const hasBlackDiscount = (driver.membershipPlan === 'BLACK' && ((driver.nextDiscount !== undefined && driver.nextDiscount > 0) || (driver.membershipProgress >= driver.membershipGoal))) || (driver.membershipProgress >= 150);
               const remainingBlackTrips = Math.max(0, 150 - driver.membershipProgress);
 
-              // FLEX Plan Checks
-              const hasFlexDiscount = (driver.membershipPlan === 'FLEX' && ((driver.nextDiscount !== undefined && driver.nextDiscount > 0) || (driver.membershipProgress >= driver.membershipGoal))) || (driver.membershipProgress >= 40);
-              const remainingFlexTrips = Math.max(0, 40 - driver.membershipProgress);
+              const blackNormalPrice = parseInt(config.membership_black_normal_price || '199990', 10);
+              const blackPromoPrice = parseInt(config.membership_black_promo_price || '49990', 10);
+              const blackFinalPrice = hasBlackDiscount ? blackPromoPrice * 0.8 : blackPromoPrice;
+              
+              const comfortNormalPrice = parseInt(config.membership_comfort_normal_price || '15990', 10);
+              const comfortPromoPrice = parseInt(config.membership_comfort_promo_price || '8990', 10);
+
+              const flexNormalPrice = parseInt(config.membership_flex_normal_price || '60000', 10);
+              const flexPromoPrice = parseInt(config.membership_flex_promo_price || '19990', 10);
 
               return (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '20px' }}>
@@ -3294,21 +3314,26 @@ export default function DriverPage() {
                         <div style={{ color: '#D4AF37', fontWeight: 900, fontSize: '1.1rem' }}>
                           {hasBlackDiscount ? (
                             <>
-                              <span style={{ textDecoration: 'line-through', color: 'rgba(255,255,255,0.4)', marginRight: '6px', fontSize: '0.85rem' }}>$150.000</span>
-                              $120.000
+                              <span style={{ textDecoration: 'line-through', color: 'rgba(255,255,255,0.4)', marginRight: '6px', fontSize: '0.85rem' }}>{formatCLP(blackPromoPrice)}</span>
+                              {formatCLP(blackFinalPrice)}
                             </>
-                          ) : '$150.000'}
+                          ) : (
+                            <>
+                              <span style={{ textDecoration: 'line-through', color: 'rgba(255,255,255,0.4)', marginRight: '6px', fontSize: '0.85rem' }}>{formatCLP(blackNormalPrice)}</span>
+                              {formatCLP(blackPromoPrice)}
+                            </>
+                          )}
                         </div>
                         <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.65rem' }}>/mes</div>
                       </div>
                     </div>
                     {hasBlackDiscount ? (
                       <div style={{ fontSize: '0.75rem', color: '#10B981', fontWeight: 600 }}>
-                        🎉 ¡Meta de 150 viajes cumplida! Tienes 20% de descuento ($120.000).
+                        🎉 ¡Meta de 150 viajes cumplida! Tienes 20% de descuento ({formatCLP(blackFinalPrice)}).
                       </div>
                     ) : (
                       <div style={{ fontSize: '0.75rem', color: '#D4AF37', fontWeight: 600 }}>
-                        ⏳ Llevas {driver.membershipProgress} viajes. Te faltan {remainingBlackTrips} viajes para obtener 20% de descuento ($120.000) en tu renovación.
+                        ⏳ Llevas {driver.membershipProgress} viajes. Te faltan {remainingBlackTrips} viajes para obtener 20% de descuento ({formatCLP(blackPromoPrice * 0.8)}) en tu renovación.
                       </div>
                     )}
                     <button
@@ -3330,25 +3355,12 @@ export default function DriverPage() {
                       </div>
                       <div style={{ textAlign: 'right' }}>
                         <div style={{ color: '#34D399', fontWeight: 900, fontSize: '1.1rem' }}>
-                          {hasFlexDiscount ? (
-                            <>
-                              <span style={{ textDecoration: 'line-through', color: 'rgba(255,255,255,0.4)', marginRight: '6px', fontSize: '0.85rem' }}>$60.000</span>
-                              $51.000
-                            </>
-                          ) : '$60.000'}
+                          <span style={{ textDecoration: 'line-through', color: 'rgba(255,255,255,0.4)', marginRight: '6px', fontSize: '0.85rem' }}>{formatCLP(flexNormalPrice)}</span>
+                          {formatCLP(flexPromoPrice)}
                         </div>
                         <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.65rem' }}>/fin de semana</div>
                       </div>
                     </div>
-                    {hasFlexDiscount ? (
-                      <div style={{ fontSize: '0.75rem', color: '#10B981', fontWeight: 600 }}>
-                        🎉 ¡Meta de 40 viajes cumplida! Tienes 15% de descuento ($51.000).
-                      </div>
-                    ) : (
-                      <div style={{ fontSize: '0.75rem', color: '#34D399', fontWeight: 600 }}>
-                        ⏳ Llevas {driver.membershipProgress} viajes. Te faltan {remainingFlexTrips} viajes para obtener 15% de descuento ($51.000) en tu renovación.
-                      </div>
-                    )}
                     <button
                       className="btn btn-accent btn-block"
                       onClick={() => handlePayMembership('FLEX')}
@@ -3367,7 +3379,10 @@ export default function DriverPage() {
                         <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.72rem' }}>Cuota Diaria de Operación</div>
                       </div>
                       <div style={{ textAlign: 'right' }}>
-                        <div style={{ color: '#60A5FA', fontWeight: 900, fontSize: '1.1rem' }}>$20.000</div>
+                        <div style={{ color: '#60A5FA', fontWeight: 900, fontSize: '1.1rem' }}>
+                          <span style={{ textDecoration: 'line-through', color: 'rgba(255,255,255,0.4)', marginRight: '6px', fontSize: '0.85rem' }}>{formatCLP(comfortNormalPrice)}</span>
+                          {formatCLP(comfortPromoPrice)}
+                        </div>
                         <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.65rem' }}>/día</div>
                       </div>
                     </div>
@@ -3763,9 +3778,9 @@ export default function DriverPage() {
                     fontWeight: 800,
                     color: driver.membershipPlan === 'BLACK' ? '#D4AF37' : driver.membershipPlan === 'COMFORT' ? '#60A5FA' : '#34D399'
                   }}>
-                    {driver.membershipPlan === 'BLACK' && '$150.000 / mes'}
-                    {driver.membershipPlan === 'COMFORT' && '$20.000 / día'}
-                    {driver.membershipPlan === 'FLEX' && '$60.000 / finde'}
+                    {driver.membershipPlan === 'BLACK' && `${formatCLP(parseInt(config.membership_black_promo_price || '49990', 10))} / mes`}
+                    {driver.membershipPlan === 'COMFORT' && `${formatCLP(parseInt(config.membership_comfort_promo_price || '8990', 10))} / día`}
+                    {driver.membershipPlan === 'FLEX' && `${formatCLP(parseInt(config.membership_flex_promo_price || '19990', 10))} / finde`}
                   </div>
                 </div>
 
@@ -3831,8 +3846,7 @@ export default function DriverPage() {
                     'Renovación mensual automática'
                   ] : driver.membershipPlan === 'COMFORT' ? [
                     'Financiado: inicia sin capital',
-                    'Paga $20.000 solo los días operados',
-                    'Gratis al completar la meta mensual ($180k)',
+                    `Paga ${formatCLP(parseInt(config.membership_comfort_promo_price || '8990', 10))} solo los días operados`,
                     'Conserva el 100% de tus tarifas'
                   ] : [
                     'Activo Viernes, Sábado y Domingo',

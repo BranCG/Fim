@@ -90,6 +90,10 @@ function validatePhone(phone: string) {
   return /^\+569[0-9]{8}$/.test(phone);
 }
 
+function formatCLP(amount: number) {
+  return new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP' }).format(amount);
+}
+
 function RegisterForm() {
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -161,6 +165,19 @@ function RegisterForm() {
 
   // Step 4 — Membresía (solo conductores)
   const [membershipPlan, setMembershipPlan] = useState<MembershipPlan>(planParam);
+  const [config, setConfig] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    const fetchConfig = async () => {
+      try {
+        const res = await api.get('/config/public');
+        setConfig(res.data.config || {});
+      } catch (err) {
+        console.error('Error fetching config', err);
+      }
+    };
+    fetchConfig();
+  }, []);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -1279,11 +1296,16 @@ function RegisterForm() {
                     <span style={{ background: 'rgba(212,175,55,0.2)', border: '1px solid rgba(212,175,55,0.3)', borderRadius: '20px', padding: '2px 8px', fontSize: '0.62rem', color: '#D4AF37', fontWeight: 800 }}>MÁS POPULAR</span>
                   </div>
                   <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                    <div style={{ color: '#D4AF37', fontWeight: 900, fontSize: '1.4rem', lineHeight: 1 }}>$150.000</div>
+                    <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.9rem', textDecoration: 'line-through' }}>
+                      {formatCLP(parseInt(config.membership_black_normal_price || '199990', 10))}
+                    </div>
+                    <div style={{ color: '#D4AF37', fontWeight: 900, fontSize: '1.4rem', lineHeight: 1 }}>
+                      {formatCLP(parseInt(config.membership_black_promo_price || '49990', 10))}
+                    </div>
                     <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.72rem' }}>/mes</div>
                   </div>
                 </div>
-                <p style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.6)', lineHeight: 1.5 }}>Pago único mensual. Acceso ilimitado 30 días. Pago automático vía <strong style={{ color: '#D4AF37' }}>Mercado Pago</strong>.</p>
+                <p style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.6)', lineHeight: 1.5 }}>PRECIO LANZAMIENTO. Pago único mensual. Acceso ilimitado 30 días. Pago automático vía <strong style={{ color: '#D4AF37' }}>Mercado Pago</strong>. Alcanza la meta de 150 viajes para obtener 20% de descuento el próximo mes.</p>
               </div>
 
               {/* PLAN COMFORT */}
@@ -1299,12 +1321,17 @@ function RegisterForm() {
                     <span style={{ background: 'rgba(96,165,250,0.15)', border: '1px solid rgba(96,165,250,0.3)', borderRadius: '20px', padding: '2px 8px', fontSize: '0.62rem', color: '#60A5FA', fontWeight: 800 }}>Membresía Crédito</span>
                   </div>
                   <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                    <div style={{ color: '#FBBF24', fontWeight: 900, fontSize: '1.4rem', lineHeight: 1 }}>$180.000</div>
-                    <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.72rem' }}>/mes total</div>
+                    <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.9rem', textDecoration: 'line-through' }}>
+                      {formatCLP(parseInt(config.membership_comfort_normal_price || '15990', 10))}
+                    </div>
+                    <div style={{ color: '#FBBF24', fontWeight: 900, fontSize: '1.4rem', lineHeight: 1 }}>
+                      {formatCLP(parseInt(config.membership_comfort_promo_price || '8990', 10))}
+                    </div>
+                    <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.72rem' }}>/día</div>
                   </div>
                 </div>
                 <p style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.6)', lineHeight: 1.5 }}>
-                  Te financiamios el inicio. Pagas $20.000 por día operado. Si no trabajas, no pagas. Al completar los $180.000 el resto del mes es gratis.
+                  PRECIO LANZAMIENTO. Te financiamos el inicio. Pagas {formatCLP(parseInt(config.membership_comfort_promo_price || '8990', 10))} por día operado. Si no trabajas, no pagas.
                 </p>
               </div>
 
@@ -1320,11 +1347,16 @@ function RegisterForm() {
                     </span>
                   </div>
                   <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                    <div style={{ color: '#34D399', fontWeight: 900, fontSize: '1.4rem', lineHeight: 1 }}>$60.000</div>
+                    <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.9rem', textDecoration: 'line-through' }}>
+                      {formatCLP(parseInt(config.membership_flex_normal_price || '60000', 10))}
+                    </div>
+                    <div style={{ color: '#34D399', fontWeight: 900, fontSize: '1.4rem', lineHeight: 1 }}>
+                      {formatCLP(parseInt(config.membership_flex_promo_price || '19990', 10))}
+                    </div>
                     <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.72rem' }}>/fin de semana</div>
                   </div>
                 </div>
-                <p style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.6)', lineHeight: 1.5 }}>Activo solo Viernes, Sábado y Domingo. Pago vía <strong style={{ color: '#34D399' }}>Mercado Pago</strong>. El resto de la semana la cuenta queda inactiva.</p>
+                <p style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.6)', lineHeight: 1.5 }}>PRECIO LANZAMIENTO. Activo solo Viernes, Sábado y Domingo. Pago vía <strong style={{ color: '#34D399' }}>Mercado Pago</strong>. El resto de la semana la cuenta queda inactiva.</p>
               </div>
 
               {/* Resumen del plan elegido */}
@@ -1335,9 +1367,9 @@ function RegisterForm() {
                   {membershipPlan === 'FLEX' && <IconZap />}
                 </div>
                 <div>
-                  {membershipPlan === 'BLACK' && 'Seleccionaste BLACK. Después del registro, serás redirigido a Mercado Pago para pagar $150.000. Tu cuenta se activa automáticamente al confirmar el pago.'}
-                  {membershipPlan === 'COMFORT' && 'Seleccionaste COMFORT. Pagas $20.000 cada mañana por transferencia y subes el comprobante en la app para activar el día. El admin valida el primer comprobante.'}
-                  {membershipPlan === 'FLEX' && 'Seleccionaste FLEX. Después del registro, pagas $60.000 con Mercado Pago. Tu cuenta queda activa los Viernes, Sábados y Domingos automáticamente.'}
+                  {membershipPlan === 'BLACK' && `Seleccionaste BLACK. Después del registro, serás redirigido a Mercado Pago para pagar ${formatCLP(parseInt(config.membership_black_promo_price || '49990', 10))}. Tu cuenta se activa automáticamente al confirmar el pago.`}
+                  {membershipPlan === 'COMFORT' && `Seleccionaste COMFORT. Pagas ${formatCLP(parseInt(config.membership_comfort_promo_price || '8990', 10))} cada mañana por transferencia y subes el comprobante en la app para activar el día. El admin valida el primer comprobante.`}
+                  {membershipPlan === 'FLEX' && `Seleccionaste FLEX. Después del registro, pagas ${formatCLP(parseInt(config.membership_flex_promo_price || '19990', 10))} con Mercado Pago. Tu cuenta queda activa los Viernes, Sábados y Domingos automáticamente.`}
                 </div>
               </div>
             </div>

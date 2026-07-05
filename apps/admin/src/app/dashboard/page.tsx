@@ -225,7 +225,7 @@ export default function DashboardPage() {
       const r = await api.get('/admin/revenue-report', { params: revenueFilter });
       setRevenueData(r.data.report);
     } catch {
-      setActionMsg('❌ Error al cargar análisis');
+      setActionMsg(' Error al cargar análisis');
     } finally { setLoading(false); }
   }, [revenueFilter]);
 
@@ -234,7 +234,7 @@ export default function DashboardPage() {
       const r = await api.get('/admin/config');
       setConfig(r.data.config || {});
     } catch {
-      setActionMsg('❌ Error al cargar configuraciones');
+      setActionMsg(' Error al cargar configuraciones');
     }
   }, []);
 
@@ -243,11 +243,23 @@ export default function DashboardPage() {
     setConfig(prev => ({ ...prev, [key]: newValue }));
     try {
       await api.post('/admin/config', { key, value: newValue });
-      setActionMsg('✅ Configuración guardada');
+      setActionMsg(' Configuración guardada');
       setTimeout(() => setActionMsg(''), 2000);
     } catch {
       setConfig(prev => ({ ...prev, [key]: currentValue }));
-      setActionMsg('❌ Error al guardar configuración');
+      setActionMsg(' Error al guardar configuración');
+      setTimeout(() => setActionMsg(''), 2000);
+    }
+  };
+
+  const handleSaveConfig = async (key: string, value: string) => {
+    setConfig(prev => ({ ...prev, [key]: value }));
+    try {
+      await api.post('/admin/config', { key, value });
+      setActionMsg(' Configuración guardada');
+      setTimeout(() => setActionMsg(''), 2000);
+    } catch {
+      setActionMsg(' Error al guardar configuración');
       setTimeout(() => setActionMsg(''), 2000);
     }
   };
@@ -261,10 +273,10 @@ export default function DashboardPage() {
     setGiftSuccess('');
     try {
       const res = await api.post('/admin/gift-free-days', { days: giftDays });
-      setGiftSuccess(`✅ ${res.data.message}`);
+      setGiftSuccess(` ${res.data.message}`);
       loadStats();
     } catch (err: any) {
-      setGiftSuccess(`❌ Error: ${err.response?.data?.error || 'No se pudo procesar.'}`);
+      setGiftSuccess(` Error: ${err.response?.data?.error || 'No se pudo procesar.'}`);
     } finally {
       setGifting(false);
     }
@@ -294,7 +306,7 @@ export default function DashboardPage() {
       else if (action === 'delete_permanent') await api.delete(`/admin/drivers/${driverId}`);
       else if (action === 'restore') await api.post(`/admin/drivers/${driverId}/restore`);
 
-      setActionMsg('✅ Acción realizada');
+      setActionMsg(' Acción realizada');
       loadStats();
       if (view === 'pending') loadPending();
       if (view === 'all_drivers') loadAll();
@@ -303,7 +315,7 @@ export default function DashboardPage() {
         setSelectedDriver(r.data.driver);
       }
     } catch {
-      setActionMsg('❌ Error al realizar la acción');
+      setActionMsg(' Error al realizar la acción');
     } finally { setLoading(false); setTimeout(() => setActionMsg(''), 3000); }
   }
 
@@ -314,7 +326,7 @@ export default function DashboardPage() {
       setSelectedDriver(r.data.driver);
       setView('driver_detail');
     } catch {
-      setActionMsg('❌ Error al cargar detalle del conductor');
+      setActionMsg(' Error al cargar detalle del conductor');
     } finally {
       setLoading(true);
       setLoading(false);
@@ -331,11 +343,11 @@ export default function DashboardPage() {
     setLoading(true); setActionMsg('');
     try {
       await api.post(`/admin/safety-reports/${resolvingReportId}/resolve`, { adminNotes: resolveNotes });
-      setActionMsg('✅ Reporte Resuelto');
+      setActionMsg(' Reporte Resuelto');
       loadSafetyReports();
       setResolvingReportId(null);
     } catch {
-      setActionMsg('❌ Error al resolver reporte');
+      setActionMsg(' Error al resolver reporte');
     } finally { setLoading(false); setTimeout(() => setActionMsg(''), 3000); }
   }
 
@@ -356,7 +368,7 @@ export default function DashboardPage() {
       else if (action === 'delete_permanent') await api.delete(`/admin/passengers/${passengerId}`);
       else if (action === 'restore') await api.post(`/admin/passengers/${passengerId}/restore`);
 
-      setActionMsg('✅ Acción realizada');
+      setActionMsg(' Acción realizada');
       loadStats();
       if (view === 'passengers') loadPassengers();
       if (view === 'passenger_detail') {
@@ -367,7 +379,7 @@ export default function DashboardPage() {
       // Rollback on failure
       setPassengers(originalPassengers);
       setSelectedPassenger(originalSelectedPassenger);
-      setActionMsg('❌ Error al realizar la acción');
+      setActionMsg(' Error al realizar la acción');
     } finally { setLoading(false); setTimeout(() => setActionMsg(''), 3000); }
   }
 
@@ -378,7 +390,7 @@ export default function DashboardPage() {
       setSelectedPassenger(r.data.passenger);
       setView('passenger_detail');
     } catch {
-      setActionMsg('❌ Error al cargar detalle del pasajero');
+      setActionMsg(' Error al cargar detalle del pasajero');
     } finally {
       setLoading(false);
     }
@@ -462,7 +474,7 @@ export default function DashboardPage() {
             <div style={{ color: actionMsg.includes('Error') ? 'var(--danger)' : 'var(--accent)' }}>
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
             </div>
-            {actionMsg.replace(/[✅❌]/g, '')}
+            {actionMsg.replace(/[]/g, '')}
           </div>
         )}
 
@@ -512,7 +524,7 @@ export default function DashboardPage() {
             <h1 style={{ fontSize: '1.5rem', marginBottom: '24px' }}>🛡️ Central de Seguridad (S.O.S)</h1>
             {safetyReports.length === 0 ? (
               <div style={{ textAlign: 'center', padding: '48px', color: 'var(--text-muted)' }}>
-                <div style={{ fontSize: '3rem', marginBottom: '12px' }}>✅</div>
+                <div style={{ fontSize: '3rem', marginBottom: '12px' }}></div>
                 <p>No hay reportes de seguridad en el sistema.</p>
               </div>
             ) : (
@@ -743,7 +755,7 @@ export default function DashboardPage() {
                         ✓ Aprobar conductor
                       </button>
                       <button className="btn btn-warning" disabled={loading} onClick={() => doAction(driver.id, 'membership')}>
-                        ✅ Aprobar Pago Manual
+                         Aprobar Pago Manual
                       </button>
                       <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                         <input placeholder="Motivo de rechazo..." value={rejectReason} onChange={e => setRejectReason(e.target.value)} style={{ width: '200px', padding: '8px 12px' }} />
@@ -790,7 +802,7 @@ export default function DashboardPage() {
                       display: 'flex', alignItems: 'center', gap: '8px',
                     }}
                   >
-                    {plan === 'BLACK' ? '🖤' : plan === 'COMFORT' ? '🟡' : plan === 'FLEX' ? '🟢' : '🗑️'} {plan}
+                    {plan === 'BLACK' ? '' : plan === 'COMFORT' ? '' : plan === 'FLEX' ? '' : ''} {plan}
                     <span style={{ background: isActive ? c.active : 'rgba(255,255,255,0.1)', color: isActive ? '#000' : 'var(--text-muted)', borderRadius: '20px', padding: '2px 8px', fontSize: '0.72rem', fontWeight: 900 }}>{count}</span>
                   </button>
                 );
@@ -871,7 +883,7 @@ export default function DashboardPage() {
                             <td>
                               <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
                                 <button className="btn btn-success btn-sm" disabled={loading} onClick={() => doAction(d.id, 'restore')}>🔄 Reintegrar</button>
-                                <button className="btn btn-danger btn-sm" disabled={loading} onClick={() => { if (window.confirm('🚨 ¿ELIMINAR DEFINITIVAMENTE DE LA BASE DE DATOS? Esta acción destruirá completamente la cuenta de forma inmediata, borrando sus viajes, calificaciones y registros. NO se puede deshacer.')) doAction(d.id, 'delete_permanent'); }}>🗑️ Hard Delete</button>
+                                <button className="btn btn-danger btn-sm" disabled={loading} onClick={() => { if (window.confirm(' ¿ELIMINAR DEFINITIVAMENTE DE LA BASE DE DATOS? Esta acción destruirá completamente la cuenta de forma inmediata, borrando sus viajes, calificaciones y registros. NO se puede deshacer.')) doAction(d.id, 'delete_permanent'); }}> Hard Delete</button>
                               </div>
                             </td>
                           </>
@@ -887,7 +899,7 @@ export default function DashboardPage() {
                             </td>
                             {driverPlanTab === 'COMFORT' && (
                               <td style={{ fontWeight: 700, color: (d.comfortDebt || 0) > 0 ? 'var(--danger)' : 'var(--success)' }}>
-                                <div>{(d.comfortDebt || 0) > 0 ? `⚠️ $${(d.comfortDebt || 0).toLocaleString('es-CL')}` : 'Al día'}</div>
+                                <div>{(d.comfortDebt || 0) > 0 ? ` $${(d.comfortDebt || 0).toLocaleString('es-CL')}` : 'Al día'}</div>
                                 {d.comfortReceiptUrl && (
                                   <button
                                     onClick={() => setImgModal(getImageUrl(d.comfortReceiptUrl))}
@@ -905,19 +917,19 @@ export default function DashboardPage() {
                               </td>
                             )}
                             <td style={{ fontWeight: 700, color: d.totalRating > 0 ? 'var(--warning)' : 'var(--text-muted)' }}>
-                              {d.totalRating > 0 ? `⭐ ${d.totalRating.toFixed(1)}` : '—'}
+                              {d.totalRating > 0 ? ` ${d.totalRating.toFixed(1)}` : '—'}
                             </td>
                             <td style={{ fontWeight: 600 }}>{d.totalTrips}</td>
                             <td>
                               <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
                                 <button className="btn btn-secondary btn-sm" onClick={() => openDriverDetail(d.id)}>Ver</button>
                                 {d.status === 'approved' && !d.membershipPaid && (
-                                  <button className="btn btn-warning btn-sm" disabled={loading} onClick={() => doAction(d.id, 'membership')}>✅ Aprobar Pago Manual</button>
+                                  <button className="btn btn-warning btn-sm" disabled={loading} onClick={() => doAction(d.id, 'membership')}> Aprobar Pago Manual</button>
                                 )}
                                 {d.status === 'active' && (
                                   <button className="btn btn-warning btn-sm" disabled={loading} onClick={() => { const r = prompt('Motivo de suspensión:'); if (r) doAction(d.id, 'suspend', r); }}>Suspender</button>
                                 )}
-                                <button className="btn btn-danger btn-sm" disabled={loading} onClick={() => { if (window.confirm('¿Estás seguro de eliminar permanentemente esta cuenta? Esta acción ofuscará todos sus datos y es irreversible.')) doAction(d.id, 'delete_permanent'); }}>🗑️ Eliminar</button>
+                                <button className="btn btn-danger btn-sm" disabled={loading} onClick={() => { if (window.confirm('¿Estás seguro de eliminar permanentemente esta cuenta? Esta acción ofuscará todos sus datos y es irreversible.')) doAction(d.id, 'delete_permanent'); }}> Eliminar</button>
                               </div>
                             </td>
                           </>
@@ -1034,11 +1046,11 @@ export default function DashboardPage() {
                   ['Año', selectedDriver.vehicleYear], ['Patente', selectedDriver.vehiclePlate],
                   ['TAG', selectedDriver.tagNumber], ['Licencia N°', selectedDriver.licenseNumber],
                   ['Plan',
-                    selectedDriver.membershipPlan === 'BLACK' ? '🖤 BLACK — $150.000/mes' :
-                      selectedDriver.membershipPlan === 'COMFORT' ? '🟡 COMFORT — $20.000/día' :
-                        '🟢 FLEX — $60.000/fin de semana'],
-                  ['Membresía', selectedDriver.isTrial ? '🎁 Prueba (Pase Libre)' : (selectedDriver.membershipPaid ? '✅ Pagada' : '❌ Sin pagar')],
-                  ['Rating', selectedDriver.totalRating > 0 ? `⭐ ${selectedDriver.totalRating.toFixed(1)}` : 'Nuevo'],
+                    selectedDriver.membershipPlan === 'BLACK' ? ' BLACK — $150.000/mes' :
+                      selectedDriver.membershipPlan === 'COMFORT' ? ' COMFORT — $20.000/día' :
+                        ' FLEX — $60.000/fin de semana'],
+                  ['Membresía', selectedDriver.isTrial ? '🎁 Prueba (Pase Libre)' : (selectedDriver.membershipPaid ? ' Pagada' : ' Sin pagar')],
+                  ['Rating', selectedDriver.totalRating > 0 ? ` ${selectedDriver.totalRating.toFixed(1)}` : 'Nuevo'],
                   ['Viajes', selectedDriver.totalTrips],
                 ].map(([k, v]) => (
                   <div key={String(k)} style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid var(--border)', fontSize: '0.875rem' }}>
@@ -1144,7 +1156,7 @@ export default function DashboardPage() {
                 if (hasDuplicates) {
                   return (
                     <div style={{ marginTop: '16px', padding: '12px', background: 'rgba(255,0,0,0.1)', color: '#ff4d4d', borderRadius: '8px', fontSize: '0.85rem', border: '1px solid rgba(255,0,0,0.2)', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <span>⚠️</span>
+                      <span></span>
                       <div>
                         <strong>ALERTA DE SEGURIDAD:</strong> Se han detectado fotos duplicadas. El usuario subió la misma imagen para varios documentos.
                       </div>
@@ -1246,7 +1258,7 @@ export default function DashboardPage() {
                 {selectedDriver.status === 'suspended' && (
                   <button className="btn btn-success" disabled={loading} onClick={() => doAction(selectedDriver.id, 'approve')}>Reactivar</button>
                 )}
-                <button className="btn btn-danger" disabled={loading} onClick={() => { if (window.confirm('¿Estás seguro de eliminar permanentemente esta cuenta? Esta acción ofuscará todos sus datos y es irreversible.')) doAction(selectedDriver.id, 'delete_permanent'); }}>🗑️ Eliminar Permanentemente</button>
+                <button className="btn btn-danger" disabled={loading} onClick={() => { if (window.confirm('¿Estás seguro de eliminar permanentemente esta cuenta? Esta acción ofuscará todos sus datos y es irreversible.')) doAction(selectedDriver.id, 'delete_permanent'); }}> Eliminar Permanentemente</button>
               </div>
             </div>
           </div>
@@ -1349,7 +1361,7 @@ export default function DashboardPage() {
                             <td>
                               <div style={{ display: 'flex', gap: '6px' }}>
                                 <button className="btn btn-success btn-sm" disabled={loading} onClick={() => doPassengerAction(p.id, 'restore')}>🔄 Reintegrar</button>
-                                <button className="btn btn-danger btn-sm" disabled={loading} onClick={() => { if (window.confirm('🚨 ¿ELIMINAR DEFINITIVAMENTE DE LA BASE DE DATOS? Esta acción destruirá completamente la cuenta de forma inmediata, borrando sus viajes, calificaciones y registros. NO se puede deshacer.')) doPassengerAction(p.id, 'delete_permanent'); }}>🗑️ Hard Delete</button>
+                                <button className="btn btn-danger btn-sm" disabled={loading} onClick={() => { if (window.confirm(' ¿ELIMINAR DEFINITIVAMENTE DE LA BASE DE DATOS? Esta acción destruirá completamente la cuenta de forma inmediata, borrando sus viajes, calificaciones y registros. NO se puede deshacer.')) doPassengerAction(p.id, 'delete_permanent'); }}> Hard Delete</button>
                               </div>
                             </td>
                           </>
@@ -1373,7 +1385,7 @@ export default function DashboardPage() {
                                 ) : (
                                   <button className="btn btn-success btn-sm" onClick={() => doPassengerAction(p.id, 'approve')}>Aprobar</button>
                                 )}
-                                <button className="btn btn-danger btn-sm" disabled={loading} onClick={() => { if (window.confirm('¿Estás seguro de eliminar permanentemente esta cuenta? Esta acción ofuscará todos sus datos y es irreversible.')) doPassengerAction(p.id, 'delete_permanent'); }}>🗑️ Eliminar</button>
+                                <button className="btn btn-danger btn-sm" disabled={loading} onClick={() => { if (window.confirm('¿Estás seguro de eliminar permanentemente esta cuenta? Esta acción ofuscará todos sus datos y es irreversible.')) doPassengerAction(p.id, 'delete_permanent'); }}> Eliminar</button>
                               </div>
                             </td>
                           </>
@@ -1459,7 +1471,7 @@ export default function DashboardPage() {
                     </button>
                   ) : (
                     <div key={doc.label} style={{ width: '150px', height: '124px', background: 'rgba(255,255,255,0.02)', border: '2px dashed var(--border)', borderRadius: '10px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', fontSize: '0.75rem', color: 'var(--text-muted)', textAlign: 'center', padding: '10px' }}>
-                      <div>❌ Sin imagen</div>
+                      <div> Sin imagen</div>
                       <div style={{ marginTop: '4px', fontSize: '0.65rem' }}>{doc.label}</div>
                     </div>
                   )
@@ -1579,14 +1591,67 @@ export default function DashboardPage() {
         {view === 'settings' && (
           <div className="animate-in">
             <div style={{ marginBottom: '24px' }}>
-              <h1 style={{ fontSize: '1.5rem', marginBottom: '4px' }}>⚙️ Configuración del Sistema</h1>
-              <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>Controla la cobertura geográfica del lanzamiento y gestiona los regalos masivos de días.</p>
+              <h1 style={{ fontSize: '1.5rem', marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" /></svg>
+                Configuración del Sistema
+              </h1>
+              <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>Controla precios de membresías, cobertura geográfica del lanzamiento y gestiona los regalos masivos de días.</p>
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '24px', marginBottom: '40px' }}>
+              {/* Bloque de Precios de Membresías */}
+              <div className="card">
+                <h3 style={{ fontSize: '1.1rem', marginBottom: '8px', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8"/><path d="M12 18V6"/></svg>
+                  Precios de Membresías de Lanzamiento
+                </h3>
+                <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem', marginBottom: '20px' }}>
+                  Ajusta los precios de lista (tachados) y los precios de promoción (los que se cobran actualmente) de cada plan.
+                </p>
+
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '20px' }}>
+                  {[
+                    { id: 'black', name: 'BLACK' },
+                    { id: 'comfort', name: 'COMFORT' },
+                    { id: 'flex', name: 'FLEX' }
+                  ].map(plan => (
+                    <div key={plan.id} style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border)', padding: '16px', borderRadius: '12px' }}>
+                      <div style={{ fontWeight: 600, marginBottom: '12px', fontSize: '0.95rem' }}>Plan {plan.name}</div>
+                      
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                        <div>
+                          <label style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'block', marginBottom: '4px' }}>Precio Normal (Tachado)</label>
+                          <input 
+                            type="number" 
+                            className="form-input" 
+                            value={config[`membership_${plan.id}_normal_price`] || ''} 
+                            placeholder={plan.id === 'black' ? '199990' : plan.id === 'comfort' ? '15990' : '60000'}
+                            onChange={(e) => handleSaveConfig(`membership_${plan.id}_normal_price`, e.target.value)}
+                          />
+                        </div>
+                        <div>
+                          <label style={{ fontSize: '0.75rem', color: 'var(--accent)', display: 'block', marginBottom: '4px', fontWeight: 600 }}>Precio Promoción (Real)</label>
+                          <input 
+                            type="number" 
+                            className="form-input" 
+                            value={config[`membership_${plan.id}_promo_price`] || ''} 
+                            placeholder={plan.id === 'black' ? '49990' : plan.id === 'comfort' ? '8990' : '19990'}
+                            onChange={(e) => handleSaveConfig(`membership_${plan.id}_promo_price`, e.target.value)}
+                            style={{ borderColor: 'rgba(212,175,55,0.3)' }}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
               {/* Bloque de Regalo Masivo */}
               <div className="card">
-                <h3 style={{ fontSize: '1.1rem', marginBottom: '8px', color: 'var(--accent)' }}>🎁 Días de Membresía de Regalo (Free Pass Fim)</h3>
+                <h3 style={{ fontSize: '1.1rem', marginBottom: '8px', color: 'var(--accent)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5"/><line x1="12" y1="22" x2="12" y2="7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/></svg>
+                  Días de Membresía de Regalo (Free Pass Fim)
+                </h3>
                 <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem', marginBottom: '16px' }}>
                   Añade días de membresía gratis a todos los conductores con estado <strong>Activo</strong> o <strong>Aprobado</strong> simultáneamente.
                   Si un conductor ya tiene su membresía pagada y vigente, su fecha de expiración se extenderá automáticamente por esta cantidad de días. Si está vencido, se le activará desde hoy por esa cantidad de días.
@@ -1619,10 +1684,10 @@ export default function DashboardPage() {
                     marginTop: '16px',
                     padding: '12px',
                     borderRadius: 'var(--radius)',
-                    background: giftSuccess.startsWith('❌') ? 'rgba(255, 69, 96, 0.1)' : 'rgba(0, 229, 160, 0.1)',
-                    border: giftSuccess.startsWith('❌') ? '1px solid var(--danger)' : '1px solid var(--success)',
+                    background: giftSuccess.startsWith('') ? 'rgba(255, 69, 96, 0.1)' : 'rgba(0, 229, 160, 0.1)',
+                    border: giftSuccess.startsWith('') ? '1px solid var(--danger)' : '1px solid var(--success)',
                     fontSize: '0.875rem',
-                    color: giftSuccess.startsWith('❌') ? 'var(--danger)' : 'var(--success)'
+                    color: giftSuccess.startsWith('') ? 'var(--danger)' : 'var(--success)'
                   }}>
                     {giftSuccess}
                   </div>
@@ -1633,16 +1698,23 @@ export default function DashboardPage() {
               <div className="card">
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '12px' }}>
                   <div>
-                    <h3 style={{ fontSize: '1.1rem', color: 'var(--text-primary)' }}>📍 Cobertura Geográfica de Operación</h3>
+                    <h3 style={{ fontSize: '1.1rem', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                      Cobertura Geográfica de Operación
+                    </h3>
                     <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>Define en qué zonas los pasajeros pueden pedir viajes y los conductores ponerse en línea.</p>
                   </div>
                   <div>
                     <button
                       className={`btn ${config.zone_enabled_all_chile === 'true' ? 'btn-primary' : 'btn-secondary'}`}
                       onClick={() => handleToggleConfig('zone_enabled_all_chile', config.zone_enabled_all_chile || 'false')}
-                      style={{ fontSize: '0.85rem', padding: '8px 16px' }}
+                      style={{ fontSize: '0.85rem', padding: '8px 16px', display: 'flex', alignItems: 'center', gap: '8px' }}
                     >
-                      {config.zone_enabled_all_chile === 'true' ? '🌎 Cobertura Nacional Activa (Sin Restricciones)' : '🔒 Restringir Cobertura por Zonas'}
+                      {config.zone_enabled_all_chile === 'true' ? (
+                        <><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg> Cobertura Nacional Activa (Sin Restricciones)</>
+                      ) : (
+                        <><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg> Restringir Cobertura por Zonas</>
+                      )}
                     </button>
                   </div>
                 </div>
@@ -1656,16 +1728,22 @@ export default function DashboardPage() {
                     borderRadius: 'var(--radius-lg)',
                     color: 'var(--accent)',
                     fontWeight: 600,
-                    fontSize: '0.95rem'
+                    fontSize: '0.95rem',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    gap: '8px'
                   }}>
-                    ✨ Fim está operando actualmente a NIVEL NACIONAL en todo Chile sin restricciones de geocerca.
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                    Fim está operando actualmente a NIVEL NACIONAL en todo Chile sin restricciones de geocerca.
                   </div>
                 ) : (
                   <div>
                     {/* Secciones de Zonas */}
                     <div style={{ marginBottom: '24px' }}>
-                      <h4 style={{ fontSize: '0.95rem', color: 'var(--accent)', marginBottom: '12px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                        🏙️ REGIÓN METROPOLITANA (MACRO-ZONAS)
+                      <h4 style={{ fontSize: '0.95rem', color: 'var(--accent)', marginBottom: '12px', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="4" y="2" width="16" height="20" rx="2" ry="2"/><path d="M9 22v-4h6v4"/><path d="M8 6h.01"/><path d="M16 6h.01"/><path d="M12 6h.01"/><path d="M12 10h.01"/><path d="M12 14h.01"/><path d="M16 10h.01"/><path d="M16 14h.01"/><path d="M8 10h.01"/><path d="M8 14h.01"/></svg>
+                        REGIÓN METROPOLITANA (MACRO-ZONAS)
                       </h4>
                       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '12px' }}>
                         {[
@@ -1713,8 +1791,9 @@ export default function DashboardPage() {
                     <hr style={{ border: 'none', borderBottom: '1px solid var(--border)', margin: '24px 0' }} />
 
                     <div>
-                      <h4 style={{ fontSize: '0.95rem', color: 'var(--info)', marginBottom: '12px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                        🇨🇱 OTRAS REGIONES DE CHILE (REGIONES COMPLETAS)
+                      <h4 style={{ fontSize: '0.95rem', color: 'var(--info)', marginBottom: '12px', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/><path d="M2 12h20"/></svg>
+                        OTRAS REGIONES DE CHILE (REGIONES COMPLETAS)
                       </h4>
                       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px' }}>
                         {[

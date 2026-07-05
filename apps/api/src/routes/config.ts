@@ -6,7 +6,17 @@ const router = Router();
 
 router.get('/public', async (_req: Request, res: Response) => {
   try {
-    const keys = ['promo_ribbon_enabled', 'promo_ribbon_text_driver', 'promo_ribbon_text_passenger'];
+    const keys = [
+      'promo_ribbon_enabled', 
+      'promo_ribbon_text_driver', 
+      'promo_ribbon_text_passenger',
+      'membership_black_normal_price',
+      'membership_black_promo_price',
+      'membership_comfort_normal_price',
+      'membership_comfort_promo_price',
+      'membership_flex_normal_price',
+      'membership_flex_promo_price'
+    ];
     const configs = await prisma.systemConfig.findMany({
       where: { key: { in: keys } },
     });
