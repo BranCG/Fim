@@ -171,6 +171,9 @@ export default function Home() {
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <ThemeToggle />
+          <Link href="/login" className="btn btn-ghost" style={{
+            padding: '8px 16px', fontSize: '0.85rem'
+          }}>Ingresar</Link>
           <Link href="/register" className="btn" style={{
             background: 'var(--accent)', color: '#000', boxShadow: 'var(--accent-glow)',
             padding: '8px 16px', fontSize: '0.85rem'

@@ -926,3 +926,5 @@ width: 100%;
 }
 
 
+html.accessible-font-lg { font-size: 18px !important; }
+html.accessible-font-xl { font-size: 20px !important; }

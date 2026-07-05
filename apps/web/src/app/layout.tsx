@@ -3,6 +3,7 @@ import { Inter } from 'next/font/google';
 import './globals.css';
 import { ThemeProvider } from '@/components/ThemeProvider';
 import { CookieBanner } from '@/components/CookieBanner';
+import { AccessibilityWidget } from '@/components/AccessibilityWidget';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 
@@ -29,6 +30,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <ThemeProvider>
           {children}
           <CookieBanner />
+          <AccessibilityWidget />
         </ThemeProvider>
       </body>
     </html>
