@@ -756,8 +756,7 @@ export default function DriverPage() {
   // Socket.io para recibir viajes
   useEffect(() => {
     if (!driver || driver.status !== 'active') return;
-    // Para planes BLACK/FLEX requiere membershipPaid; COMFORT requiere haber pagado hoy
-    if (!driver.membershipPaid && (driver.membershipPlan === 'BLACK' || driver.membershipPlan === 'FLEX')) return;
+    // Validaciones de membresía ya fueron realizadas en /toggle-online. Confiar en isOnline.
     if (!isOnline) return;
 
     const socket = connectSocket();
