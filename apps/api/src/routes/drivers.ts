@@ -28,6 +28,7 @@ router.get('/me', requireAuth, requireRole('driver'), async (req: Request, res: 
         isTrial: true, nextDiscount: true,
         giftDaysPending: true,
         createdAt: true,
+        selfieUrl: true, lastBiometricAuth: true,
       },
     });
 
