@@ -3292,14 +3292,14 @@ export default function DriverPage() {
               const remainingBlackTrips = Math.max(0, 150 - driver.membershipProgress);
 
               const blackNormalPrice = parseInt(config.membership_black_normal_price || '199990', 10);
-              const blackPromoPrice = parseInt(config.membership_black_promo_price || '49990', 10);
+              const blackPromoPrice = parseInt(config.membership_black_promo_price || '39990', 10);
               const blackFinalPrice = hasBlackDiscount ? blackPromoPrice * 0.8 : blackPromoPrice;
               
               const comfortNormalPrice = parseInt(config.membership_comfort_normal_price || '15990', 10);
               const comfortPromoPrice = parseInt(config.membership_comfort_promo_price || '8990', 10);
 
               const flexNormalPrice = parseInt(config.membership_flex_normal_price || '60000', 10);
-              const flexPromoPrice = parseInt(config.membership_flex_promo_price || '19990', 10);
+              const flexPromoPrice = parseInt(config.membership_flex_promo_price || '14990', 10);
 
               return (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '20px' }}>
@@ -3778,9 +3778,9 @@ export default function DriverPage() {
                     fontWeight: 800,
                     color: driver.membershipPlan === 'BLACK' ? '#D4AF37' : driver.membershipPlan === 'COMFORT' ? '#60A5FA' : '#34D399'
                   }}>
-                    {driver.membershipPlan === 'BLACK' && `${formatCLP(parseInt(config.membership_black_promo_price || '49990', 10))} / mes`}
+                    {driver.membershipPlan === 'BLACK' && `${formatCLP(parseInt(config.membership_black_promo_price || '39990', 10))} / mes`}
                     {driver.membershipPlan === 'COMFORT' && `${formatCLP(parseInt(config.membership_comfort_promo_price || '8990', 10))} / día`}
-                    {driver.membershipPlan === 'FLEX' && `${formatCLP(parseInt(config.membership_flex_promo_price || '19990', 10))} / finde`}
+                    {driver.membershipPlan === 'FLEX' && `${formatCLP(parseInt(config.membership_flex_promo_price || '14990', 10))} / finde`}
                   </div>
                 </div>
 
@@ -3840,19 +3840,20 @@ export default function DriverPage() {
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginTop: '2px' }}>
                   {/* Advantages list */}
                   {(driver.membershipPlan === 'BLACK' ? [
-                    'Acceso ilimitado 30 días seguidos',
-                    'Sin cobros diarios ni interrupciones',
-                    'Conserva el 100% de tus tarifas',
+                    'Recupera el valor de tu membresía en pocos días',
+                    'Después, cada viaje es 100% para ti',
+                    'Sin comisiones ocultas',
                     'Renovación mensual automática'
                   ] : driver.membershipPlan === 'COMFORT' ? [
-                    'Financiado: inicia sin capital',
-                    `Paga ${formatCLP(parseInt(config.membership_comfort_promo_price || '8990', 10))} solo los días operados`,
-                    'Conserva el 100% de tus tarifas'
+                    'Conduce solo cuando quieras',
+                    'Recupera el costo del día con pocos viajes',
+                    'El resto de tus ganancias son tuyas',
+                    `Paga ${formatCLP(parseInt(config.membership_comfort_promo_price || '8990', 10))} solo los días operados`
                   ] : [
-                    'Activo Viernes, Sábado y Domingo',
-                    'Ideal para complementar tus ingresos',
-                    'Conserva el 100% de tus tarifas',
-                    'Sin cobros durante la semana'
+                    'Convierte tu fin de semana en el más rentable',
+                    'Recupera la membresía rápidamente',
+                    'Conduce sin comisiones',
+                    'Activo solo Viernes, Sábado y Domingo'
                   ]).map((advantage, i) => (
                     <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.78rem', color: 'var(--text-secondary)' }}>
                       <span style={{

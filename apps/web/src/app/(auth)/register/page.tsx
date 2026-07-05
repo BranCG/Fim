@@ -1300,12 +1300,12 @@ function RegisterForm() {
                       {formatCLP(parseInt(config.membership_black_normal_price || '199990', 10))}
                     </div>
                     <div style={{ color: '#D4AF37', fontWeight: 900, fontSize: '1.4rem', lineHeight: 1 }}>
-                      {formatCLP(parseInt(config.membership_black_promo_price || '49990', 10))}
+                      {formatCLP(parseInt(config.membership_black_promo_price || '39990', 10))}
                     </div>
                     <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.72rem' }}>/mes</div>
                   </div>
                 </div>
-                <p style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.6)', lineHeight: 1.5 }}>PRECIO LANZAMIENTO. Pago único mensual. Acceso ilimitado 30 días. Pago automático vía <strong style={{ color: '#D4AF37' }}>Mercado Pago</strong>. Alcanza la meta de 150 viajes para obtener 20% de descuento el próximo mes.</p>
+                <p style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.6)', lineHeight: 1.5 }}>PRECIO LANZAMIENTO. Recupera el valor de tu membresía en pocos días. Después, cada viaje es 100% para ti, sin comisiones. Pago automático vía <strong style={{ color: '#D4AF37' }}>Mercado Pago</strong>. Alcanza la meta de 150 viajes para obtener 20% de descuento el próximo mes.</p>
               </div>
 
               {/* PLAN COMFORT */}
@@ -1331,7 +1331,7 @@ function RegisterForm() {
                   </div>
                 </div>
                 <p style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.6)', lineHeight: 1.5 }}>
-                  PRECIO LANZAMIENTO. Te financiamos el inicio. Pagas {formatCLP(parseInt(config.membership_comfort_promo_price || '8990', 10))} por día operado. Si no trabajas, no pagas.
+                  PRECIO LANZAMIENTO. Conduce solo cuando quieras. Recupera el costo del día con pocos viajes y el resto de tus ganancias son tuyas. Pagas {formatCLP(parseInt(config.membership_comfort_promo_price || '8990', 10))} por día operado.
                 </p>
               </div>
 
@@ -1351,12 +1351,12 @@ function RegisterForm() {
                       {formatCLP(parseInt(config.membership_flex_normal_price || '60000', 10))}
                     </div>
                     <div style={{ color: '#34D399', fontWeight: 900, fontSize: '1.4rem', lineHeight: 1 }}>
-                      {formatCLP(parseInt(config.membership_flex_promo_price || '19990', 10))}
+                      {formatCLP(parseInt(config.membership_flex_promo_price || '14990', 10))}
                     </div>
                     <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.72rem' }}>/fin de semana</div>
                   </div>
                 </div>
-                <p style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.6)', lineHeight: 1.5 }}>PRECIO LANZAMIENTO. Activo solo Viernes, Sábado y Domingo. Pago vía <strong style={{ color: '#34D399' }}>Mercado Pago</strong>. El resto de la semana la cuenta queda inactiva.</p>
+                <p style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.6)', lineHeight: 1.5 }}>PRECIO LANZAMIENTO. Convierte tu fin de semana en el más rentable. Recupera la membresía rápidamente y conduce sin comisiones. Activo solo Viernes, Sábado y Domingo. Pago vía <strong style={{ color: '#34D399' }}>Mercado Pago</strong>.</p>
               </div>
 
               {/* Resumen del plan elegido */}
@@ -1367,9 +1367,9 @@ function RegisterForm() {
                   {membershipPlan === 'FLEX' && <IconZap />}
                 </div>
                 <div>
-                  {membershipPlan === 'BLACK' && `Seleccionaste BLACK. Después del registro, serás redirigido a Mercado Pago para pagar ${formatCLP(parseInt(config.membership_black_promo_price || '49990', 10))}. Tu cuenta se activa automáticamente al confirmar el pago.`}
+                  {membershipPlan === 'BLACK' && `Seleccionaste BLACK. Después del registro, serás redirigido a Mercado Pago para pagar ${formatCLP(parseInt(config.membership_black_promo_price || '39990', 10))}. Tu cuenta se activa automáticamente al confirmar el pago.`}
                   {membershipPlan === 'COMFORT' && `Seleccionaste COMFORT. Pagas ${formatCLP(parseInt(config.membership_comfort_promo_price || '8990', 10))} cada mañana por transferencia y subes el comprobante en la app para activar el día. El admin valida el primer comprobante.`}
-                  {membershipPlan === 'FLEX' && `Seleccionaste FLEX. Después del registro, pagas ${formatCLP(parseInt(config.membership_flex_promo_price || '19990', 10))} con Mercado Pago. Tu cuenta queda activa los Viernes, Sábados y Domingos automáticamente.`}
+                  {membershipPlan === 'FLEX' && `Seleccionaste FLEX. Después del registro, pagas ${formatCLP(parseInt(config.membership_flex_promo_price || '14990', 10))} con Mercado Pago. Tu cuenta queda activa los Viernes, Sábados y Domingos automáticamente.`}
                 </div>
               </div>
             </div>
