@@ -897,13 +897,13 @@ export default function Home() {
 
                       <div>
                         <div style={{ fontSize: 'clamp(2.5rem, 5vw, 3.5rem)', fontWeight: 900, color: '#D4AF37', letterSpacing: '-0.03em', lineHeight: 1 }}>
-                          $150.000
+                          $39.990
                         </div>
                         <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.9rem', marginTop: '6px' }}>por mes — pago único mensual</div>
                       </div>
 
                       <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.95rem', lineHeight: 1.6, borderLeft: '2px solid rgba(212,175,55,0.4)', paddingLeft: '12px' }}>
-                        Pagas una vez al mes. Acceso ilimitado los 30 días. <strong style={{ color: '#D4AF37' }}>¡Por lanzamiento, los primeros 14 días son gratis!</strong> Luego de eso se te cobrará la membresía para continuar.
+                        Recupera el valor de tu membresía en pocos días. Después, cada viaje es 100% para ti, sin comisiones.
                       </p>
 
                       {/* Oferta por Meta de Viajes */}
@@ -938,7 +938,7 @@ export default function Home() {
                           Meta: 150 viajes al mes
                         </div>
                         <p style={{ margin: 0, fontSize: '0.78rem', color: 'rgba(255,255,255,0.65)', lineHeight: '1.4' }}>
-                          Si completas 150 viajes en tu ciclo mensual, tu siguiente mes se cobrará con un <strong style={{ color: '#fff' }}>20% de descuento</strong> (pagas solo <strong style={{ color: '#D4AF37' }}>$120.000</strong>, ahorrando $30.000).
+                          Si completas 150 viajes en tu ciclo mensual, tu siguiente mes se cobrará con un <strong style={{ color: '#fff' }}>20% de descuento</strong> (pagas solo <strong style={{ color: '#D4AF37' }}>$31.990</strong>, ahorrando $8.000).
                         </p>
                       </div>
 
@@ -1011,18 +1011,18 @@ export default function Home() {
                       <div>
                         <div style={{ display: 'flex', alignItems: 'flex-end', gap: '8px' }}>
                           <div style={{ fontSize: 'clamp(2.5rem, 5vw, 3.5rem)', fontWeight: 900, color: '#FBBF24', letterSpacing: '-0.03em', lineHeight: 1 }}>
-                            $180.000
+                            $8.990
                           </div>
-                          <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.9rem', paddingBottom: '6px' }}>/mes total</div>
+                          <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.9rem', paddingBottom: '6px' }}>/día</div>
                         </div>
                         <div style={{ marginTop: '8px', padding: '6px 12px', background: 'rgba(59,130,246,0.1)', border: '1px solid rgba(59,130,246,0.2)', borderRadius: '6px', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
                           <span style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.78rem' }}>Cuota diaria:</span>
-                          <span style={{ color: '#60A5FA', fontWeight: 800, fontSize: '0.85rem' }}>$20.000 /día operado</span>
+                          <span style={{ color: '#60A5FA', fontWeight: 800, fontSize: '0.85rem' }}>$8.990 /día operado</span>
                         </div>
                       </div>
 
                       <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.95rem', lineHeight: 1.6, borderLeft: '2px solid rgba(59,130,246,0.5)', paddingLeft: '12px' }}>
-                        <strong>Membresía Crédito:</strong> <strong style={{ color: '#60A5FA' }}>¡Por lanzamiento, los primeros 14 días son gratis!</strong> Luego de eso pagas $20.000 por día trabajado hasta completar la meta de $180.000 en el mes. ¡Al cumplir la meta, el resto del mes es gratis!
+                        Conduce solo cuando quieras. Recupera el costo del día con pocos viajes y el resto de tus ganancias son tuyas.
                       </p>
 
                       <div style={{ background: 'rgba(251,191,36,0.08)', border: '1px solid rgba(251,191,36,0.2)', borderRadius: '10px', padding: '14px', fontSize: '0.82rem' }}>
@@ -1105,50 +1105,14 @@ export default function Home() {
 
                       <div>
                         <div style={{ fontSize: 'clamp(2.5rem, 5vw, 3.5rem)', fontWeight: 900, color: '#34D399', letterSpacing: '-0.03em', lineHeight: 1 }}>
-                          $60.000
+                          $14.990
                         </div>
                         <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.9rem', marginTop: '6px' }}>por fin de semana (Vie → Dom)</div>
                       </div>
 
                       <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.95rem', lineHeight: 1.6, borderLeft: '2px solid rgba(16,185,129,0.4)', paddingLeft: '12px' }}>
-                        Pensado para quienes solo trabajan el fin de semana. <strong style={{ color: '#34D399' }}>¡Por lanzamiento, tu primer fin de semana es gratis!</strong> Luego de eso pagas $60.000 por el acceso de Viernes, Sábado y Domingo.
+                        Convierte tu fin de semana en el más rentable. Recupera la membresía rápidamente y conduce sin comisiones.
                       </p>
-
-                      {/* Oferta por Meta de Viajes */}
-                      <div style={{
-                        background: 'rgba(16,185,129,0.05)',
-                        border: '1px dashed rgba(16,185,129,0.3)',
-                        borderRadius: '12px',
-                        padding: '16px',
-                        display: 'flex',
-                        flexDirection: 'column',
-                        gap: '8px',
-                        position: 'relative',
-                        marginTop: '4px',
-                        marginBottom: '4px'
-                      }}>
-                        <div style={{
-                          position: 'absolute',
-                          top: '-10px',
-                          right: '12px',
-                          background: '#10B981',
-                          color: '#fff',
-                          fontSize: '0.65rem',
-                          fontWeight: 900,
-                          padding: '2px 8px',
-                          borderRadius: '4px',
-                          letterSpacing: '0.05em'
-                        }}>
-                          15% DCTO
-                        </div>
-                        <div style={{ fontSize: '0.85rem', fontWeight: 800, color: '#34D399', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
-                          Meta: 40 viajes al fin de semana
-                        </div>
-                        <p style={{ margin: 0, fontSize: '0.78rem', color: 'rgba(255,255,255,0.65)', lineHeight: '1.4' }}>
-                          Si completas 40 viajes en tu ciclo semanal, tu siguiente fin de semana se cobrará con un <strong style={{ color: '#fff' }}>15% de descuento</strong> (pagas solo <strong style={{ color: '#34D399' }}>$51.000</strong>, ahorrando $9.000).
-                        </p>
-                      </div>
 
                       <div style={{ background: 'rgba(52,211,153,0.06)', border: '1px solid rgba(52,211,153,0.15)', borderRadius: '10px', padding: '14px' }}>
                         <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
