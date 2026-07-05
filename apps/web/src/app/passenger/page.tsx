@@ -2638,9 +2638,11 @@ export default function PassengerPage() {
               <svg width="64" height="64" viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
             </div>
             <h2 style={{ fontSize: '1.8rem', fontWeight: 900, marginBottom: '8px' }}>¡Viaje Finalizado!</h2>
-            <p style={{ color: 'var(--text-muted)', marginBottom: '32px' }}>¿Cómo estuvo tu experiencia con {driver?.name}?</p>
+            <p style={{ color: 'var(--text-muted)', marginBottom: '32px' }}>
+              {driver ? `¿Cómo estuvo tu experiencia con ${driver.name}?` : 'Tu viaje ha concluido exitosamente.'}
+            </p>
             
-            {!ratingDone ? (
+            {!ratingDone && driver ? (
               <div style={{ background: 'var(--bg-secondary)', padding: '24px', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border)' }}>
                 <div style={{ display: 'flex', justifyContent: 'center', gap: '12px', marginBottom: '24px' }}>
                   {[1, 2, 3, 4, 5].map((star) => (
@@ -2713,7 +2715,7 @@ export default function PassengerPage() {
             ) : (
               <div style={{ animation: 'fadeIn 1s' }}>
                 <div className="alert alert-success" style={{ marginBottom: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
-                  <IconCheck /> ¡Gracias por tus comentarios!
+                  <IconCheck /> {ratingDone ? '¡Gracias por tus comentarios!' : '¡Viaje concluido exitosamente!'}
                 </div>
                 <button className="btn btn-secondary btn-block" onClick={resetTrip}>Volver al inicio</button>
               </div>

@@ -30,31 +30,37 @@ export function AccessibilityWidget() {
   useEffect(() => {
     if (typeof window === 'undefined') return;
 
-    const handleGlobalClick = (e: MouseEvent) => {
+    let hoverTimeout: NodeJS.Timeout;
+
+    const handleMouseOver = (e: MouseEvent) => {
       if (!narratorEnabled) return;
       
       const target = e.target as HTMLElement;
-      // No leer si el clic es dentro del widget mismo
+      // No leer si el hover es dentro del widget mismo
       if (target.closest('.accessibility-widget')) return;
 
       const text = target.innerText || target.textContent;
       if (text && text.trim().length > 0) {
-        window.speechSynthesis.cancel(); // Cancelar locución anterior
-        const utterance = new SpeechSynthesisUtterance(text.trim());
-        utterance.lang = 'es-CL'; // Español Chile (o el más cercano disponible)
-        utterance.rate = 0.95; // Un poco más lento para mejor comprensión
-        window.speechSynthesis.speak(utterance);
+        clearTimeout(hoverTimeout);
+        hoverTimeout = setTimeout(() => {
+          window.speechSynthesis.cancel(); // Cancelar locución anterior
+          const utterance = new SpeechSynthesisUtterance(text.trim());
+          utterance.lang = 'es-CL'; // Español Chile (o el más cercano disponible)
+          utterance.rate = 0.95; // Un poco más lento para mejor comprensión
+          window.speechSynthesis.speak(utterance);
+        }, 300); // Pequeño retraso para evitar leer todo mientras se mueve el mouse rápido
       }
     };
 
     if (narratorEnabled) {
-      document.addEventListener('click', handleGlobalClick, { capture: true });
+      document.addEventListener('mouseover', handleMouseOver, { capture: true });
     } else {
       window.speechSynthesis?.cancel();
     }
 
     return () => {
-      document.removeEventListener('click', handleGlobalClick, { capture: true });
+      clearTimeout(hoverTimeout);
+      document.removeEventListener('mouseover', handleMouseOver, { capture: true });
     };
   }, [narratorEnabled]);
 
@@ -144,7 +150,7 @@ export function AccessibilityWidget() {
             </button>
             {narratorEnabled && (
               <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '8px', lineHeight: 1.4 }}>
-                Haz clic en cualquier texto de la pantalla para escucharlo en voz alta.
+                Pasa el puntero del mouse sobre cualquier texto de la pantalla para escucharlo en voz alta.
               </p>
             )}
           </div>

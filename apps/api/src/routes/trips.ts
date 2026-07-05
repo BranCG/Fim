@@ -186,7 +186,8 @@ router.get('/active', requireAuth, async (req: Request, res: Response) => {
             { status: { in: ['searching', 'driver_assigned', 'driver_arrived', 'in_progress'] } },
             {
               status: 'completed',
-              rating: { is: null }
+              rating: { is: null },
+              driverId: { not: null }
             }
           ]
         },
