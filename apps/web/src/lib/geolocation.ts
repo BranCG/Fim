@@ -93,9 +93,8 @@ export async function watchPosition(
     }
     const watchId = navigator.geolocation.watchPosition(
       (p) => {
-        if (p.coords.accuracy && p.coords.accuracy > 2000) {
-          console.log(`[GPS] Ignorando coordenada ruidosa en Web (precisión: ${p.coords.accuracy}m)`);
-          return;
+        if (p.coords.accuracy) {
+          console.log(`[GPS] Coordenada Web detectada (precisión: ${p.coords.accuracy}m). Al ser Web (escritorio), se permite para pruebas.`);
         }
         onSuccess({ lat: p.coords.latitude, lng: p.coords.longitude });
       },
