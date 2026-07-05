@@ -250,7 +250,19 @@ export default function DriverPage() {
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [selectedCancelOption, setSelectedCancelOption] = useState('');
   const [customCancelReason, setCustomCancelReason] = useState('');
-  const [timer, setTimer] = useState(30);
+  const [timer, setTimer] = useState(0);
+  const [socketLogs, setSocketLogs] = useState<string[]>([]);
+
+  useEffect(() => {
+    const updateLogs = () => {
+      try {
+        setSocketLogs(JSON.parse(localStorage.getItem('socket_logs') || '[]'));
+      } catch(e){}
+    };
+    updateLogs();
+    window.addEventListener('socket_logs_updated', updateLogs);
+    return () => window.removeEventListener('socket_logs_updated', updateLogs);
+  }, []);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [showBiometricModal, setShowBiometricModal] = useState(false);
@@ -4347,8 +4359,12 @@ export default function DriverPage() {
       />
       
       {/* VERSIÓN PARA DEPURACIÓN */}
-      <div style={{ position: 'fixed', bottom: '10px', right: '10px', fontSize: '12px', color: 'rgba(255,255,255,0.8)', zIndex: 99999, background: 'rgba(0,0,0,0.5)', padding: '4px 8px', borderRadius: '4px', pointerEvents: 'none' }}>
-        v1.0.2 (Debug State) | Req: {tripRequest ? 'YES' : 'NO'} | Timer: {timer}
+      <div style={{ position: 'fixed', bottom: '10px', right: '10px', fontSize: '10px', color: '#0f0', zIndex: 99999, background: 'rgba(0,0,0,0.85)', padding: '8px', borderRadius: '8px', pointerEvents: 'none', maxWidth: '80%', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+        <div style={{ borderBottom: '1px solid #333', paddingBottom: '4px', marginBottom: '4px', fontWeight: 'bold' }}>
+          v1.0.3 | Req: {tripRequest ? 'YES' : 'NO'} | T: {timer}
+        </div>
+        {socketLogs.map((log, i) => <div key={i}>{log}</div>)}
+        {socketLogs.length === 0 && <div>No events yet</div>}
       </div>
     </div>
   );

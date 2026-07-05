@@ -11,6 +11,20 @@ export function getSocket(): Socket {
       autoConnect: false,
       transports: ['websocket', 'polling'],
     });
+    
+    // Log all incoming events for debugging on mobile devices
+    socket.onAny((eventName, ...args) => {
+      console.log(`[Socket Debug] Event: ${eventName}`);
+      try {
+        const logs = JSON.parse(localStorage.getItem('socket_logs') || '[]');
+        logs.unshift(`${new Date().toLocaleTimeString('es-CL')} - ${eventName}`);
+        localStorage.setItem('socket_logs', JSON.stringify(logs.slice(0, 5)));
+        // Dispatch custom event to update UI immediately
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new Event('socket_logs_updated'));
+        }
+      } catch (e) {}
+    });
   }
   return socket;
 }
