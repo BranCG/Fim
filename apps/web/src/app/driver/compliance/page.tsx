@@ -55,7 +55,7 @@ function ComplianceContent() {
     const now = new Date();
     formData.append('month', String(now.getMonth() + 1));
     formData.append('year', String(now.getFullYear()));
-    formData.append('amount', '100000'); // Monto de ejemplo, idealmente sacado de las ganancias del mes
+    formData.append('amount', '100000');
 
     try {
       setUploading(true);
@@ -74,53 +74,60 @@ function ComplianceContent() {
   };
 
   if (loading) return (
-    <div className="app-container" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-      <div className="spinner" style={{ width: '40px', height: '40px', borderWidth: '3px' }}></div>
+    <div className="min-h-screen bg-background flex items-center justify-center">
+      <div className="w-10 h-10 border-4 border-white/10 border-t-accent rounded-full animate-spin"></div>
     </div>
   );
 
   const isLinked = !!driver?.mpAccessToken;
 
   return (
-    <div className="app-container">
-      <header className="app-header" style={{ display: 'flex', alignItems: 'center', gap: '16px', padding: '16px 20px' }}>
+    <div className="min-h-screen bg-background text-text-primary font-sans relative overflow-hidden">
+      {/* Luces de fondo (Efecto ambiental premium) */}
+      <div className="absolute top-0 left-0 w-full h-[300px] bg-accent/5 blur-[120px] pointer-events-none"></div>
+
+      <header className="relative z-10 flex items-center gap-4 p-5 md:p-6 bg-background/80 backdrop-blur-xl border-b border-border sticky top-0">
         <button 
           onClick={() => router.push('/driver')} 
-          style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: '50%', width: '40px', height: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-primary)', cursor: 'pointer' }}
+          className="w-10 h-10 rounded-full bg-card border border-border flex items-center justify-center text-text-primary hover:bg-card/80 hover:border-border-accent transition-all hover:scale-105 active:scale-95"
         >
           <ArrowLeft size={20} />
         </button>
-        <h1 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 800 }}>Cumplimiento y Pagos</h1>
+        <h1 className="text-xl font-extrabold tracking-tight">Cumplimiento y Pagos</h1>
       </header>
 
-      <main className="main-content" style={{ padding: '24px 20px', paddingBottom: '100px', maxWidth: '600px', margin: '0 auto', width: '100%' }}>
-        <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginBottom: '24px' }}>
+      <main className="relative z-10 p-5 md:p-8 pb-32 max-w-2xl mx-auto w-full space-y-6">
+        <p className="text-text-muted text-sm leading-relaxed mb-6">
           Mantén tu cuenta al día para seguir conduciendo y recibir pagos automáticos directamente a tu cuenta.
         </p>
 
         {successParam === 'oauth' && (
-          <div className="animate-in" style={{ background: 'rgba(16, 185, 129, 0.1)', border: '1px solid rgba(16, 185, 129, 0.2)', color: 'rgb(52, 211, 153)', padding: '16px', borderRadius: 'var(--radius)', display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '24px' }}>
+          <div className="bg-success/10 border border-success/20 text-success p-4 rounded-xl flex items-center gap-3 mb-6 animate-fade-in">
             <CheckCircle size={20} />
-            <p style={{ margin: 0, fontSize: '0.9rem', fontWeight: 600 }}>¡Cuenta vinculada exitosamente!</p>
+            <p className="m-0 text-sm font-semibold">¡Cuenta vinculada exitosamente!</p>
           </div>
         )}
 
         {/* 1. Recibir Pagos (MercadoPago) */}
-        <div className="card animate-in" style={{ padding: '24px', marginBottom: '24px' }}>
-          <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '20px' }}>
+        <div className="bg-card/80 backdrop-blur-md rounded-2xl p-6 border border-border relative overflow-hidden group hover:border-border-accent transition-colors duration-500 shadow-glass">
+          <div className="absolute -top-4 -right-4 opacity-[0.03] text-accent pointer-events-none transform group-hover:scale-110 group-hover:rotate-12 transition-transform duration-700">
+            <LinkIcon size={160} />
+          </div>
+
+          <div className="flex items-start justify-between mb-5 relative z-10">
             <div>
-              <h2 style={{ fontSize: '1.1rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '8px', color: '#fff', margin: 0 }}>
-                <LinkIcon size={20} color="var(--accent)" />
+              <h2 className="text-lg font-bold flex items-center gap-2 text-white m-0">
+                <LinkIcon size={22} className="text-accent" />
                 Recepción de Pagos
               </h2>
-              <p style={{ color: 'var(--text-muted)', fontSize: '0.8rem', marginTop: '6px', margin: 0 }}>Vincula tu cuenta para recibir ganancias al instante.</p>
+              <p className="text-text-muted text-xs mt-1.5 m-0">Vincula tu cuenta para recibir ganancias al instante.</p>
             </div>
             {isLinked ? (
-              <span style={{ background: 'rgba(16, 185, 129, 0.1)', color: 'rgb(52, 211, 153)', fontSize: '0.75rem', padding: '4px 8px', borderRadius: '6px', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '4px' }}>
+              <span className="bg-success/10 text-success text-xs px-2 py-1 rounded-md font-semibold flex items-center gap-1">
                 <CheckCircle size={14} /> Vinculada
               </span>
             ) : (
-              <span style={{ background: 'rgba(239, 68, 68, 0.1)', color: 'rgb(248, 113, 113)', fontSize: '0.75rem', padding: '4px 8px', borderRadius: '6px', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '4px' }}>
+              <span className="bg-danger/10 text-danger-hover text-xs px-2 py-1 rounded-md font-semibold flex items-center gap-1">
                 <AlertCircle size={14} /> Pendiente
               </span>
             )}
@@ -129,33 +136,33 @@ function ComplianceContent() {
           {!isLinked && (
             <button
               onClick={handleOAuthLink}
-              className="btn"
-              style={{ background: '#009EE3', color: '#fff', border: 'none', width: '100%', padding: '16px', fontWeight: 700, borderRadius: 'var(--radius)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
+              className="w-full relative overflow-hidden group flex items-center justify-center gap-2 py-4 rounded-xl font-bold text-sm transition-all duration-300 bg-[#009EE3] text-white hover:bg-[#008CDE] hover:scale-[1.02] active:scale-95"
             >
-              Vincular cuenta de Mercado Pago
+              <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
+              <span className="relative z-10">Vincular cuenta de Mercado Pago</span>
             </button>
           )}
         </div>
 
         {/* 2. Boletas de Honorarios (SII) */}
-        <div className="card animate-in" style={{ animationDelay: '0.1s', padding: '24px', marginBottom: '24px' }}>
-          <h2 style={{ fontSize: '1.1rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '8px', color: '#fff', margin: 0, marginBottom: '12px' }}>
-            <FileText size={20} color="var(--accent)" />
+        <div className="bg-card/80 backdrop-blur-md rounded-2xl p-6 border border-border relative overflow-hidden group hover:border-border-accent transition-colors duration-500 shadow-glass">
+          <h2 className="text-lg font-bold flex items-center gap-2 text-white m-0 mb-3 relative z-10">
+            <FileText size={22} className="text-accent" />
             Declaración Mensual (SII)
           </h2>
-          <p style={{ color: 'var(--text-muted)', fontSize: '0.8rem', marginBottom: '20px' }}>
+          <p className="text-text-muted text-xs mb-5 leading-relaxed relative z-10">
             Debes subir la Boleta de Honorarios mensual (Retención 15.25%) correspondiente a tus ganancias por transporte de pasajeros.
           </p>
 
-          <label style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', border: '2px dashed var(--border-accent)', borderRadius: 'var(--radius)', padding: '32px', cursor: 'pointer', transition: 'all 0.2s', opacity: uploading ? 0.5 : 1, background: 'rgba(212, 175, 55, 0.02)' }}>
-            <UploadCloud size={32} color="var(--accent)" style={{ marginBottom: '12px' }} />
-            <span style={{ fontSize: '0.9rem', fontWeight: 600, color: 'var(--text-primary)' }}>
+          <label className={`w-full flex flex-col items-center justify-center border-2 border-dashed border-border-accent rounded-xl p-8 cursor-pointer transition-all bg-accent/5 hover:bg-accent/10 relative z-10 ${uploading ? 'opacity-50 pointer-events-none' : ''}`}>
+            <UploadCloud size={32} className="text-accent mb-3" />
+            <span className="text-sm font-semibold text-text-primary">
               {uploading ? 'Subiendo archivo...' : 'Subir archivo PDF'}
             </span>
             <input
               type="file"
               accept=".pdf,image/*"
-              style={{ display: 'none' }}
+              className="hidden"
               onChange={handleFileUpload}
               disabled={uploading}
             />
@@ -164,26 +171,26 @@ function ComplianceContent() {
 
         {/* Historial de Documentos */}
         {documents.length > 0 && (
-          <div className="animate-in" style={{ animationDelay: '0.2s' }}>
-            <h3 style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '16px' }}>Historial de Boletas</h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          <div className="animate-fade-in mt-2">
+            <h3 className="text-xs font-bold text-text-muted uppercase tracking-widest mb-4">Historial de Boletas</h3>
+            <div className="flex flex-col gap-3">
               {documents.map((doc: any) => (
-                <div key={doc.id} className="card" style={{ padding: '16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', margin: 0 }}>
+                <div key={doc.id} className="bg-card/50 backdrop-blur-sm p-4 rounded-xl border border-border flex items-center justify-between group hover:border-border-accent transition-colors">
                   <div>
-                    <p style={{ margin: 0, fontSize: '0.9rem', fontWeight: 600, color: '#fff' }}>Boleta - Mes {doc.month}/{doc.year}</p>
-                    <p style={{ margin: 0, fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '4px' }}>
+                    <p className="m-0 text-sm font-semibold text-white">Boleta - Mes {doc.month}/{doc.year}</p>
+                    <p className="m-0 text-xs text-text-muted mt-1">
                       {new Date(doc.createdAt).toLocaleDateString('es-CL')} • ${doc.amount.toLocaleString('es-CL')}
                     </p>
                   </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                    <span style={{ 
-                      fontSize: '0.7rem', padding: '4px 8px', borderRadius: '6px', fontWeight: 600,
-                      background: doc.status === 'approved' ? 'rgba(16, 185, 129, 0.1)' : doc.status === 'rejected' ? 'rgba(239, 68, 68, 0.1)' : 'rgba(245, 158, 11, 0.1)',
-                      color: doc.status === 'approved' ? 'rgb(52, 211, 153)' : doc.status === 'rejected' ? 'rgb(248, 113, 113)' : 'rgb(251, 191, 36)'
-                    }}>
+                  <div className="flex items-center gap-3">
+                    <span className={`text-[10px] px-2 py-1 rounded-md font-semibold tracking-wide ${
+                      doc.status === 'approved' ? 'bg-success/10 text-success' : 
+                      doc.status === 'rejected' ? 'bg-danger/10 text-danger-hover' : 
+                      'bg-accent/10 text-accent'
+                    }`}>
                       {doc.status === 'approved' ? 'Aprobado' : doc.status === 'rejected' ? 'Rechazado' : 'Pendiente'}
                     </span>
-                    <a href={`${process.env.NEXT_PUBLIC_API_URL}${doc.fileUrl}`} target="_blank" rel="noreferrer" style={{ padding: '8px', background: 'var(--bg-primary)', borderRadius: '8px', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <a href={`${process.env.NEXT_PUBLIC_API_URL}${doc.fileUrl}`} target="_blank" rel="noreferrer" className="p-2 bg-background rounded-lg text-text-primary hover:text-accent transition-colors">
                       <Download size={16} />
                     </a>
                   </div>
@@ -200,8 +207,8 @@ function ComplianceContent() {
 export default function CompliancePage() {
   return (
     <Suspense fallback={
-      <div className="app-container" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <div className="spinner" style={{ width: '40px', height: '40px', borderWidth: '3px' }}></div>
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="w-10 h-10 border-4 border-white/10 border-t-accent rounded-full animate-spin"></div>
       </div>
     }>
       <ComplianceContent />

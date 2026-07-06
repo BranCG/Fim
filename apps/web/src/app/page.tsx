@@ -56,9 +56,7 @@ export default function Home() {
     // Si el usuario abre esto desde la aplicación nativa (Android/iOS), 
     // lo enviamos a la vista clásica de la app (/mobile).
     if (typeof window !== 'undefined') {
-      const isMobileApp = (window as any).Capacitor ||
-        window.location.origin.includes('capacitor://') ||
-        ((window.location.hostname === 'localhost' || window.location.hostname === '') && window.location.port === '');
+      const isMobileApp = (window as any).Capacitor && (window as any).Capacitor.isNative;
 
       if (isMobileApp) {
         router.replace('/mobile');

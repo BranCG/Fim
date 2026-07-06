@@ -1637,6 +1637,13 @@ export default function DriverPage() {
                   <span className="btn-label">Usuario</span>
                 </button>
 
+                <button className="header-nav-btn" onClick={() => { router.push('/driver/compliance'); setIsMenuOpen(false); }}>
+                  <div className="icon-circle">
+                    <IconWalletColor />
+                  </div>
+                  <span className="btn-label">Pagos</span>
+                </button>
+
                 <button className="header-nav-btn" onClick={() => { router.push('/driver/history'); setIsMenuOpen(false); }}>
                   <div className="icon-circle">
                     <IconClock />
