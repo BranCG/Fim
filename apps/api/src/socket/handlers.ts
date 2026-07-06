@@ -272,7 +272,7 @@ export function setupSocketHandlers(io: Server) {
                 vehiclePlate: true, vehiclePhotoUrl: true,
                 totalRating: true, totalTrips: true,
                 lastLat: true, lastLng: true,
-                mercadoPagoLink: true,
+                mpAccessToken: true,
                 membershipPlan: true,
                 topQualities: true,
               },

@@ -200,7 +200,7 @@ router.get('/active', requireAuth, async (req: Request, res: Response) => {
               vehiclePlate: true, vehiclePhotoUrl: true,
               totalRating: true, totalTrips: true,
               lastLat: true, lastLng: true,
-              mercadoPagoLink: true,
+              mpAccessToken: true,
               membershipPlan: true,
               topQualities: true,
             },

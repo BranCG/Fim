@@ -232,7 +232,7 @@ router.get('/oauth/callback', async (req, res) => {
       })
     });
 
-    const tokenData = await tokenResponse.json();
+    const tokenData: any = await tokenResponse.json();
 
     if (!tokenData.access_token) {
       console.error('Error de OAuth MP:', tokenData);
@@ -485,7 +485,7 @@ router.post('/trip/:id/auto-charge', async (req, res) => {
         data: {
           tripId: trip.id,
           passengerId: trip.passengerId,
-          driverId: trip.driverId,
+          driverId: trip.driverId as string,
           grossAmount: amountToChargePassenger,
           netAmount: amountToDriver,
           mpFee: mpFee,

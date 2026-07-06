@@ -24,7 +24,7 @@ router.get('/me', requireAuth, requireRole('driver'), async (req: Request, res: 
         vehicleBrand: true, vehicleModel: true, vehicleYear: true,
         vehiclePlate: true, vehiclePhotoUrl: true, tagNumber: true,
         totalRating: true, totalTrips: true,
-        adminNotes: true, mercadoPagoLink: true, walletBalance: true,
+        adminNotes: true, mpAccessToken: true, walletBalance: true,
         isTrial: true, nextDiscount: true,
         giftDaysPending: true,
         createdAt: true,
@@ -228,19 +228,6 @@ router.get('/active-trip', requireAuth, requireRole('driver'), async (req: Reque
   }
 });
 
-// ─── ACTUALIZAR LINK DE PAGO ─────────────────────────────────────────────
-router.post('/payment-link', requireAuth, requireRole('driver'), async (req: Request, res: Response) => {
-  try {
-    const { mercadoPagoLink } = req.body;
-    await prisma.driver.update({
-      where: { id: req.user!.id },
-      data: { mercadoPagoLink },
-    });
-    return res.json({ ok: true });
-  } catch (err) {
-    return res.status(500).json({ error: 'Error al actualizar link de pago' });
-  }
-});
 
 
 

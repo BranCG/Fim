@@ -1,11 +1,11 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { CheckCircle, UploadCloud, AlertCircle, FileText, Link as LinkIcon, Download } from 'lucide-react';
 import api from '@/lib/api';
 
-export default function CompliancePage() {
+function ComplianceContent() {
   const [driver, setDriver] = useState<any>(null);
   const [documents, setDocuments] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -178,5 +178,13 @@ export default function CompliancePage() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function CompliancePage() {
+  return (
+    <Suspense fallback={<div className="p-8 text-center text-gray-400">Cargando...</div>}>
+      <ComplianceContent />
+    </Suspense>
   );
 }
