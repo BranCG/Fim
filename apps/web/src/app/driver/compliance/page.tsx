@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { CheckCircle, UploadCloud, AlertCircle, FileText, Link as LinkIcon, Download } from 'lucide-react';
+import { CheckCircle, UploadCloud, AlertCircle, FileText, Link as LinkIcon, Download, ArrowLeft } from 'lucide-react';
 import api from '@/lib/api';
 
 function ComplianceContent() {
@@ -39,7 +39,6 @@ function ComplianceContent() {
   };
 
   const handleOAuthLink = () => {
-    // URL generada en tu app de MercadoPago Developers (OAuth)
     const clientId = process.env.NEXT_PUBLIC_MP_CLIENT_ID || 'TU_CLIENT_ID';
     const redirectUri = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/payments/oauth/callback`;
     const url = `https://auth.mercadopago.com/authorization?client_id=${clientId}&response_type=code&platform_id=mp&state=${driver?.id}&redirect_uri=${encodeURIComponent(redirectUri)}`;
@@ -60,9 +59,10 @@ function ComplianceContent() {
 
     try {
       setUploading(true);
-      await api.post('/tax/upload', formData, {
+      const res = await api.post('/tax/upload', formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
+      localStorage.setItem('fim_user', JSON.stringify({ ...driver, taxDocuments: [res.data.document, ...(driver.taxDocuments || [])] }));
       alert('Boleta subida exitosamente');
       fetchData();
     } catch (error) {
@@ -73,42 +73,55 @@ function ComplianceContent() {
     }
   };
 
-  if (loading) return <div className="p-8 text-center text-gray-400">Cargando...</div>;
+  if (loading) return (
+    <div className="app-container" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div className="spinner" style={{ width: '40px', height: '40px', borderWidth: '3px' }}></div>
+    </div>
+  );
 
-  const isLinked = !!driver?.mpAccessToken; // En producción esto vendría validado desde el backend
+  const isLinked = !!driver?.mpAccessToken;
 
   return (
-    <div className="min-h-screen bg-gray-950 text-white p-4 pb-24">
-      <div className="max-w-md mx-auto space-y-6 pt-4">
-        <h1 className="text-2xl font-bold tracking-tight">Cumplimiento y Pagos</h1>
-        <p className="text-gray-400 text-sm">
+    <div className="app-container">
+      <header className="app-header" style={{ display: 'flex', alignItems: 'center', gap: '16px', padding: '16px 20px' }}>
+        <button 
+          onClick={() => router.push('/driver')} 
+          style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: '50%', width: '40px', height: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-primary)', cursor: 'pointer' }}
+        >
+          <ArrowLeft size={20} />
+        </button>
+        <h1 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 800 }}>Cumplimiento y Pagos</h1>
+      </header>
+
+      <main className="main-content" style={{ padding: '24px 20px', paddingBottom: '100px', maxWidth: '600px', margin: '0 auto', width: '100%' }}>
+        <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginBottom: '24px' }}>
           Mantén tu cuenta al día para seguir conduciendo y recibir pagos automáticos directamente a tu cuenta.
         </p>
 
         {successParam === 'oauth' && (
-          <div className="bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 p-4 rounded-xl flex items-center gap-3">
-            <CheckCircle className="w-5 h-5" />
-            <p className="text-sm font-medium">¡Cuenta vinculada exitosamente!</p>
+          <div className="animate-in" style={{ background: 'rgba(16, 185, 129, 0.1)', border: '1px solid rgba(16, 185, 129, 0.2)', color: 'rgb(52, 211, 153)', padding: '16px', borderRadius: 'var(--radius)', display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '24px' }}>
+            <CheckCircle size={20} />
+            <p style={{ margin: 0, fontSize: '0.9rem', fontWeight: 600 }}>¡Cuenta vinculada exitosamente!</p>
           </div>
         )}
 
         {/* 1. Recibir Pagos (MercadoPago) */}
-        <div className="bg-gray-900 rounded-2xl p-5 border border-gray-800">
-          <div className="flex items-start justify-between mb-4">
+        <div className="card animate-in" style={{ padding: '24px', marginBottom: '24px' }}>
+          <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '20px' }}>
             <div>
-              <h2 className="text-lg font-semibold flex items-center gap-2">
-                <LinkIcon className="w-5 h-5 text-blue-400" />
+              <h2 style={{ fontSize: '1.1rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '8px', color: '#fff', margin: 0 }}>
+                <LinkIcon size={20} color="var(--accent)" />
                 Recepción de Pagos
               </h2>
-              <p className="text-gray-400 text-xs mt-1">Vincula tu cuenta para recibir ganancias al instante.</p>
+              <p style={{ color: 'var(--text-muted)', fontSize: '0.8rem', marginTop: '6px', margin: 0 }}>Vincula tu cuenta para recibir ganancias al instante.</p>
             </div>
             {isLinked ? (
-              <span className="bg-emerald-500/10 text-emerald-400 text-xs px-2 py-1 rounded-md font-medium flex items-center gap-1">
-                <CheckCircle className="w-3 h-3" /> Vinculada
+              <span style={{ background: 'rgba(16, 185, 129, 0.1)', color: 'rgb(52, 211, 153)', fontSize: '0.75rem', padding: '4px 8px', borderRadius: '6px', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <CheckCircle size={14} /> Vinculada
               </span>
             ) : (
-              <span className="bg-red-500/10 text-red-400 text-xs px-2 py-1 rounded-md font-medium flex items-center gap-1">
-                <AlertCircle className="w-3 h-3" /> Pendiente
+              <span style={{ background: 'rgba(239, 68, 68, 0.1)', color: 'rgb(248, 113, 113)', fontSize: '0.75rem', padding: '4px 8px', borderRadius: '6px', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <AlertCircle size={14} /> Pendiente
               </span>
             )}
           </div>
@@ -116,7 +129,8 @@ function ComplianceContent() {
           {!isLinked && (
             <button
               onClick={handleOAuthLink}
-              className="w-full bg-[#009EE3] hover:bg-[#008CCh] text-white font-medium py-3 rounded-xl transition-colors flex items-center justify-center gap-2"
+              className="btn"
+              style={{ background: '#009EE3', color: '#fff', border: 'none', width: '100%', padding: '16px', fontWeight: 700, borderRadius: 'var(--radius)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
             >
               Vincular cuenta de Mercado Pago
             </button>
@@ -124,24 +138,24 @@ function ComplianceContent() {
         </div>
 
         {/* 2. Boletas de Honorarios (SII) */}
-        <div className="bg-gray-900 rounded-2xl p-5 border border-gray-800">
-          <h2 className="text-lg font-semibold flex items-center gap-2 mb-2">
-            <FileText className="w-5 h-5 text-emerald-400" />
+        <div className="card animate-in" style={{ animationDelay: '0.1s', padding: '24px', marginBottom: '24px' }}>
+          <h2 style={{ fontSize: '1.1rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '8px', color: '#fff', margin: 0, marginBottom: '12px' }}>
+            <FileText size={20} color="var(--accent)" />
             Declaración Mensual (SII)
           </h2>
-          <p className="text-gray-400 text-xs mb-4">
+          <p style={{ color: 'var(--text-muted)', fontSize: '0.8rem', marginBottom: '20px' }}>
             Debes subir la Boleta de Honorarios mensual (Retención 15.25%) correspondiente a tus ganancias por transporte de pasajeros.
           </p>
 
-          <label className={`w-full flex flex-col items-center justify-center border-2 border-dashed border-gray-700 rounded-xl p-6 cursor-pointer hover:bg-gray-800/50 transition-colors ${uploading ? 'opacity-50' : ''}`}>
-            <UploadCloud className="w-8 h-8 text-gray-500 mb-2" />
-            <span className="text-sm font-medium text-gray-300">
-              {uploading ? 'Subiendo...' : 'Subir archivo PDF'}
+          <label style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', border: '2px dashed var(--border-accent)', borderRadius: 'var(--radius)', padding: '32px', cursor: 'pointer', transition: 'all 0.2s', opacity: uploading ? 0.5 : 1, background: 'rgba(212, 175, 55, 0.02)' }}>
+            <UploadCloud size={32} color="var(--accent)" style={{ marginBottom: '12px' }} />
+            <span style={{ fontSize: '0.9rem', fontWeight: 600, color: 'var(--text-primary)' }}>
+              {uploading ? 'Subiendo archivo...' : 'Subir archivo PDF'}
             </span>
             <input
               type="file"
               accept=".pdf,image/*"
-              className="hidden"
+              style={{ display: 'none' }}
               onChange={handleFileUpload}
               disabled={uploading}
             />
@@ -150,40 +164,46 @@ function ComplianceContent() {
 
         {/* Historial de Documentos */}
         {documents.length > 0 && (
-          <div className="space-y-3">
-            <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wider">Historial de Boletas</h3>
-            {documents.map((doc: any) => (
-              <div key={doc.id} className="bg-gray-900 rounded-xl p-4 border border-gray-800 flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-white">Boleta - Mes {doc.month}/{doc.year}</p>
-                  <p className="text-xs text-gray-500">
-                    {new Date(doc.createdAt).toLocaleDateString('es-CL')} • ${doc.amount.toLocaleString('es-CL')}
-                  </p>
+          <div className="animate-in" style={{ animationDelay: '0.2s' }}>
+            <h3 style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '16px' }}>Historial de Boletas</h3>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              {documents.map((doc: any) => (
+                <div key={doc.id} className="card" style={{ padding: '16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', margin: 0 }}>
+                  <div>
+                    <p style={{ margin: 0, fontSize: '0.9rem', fontWeight: 600, color: '#fff' }}>Boleta - Mes {doc.month}/{doc.year}</p>
+                    <p style={{ margin: 0, fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '4px' }}>
+                      {new Date(doc.createdAt).toLocaleDateString('es-CL')} • ${doc.amount.toLocaleString('es-CL')}
+                    </p>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <span style={{ 
+                      fontSize: '0.7rem', padding: '4px 8px', borderRadius: '6px', fontWeight: 600,
+                      background: doc.status === 'approved' ? 'rgba(16, 185, 129, 0.1)' : doc.status === 'rejected' ? 'rgba(239, 68, 68, 0.1)' : 'rgba(245, 158, 11, 0.1)',
+                      color: doc.status === 'approved' ? 'rgb(52, 211, 153)' : doc.status === 'rejected' ? 'rgb(248, 113, 113)' : 'rgb(251, 191, 36)'
+                    }}>
+                      {doc.status === 'approved' ? 'Aprobado' : doc.status === 'rejected' ? 'Rechazado' : 'Pendiente'}
+                    </span>
+                    <a href={`${process.env.NEXT_PUBLIC_API_URL}${doc.fileUrl}`} target="_blank" rel="noreferrer" style={{ padding: '8px', background: 'var(--bg-primary)', borderRadius: '8px', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <Download size={16} />
+                    </a>
+                  </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <span className={`text-xs px-2 py-1 rounded-md font-medium ${
-                    doc.status === 'approved' ? 'bg-emerald-500/10 text-emerald-400' :
-                    doc.status === 'rejected' ? 'bg-red-500/10 text-red-400' :
-                    'bg-amber-500/10 text-amber-400'
-                  }`}>
-                    {doc.status === 'approved' ? 'Aprobado' : doc.status === 'rejected' ? 'Rechazado' : 'Pendiente'}
-                  </span>
-                  <a href={`${process.env.NEXT_PUBLIC_API_URL}${doc.fileUrl}`} target="_blank" rel="noreferrer" className="p-2 bg-gray-800 rounded-lg hover:bg-gray-700 transition">
-                    <Download className="w-4 h-4 text-gray-300" />
-                  </a>
-                </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
         )}
-      </div>
+      </main>
     </div>
   );
 }
 
 export default function CompliancePage() {
   return (
-    <Suspense fallback={<div className="p-8 text-center text-gray-400">Cargando...</div>}>
+    <Suspense fallback={
+      <div className="app-container" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div className="spinner" style={{ width: '40px', height: '40px', borderWidth: '3px' }}></div>
+      </div>
+    }>
       <ComplianceContent />
     </Suspense>
   );
