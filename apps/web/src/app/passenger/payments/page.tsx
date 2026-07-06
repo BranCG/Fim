@@ -16,7 +16,7 @@ export default function PassengerPaymentsPage() {
   const router = useRouter();
 
   useEffect(() => {
-    const userStr = localStorage.getItem('user');
+    const userStr = localStorage.getItem('fim_user');
     if (!userStr) {
       router.push('/');
       return;
@@ -44,7 +44,7 @@ export default function PassengerPaymentsPage() {
       
       // Actualizar estado local
       const updatedUser = { ...passenger, mpCardToken: fakeToken, paymentMethod: 'card' };
-      localStorage.setItem('user', JSON.stringify(updatedUser));
+      localStorage.setItem('fim_user', JSON.stringify(updatedUser));
       setPassenger(updatedUser);
       
       alert('Tarjeta guardada exitosamente para cobros automáticos.');

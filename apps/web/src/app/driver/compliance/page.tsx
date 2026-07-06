@@ -21,7 +21,7 @@ function ComplianceContent() {
   const fetchData = async () => {
     try {
       setLoading(true);
-      const userStr = localStorage.getItem('user');
+      const userStr = localStorage.getItem('fim_user');
       if (!userStr) {
         router.push('/');
         return;
