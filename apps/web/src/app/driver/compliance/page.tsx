@@ -40,7 +40,7 @@ function ComplianceContent() {
 
   const handleOAuthLink = () => {
     const clientId = process.env.NEXT_PUBLIC_MP_CLIENT_ID || 'TU_CLIENT_ID';
-    const redirectUri = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/payments/oauth/callback`;
+    const redirectUri = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/api/payments/oauth/callback`;
     const url = `https://auth.mercadopago.com/authorization?client_id=${clientId}&response_type=code&platform_id=mp&state=${driver?.id}&redirect_uri=${encodeURIComponent(redirectUri)}`;
     window.location.href = url;
   };
