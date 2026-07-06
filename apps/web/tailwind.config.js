@@ -42,6 +42,14 @@ module.exports = {
       boxShadow: {
         accent: '0 4px 20px rgba(212, 175, 55, 0.15)',
         glass: '0 8px 32px rgba(0, 0, 0, 0.4)',
+      },
+      keyframes: {
+        shimmer: {
+          '100%': { transform: 'translateX(100%)' },
+        }
+      },
+      animation: {
+        shimmer: 'shimmer 3s infinite',
       }
     },
   },
