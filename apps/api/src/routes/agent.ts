@@ -36,14 +36,17 @@ router.get('/stats', async (_req: Request, res: Response) => {
           isOnline: true 
         } 
       }),
-      // 2. Últimos 5 viajes
+      // 2. Últimos 10 viajes
       prisma.trip.findMany({
-        take: 5,
+        take: 10,
         orderBy: { createdAt: 'desc' },
         select: {
           id: true,
           status: true,
           finalPrice: true,
+          estimatedPrice: true,
+          paymentMethod: true,
+          paymentStatus: true,
           distanceKm: true,
           originAddress: true,
           destAddress: true,
