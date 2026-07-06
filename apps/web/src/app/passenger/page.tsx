@@ -64,6 +64,7 @@ const IconAlert = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="no
 const IconCash = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2"/><path d="M6 12h.01M18 12h.01"/></svg>;
 const IconCard = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>;
 const IconParty = () => <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 4.5l9 9 3.5-4.5-9-9-3.5 4.5z"/><path d="M13 13.5l2 2.5 5-5-2-2.5-5 5z"/><path d="M15 15.5l4.5 4.5.5-1.5 1.5.5-4.5-4.5-.5 1.5-1.5-.5z"/><path d="M21 21l-9-9"/><path d="M18 11l.5.5"/><path d="M19 10l.5.5"/></svg>;
+const IconCreditCard = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2" /><line x1="1" y1="10" x2="23" y2="10" /></svg>;
 const IconLogout = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" /><polyline points="16 17 21 12 16 7" /><line x1="21" y1="12" x2="9" y2="12" /></svg>;
 
 const IconUser = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>;
@@ -1277,14 +1278,21 @@ export default function PassengerPage() {
     if (!currentTrip) return;
     setPaying(true);
 
-    if (driver?.mercadoPagoLink) {
-      const paymentUrl = driver.mercadoPagoLink;
-      window.open(paymentUrl, '_blank');
-      await api.post(`/payments/trip/${currentTrip.id}/simulate-payment`).catch(() => {});
+    try {
+      const res = await api.post(`/payments/trip/${currentTrip.id}/auto-charge`);
+      if (res.data.success) {
+        // Emitir al socket que se pagó automáticamente
+        const socket = connectSocket();
+        socket.emit('trip:passenger-confirmed-payment', { tripId: currentTrip.id });
+        setPaymentSent(true);
+        alert('Pago procesado correctamente. Esperando confirmación del conductor...');
+      }
+    } catch (err: any) {
+      console.error(err);
+      alert(err.response?.data?.error || 'Error al procesar el pago automático. Asegúrate de tener una tarjeta vinculada.');
+    } finally {
       setPaying(false);
-      return;
     }
-    setPaying(false);
   };
 
   const handleConfirmPaymentSent = async () => {
@@ -1526,6 +1534,13 @@ export default function PassengerPage() {
               <IconClock />
             </div>
             <span className="btn-label">Historial</span>
+          </button>
+
+          <button className="header-nav-btn" onClick={() => router.push('/passenger/payments')}>
+            <div className="icon-circle">
+              <IconCreditCard />
+            </div>
+            <span className="btn-label">Pagos</span>
           </button>
 
           <button className="header-nav-btn" onClick={handleLogout}>
@@ -2583,38 +2598,32 @@ export default function PassengerPage() {
 
                   {!paymentSent ? (
                     <>
-                      {paymentMethod === 'card' && (
-                        <div style={{ marginBottom: '16px' }}>
-                          <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '8px', textAlign: 'center' }}>Sube tu comprobante para mayor seguridad:</p>
-                          <label style={{ 
-                            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
-                            padding: '12px', border: '2px dashed var(--border)', borderRadius: 'var(--radius)',
-                            cursor: 'pointer', color: receiptUrl ? 'var(--accent)' : 'var(--text-muted)',
-                            background: receiptUrl ? 'rgba(0,229,160,0.05)' : 'transparent'
-                          }}>
-                            <input type="file" hidden accept="image/*" onChange={handleUploadReceipt} />
-                            {receiptUploading ? 'Subiendo...' : receiptUrl ? <><IconCheck /> Comprobante cargado</> : (
-                              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
-                                Adjuntar pantallazo
-                              </span>
-                            )}
-                          </label>
+                      {paymentMethod === 'cash' && (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                          <button 
+                            className="btn btn-accent btn-block btn-lg"
+                            onClick={handleConfirmPaymentSent}
+                            disabled={receiptUploading}
+                          >
+                            Confirmar pago en efectivo
+                          </button>
                         </div>
                       )}
                       
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                        {paymentMethod === 'card' && !receiptUrl && (
-                          <button className="btn btn-outline btn-block" onClick={handlePayTrip}>Ir a Mercado Pago</button>
-                        )}
-                        <button 
-                          className="btn btn-accent btn-block btn-lg"
-                          onClick={handleConfirmPaymentSent}
-                          disabled={receiptUploading}
-                        >
-                          Confirmar envío de pago
-                        </button>
-                      </div>
+                      {paymentMethod === 'card' && (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                          <button 
+                            className="btn btn-primary btn-block btn-lg" 
+                            onClick={handlePayTrip}
+                            disabled={paying}
+                          >
+                            {paying ? 'Procesando pago...' : 'Pagar automáticamente con Tarjeta'}
+                          </button>
+                          <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textAlign: 'center' }}>
+                            El cobro se hará a tu tarjeta guardada.
+                          </p>
+                        </div>
+                      )}
                     </>
                   ) : (
                     <div style={{ padding: '20px', textAlign: 'center', color: 'var(--accent)', fontWeight: 700 }}>

@@ -18,6 +18,7 @@ import paymentRoutes from './routes/payments.routes';
 import configRoutes from './routes/config';
 import agentRoutes from './routes/agent';
 import financeRoutes from './routes/finances';
+import taxRoutes from './routes/tax';
 
 // Socket handler
 import { setupSocketHandlers } from './socket/handlers';
@@ -111,6 +112,7 @@ app.use('/api/payments', paymentRoutes);
 app.use('/api/config', configRoutes);
 app.use('/api/agent', agentRoutes);
 app.use('/api/finances', financeRoutes);
+app.use('/api/tax', taxRoutes);
 
 // Health check
 app.get('/api/health', (_, res) => {

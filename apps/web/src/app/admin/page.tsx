@@ -196,6 +196,7 @@ interface Driver {
   nextDiscount: number;
   giftDaysPending: number;
   isDeleted?: boolean;
+  mpAccessToken?: string;
 }
 
 interface Passenger {
@@ -230,7 +231,7 @@ interface Passenger {
   }[];
 }
 
-type View = 'dashboard' | 'pending' | 'drivers' | 'passengers' | 'revenue' | 'system' | 'safety';
+type View = 'dashboard' | 'pending' | 'drivers' | 'passengers' | 'revenue' | 'safety' | 'taxes' | 'system';
 
 export default function AdminDashboardPage() {
   const router = useRouter();
@@ -274,6 +275,10 @@ export default function AdminDashboardPage() {
   // Trazabilidad de Viajes (paginación y expansión)
   const [tripsVisible, setTripsVisible] = useState(10);
   const [expandedTripId, setExpandedTripId] = useState<string | null>(null);
+
+  // Cumplimiento Tributario
+  const [taxDocuments, setTaxDocuments] = useState<any[]>([]);
+  const [selectedTaxDoc, setSelectedTaxDoc] = useState<any | null>(null);
 
   useEffect(() => {
     const s = getSession();
@@ -395,6 +400,18 @@ export default function AdminDashboardPage() {
     }
   }, []);
 
+  const loadTaxDocuments = useCallback(async () => {
+    setLoading(true);
+    try {
+      const r = await api.get('/tax/admin/documents');
+      setTaxDocuments(r.data.documents || []);
+    } catch (err) {
+      setActionMsg('Error al cargar documentos tributarios');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
   const handleGiftDays = async () => {
     if (giftDays <= 0) return;
     const confirm = window.confirm(`¿Estás seguro de que deseas regalar ${giftDays} días de membresía gratis a TODOS los conductores?`);
@@ -452,7 +469,8 @@ export default function AdminDashboardPage() {
     if (view === 'revenue') loadRevenue();
     if (view === 'system') loadSystemConfig();
     if (view === 'safety') loadSafetyReports();
-  }, [view, loadPending, loadAllDrivers, loadPassengers, loadRevenue, loadSystemConfig, loadSafetyReports]);
+    if (view === 'taxes') loadTaxDocuments();
+  }, [view, loadPending, loadAllDrivers, loadPassengers, loadRevenue, loadSystemConfig, loadSafetyReports, loadTaxDocuments]);
 
   async function doDriverAction(driverId: string, action: string, reason?: string) {
     setLoading(true); setActionMsg('');
@@ -594,6 +612,22 @@ export default function AdminDashboardPage() {
     }
   }
 
+  async function handleTaxDocAction(docId: string, action: 'APPROVE' | 'REJECT', notes?: string) {
+    setLoading(true);
+    setActionMsg('');
+    try {
+      await api.patch(`/tax/admin/documents/${docId}`, { status: action, adminNotes: notes });
+      setActionMsg(`Documento ${action === 'APPROVE' ? 'aprobado' : 'rechazado'} correctamente`);
+      loadTaxDocuments();
+      setSelectedTaxDoc(null);
+    } catch (err) {
+      setActionMsg('Error al procesar el documento');
+    } finally {
+      setLoading(false);
+      setTimeout(() => setActionMsg(''), 3000);
+    }
+  }
+
   const pendingBadgeCount = (stats?.pendingDrivers || 0) + (stats?.pendingPassengers || 0);
 
   const navTabs: { key: View; label: string; icon: string; badge?: number | null }[] = [
@@ -603,6 +637,7 @@ export default function AdminDashboardPage() {
     { key: 'passengers', label: 'Pasajeros', icon: 'users' },
     { key: 'revenue', label: 'Estudios', icon: 'chart' },
     { key: 'safety', label: 'Seguridad', icon: 'alert', badge: activeAlertsCount > 0 ? activeAlertsCount : null },
+    { key: 'taxes', label: 'Tributario', icon: 'file' },
     { key: 'system', label: 'Sistema', icon: 'settings' },
   ];
 
@@ -946,7 +981,19 @@ export default function AdminDashboardPage() {
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><Icon name="car" size={12} color="var(--text-muted)" /><strong>Vehículo:</strong> {selectedDriver.vehicleBrand} {selectedDriver.vehicleModel} ({selectedDriver.vehicleYear})</div>
               <div><strong>Patente:</strong> {selectedDriver.vehiclePlate}</div>
               <div><strong>Licencia N°:</strong> {selectedDriver.licenseNumber}</div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><Icon name="creditcard" size={12} color="var(--text-muted)" /><strong>Plan / Membresía:</strong> {selectedDriver.membershipPlan} {selectedDriver.isTrial ? ' (Pase Libre - Prueba)' : ` · ${selectedDriver.membershipPaid ? 'PAGADA' : 'NO PAGADA'}`}</div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <Icon name="creditcard" size={12} color="var(--text-muted)" />
+                <strong>MercadoPago:</strong> 
+                {selectedDriver.mpAccessToken ? (
+                  <span style={{ color: 'var(--success)', fontWeight: 800 }}>VINCULADO ✓</span>
+                ) : (
+                  <span style={{ color: 'var(--danger)', fontWeight: 800 }}>NO VINCULADO ❌</span>
+                )}
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <Icon name="creditcard" size={12} color="var(--text-muted)" />
+                <strong>Plan / Membresía:</strong> {selectedDriver.membershipPlan} {selectedDriver.isTrial ? ' (Pase Libre - Prueba)' : ` · ${selectedDriver.membershipPaid ? 'PAGADA' : 'NO PAGADA'}`}
+              </div>
               {(() => {
                 const now = new Date();
                 const expires = selectedDriver.membershipExpiresAt ? new Date(selectedDriver.membershipExpiresAt) : null;
@@ -2194,6 +2241,84 @@ export default function AdminDashboardPage() {
                   </div>
                 )}
               </div>
+            </div>
+          </div>
+        )}
+
+        {/* ── X. TRIBUTARIO (BOLETAS DE HONORARIOS) ── */}
+        {view === 'taxes' && !selectedTaxDoc && (
+          <div className="animate-in" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            <h2 style={{ fontSize: '1.15rem', fontWeight: 900, marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <Icon name="file" size={18} color="var(--accent)" />
+              Cumplimiento Tributario ({taxDocuments.length})
+            </h2>
+
+            {taxDocuments.length === 0 ? (
+              <div className="card" style={{ textAlign: 'center', padding: '36px 24px', color: 'var(--text-muted)' }}>
+                No hay boletas de honorarios pendientes de revisión.
+              </div>
+            ) : (
+              taxDocuments.map(doc => (
+                <div key={doc.id} className="card" style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                    <div>
+                      <h3 style={{ fontSize: '0.95rem', fontWeight: 800 }}>{doc.driver.name}</h3>
+                      <div style={{ fontSize: '0.77rem', color: 'var(--text-muted)' }}>RUT: {doc.driver.rut}</div>
+                    </div>
+                    <span className="badge seal-flex" style={{ fontSize: '0.65rem' }}>{doc.status}</span>
+                  </div>
+
+                  <div style={{ background: 'var(--bg-secondary)', padding: '12px', borderRadius: '8px' }}>
+                    <div style={{ fontSize: '0.8rem', fontWeight: 700 }}>Periodo: {doc.month}/{doc.year}</div>
+                    <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Ganancias del periodo: {formatCLP(doc.totalEarnings)}</div>
+                  </div>
+
+                  <button className="btn btn-secondary btn-sm" onClick={() => setSelectedTaxDoc(doc)}>
+                    Revisar Documento
+                  </button>
+                </div>
+              ))
+            )}
+          </div>
+        )}
+
+        {/* ── DETALLE DE BOLETA ── */}
+        {view === 'taxes' && selectedTaxDoc && (
+          <div className="animate-in" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            <button className="btn btn-ghost btn-sm" onClick={() => setSelectedTaxDoc(null)} style={{ alignSelf: 'flex-start', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <Icon name="arrow_left" size={14} /> Volver
+            </button>
+
+            <div className="card" style={{ padding: '24px' }}>
+              <h2 style={{ fontSize: '1.2rem', fontWeight: 900, marginBottom: '16px' }}>
+                Revisión de Boleta de Honorarios
+              </h2>
+              
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '24px' }}>
+                <div style={{ fontSize: '0.9rem' }}><strong>Conductor:</strong> {selectedTaxDoc.driver.name} (RUT: {selectedTaxDoc.driver.rut})</div>
+                <div style={{ fontSize: '0.9rem' }}><strong>Periodo Declarado:</strong> {selectedTaxDoc.month}/{selectedTaxDoc.year}</div>
+                <div style={{ fontSize: '0.9rem' }}><strong>Monto Total:</strong> {formatCLP(selectedTaxDoc.totalEarnings)}</div>
+              </div>
+
+              <div style={{ marginBottom: '24px' }}>
+                <a href={selectedTaxDoc.documentUrl} target="_blank" rel="noopener noreferrer" className="btn btn-outline btn-block">
+                  <Icon name="file" size={16} /> Ver Documento PDF/Imagen
+                </a>
+              </div>
+
+              {selectedTaxDoc.status === 'PENDING' && (
+                <div style={{ display: 'flex', gap: '12px', flexDirection: 'column' }}>
+                  <button className="btn btn-accent btn-lg" onClick={() => handleTaxDocAction(selectedTaxDoc.id, 'APPROVE')} disabled={loading}>
+                    {loading ? 'Procesando...' : 'Aprobar Boleta'}
+                  </button>
+                  <button className="btn btn-danger btn-lg" onClick={() => {
+                    const r = prompt('Razón del rechazo:');
+                    if (r) handleTaxDocAction(selectedTaxDoc.id, 'REJECT', r);
+                  }} disabled={loading}>
+                    {loading ? 'Procesando...' : 'Rechazar Boleta'}
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         )}

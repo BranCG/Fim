@@ -37,7 +37,7 @@ interface DriverInfo {
   comfortLastPaidAt?: string;
   vehicleBrand: string; vehicleModel: string; vehiclePlate: string;
   totalRating: number; totalTrips: number;
-  mercadoPagoLink: string | null;
+  mpAccessToken: string | null;
   email: string;
   walletBalance: number;
   adminNotes: string | null;
@@ -165,36 +165,6 @@ const PaymentLinkTutorial = ({ showMpTutorial, setShowMpTutorial }: { showMpTuto
     </button>
     {showMpTutorial && (
       <div style={{
-        background: 'var(--bg-secondary)',
-        padding: '24px',
-        borderRadius: 'var(--radius-lg)',
-        border: '1px solid var(--border)',
-        textAlign: 'left',
-        animation: 'fadeIn 0.3s ease'
-      }}>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', color: 'var(--text-secondary)' }}>
-          <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
-            <IconWalletColor />
-            <p style={{ margin: 0, fontSize: '0.85rem', lineHeight: '1.4' }}>Crea una cuenta en <strong>Mercado Pago</strong> (es gratis y personal).</p>
-          </div>
-          <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
-            <IconLinkColor />
-            <p style={{ margin: 0, fontSize: '0.85rem', lineHeight: '1.4' }}>En tu app de Mercado Pago, ve a <strong>Cobrar con Link</strong> y crea un link genérico o usa tu código QR.</p>
-          </div>
-          <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
-            <IconProfileColor />
-            <p style={{ margin: 0, fontSize: '0.85rem', lineHeight: '1.4' }}>Pega ese link en tu perfil de <strong>Fim</strong> en la sección "Cobro Directo".</p>
-          </div>
-          <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
-            <IconCheckColor />
-            <p style={{ margin: 0, fontSize: '0.85rem', lineHeight: '1.4' }}>¡Listo! El 100% de los pagos irán directo a tu cuenta sin comisiones.</p>
-          </div>
-        </div>
-      </div>
-    )}
-  </div>
-);
-
 export default function DriverPage() {
   const router = useRouter();
   const [session, setSession] = useState<any>(null);
@@ -316,7 +286,6 @@ export default function DriverPage() {
   }, [tripRequest]);
 
   const [passengerConfirmed, setPassengerConfirmed] = useState(false);
-  const [showMpTutorial, setShowMpTutorial] = useState(false);
   const [receiptUrl, setReceiptUrl] = useState<string | null>(null);
   const [paymentRequested, setPaymentRequested] = useState(false);
   const [cancellationNotice, setCancellationNotice] = useState<{ reason: string; wasAccepted?: boolean } | null>(null);
@@ -1074,8 +1043,9 @@ export default function DriverPage() {
     setLoading(true);
 
     if (newStatus && driver) {
-      if (!driver.mercadoPagoLink) {
-        showCustomAlert('Debes vincular tu link de Mercado Pago para poder ponerte en línea y recibir pagos de tus viajes.', 'Atención', 'warning');
+      // 1. Validar vinculación MP
+      if (!driver.mpAccessToken) {
+        showCustomAlert('Debes vincular tu cuenta de Mercado Pago en la sección de Cumplimiento para recibir pagos.', 'Atención', 'warning');
         setLoading(false);
         return;
       }
@@ -1151,7 +1121,6 @@ export default function DriverPage() {
   };
 
   const [showHistory, setShowHistory] = useState(false);
-  const [mpLink, setMpLink] = useState('');
 
   const [customDialog, setCustomDialog] = useState<{
     show: boolean;
@@ -1191,10 +1160,6 @@ export default function DriverPage() {
       onCancel
     });
   };
-
-  useEffect(() => {
-    if (driver?.mercadoPagoLink) setMpLink(driver.mercadoPagoLink);
-  }, [driver]);
 
   const getFreePassExpirationDateObj = () => {
     if (!driver) return new Date();
@@ -1255,18 +1220,6 @@ export default function DriverPage() {
       '¡Felicitaciones! FREE PASS Activo',
       'success'
     );
-  };
-
-  const saveMPLink = async () => {
-    try {
-      await api.post('/drivers/payment-link', { mercadoPagoLink: mpLink });
-      showCustomAlert('Link de pago vinculado correctamente.', 'Éxito', 'success');
-      if (driver) {
-        setDriver({ ...driver, mercadoPagoLink: mpLink });
-      }
-    } catch (err) {
-      showCustomAlert('Error al guardar el link.', 'Error', 'error');
-    }
   };
 
   const handleLogout = () => {
@@ -1410,34 +1363,16 @@ export default function DriverPage() {
           Mientras hacemos esto podrías configurar tu link de pago.
         </p>
 
-        {/* Mercado Pago Link Config */}
-        <div style={{ width: '100%', borderTop: '1px solid var(--border)', paddingTop: '20px', marginTop: '10px' }}>
-          {!driver.mercadoPagoLink ? (
-            <div style={{ background: 'rgba(0,229,160,0.05)', padding: '16px', borderRadius: 'var(--radius)', border: '1px solid var(--accent)', marginBottom: '10px' }}>
-              <p style={{ fontSize: '0.85rem', marginBottom: '12px', fontWeight: 600 }}>¡Vincular Mercado Pago Connect!</p>
-              <input
-                type="text" className="form-input" placeholder="Pega tu link aquí..."
-                value={mpLink} onChange={(e) => setMpLink(e.target.value)}
-                style={{ marginBottom: '12px' }}
-              />
-              <button
-                className="btn btn-accent btn-block"
-                onClick={saveMPLink}
-                disabled={!mpLink.toLowerCase().includes('mercadopago') && !mpLink.toLowerCase().includes('mpago')}
-              >
-                Vincular Cuenta
-              </button>
-            </div>
-          ) : (
-            <div style={{ background: 'rgba(0,229,160,0.1)', padding: '16px', borderRadius: 'var(--radius)', border: '1px solid var(--accent)', marginBottom: '10px', textAlign: 'center' }}>
-              <p style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--accent)', margin: 0 }}>
-                ✓ Link de Mercado Pago configurado.
-              </p>
-            </div>
-          )}
-          {!driver.mercadoPagoLink && (
-            <PaymentLinkTutorial showMpTutorial={showMpTutorial} setShowMpTutorial={setShowMpTutorial} />
-          )}
+        {/* Mercado Pago Vinculación Link */}
+        <div style={{ marginTop: '20px' }}>
+          <button 
+            className="btn btn-outline"
+            style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
+            onClick={() => router.push('/driver/compliance')}
+          >
+            <IconLinkColor />
+            Ir a Cumplimiento y Pagos
+          </button>
         </div>
       </div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', width: '100%', maxWidth: '440px' }}>
@@ -1939,63 +1874,7 @@ export default function DriverPage() {
                 {driver.vehicleBrand} {driver.vehicleModel} · {driver.vehiclePlate} · {driver.totalTrips} {driver.totalTrips === 1 ? 'viaje' : 'viajes'}
               </p>
             </div>
-            <div style={{ textAlign: 'right' }}>
-              {/* Recaudación removida: Ahora se muestra en Fim Finanzas */}
-            </div>
           </div>
-
-          {driver.isPromoActive && !isOnline && !hasActivatedOnline && (
-            <div style={{
-              background: 'rgba(255,239,94,0.08)',
-              border: '1px solid rgba(255,239,94,0.3)',
-              borderRadius: '16px',
-              padding: '16px 20px',
-              marginBottom: '20px',
-              display: 'flex',
-              alignItems: 'flex-start',
-              gap: '12px',
-              textAlign: 'left'
-            }}>
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" id="Party-Popper-1--Streamline-Ultimate" height="24" width="24" style={{ flexShrink: 0 }}>
-                <desc>
-                  Party Popper 1 Streamline Icon: https://streamlinehq.com
-                </desc>
-                <path fill="#ffbfc5" d="M8.1735 7.69558c1.32067 0 2.3913 -1.07061 2.3913 -2.39128 0 -1.32066 -1.07063 -2.39128 -2.3913 -2.39128 -1.32066 0 -2.39127 1.07062 -2.39127 2.39128 0 1.32067 1.07061 2.39128 2.39127 2.39128Z" strokeWidth={1}></path>
-                <path fill="#c2f3ff" d="M19.6518 6.26081c1.0566 0 1.913 -0.85649 1.913 -1.91302s-0.8564 -1.91302 -1.913 -1.91302 -1.913 0.85649 -1.913 1.91302 0.8564 1.91302 1.913 1.91302Z" strokeWidth={1}></path>
-                <path fill="#c9f7ca" d="M19.1733 15.8259c1.0565 0 1.913 -0.8564 1.913 -1.913s-0.8565 -1.913 -1.913 -1.913c-1.0566 0 -1.913 0.8564 -1.913 1.913s0.8564 1.913 1.913 1.913Z" strokeWidth={1}></path>
-                <path stroke="#191919" strokeLinecap="round" strokeLinejoin="round" d="M16.2876 12.2065c0.8907 -0.8888 2.0976 -1.388 3.3559 -1.388 1.2583 0 2.4652 0.4992 3.3559 1.388" strokeWidth={1}></path>
-                <path stroke="#191919" strokeLinecap="round" strokeLinejoin="round" d="M11.7778 7.71279c0.441 -0.44067 0.7908 -0.96391 1.0294 -1.53982 0.2387 -0.57589 0.3615 -1.19318 0.3615 -1.81657 0 -0.6234 -0.1228 -1.24068 -0.3615 -1.81658 -0.2386 -0.57591 -0.5884 -1.09915 -1.0294 -1.53982" strokeWidth={1}></path>
-                <path stroke="#191919" strokeLinecap="round" strokeLinejoin="round" d="m17.8105 8.41199 3.3564 -1.11721" strokeWidth={1}></path>
-                <path stroke="#191919" strokeLinecap="round" strokeLinejoin="round" d="m15.5732 6.17664 1.1192 -3.35735" strokeWidth={1}></path>
-                <path stroke="#191919" strokeLinecap="round" strokeLinejoin="round" d="M8.14014 5.08525c0.06341 0 0.12424 0.0252 0.16909 0.07004 0.04484 0.04484 0.07003 0.10566 0.07003 0.16909" strokeWidth={1}></path>
-                <path stroke="#191919" strokeLinecap="round" strokeLinejoin="round" d="M7.90088 5.32438c0 -0.06343 0.02519 -0.12425 0.07003 -0.16909 0.04486 -0.04484 0.10568 -0.07004 0.1691 -0.07004" strokeWidth={1}></path>
-                <path stroke="#191919" strokeLinecap="round" strokeLinejoin="round" d="M8.14001 5.56351c-0.06342 0 -0.12424 -0.02519 -0.1691 -0.07004 -0.04484 -0.04484 -0.07 -0.10567 -0.07 -0.16908" strokeWidth={1}></path>
-                <path stroke="#191919" strokeLinecap="round" strokeLinejoin="round" d="M8.37926 5.32439c0 0.06341 -0.02519 0.12424 -0.07003 0.16908 -0.04485 0.04485 -0.10568 0.07004 -0.16909 0.07004" strokeWidth={1}></path>
-                <path stroke="#191919" strokeLinecap="round" strokeLinejoin="round" d="M15.314 7.95479c0.0634 0 0.1242 0.02519 0.1691 0.07003 0.0448 0.04485 0.07 0.10567 0.07 0.1691" strokeWidth={1}></path>
-                <path stroke="#191919" strokeLinecap="round" strokeLinejoin="round" d="M15.0747 8.19392c0 -0.06343 0.0252 -0.12425 0.07 -0.1691 0.0449 -0.04484 0.1057 -0.07003 0.1691 -0.07003" strokeWidth={1}></path>
-                <path stroke="#191919" strokeLinecap="round" strokeLinejoin="round" d="M15.3138 8.43304c-0.0634 0 -0.1242 -0.0252 -0.1691 -0.07005 -0.0448 -0.04484 -0.07 -0.10566 -0.07 -0.16908" strokeWidth={1}></path>
-                <path stroke="#191919" strokeLinecap="round" strokeLinejoin="round" d="M15.5531 8.19391c0 0.06342 -0.0252 0.12424 -0.07 0.16908 -0.0449 0.04485 -0.1057 0.07005 -0.1691 0.07005" strokeWidth={1}></path>
-                <path stroke="#191919" strokeLinecap="round" strokeLinejoin="round" d="M19.1396 13.6938c0.0635 0 0.1243 0.0252 0.1692 0.0701 0.0448 0.0448 0.07 0.1057 0.07 0.1691" strokeWidth={1}></path>
-                <path stroke="#191919" strokeLinecap="round" strokeLinejoin="round" d="M18.9009 13.933c0 -0.0634 0.0251 -0.1243 0.07 -0.1691 0.0449 -0.0449 0.1057 -0.0701 0.1691 -0.0701" strokeWidth={1}></path>
-                <path stroke="#191919" strokeLinecap="round" strokeLinejoin="round" d="M19.14 14.1721c-0.0634 0 -0.1242 -0.0251 -0.1691 -0.07 -0.0449 -0.0449 -0.07 -0.10567 -0.07 -0.1691" strokeWidth={1}></path>
-                <path stroke="#191919" strokeLinecap="round" strokeLinejoin="round" d="M19.3788 13.933c0 0.0634 -0.0252 0.1242 -0.07 0.1691 -0.0449 0.0449 -0.1057 0.07 -0.1692 0.07" strokeWidth={1}></path>
-                <path stroke="#191919" strokeLinecap="round" strokeLinejoin="round" d="M19.6182 4.12874c0.0634 0 0.1242 0.02519 0.1691 0.07003 0.0448 0.04485 0.07 0.10567 0.07 0.1691" strokeWidth={1}></path>
-                <path stroke="#191919" strokeLinecap="round" strokeLinejoin="round" d="M19.3789 4.36787c0 -0.06343 0.0252 -0.12425 0.07 -0.1691 0.0449 -0.04484 0.1057 -0.07003 0.1691 -0.07003" strokeWidth={1}></path>
-                <path stroke="#191919" strokeLinecap="round" strokeLinejoin="round" d="M19.618 4.607c-0.0634 0 -0.1242 -0.02519 -0.1691 -0.07004 -0.0448 -0.04484 -0.07 -0.10567 -0.07 -0.16909" strokeWidth={1}></path>
-                <path stroke="#191919" strokeLinecap="round" strokeLinejoin="round" d="M19.8573 4.36787c0 0.06342 -0.0252 0.12425 -0.07 0.16909 -0.0449 0.04485 -0.1057 0.07004 -0.1691 0.07004" strokeWidth={1}></path>
-                <path fill="#ffef5e" d="M15.0082 16.3759 2.89783 22.8477c-0.24402 0.1304 -0.52354 0.1789 -0.79724 0.1384 -0.27371 -0.0407 -0.5271 -0.1683 -0.7227 -0.364 -0.19561 -0.1957 -0.32306 -0.4492 -0.36354 -0.7229 -0.040465 -0.2738 0.0082 -0.5533 0.1388 -0.7972l6.4708 -12.11035 7.38425 7.38425Z" strokeWidth={1}></path>
-                <path fill="#fff9bf" d="M11.316 12.6838 7.62386 8.99165 1.15306 21.102c-0.13042 0.2443 -0.178524 0.5242 -0.13717 0.798 0.04136 0.2739 0.16998 0.5271 0.36674 0.7219l9.93337 -9.9381Z" strokeWidth={1}></path>
-                <path stroke="#191919" strokeLinecap="round" strokeLinejoin="round" d="M15.0082 16.3759 2.89783 22.8477c-0.24402 0.1304 -0.52354 0.1789 -0.79724 0.1384 -0.27371 -0.0407 -0.5271 -0.1683 -0.7227 -0.364 -0.19561 -0.1957 -0.32306 -0.4492 -0.36354 -0.7229 -0.040465 -0.2738 0.0082 -0.5533 0.1388 -0.7972l6.4708 -12.11035" strokeWidth={1}></path>
-                <path fill="#ffbc44" stroke="#191919" strokeLinecap="round" strokeLinejoin="round" d="M15.2422 16.1965c0.9339 -0.934 0.0254 -3.3564 -2.0291 -5.4109S8.73618 7.82266 7.80233 8.75651c-0.93387 0.93386 -0.02542 3.35639 2.02906 5.41079 2.05451 2.0545 4.47691 2.963 5.41081 2.0292Z" strokeWidth={1}></path>
-              </svg>
-              <div style={{ textAlign: 'left' }}>
-                <h4 style={{ margin: '0 0 4px 0', fontSize: '0.95rem', fontWeight: 800, color: 'var(--accent)' }}>¡Felicitaciones!</h4>
-                <p style={{ margin: 0, fontSize: '0.8rem', color: '#fff', lineHeight: '1.4' }}>
-                  Bienvenido a FIM, la app que une a pasajeros y conductores más rentable del país. Nuestra app es <strong>0% comisión</strong>, ¡A disfrutar jefe!
-                </p>
-              </div>
-            </div>
-          )}
 
           {driver.isPromoActive && !isOnline && !hasActivatedOnline && (
             <div style={{
@@ -2009,9 +1888,6 @@ export default function DriverPage() {
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" id="Gift-Box-1--Streamline-Ultimate" height="24" width="24" style={{ flexShrink: 0 }}>
-                  <desc>
-                    Gift Box 1 Streamline Icon: https://streamlinehq.com
-                  </desc>
                   <path fill="#78eb7b" d="M17.2609 11.0435H6.73967c-0.25367 0 -0.49695 0.1008 -0.67632 0.2802 -0.17938 0.1793 -0.28015 0.4226 -0.28015 0.6763v0.9565c0 0.2536 0.10077 0.4969 0.28015 0.6763 0.17937 0.1794 0.42265 0.2801 0.67632 0.2801h0.47824l0.41511 5.8068c0.0172 0.2417 0.12552 0.4679 0.30306 0.6328 0.17755 0.1649 0.41108 0.2563 0.65341 0.2557h6.82731c0.2423 0.0006 0.4759 -0.0908 0.6534 -0.2557s0.2859 -0.3911 0.3031 -0.6328l0.4093 -5.8068h0.4783c0.2536 0 0.4969 -0.1007 0.6763 -0.2801s0.2801 -0.4227 0.2801 -0.6763V12c0 -0.2537 -0.1007 -0.497 -0.2801 -0.6763 -0.1794 -0.1794 -0.4227 -0.2802 -0.6763 -0.2802Z" strokeWidth={1}></path>
                   <path fill="#ff808c" d="M13.4348 11.0435h-2.8694v9.5647h2.8694v-9.5647Z" strokeWidth={1}></path>
                   <path stroke="#191919" strokeLinecap="round" strokeLinejoin="round" d="M10.5656 13.9129H6.73967c-0.25367 0 -0.49695 -0.1007 -0.67632 -0.2801 -0.17938 -0.1794 -0.28015 -0.4227 -0.28015 -0.6763V12c0 -0.2537 0.10077 -0.497 0.28015 -0.6763 0.17937 -0.1794 0.42265 -0.2802 0.67632 -0.2802H17.2609c0.2536 0 0.4969 0.1008 0.6763 0.2802 0.1794 0.1793 0.2801 0.4226 0.2801 0.6763v0.9565c0 0.2536 -0.1007 0.4969 -0.2801 0.6763s-0.4227 0.2801 -0.6763 0.2801H13.435" strokeWidth={1}></path>
@@ -2046,17 +1922,6 @@ export default function DriverPage() {
           )}
 
 
-          {!isOnline && !driver.mercadoPagoLink && (
-            <>
-              <div style={{ background: 'rgba(0,229,160,0.05)', padding: '16px', borderRadius: 'var(--radius)', border: '1px solid var(--accent)', marginBottom: '20px' }}>
-                <p style={{ fontSize: '0.85rem', marginBottom: '12px', fontWeight: 600 }}>¡Vincular Mercado Pago Connect!</p>
-                <input
-                  type="text" className="form-input" placeholder="Pega tu link aquí..."
-                  value={mpLink} onChange={(e) => setMpLink(e.target.value)}
-                  style={{ marginBottom: '12px' }}
-                />
-                <button
-                  className="btn btn-accent btn-block"
                   onClick={saveMPLink}
                   disabled={!mpLink.toLowerCase().includes('mercadopago') && !mpLink.toLowerCase().includes('mpago')}
                   style={{ marginBottom: '10px' }}

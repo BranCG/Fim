@@ -204,6 +204,61 @@ router.post('/membership/simulate', async (req, res) => {
 });
 
 
+// ─── MERCADOPAGO OAUTH (CONDUCTORES) ────────────────────────────────────────
+
+router.get('/oauth/callback', async (req, res) => {
+  try {
+    const { code, state } = req.query; // El state es el driverId
+    if (!code || !state) {
+      return res.status(400).send('Faltan parámetros de OAuth');
+    }
+
+    const driverId = String(state);
+    
+    const clientId = process.env.MP_CLIENT_ID || '';
+    const clientSecret = process.env.MP_CLIENT_SECRET || '';
+    const redirectUri = process.env.MP_REDIRECT_URI || `${process.env.API_URL || 'http://localhost:3001'}/api/payments/oauth/callback`;
+
+    // Intercambiar código por token
+    const tokenResponse = await fetch('https://api.mercadopago.com/oauth/token', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'Accept': 'application/json' },
+      body: new URLSearchParams({
+        client_secret: clientSecret,
+        client_id: clientId,
+        grant_type: 'authorization_code',
+        code: String(code),
+        redirect_uri: redirectUri
+      })
+    });
+
+    const tokenData = await tokenResponse.json();
+
+    if (!tokenData.access_token) {
+      console.error('Error de OAuth MP:', tokenData);
+      return res.status(400).send('No se pudo obtener el token de MercadoPago');
+    }
+
+    // Guardar tokens en el conductor
+    await prisma.driver.update({
+      where: { id: driverId },
+      data: {
+        mpAccessToken: tokenData.access_token,
+        mpRefreshToken: tokenData.refresh_token,
+        mpUserId: String(tokenData.user_id)
+      }
+    });
+
+    // Redirigir de vuelta a la app (Deep link o Web)
+    const baseUrl = process.env.NEXT_PUBLIC_WEB_URL || 'http://localhost:3000';
+    res.redirect(`${baseUrl}/driver/compliance?success=oauth`);
+
+  } catch (error) {
+    console.error('Error en OAuth Callback:', error);
+    res.status(500).send('Error interno en OAuth');
+  }
+});
+
 // 1. Crear la suscripción (Preapproval)
 router.post('/subscribe', async (req, res) => {
   try {
@@ -339,10 +394,32 @@ router.post('/simulate-subscription', async (req, res) => {
   }
 });
 
-// ─── PAGOS POR VIAJE (RECAUDACIÓN CENTRALIZADA) ─────────────────────────
+// ─── PAGOS AUTOMÁTICOS POR VIAJE (SPLIT PAYMENTS) ─────────────────────────
 
-// 3. Crear preferencia de pago para un viaje específico
-router.post('/trip/:id/pay', async (req, res) => {
+import { Payment } from 'mercadopago';
+
+// 3. Guardar Tarjeta del Pasajero (Tokenización)
+router.post('/passenger/cards', async (req, res) => {
+  try {
+    const { passengerId, cardToken } = req.body;
+    if (!passengerId || !cardToken) return res.status(400).json({ error: 'Faltan datos' });
+
+    // En un sistema real, aquí crearías un "Customer" en MP y guardarías la tarjeta.
+    // Para simplificar, guardaremos el token directo para el próximo viaje (o el ID del Customer).
+    await prisma.user.update({
+      where: { id: passengerId },
+      data: { mpCardToken: cardToken, paymentMethod: 'card' }
+    });
+
+    res.json({ success: true, message: 'Tarjeta guardada exitosamente' });
+  } catch (error) {
+    console.error('Error guardando tarjeta:', error);
+    res.status(500).json({ error: 'Error al guardar la tarjeta' });
+  }
+});
+
+// 4. Cobro Automático al finalizar el viaje (Split Payment al Conductor)
+router.post('/trip/:id/auto-charge', async (req, res) => {
   try {
     const { id } = req.params;
 
@@ -355,40 +432,75 @@ router.post('/trip/:id/pay', async (req, res) => {
     if (trip.paymentStatus === 'paid' || trip.isPaid) {
       return res.status(400).json({ error: 'El viaje ya fue pagado' });
     }
+    if (!trip.driver || !trip.driver.mpAccessToken) {
+      return res.status(400).json({ error: 'El conductor no tiene MercadoPago vinculado' });
+    }
+    if (!trip.passenger.mpCardToken) {
+      return res.status(400).json({ error: 'El pasajero no tiene tarjeta guardada' });
+    }
 
-    let price = trip.finalPrice || trip.estimatedPrice;
-    price = roundCLP(price);
+    let grossAmount = trip.finalPrice || trip.estimatedPrice;
+    grossAmount = roundCLP(grossAmount);
+    
+    // Calcular comisión de Fim (ejemplo: 15% o cargo fijo)
+    // Para este caso, el conductor se lleva todo el viaje porque Fim gana por membresías!
+    // Pero si queremos cobrar la comisión de MercadoPago (ej. 3.49% + IVA)
+    const mpFee = Math.round(grossAmount * 0.0415); // Aprox 4.15% total
+    const fimFee = 0; // Fim no cobra comisión por viaje
+    
+    const amountToChargePassenger = grossAmount + mpFee;
+    const amountToDriver = grossAmount;
 
-    // Crear la preferencia en Mercado Pago
-    const response = await preference.create({
+    // Configurar cliente MP usando el token del CONDUCTOR (para que el dinero le caiga a él)
+    const driverMpClient = new MercadoPagoConfig({ 
+      accessToken: trip.driver.mpAccessToken,
+      options: { timeout: 5000 } 
+    });
+    const payment = new Payment(driverMpClient);
+
+    // Crear el pago automático
+    const response = await payment.create({
       body: {
-        items: [
-          {
-            id: trip.id,
-            title: `Viaje Fim - ${trip.destAddress}`,
-            quantity: 1,
-            unit_price: price,
-            currency_id: 'CLP',
-          }
-        ],
+        transaction_amount: amountToChargePassenger,
+        token: trip.passenger.mpCardToken,
+        description: `Viaje Fim - ${trip.destAddress}`,
+        installments: 1,
+        payment_method_id: 'master', // O el que provea el frontend
         payer: {
           email: trip.passenger.email,
         },
-        back_urls: {
-          success: 'https://fim.cl/passenger/payment-success',
-          failure: 'https://fim.cl/passenger/payment-failure',
-          pending: 'https://fim.cl/passenger/payment-pending'
-        },
-        auto_return: 'approved',
-        notification_url: 'https://fim.cl/api/payments/trip-webhook', // URL real requerida en prod
+        application_fee: fimFee, // Comisión para la plataforma Fim
         external_reference: trip.id,
       }
     });
 
-    res.json({ init_point: response.init_point, preferenceId: response.id });
+    // Registrar pago y boleta interna
+    if (response.status === 'approved' || response.status === 'in_process') {
+      await prisma.trip.update({
+        where: { id: trip.id },
+        data: { isPaid: true, paymentStatus: response.status, mpPaymentId: String(response.id) }
+      });
+
+      await prisma.tripReceipt.create({
+        data: {
+          tripId: trip.id,
+          passengerId: trip.passengerId,
+          driverId: trip.driverId,
+          grossAmount: amountToChargePassenger,
+          netAmount: amountToDriver,
+          mpFee: mpFee,
+          fimFee: fimFee
+        }
+      });
+
+      res.json({ success: true, status: response.status, paymentId: response.id });
+    } else {
+      res.status(400).json({ error: 'Pago rechazado por MercadoPago', status: response.status });
+    }
+
   } catch (error) {
-    console.error('Error al crear preferencia de viaje:', error);
-    res.status(500).json({ error: 'Error interno al generar pago del viaje' });
+    console.error('Error procesando pago automático:', error);
+    res.status(500).json({ error: 'Error interno al procesar el pago del viaje' });
   }
 });
 

@@ -80,7 +80,9 @@ model Driver {
   comfortReceiptUrl   String?   @map("url_comprobante_comfort")
   walletBalance       Int       @default(0) @map("saldo_billetera")
   adminNotes          String?   @map("notas_administrador")
-  mercadoPagoLink     String?   @map("enlace_mercado_pago") // Link de pago directo (mpago.li/...)
+  mpAccessToken       String?   @map("mp_access_token") // MercadoPago OAuth Access Token
+  mpRefreshToken      String?   @map("mp_refresh_token") // MercadoPago OAuth Refresh Token
+  mpUserId            String?   @map("mp_user_id") // ID de usuario en MercadoPago
   isOnline            Boolean   @default(false) @map("esta_en_linea")
   lastLat             Float?    @map("ultima_latitud")
   lastLng             Float?    @map("ultima_longitud")
@@ -109,8 +111,41 @@ model Driver {
   fuelEfficiency      Float?    @default(12.0) @map("rendimiento_combustible")
   fuelPrice           Int?      @default(1300) @map("precio_combustible")
   netIncomeGoal       Int?      @default(1000000) @map("meta_ingreso_neto")
+  taxDocuments        TaxDocument[] @relation("DriverTaxDocuments")
 
   @@map("conductores")
+}
+
+model TaxDocument {
+  id          String   @id @default(cuid()) @map("id")
+  driverId    String   @map("id_conductor")
+  month       Int      @map("mes")
+  year        Int      @map("anio")
+  fileUrl     String   @map("url_archivo")
+  status      String   @default("pending") @map("estado") // pending, approved, rejected
+  amount      Int      @map("monto_declarado")
+  createdAt   DateTime @default(now()) @map("fecha_creacion")
+  updatedAt   DateTime @updatedAt @map("fecha_actualizacion")
+  driver      Driver   @relation("DriverTaxDocuments", fields: [driverId], references: [id])
+
+  @@map("documentos_tributarios")
+}
+
+model TripReceipt {
+  id          String   @id @default(cuid()) @map("id")
+  tripId      String   @unique @map("id_viaje")
+  passengerId String   @map("id_pasajero")
+  driverId    String   @map("id_conductor")
+  grossAmount Int      @map("monto_bruto")
+  netAmount   Int      @map("monto_neto")
+  mpFee       Int      @map("comision_mp")
+  fimFee      Int      @default(0) @map("comision_fim")
+  receiptUrl  String?  @map("url_recibo")
+  createdAt   DateTime @default(now()) @map("fecha_creacion")
+  
+  trip        Trip     @relation(fields: [tripId], references: [id])
+
+  @@map("recibos_viajes")
 }
 
 model Trip {
@@ -148,6 +183,7 @@ model Trip {
   createdAt       DateTime       @default(now()) @map("fecha_creacion")
   updatedAt       DateTime       @updatedAt @map("fecha_actualizacion")
   rating          Rating?
+  receipt         TripReceipt?
   driver          Driver?        @relation("DriverTrips", fields: [driverId], references: [id])
   passenger       User           @relation("PassengerTrips", fields: [passengerId], references: [id])
   safetyReports   SafetyReport[]
