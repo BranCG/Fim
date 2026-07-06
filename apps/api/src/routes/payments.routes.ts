@@ -442,13 +442,13 @@ router.post('/trip/:id/auto-charge', async (req, res) => {
     let grossAmount = trip.finalPrice || trip.estimatedPrice;
     grossAmount = roundCLP(grossAmount);
     
-    // Calcular comisión de Fim (ejemplo: 15% o cargo fijo)
-    // Para este caso, el conductor se lleva todo el viaje porque Fim gana por membresías!
-    // Pero si queremos cobrar la comisión de MercadoPago (ej. 3.49% + IVA)
-    const mpFee = Math.round(grossAmount * 0.0415); // Aprox 4.15% total
+    // Queremos que el conductor reciba exactamente `grossAmount` líquidos.
+    // MercadoPago descuenta ~4.15% del total cobrado.
+    // Formula: Total_a_cobrar = Monto_liquido / (1 - comision)
+    const amountToChargePassenger = Math.round(grossAmount / (1 - 0.0415)); 
+    const mpFee = amountToChargePassenger - grossAmount;
     const fimFee = 0; // Fim no cobra comisión por viaje
     
-    const amountToChargePassenger = grossAmount + mpFee;
     const amountToDriver = grossAmount;
 
     // Configurar cliente MP usando el token del CONDUCTOR (para que el dinero le caiga a él)
