@@ -730,7 +730,6 @@ export default function DriverPage() {
     socket.on('trip:request', ({ trip }: { trip: TripRequest }) => {
       setTripRequest(trip);
       setTimer(30);
-      try { window.alert(`NUEVO VIAJE RECIBIDO por ${formatCLP(trip.estimatedPrice)}`); } catch(e){}
       sendLocalNotification("¡Nueva Solicitud de Viaje!", `Tienes un viaje disponible por ${formatCLP(trip.estimatedPrice)}.`);
       if (timerRef.current) clearInterval(timerRef.current);
       timerRef.current = setInterval(() => {

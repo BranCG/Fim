@@ -515,14 +515,17 @@ export default function PassengerPage() {
 
   const checkActiveTrip = useCallback(async () => {
     try {
-      const res = await api.get('/trips/active');
+      const res = await api.get(`/trips/active?t=${Date.now()}`);
       if (res.data.trip) {
         const trip = res.data.trip;
         setCurrentTrip(prev => {
-          const activeOtp = (trip.paymentStatus === 'requested' || trip.paymentStatus === 'otp_verified' || trip.paymentStatus === 'passenger_confirmed')
-            ? (trip.dropoffOtpCode || prev?.otpCode)
-            : (trip.otpCode || prev?.otpCode);
-          return { id: trip.id, otpCode: activeOtp, estimatedPrice: trip.estimatedPrice };
+          let activeOtp = prev?.otpCode;
+          if (trip.paymentStatus === 'requested' || trip.paymentStatus === 'otp_verified' || trip.paymentStatus === 'passenger_confirmed') {
+            activeOtp = trip.dropoffOtpCode || prev?.dropoffOtpCode || activeOtp;
+          } else {
+            activeOtp = trip.otpCode || activeOtp;
+          }
+          return { ...(prev || {}), id: trip.id, otpCode: activeOtp, dropoffOtpCode: trip.dropoffOtpCode, estimatedPrice: trip.estimatedPrice };
         });
         setStatus(trip.status);
         if (trip.originLat && trip.originLng) {

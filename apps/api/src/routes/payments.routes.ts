@@ -517,7 +517,6 @@ router.post('/trip/:id/auto-charge', async (req, res) => {
         token: trip.passenger.mpCardToken,
         description: `Viaje Fim - ${trip.destAddress}`,
         installments: 1,
-        payment_method_id: 'master', // O el que provea el frontend
         payer: {
           email: trip.passenger.email,
         },
@@ -550,9 +549,9 @@ router.post('/trip/:id/auto-charge', async (req, res) => {
       res.status(400).json({ error: 'Pago rechazado por MercadoPago', status: response.status });
     }
 
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error procesando pago automático:', error);
-    res.status(500).json({ error: 'Error interno al procesar el pago del viaje' });
+    res.status(500).json({ error: 'Error al procesar el pago automático: ' + (error.message || 'Desconocido') });
   }
 });
 
