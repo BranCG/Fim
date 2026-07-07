@@ -336,6 +336,8 @@ router.get('/me', requireAuth, async (req: Request, res: Response) => {
           idFrontUrl: user.idFrontUrl,
           idBackUrl: user.idBackUrl,
           selfieUrl: user.selfieUrl,
+          mpCardToken: user.mpCardToken,
+          paymentMethod: user.paymentMethod,
         }
       });
     }

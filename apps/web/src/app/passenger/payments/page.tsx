@@ -15,6 +15,14 @@ export default function PassengerPaymentsPage() {
   const [cvc, setCvc] = useState('');
   const router = useRouter();
 
+  const handleExpiryChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    let val = e.target.value.replace(/\D/g, '');
+    if (val.length >= 3) {
+      val = val.slice(0, 2) + '/' + val.slice(2, 4);
+    }
+    setExpiry(val);
+  };
+
   useEffect(() => {
     const userStr = localStorage.getItem('fim_user');
     if (!userStr) {
@@ -155,7 +163,8 @@ export default function PassengerPaymentsPage() {
                   type="text" 
                   placeholder="12/25" 
                   value={expiry}
-                  onChange={e => setExpiry(e.target.value)}
+                  onChange={handleExpiryChange}
+                  maxLength={5}
                   className="w-full bg-background border border-border rounded-xl px-4 py-3.5 text-sm font-medium text-white placeholder-white/20 focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-all text-center tracking-widest"
                   required
                 />
@@ -166,7 +175,8 @@ export default function PassengerPaymentsPage() {
                   type="text" 
                   placeholder="123" 
                   value={cvc}
-                  onChange={e => setCvc(e.target.value)}
+                  maxLength={4}
+                  onChange={e => setCvc(e.target.value.replace(/\D/g, ''))}
                   className="w-full bg-background border border-border rounded-xl px-4 py-3.5 text-sm font-medium text-white placeholder-white/20 focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-all text-center tracking-widest"
                   required
                 />

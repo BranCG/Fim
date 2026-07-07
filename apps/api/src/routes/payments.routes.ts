@@ -9,9 +9,9 @@ import { requireAuth, requireRole } from '../middleware/auth';
 import { Request, Response } from 'express';
 dotenv.config();
 
-const client = new MercadoPagoConfig({ 
-  accessToken: process.env.MP_ACCESS_TOKEN || '', 
-  options: { timeout: 5000 } 
+const client = new MercadoPagoConfig({
+  accessToken: process.env.MP_ACCESS_TOKEN || '',
+  options: { timeout: 5000 }
 });
 
 const preference = new Preference(client);
@@ -36,7 +36,7 @@ router.post('/membership/create-preference', async (req, res) => {
       where: { key: { in: ['membership_black_promo_price', 'membership_flex_promo_price', 'membership_comfort_promo_price'] } }
     });
     const configMap = configs.reduce((acc: any, curr: any) => ({ ...acc, [curr.key]: curr.value }), {});
-    
+
     const blackPrice = parseInt((configMap.membership_black_promo_price || '49990').toString().replace(/\D/g, ''), 10);
     const flexPrice = parseInt((configMap.membership_flex_promo_price || '19990').toString().replace(/\D/g, ''), 10);
     const comfortPrice = parseInt((configMap.membership_comfort_promo_price || '8990').toString().replace(/\D/g, ''), 10);
@@ -51,7 +51,7 @@ router.post('/membership/create-preference', async (req, res) => {
     let finalAmount = config.amount;
     const goal = plan === 'BLACK' ? 150 : 0;
     const hasDiscount = (driver.nextDiscount !== undefined && driver.nextDiscount > 0) || (driver.membershipProgress >= goal);
-    
+
     if (hasDiscount && plan === 'BLACK') {
       finalAmount = Math.round(finalAmount * 0.8); // 20% dcto
     }
@@ -113,7 +113,7 @@ router.post('/membership-webhook', async (req, res) => {
                 }
               });
               console.log(`✅ COMFORT: Conductor ${driverId} pagó cuota diaria vía Mercado Pago. Deuda restante: $${newDebt}`);
-              
+
               const comfortConfig = await prisma.systemConfig.findUnique({ where: { key: 'membership_comfort_promo_price' } });
               const comfortPromoPrice = parseInt((comfortConfig?.value || '8990').toString().replace(/\D/g, ''), 10);
               const formattedComfortAmount = new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP' }).format(comfortPromoPrice);
@@ -143,7 +143,7 @@ router.post('/membership-webhook', async (req, res) => {
                 }
               });
               console.log(`✅ Membresía ${plan} activada para conductor ${driverId} hasta ${expiresAt.toLocaleDateString('es-CL')}`);
-              
+
               // Notificar al admin
               const configs = await prisma.systemConfig.findMany({
                 where: { key: { in: ['membership_black_promo_price', 'membership_flex_promo_price'] } }
@@ -153,7 +153,7 @@ router.post('/membership-webhook', async (req, res) => {
               const blackPromoPrice = parseInt((configMap.membership_black_promo_price || '49990').toString().replace(/\D/g, ''), 10);
               const flexPromoPrice = parseInt((configMap.membership_flex_promo_price || '19990').toString().replace(/\D/g, ''), 10);
               const blackFinalPrice = hasBlackDiscount ? blackPromoPrice * 0.8 : blackPromoPrice;
-              
+
               const amountValue = plan === 'BLACK' ? blackFinalPrice : flexPromoPrice;
               const formattedAmount = new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP' }).format(amountValue);
 
@@ -189,13 +189,13 @@ router.post('/membership/simulate', async (req, res) => {
 
     await prisma.driver.update({
       where: { id: driverId },
-      data: { 
-        membershipPaid: true, 
-        membershipDate: now, 
-        membershipExpiresAt: expiresAt, 
-        membershipPlan: plan, 
+      data: {
+        membershipPaid: true,
+        membershipDate: now,
+        membershipExpiresAt: expiresAt,
+        membershipPlan: plan,
         isTrial: false, // Terminar periodo de prueba al pagar
-        status: 'active' 
+        status: 'active'
       }
     });
 
@@ -216,7 +216,7 @@ router.get('/oauth/callback', async (req, res) => {
     }
 
     const driverId = String(state);
-    
+
     const clientId = process.env.MP_CLIENT_ID || '';
     const clientSecret = process.env.MP_CLIENT_SECRET || '';
     const apiBaseUrl = process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || 'https://api.fimchile.cl';
@@ -364,7 +364,7 @@ router.post('/webhook', async (req, res) => {
   try {
     // Mercado Pago envía notificaciones POST aquí
     console.log('🔔 Webhook de Mercado Pago recibido:', req.query, req.body);
-    
+
     // El query o body contiene `type` y `data.id`
     // Para suscripciones, suele ser topic=preapproval o type=subscription_preapproval
     const type = req.query.type || req.query.topic;
@@ -493,20 +493,20 @@ router.post('/trip/:id/auto-charge', async (req, res) => {
 
     let grossAmount = trip.finalPrice || trip.estimatedPrice;
     grossAmount = roundCLP(grossAmount);
-    
+
     // Queremos que el conductor reciba exactamente `grossAmount` líquidos.
     // MercadoPago descuenta ~4.15% del total cobrado.
     // Formula: Total_a_cobrar = Monto_liquido / (1 - comision)
-    const amountToChargePassenger = Math.round(grossAmount / (1 - 0.0415)); 
+    const amountToChargePassenger = Math.round(grossAmount / (1 - 0.0415));
     const mpFee = amountToChargePassenger - grossAmount;
     const fimFee = 0; // Fim no cobra comisión por viaje
-    
+
     const amountToDriver = grossAmount;
 
     // Configurar cliente MP usando el token del CONDUCTOR (para que el dinero le caiga a él)
-    const driverMpClient = new MercadoPagoConfig({ 
+    const driverMpClient = new MercadoPagoConfig({
       accessToken: trip.driver.mpAccessToken,
-      options: { timeout: 5000 } 
+      options: { timeout: 5000 }
     });
     const payment = new Payment(driverMpClient);
 
@@ -563,7 +563,7 @@ router.post('/trip-webhook', async (req, res) => {
     // NOTA: En desarrollo local sin ngrok, este webhook no será llamado por Mercado Pago.
     // Para probar en local, el frontend tendrá que llamar a un endpoint de confirmación manual,
     // o podemos simular este webhook enviando un POST manualmente.
-    
+
     const paymentId = req.query['data.id'] || req.body?.data?.id;
     const type = req.query.type || req.body?.type;
 
@@ -571,26 +571,26 @@ router.post('/trip-webhook', async (req, res) => {
       // Idealmente aquí consultamos a la API de MP usando Payment.get({ id: paymentId })
       // para validar que el pago esté aprobado y obtener el external_reference (tripId).
       // Simularemos la lógica asumiendo que llega el external_reference en el body para pruebas.
-      
+
       const tripId = req.body?.external_reference || req.query.external_reference;
-      
+
       if (tripId) {
         const trip = await prisma.trip.findUnique({ where: { id: tripId as string } });
-        
+
         if (trip && !trip.isPaid && trip.driverId) {
           // 1. Marcar viaje como pagado
           await prisma.trip.update({
             where: { id: trip.id },
             data: { isPaid: true, paymentStatus: 'paid', mpPaymentId: String(paymentId) }
           });
-          
+
           // 2. Sumar saldo a la billetera del conductor
           const price = trip.finalPrice || trip.estimatedPrice;
           await prisma.driver.update({
             where: { id: trip.driverId },
             data: { walletBalance: { increment: price } }
           });
-          
+
           console.log(`✅ Pago de viaje ${trip.id} procesado. $${price} sumados a la billetera del conductor ${trip.driverId}.`);
         }
       }
@@ -608,20 +608,20 @@ router.post('/trip/:id/simulate-payment', async (req, res) => {
   try {
     const { id } = req.params;
     const trip = await prisma.trip.findUnique({ where: { id } });
-    
+
     if (trip && !trip.isPaid && trip.driverId) {
       const price = trip.finalPrice || trip.estimatedPrice;
-      
+
       await prisma.trip.update({
         where: { id: trip.id },
         data: { isPaid: true, paymentStatus: 'paid' }
       });
-      
+
       await prisma.driver.update({
         where: { id: trip.driverId },
         data: { walletBalance: { increment: price } }
       });
-      
+
       console.log(`✅ SIMULACRO: Viaje ${trip.id} pagado. $${price} a la billetera.`);
       return res.json({ success: true, message: 'Pago simulado correctamente' });
     }
