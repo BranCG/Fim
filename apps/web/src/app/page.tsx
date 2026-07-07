@@ -51,10 +51,10 @@ export default function Home() {
       else router.replace('/passenger');
     } else {
       if (typeof window !== 'undefined') {
-        // Redirigir a /login directo si es APK nativa, para no mostrar la landing page
+        // Redirigir a /mobile si es APK nativa, para mostrar la landing de la app
         const isNative = (window as any).Capacitor?.isNativePlatform?.() || (window as any).Capacitor?.isNative;
         if (isNative) {
-          router.replace('/login');
+          router.replace('/mobile');
         }
       }
     }

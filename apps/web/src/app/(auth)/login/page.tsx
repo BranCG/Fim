@@ -405,7 +405,7 @@ export default function LoginPage() {
     <div className="app-container" style={{ background: 'var(--bg-primary)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', padding: '24px' }}>
 
       <div style={{ position: 'absolute', top: '24px', left: '24px' }}>
-        <Link href="/" style={{ color: 'var(--text-muted)', fontSize: '0.85rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <Link href={isMobile ? '/mobile' : '/'} style={{ color: 'var(--text-muted)', fontSize: '0.85rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '8px' }}>
           ← REGRESAR AL INICIO
         </Link>
       </div>
