@@ -251,7 +251,9 @@ router.get('/oauth/callback', async (req, res) => {
     });
 
     // Redirigir de vuelta a la app (Deep link o Web)
-    const webBaseUrl = process.env.NEXT_PUBLIC_WEB_URL || 'http://localhost:3000';
+    const webBaseUrl = process.env.CLIENT_URL === 'http://localhost:3000' && process.env.NODE_ENV === 'production' 
+      ? 'https://fimchile.cl' 
+      : (process.env.CLIENT_URL || 'https://fimchile.cl');
     res.redirect(`${webBaseUrl}/driver/compliance?success=oauth`);
 
   } catch (error) {
