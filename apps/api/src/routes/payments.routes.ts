@@ -516,9 +516,9 @@ router.post('/trip/:id/auto-charge', async (req, res) => {
       description: `Viaje Fim - ${trip.destAddress}`,
       installments: 1,
       payer: {
-        // MP rechaza correos reales en entorno de pruebas. Usamos uno ficticio si el token es TEST.
+        // MP exige que el comprador sea el usuario de prueba registrado si usamos token TEST.
         email: trip.driver.mpAccessToken?.startsWith('TEST-') 
-          ? `test_user_${Math.floor(Math.random() * 1000000)}@testuser.com`
+          ? 'testuser6739155661390234246@testuser.com'
           : trip.passenger.email,
       },
       external_reference: trip.id,
