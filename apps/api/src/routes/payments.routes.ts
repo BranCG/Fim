@@ -217,8 +217,8 @@ router.get('/oauth/callback', async (req, res) => {
     
     const clientId = process.env.MP_CLIENT_ID || '';
     const clientSecret = process.env.MP_CLIENT_SECRET || '';
-    const baseUrl = process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || 'https://api.fimchile.cl';
-    const redirectUri = process.env.MP_REDIRECT_URI || `${baseUrl}/api/payments/oauth/callback`;
+    const apiBaseUrl = process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || 'https://api.fimchile.cl';
+    const redirectUri = process.env.MP_REDIRECT_URI || `${apiBaseUrl}/api/payments/oauth/callback`;
 
     // Intercambiar código por token
     const tokenResponse = await fetch('https://api.mercadopago.com/oauth/token', {
@@ -251,8 +251,8 @@ router.get('/oauth/callback', async (req, res) => {
     });
 
     // Redirigir de vuelta a la app (Deep link o Web)
-    const baseUrl = process.env.NEXT_PUBLIC_WEB_URL || 'http://localhost:3000';
-    res.redirect(`${baseUrl}/driver/compliance?success=oauth`);
+    const webBaseUrl = process.env.NEXT_PUBLIC_WEB_URL || 'http://localhost:3000';
+    res.redirect(`${webBaseUrl}/driver/compliance?success=oauth`);
 
   } catch (error) {
     console.error('Error en OAuth Callback:', error);
