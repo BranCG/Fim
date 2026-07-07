@@ -5,6 +5,8 @@ import { MercadoPagoConfig, Preference } from 'mercadopago';
 import { roundCLP } from '../utils/pricing';
 import { sendAdminPaymentNotification } from '../utils/mailer';
 import dotenv from 'dotenv';
+import { requireAuth, requireRole } from '../middleware/auth';
+import { Request, Response } from 'express';
 dotenv.config();
 
 const client = new MercadoPagoConfig({ 
@@ -287,6 +289,25 @@ router.get('/oauth/callback', async (req, res) => {
   } catch (error) {
     console.error('Error en OAuth Callback:', error);
     res.status(500).send('Error interno en OAuth');
+  }
+});
+
+// Desvincular cuenta de Mercado Pago
+router.post('/oauth/unlink', requireAuth, requireRole('driver'), async (req: Request, res: Response) => {
+  try {
+    const driverId = req.user!.id;
+    await prisma.driver.update({
+      where: { id: driverId },
+      data: {
+        mpAccessToken: null,
+        mpRefreshToken: null,
+        mpUserId: null
+      }
+    });
+    return res.json({ success: true, message: 'Cuenta desvinculada exitosamente' });
+  } catch (error) {
+    console.error('Error al desvincular cuenta MP:', error);
+    return res.status(500).json({ error: 'No se pudo desvincular la cuenta' });
   }
 });
 

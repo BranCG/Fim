@@ -68,6 +68,21 @@ function ComplianceContent() {
     window.location.href = url;
   };
 
+  const handleUnlink = async () => {
+    if (!confirm('¿Estás seguro que deseas desvincular tu cuenta de Mercado Pago? No podrás recibir pagos automáticos hasta que vincules una nueva.')) return;
+    
+    try {
+      setLoading(true);
+      await api.post('/payments/oauth/unlink');
+      alert('Cuenta desvinculada exitosamente');
+      fetchData();
+    } catch (err) {
+      console.error(err);
+      alert('Error al desvincular la cuenta');
+      setLoading(false);
+    }
+  };
+
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !driver) return;
@@ -156,7 +171,7 @@ function ComplianceContent() {
             )}
           </div>
 
-          {!isLinked && (
+          {!isLinked ? (
             <button
               onClick={handleOAuthLink}
               className="w-full relative overflow-hidden group flex items-center justify-center gap-2 py-4 rounded-xl font-bold text-sm transition-all duration-300 bg-[#009EE3] text-white hover:bg-[#008CDE] hover:scale-[1.02] active:scale-95"
@@ -164,6 +179,21 @@ function ComplianceContent() {
               <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
               <span className="relative z-10">Vincular cuenta de Mercado Pago</span>
             </button>
+          ) : (
+            <div className="mt-4 p-4 bg-black/20 rounded-xl border border-white/5 flex flex-col md:flex-row md:items-center justify-between gap-4 animate-fade-in">
+              <div>
+                <p className="text-[10px] text-text-muted uppercase tracking-widest mb-1 font-bold">Cuenta vinculada (ID MP)</p>
+                <p className="text-sm font-mono text-white/90 bg-white/5 px-2 py-1 rounded inline-block">
+                  {driver?.mpUserId || 'ID Oculto'}
+                </p>
+              </div>
+              <button
+                onClick={handleUnlink}
+                className="text-xs text-danger-hover hover:text-white bg-danger/10 hover:bg-danger px-4 py-2 rounded-lg font-semibold transition-all"
+              >
+                Cambiar / Desvincular
+              </button>
+            </div>
           )}
         </div>
 
