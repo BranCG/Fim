@@ -217,7 +217,8 @@ router.get('/oauth/callback', async (req, res) => {
     
     const clientId = process.env.MP_CLIENT_ID || '';
     const clientSecret = process.env.MP_CLIENT_SECRET || '';
-    const redirectUri = process.env.MP_REDIRECT_URI || `${process.env.API_URL || 'http://localhost:3001'}/api/payments/oauth/callback`;
+    const baseUrl = process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || 'https://api.fimchile.cl';
+    const redirectUri = process.env.MP_REDIRECT_URI || `${baseUrl}/api/payments/oauth/callback`;
 
     // Intercambiar código por token
     const tokenResponse = await fetch('https://api.mercadopago.com/oauth/token', {
