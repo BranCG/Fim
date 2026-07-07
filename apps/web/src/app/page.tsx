@@ -49,17 +49,13 @@ export default function Home() {
       if (s.user.role === 'admin') router.replace('/admin');
       else if (s.user.role === 'driver') router.replace('/driver');
       else router.replace('/passenger');
-    }
-  }, [router]);
-
-  useEffect(() => {
-    // Si el usuario abre esto desde la aplicación nativa (Android/iOS), 
-    // lo enviamos a la vista clásica de la app (/mobile).
-    if (typeof window !== 'undefined') {
-      const isMobileApp = (window as any).Capacitor && (window as any).Capacitor.isNative;
-
-      if (isMobileApp) {
-        router.replace('/mobile');
+    } else {
+      if (typeof window !== 'undefined') {
+        // Redirigir a /login directo si es APK nativa, para no mostrar la landing page
+        const isNative = (window as any).Capacitor?.isNativePlatform?.() || (window as any).Capacitor?.isNative;
+        if (isNative) {
+          router.replace('/login');
+        }
       }
     }
   }, [router]);
