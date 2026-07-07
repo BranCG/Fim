@@ -525,7 +525,14 @@ export default function PassengerPage() {
           } else {
             activeOtp = trip.otpCode || activeOtp;
           }
-          return { ...(prev || {}), id: trip.id, otpCode: activeOtp, dropoffOtpCode: trip.dropoffOtpCode, estimatedPrice: trip.estimatedPrice };
+          return { 
+            ...(prev || {}), 
+            ...trip, 
+            id: trip.id, 
+            otpCode: activeOtp, 
+            dropoffOtpCode: trip.dropoffOtpCode || prev?.dropoffOtpCode, 
+            estimatedPrice: trip.estimatedPrice 
+          };
         });
         setStatus(trip.status);
         if (trip.originLat && trip.originLng) {

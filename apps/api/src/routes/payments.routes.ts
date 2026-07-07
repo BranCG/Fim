@@ -510,19 +510,24 @@ router.post('/trip/:id/auto-charge', async (req, res) => {
     });
     const payment = new Payment(driverMpClient);
 
+    const bodyData: any = {
+      transaction_amount: amountToChargePassenger,
+      token: trip.passenger.mpCardToken,
+      description: `Viaje Fim - ${trip.destAddress}`,
+      installments: 1,
+      payer: {
+        email: trip.passenger.email,
+      },
+      external_reference: trip.id,
+    };
+
+    if (fimFee > 0) {
+      bodyData.application_fee = fimFee;
+    }
+
     // Crear el pago automático
     const response = await payment.create({
-      body: {
-        transaction_amount: amountToChargePassenger,
-        token: trip.passenger.mpCardToken,
-        description: `Viaje Fim - ${trip.destAddress}`,
-        installments: 1,
-        payer: {
-          email: trip.passenger.email,
-        },
-        application_fee: fimFee, // Comisión para la plataforma Fim
-        external_reference: trip.id,
-      }
+      body: bodyData
     });
 
     // Registrar pago y boleta interna
