@@ -16,6 +16,21 @@ function ComplianceContent() {
 
   useEffect(() => {
     fetchData();
+    
+    // Escuchar cuando el usuario vuelve a la app (cierra el navegador)
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        fetchData();
+      }
+    };
+    
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('focus', fetchData);
+    
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('focus', fetchData);
+    };
   }, []);
 
   const fetchData = async () => {
@@ -27,7 +42,15 @@ function ComplianceContent() {
         return;
       }
       const user = JSON.parse(userStr);
-      setDriver(user);
+
+      try {
+        const driverRes = await api.get(`/drivers/${user.id}`);
+        const updatedDriver = driverRes.data;
+        localStorage.setItem('fim_user', JSON.stringify({ ...user, ...updatedDriver }));
+        setDriver(updatedDriver);
+      } catch (err) {
+        setDriver(user); // fallback
+      }
 
       const docsRes = await api.get(`/tax/driver/${user.id}`);
       setDocuments(docsRes.data);

@@ -250,11 +250,39 @@ router.get('/oauth/callback', async (req, res) => {
       }
     });
 
-    // Redirigir de vuelta a la app (Deep link o Web)
-    const webBaseUrl = process.env.CLIENT_URL === 'http://localhost:3000' && process.env.NODE_ENV === 'production' 
-      ? 'https://fimchile.cl' 
-      : (process.env.CLIENT_URL || 'https://fimchile.cl');
-    res.redirect(`${webBaseUrl}/driver/compliance?success=oauth`);
+    // Enviar una pantalla HTML de éxito en lugar de redirigir a la web, 
+    // para que el conductor pueda cerrar la pestaña y volver a la app nativa.
+    res.send(`
+      <!DOCTYPE html>
+      <html lang="es">
+      <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Fim - Vinculación Exitosa</title>
+        <style>
+          body { margin: 0; padding: 0; background-color: #050505; color: #ffffff; font-family: 'Inter', system-ui, sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; text-align: center; }
+          .container { max-width: 400px; padding: 40px 20px; }
+          .icon { width: 80px; height: 80px; background-color: rgba(16, 185, 129, 0.1); border: 2px solid #10b981; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 24px auto; }
+          .icon svg { width: 40px; height: 40px; color: #10b981; }
+          h1 { font-size: 24px; margin: 0 0 12px 0; font-weight: 800; }
+          p { color: #a1a1aa; font-size: 16px; line-height: 1.5; margin: 0 0 32px 0; }
+          .btn { display: inline-block; background-color: #d4af37; color: #000; padding: 16px 32px; border-radius: 12px; font-weight: bold; text-decoration: none; font-size: 16px; }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="icon">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+            </svg>
+          </div>
+          <h1>¡Cuenta Vinculada!</h1>
+          <p>Tu cuenta de Mercado Pago ha sido vinculada exitosamente a Fim para recibir pagos de viajes.</p>
+          <p style="color: white; font-weight: bold;">Ya puedes cerrar esta ventana y volver a la aplicación Fim.</p>
+        </div>
+      </body>
+      </html>
+    `);
 
   } catch (error) {
     console.error('Error en OAuth Callback:', error);
