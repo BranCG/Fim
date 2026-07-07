@@ -44,8 +44,8 @@ function ComplianceContent() {
       const user = JSON.parse(userStr);
 
       try {
-        const driverRes = await api.get(`/drivers/${user.id}`);
-        const updatedDriver = driverRes.data;
+        const driverRes = await api.get(`/drivers/me`);
+        const updatedDriver = driverRes.data.driver;
         localStorage.setItem('fim_user', JSON.stringify({ ...user, ...updatedDriver }));
         setDriver(updatedDriver);
       } catch (err) {
