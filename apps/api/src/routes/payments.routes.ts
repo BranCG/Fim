@@ -237,7 +237,7 @@ router.get('/oauth/callback', async (req, res) => {
 
     if (!tokenData.access_token) {
       console.error('Error de OAuth MP:', tokenData);
-      return res.status(400).send('No se pudo obtener el token de MercadoPago');
+      return res.status(400).send(`No se pudo obtener el token de MercadoPago. Detalles: ${JSON.stringify(tokenData)}`);
     }
 
     // Guardar tokens en el conductor
