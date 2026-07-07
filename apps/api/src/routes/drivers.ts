@@ -24,7 +24,7 @@ router.get('/me', requireAuth, requireRole('driver'), async (req: Request, res: 
         vehicleBrand: true, vehicleModel: true, vehicleYear: true,
         vehiclePlate: true, vehiclePhotoUrl: true, tagNumber: true,
         totalRating: true, totalTrips: true,
-        adminNotes: true, mpAccessToken: true, walletBalance: true,
+        adminNotes: true, mpAccessToken: true, mpUserId: true, walletBalance: true,
         isTrial: true, nextDiscount: true,
         giftDaysPending: true,
         createdAt: true,
