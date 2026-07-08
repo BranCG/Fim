@@ -991,8 +991,14 @@ export default function PassengerPage() {
       setStatus('driver_arrived');
     });
 
-    socket.on('trip:started', () => {
+    socket.on('trip:started', (data?: { trip?: any }) => {
       console.log('[Socket] El viaje ha iniciado');
+      if (data?.trip) {
+        setCurrentTrip((prev: any) => ({ ...prev, ...data.trip }));
+        if (data.trip.paymentMethod) {
+          setPaymentMethod(data.trip.paymentMethod);
+        }
+      }
       sendLocalNotification("¡Viaje Iniciado!", "Tu viaje hacia el destino ha comenzado. ¡Buen viaje!");
       setStatus('in_progress');
     });
@@ -2591,19 +2597,21 @@ export default function PassengerPage() {
                     </div>
                   </div>
 
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '20px' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: currentTrip?.paymentMethod === 'cash' ? '1fr' : '1fr 1fr', gap: '12px', marginBottom: '20px' }}>
                     <button 
                       className={`btn ${paymentMethod === 'cash' ? 'btn-primary' : 'btn-secondary'}`}
                       onClick={() => setPaymentMethod('cash')}
                     >
                       <IconCash /> Efectivo
                     </button>
-                    <button 
-                      className={`btn ${paymentMethod === 'card' ? 'btn-primary' : 'btn-secondary'}`}
-                      onClick={() => setPaymentMethod('card')}
-                    >
-                      <IconCard /> Mercado Pago
-                    </button>
+                    {currentTrip?.paymentMethod !== 'cash' && (
+                      <button 
+                        className={`btn ${paymentMethod === 'card' ? 'btn-primary' : 'btn-secondary'}`}
+                        onClick={() => setPaymentMethod('card')}
+                      >
+                        <IconCard /> Mercado Pago
+                      </button>
+                    )}
                   </div>
 
                   {!paymentSent ? (
