@@ -14,7 +14,7 @@ export default function PassengerPaymentsPage() {
 
   useEffect(() => {
     // Inicializar SDK de Mercado Pago. Se requiere la Public Key en el .env
-    const publicKey = process.env.NEXT_PUBLIC_MP_PUBLIC_KEY || 'TEST-8fe6a928-8de1-4177-ad61-2b0c169a8e97'; // Reemplazar con real si no hay env
+    const publicKey = process.env.NEXT_PUBLIC_MP_PUBLIC_KEY || 'TEST-8a1b9f71-79b9-40e5-afd2-89c46b518057';
     initMercadoPago(publicKey, { locale: 'es-CL' });
 
     const userStr = localStorage.getItem('fim_user');
