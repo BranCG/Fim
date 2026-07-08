@@ -158,7 +158,10 @@ function ComplianceContent() {
                 <LinkIcon size={22} className="text-accent" />
                 Recepción de Pagos
               </h2>
-              <p className="text-text-muted text-xs mt-1.5 m-0">Vincula tu cuenta para recibir ganancias al instante.</p>
+              <p className="text-text-muted text-xs mt-1.5 m-0 leading-relaxed">
+                Debes crear y vincular una <strong>cuenta de Mercado Pago</strong> para poder recibir tus ganancias. 
+                El pasajero te pagará automáticamente al iniciar el viaje (asumiendo un 4,15% de comisión de la pasarela).
+              </p>
             </div>
             {isLinked ? (
               <span className="bg-success/10 text-success text-xs px-2 py-1 rounded-md font-semibold flex items-center gap-1">

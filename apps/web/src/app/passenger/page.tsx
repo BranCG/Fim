@@ -2213,9 +2213,17 @@ export default function PassengerPage() {
                 className={`btn ${paymentMethod === 'card' ? 'btn-primary' : 'btn-secondary'}`}
                 onClick={() => setPaymentMethod('card')}
               >
-                <IconCard /> Tarjeta
+                <IconCard /> Tarjeta (MP)
               </button>
             </div>
+            {paymentMethod === 'card' && (
+              <div style={{ marginTop: '12px', padding: '12px', background: 'rgba(0, 158, 227, 0.1)', border: '1px solid rgba(0, 158, 227, 0.3)', borderRadius: 'var(--radius)', fontSize: '0.75rem', color: '#009ee3', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                <span style={{ fontWeight: 600 }}>ℹ️ Información importante:</span>
+                <span>• Debes tener una <strong>cuenta de Mercado Pago</strong> activa.</span>
+                <span>• El cobro se realiza <strong>al comenzar el viaje</strong> de forma segura (Checkout Pro).</span>
+                <span>• Se aplicará una comisión del <strong>4,15%</strong> sobre el costo del viaje a cargo del pasajero.</span>
+              </div>
+            )}
           </div>
 
           <div style={{ marginBottom: '24px' }}>
