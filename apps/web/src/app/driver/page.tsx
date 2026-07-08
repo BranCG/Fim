@@ -180,6 +180,7 @@ export default function DriverPage() {
   const [tripRequest, setTripRequest] = useState<TripRequest | null>(null);
   const [activeTrip, setActiveTrip] = useState<any>(null);
   const [tripPhase, setTripPhase] = useState<'going_to_passenger' | 'arrived' | 'in_progress'>('going_to_passenger');
+  const [paymentFailedMsg, setPaymentFailedMsg] = useState('');
   const [arrivedAt, setArrivedAt] = useState<number | null>(null);
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [selectedCancelOption, setSelectedCancelOption] = useState('');
@@ -755,7 +756,14 @@ export default function DriverPage() {
     socket.on('trip:started', (data?: { trip?: any }) => {
       if (!data?.trip?.id || (activeTripRef.current && data.trip.id === activeTripRef.current.id)) {
         setTripPhase('in_progress');
+        // Asegurarnos de limpiar cualquier modal de fallo anterior si inicia bien
+        setPaymentFailedMsg('');
       }
+    });
+
+    socket.on('trip:payment-failed', (data: { message: string }) => {
+      console.log('[Socket] Fallo de cobro anticipado:', data.message);
+      setPaymentFailedMsg(data.message);
     });
 
     socket.on('trip:passenger-confirmed-payment', (data: { tripId?: string; receiptUrl?: string }) => {
@@ -2736,6 +2744,78 @@ export default function DriverPage() {
                 }}
               >
                 Confirmar
+              </button>
+            </div>
+          </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Fallo de Cobro Anticipado */}
+      {paymentFailedMsg && (
+        <div style={{
+          position: 'fixed',
+          inset: 0,
+          background: 'rgba(0,0,0,0.85)',
+          backdropFilter: 'blur(10px)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 9999,
+          padding: '20px'
+        }}>
+          <div style={{
+            background: 'var(--bg-secondary)',
+            border: '1px solid var(--border)',
+            borderRadius: 'var(--radius-lg)',
+            width: '100%',
+            maxWidth: '400px',
+            padding: '24px',
+            boxShadow: 'var(--shadow-lg)',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '20px',
+            textAlign: 'center'
+          }}>
+            <div style={{ 
+              width: '60px', height: '60px', borderRadius: '50%', background: 'rgba(255, 59, 48, 0.1)', 
+              display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto', color: 'var(--danger)' 
+            }}>
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="12" y1="8" x2="12" y2="12"></line>
+                <line x1="12" y1="16" x2="12.01" y2="16"></line>
+              </svg>
+            </div>
+            
+            <div>
+              <h3 style={{ margin: '0 0 8px 0', fontWeight: 900, fontSize: '1.25rem', color: 'white' }}>Pago Rechazado</h3>
+              <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', lineHeight: 1.5, margin: 0 }}>
+                {paymentFailedMsg}
+              </p>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              <button
+                className="btn btn-primary"
+                onClick={() => {
+                  const socket = connectSocket();
+                  if (activeTripRef.current) {
+                    socket.emit('driver:change-payment-to-cash', { tripId: activeTripRef.current.id });
+                    setPaymentFailedMsg('');
+                  }
+                }}
+              >
+                Cambiar a Efectivo e Iniciar
+              </button>
+              <button
+                className="btn btn-secondary"
+                onClick={() => {
+                  setPaymentFailedMsg('');
+                  setShowCancelModal(true); // Abre el modal normal de cancelación
+                }}
+              >
+                Cancelar este Viaje
               </button>
             </div>
           </div>

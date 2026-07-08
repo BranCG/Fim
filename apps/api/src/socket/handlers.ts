@@ -336,9 +336,99 @@ export function setupSocketHandlers(io: Server) {
           return socket.emit('error', { message: 'Código de seguridad incorrecto. Pídelo al pasajero.' });
         }
 
+        // 1. Lógica de cobro anticipado si usa tarjeta
+        let isPaid = false;
+        let paymentStatus = 'pending';
+        let mpPaymentId = null;
+
+        if (trip.paymentMethod === 'card') {
+          // Obtener token y driver
+          const tripDetails = await prisma.trip.findUnique({
+            where: { id: tripId },
+            include: { passenger: true, driver: true }
+          });
+
+          if (tripDetails?.passenger?.mpCardToken && tripDetails?.driver?.mpAccessToken) {
+            try {
+              const { MercadoPagoConfig, Payment } = require('mercadopago');
+              
+              let grossAmount = tripDetails.estimatedPrice;
+              grossAmount = Math.round(grossAmount);
+              
+              // Cobramos comisión a favor del conductor
+              const amountToChargePassenger = Math.round(grossAmount / (1 - 0.0415));
+              const mpFee = amountToChargePassenger - grossAmount;
+              
+              const driverMpClient = new MercadoPagoConfig({
+                accessToken: tripDetails.driver.mpAccessToken,
+                options: { timeout: 5000 }
+              });
+              const payment = new Payment(driverMpClient);
+              
+              const bodyData: any = {
+                transaction_amount: amountToChargePassenger,
+                token: tripDetails.passenger.mpCardToken,
+                description: `Viaje Fim - ${tripDetails.destAddress}`,
+                installments: 1,
+                payer: {
+                  email: tripDetails.driver.mpAccessToken.startsWith('TEST-') 
+                    ? 'testuser6739155661390234246@testuser.com'
+                    : tripDetails.passenger.email,
+                },
+                external_reference: tripDetails.id,
+              };
+
+              let response: any;
+              
+              // Simulador para desarrollo
+              if (tripDetails.passenger.mpCardToken.startsWith('tok_') && tripDetails.passenger.mpCardToken.length < 20) {
+                console.log('Simulando pago exitoso (fakeToken)...');
+                response = { status: 'approved', id: Math.floor(Math.random() * 10000000000).toString() };
+              } else {
+                response = await payment.create({ body: bodyData });
+              }
+
+              if (response.status === 'approved' || response.status === 'in_process') {
+                isPaid = true;
+                paymentStatus = response.status;
+                mpPaymentId = String(response.id);
+
+                // Crear recibo interno inmediatamente
+                await prisma.tripReceipt.create({
+                  data: {
+                    tripId: tripDetails.id,
+                    passengerId: tripDetails.passengerId,
+                    driverId: tripDetails.driverId as string,
+                    grossAmount: amountToChargePassenger,
+                    netAmount: grossAmount,
+                    mpFee: mpFee,
+                    fimFee: 0
+                  }
+                });
+              } else {
+                // Pago rechazado o fallido
+                return socket.emit('trip:payment-failed', { message: 'Pago rechazado por Mercado Pago. Saldo insuficiente.' });
+              }
+
+            } catch (err: any) {
+              console.error('[Socket] Error procesando cobro anticipado:', err);
+              return socket.emit('trip:payment-failed', { message: 'Error procesando la tarjeta. Invita al pasajero a cambiar a efectivo.' });
+            }
+          } else {
+            return socket.emit('trip:payment-failed', { message: 'El pasajero o conductor no tienen métodos de pago válidos configurados.' });
+          }
+        }
+
+        // 2. Iniciar el viaje si el cobro fue exitoso (o si es en efectivo)
         const updated = await prisma.trip.update({
           where: { id: tripId },
-          data: { status: 'in_progress', startedAt: new Date() },
+          data: { 
+            status: 'in_progress', 
+            startedAt: new Date(),
+            isPaid,
+            paymentStatus,
+            mpPaymentId: mpPaymentId || undefined
+          },
         });
 
         io.to(`trip:${tripId}`).emit('trip:started', { trip: updated });
@@ -361,6 +451,45 @@ export function setupSocketHandlers(io: Server) {
         console.log(`[Socket] Viaje ${tripId} iniciado con éxito`);
       } catch (err) {
         console.error('[Socket] Error iniciando viaje:', err);
+      }
+    });
+
+    // ─── CONDUCTOR: cambia a efectivo por fallo de tarjeta y arranca ─────
+    socket.on('driver:change-payment-to-cash', async ({ tripId }: { tripId: string }) => {
+      try {
+        const trip = await prisma.trip.findUnique({ where: { id: tripId } });
+        if (!trip) return;
+
+        const updated = await prisma.trip.update({
+          where: { id: tripId },
+          data: { 
+            paymentMethod: 'cash',
+            status: 'in_progress', 
+            startedAt: new Date(),
+            isPaid: false,
+            paymentStatus: 'pending'
+          },
+        });
+
+        io.to(`trip:${tripId}`).emit('trip:started', { trip: updated });
+
+        prisma.user.findUnique({
+          where: { id: updated.passengerId },
+          select: { fcmToken: true }
+        }).then(passenger => {
+          if (passenger && passenger.fcmToken) {
+            sendPushNotification(
+              passenger.fcmToken,
+              "¡Viaje Iniciado en Efectivo!",
+              "El viaje ha comenzado. Recuerda pagar en efectivo al finalizar.",
+              { tripId, type: 'trip_started' }
+            );
+          }
+        }).catch(console.error);
+
+        console.log(`[Socket] Viaje ${tripId} cambiado a efectivo e iniciado`);
+      } catch (err) {
+        console.error('[Socket] Error cambiando a efectivo:', err);
       }
     });
 
