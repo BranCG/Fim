@@ -755,6 +755,9 @@ export default function DriverPage() {
 
     socket.on('trip:started', (data?: { trip?: any }) => {
       if (!data?.trip?.id || (activeTripRef.current && data.trip.id === activeTripRef.current.id)) {
+        if (data?.trip) {
+          setActiveTrip(data.trip);
+        }
         setTripPhase('in_progress');
         // Asegurarnos de limpiar cualquier modal de fallo anterior si inicia bien
         setPaymentFailedMsg('');
@@ -946,14 +949,20 @@ export default function DriverPage() {
     }
   };
 
+  const [isStartingTrip, setIsStartingTrip] = useState(false);
+
   const startTrip = (code: string) => {
-    if (!activeTrip) return;
+    if (!activeTrip || isStartingTrip) return;
     if (!code || code.length < 4) {
       showCustomAlert('Por favor ingresa el código de seguridad.', 'Atención', 'warning');
       return;
     }
+    setIsStartingTrip(true);
     const socket = connectSocket();
     socket.emit('driver:start-trip', { tripId: activeTrip.id, otpCode: code });
+    setOtp('');
+    // Liberar el botón después de 5 segundos por si algo falla
+    setTimeout(() => setIsStartingTrip(false), 5000);
   };
 
   const handleRequestPayment = () => {
@@ -2523,7 +2532,7 @@ export default function DriverPage() {
 
           {tripPhase === 'in_progress' && (
             <div style={{ borderTop: '1px solid var(--border)', paddingTop: '16px' }}>
-              {!paymentRequested ? (
+              {(!activeTrip?.isPaid && !paymentRequested) ? (
                 <div style={{ textAlign: 'center' }}>
                   <button
                     className="btn btn-primary btn-block btn-lg"
@@ -2554,7 +2563,9 @@ export default function DriverPage() {
                   {!completionOtpVerified ? (
                     <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border)', padding: '16px', borderRadius: 'var(--radius)', marginBottom: '16px' }}>
                       <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '12px', textAlign: 'center', fontWeight: 600 }}>
-                        Pide el código de término al pasajero para habilitar el pago:
+                        {activeTrip?.isPaid 
+                          ? "Pide el código de término al pasajero para finalizar el viaje:"
+                          : "Pide el código de término al pasajero para habilitar el pago:"}
                       </p>
                       <div style={{ display: 'flex', gap: '10px' }}>
                         <input
@@ -2565,7 +2576,7 @@ export default function DriverPage() {
                         <button className="btn btn-accent" onClick={() => verifyCompletionOtp(completionOtp)}>VERIFICAR</button>
                       </div>
                     </div>
-                  ) : !passengerConfirmed ? (
+                  ) : (!activeTrip?.isPaid && !passengerConfirmed) ? (
                     <div style={{ background: 'rgba(255,184,0,0.1)', border: '1px solid var(--warning)', padding: '16px', borderRadius: 'var(--radius)', marginBottom: '16px', textAlign: 'center' }}>
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', color: 'var(--warning)', fontWeight: 800, fontSize: '0.9rem', marginBottom: '8px' }}>
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg>
@@ -2610,8 +2621,8 @@ export default function DriverPage() {
                   )}
 
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                    <button className={`btn btn-block btn-lg ${passengerConfirmed ? 'btn-primary' : 'btn-secondary'}`} onClick={() => {
-                      if (!passengerConfirmed) {
+                    <button className={`btn btn-block btn-lg ${(activeTrip?.isPaid || passengerConfirmed) ? 'btn-primary' : 'btn-secondary'}`} onClick={() => {
+                      if (!activeTrip?.isPaid && !passengerConfirmed) {
                         showCustomConfirm(
                           'El pasajero no ha confirmado el pago. ¿Deseas cerrar el viaje de forma manual?',
                           'Cerrar Manualmente',
@@ -2623,7 +2634,7 @@ export default function DriverPage() {
                         completeTrip();
                       }
                     }}>
-                      {passengerConfirmed ? 'Verificar y Finalizar' : 'Cerrar Manual (Sin Confirmación)'}
+                      {(activeTrip?.isPaid || passengerConfirmed) ? 'Finalizar Viaje' : 'Cerrar Manual (Sin Confirmación)'}
                     </button>
                   </div>
                 </div>
