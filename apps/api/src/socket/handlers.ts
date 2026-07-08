@@ -411,9 +411,8 @@ export function setupSocketHandlers(io: Server) {
               }
 
             } catch (err: any) {
-              console.error('[Socket] Error procesando cobro anticipado:', err.message || err);
-              if (err.response) console.error(err.response);
-              return socket.emit('trip:payment-failed', { message: `Error de pasarela: ${err.message || 'Desconocido'}` });
+              console.error('[Socket] Error procesando cobro anticipado:', err);
+              return socket.emit('trip:payment-failed', { message: 'Error procesando la tarjeta. Invita al pasajero a cambiar a efectivo.' });
             }
           } else {
             return socket.emit('trip:payment-failed', { message: 'El pasajero o conductor no tienen métodos de pago válidos configurados.' });
