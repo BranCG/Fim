@@ -756,7 +756,7 @@ export default function DriverPage() {
     socket.on('trip:started', (data?: { trip?: any }) => {
       if (!data?.trip?.id || (activeTripRef.current && data.trip.id === activeTripRef.current.id)) {
         if (data?.trip) {
-          setActiveTrip(data.trip);
+          setActiveTrip((prev: any) => ({ ...prev, ...data.trip }));
         }
         setTripPhase('in_progress');
         // Asegurarnos de limpiar cualquier modal de fallo anterior si inicia bien
