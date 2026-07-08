@@ -181,6 +181,8 @@ export default function DriverPage() {
   const [activeTrip, setActiveTrip] = useState<any>(null);
   const [tripPhase, setTripPhase] = useState<'going_to_passenger' | 'arrived' | 'in_progress'>('going_to_passenger');
   const [paymentFailedMsg, setPaymentFailedMsg] = useState('');
+  const [passengerConfirmed, setPassengerConfirmed] = useState(false);
+  const [isWaitingCheckout, setIsWaitingCheckout] = useState(false);
   const [arrivedAt, setArrivedAt] = useState<number | null>(null);
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [selectedCancelOption, setSelectedCancelOption] = useState('');
@@ -250,7 +252,6 @@ export default function DriverPage() {
     tripRequestRef.current = tripRequest;
   }, [tripRequest]);
 
-  const [passengerConfirmed, setPassengerConfirmed] = useState(false);
   const [receiptUrl, setReceiptUrl] = useState<string | null>(null);
   const [paymentRequested, setPaymentRequested] = useState(false);
   const [cancellationNotice, setCancellationNotice] = useState<{ reason: string; wasAccepted?: boolean } | null>(null);
@@ -759,9 +760,16 @@ export default function DriverPage() {
           setActiveTrip((prev: any) => ({ ...prev, ...data.trip }));
         }
         setTripPhase('in_progress');
-        // Asegurarnos de limpiar cualquier modal de fallo anterior si inicia bien
+        // Asegurarnos de limpiar cualquier modal de fallo o espera si inicia bien
         setPaymentFailedMsg('');
+        setIsWaitingCheckout(false);
+        setIsStartingTrip(false);
       }
+    });
+
+    socket.on('trip:waiting-checkout', () => {
+      console.log('[Socket] Esperando que el pasajero complete el checkout...');
+      setIsWaitingCheckout(true);
     });
 
     socket.on('trip:payment-failed', (data: { message: string }) => {
@@ -848,6 +856,8 @@ export default function DriverPage() {
       socket.off('trip:request');
       socket.off('trip:confirmed');
       socket.off('trip:started');
+      socket.off('trip:waiting-checkout');
+      socket.off('trip:payment-failed');
       socket.off('trip:passenger-confirmed-payment');
       socket.off('trip:message');
       socket.off('trip:cancelled');
@@ -2641,6 +2651,54 @@ export default function DriverPage() {
               )}
             </div>
           )}
+        </div>
+      )}
+
+      {/* MODAL ESPERANDO CHECKOUT PRO (PASAJERO) */}
+      {isWaitingCheckout && (
+        <div style={{
+          position: 'fixed',
+          inset: 0,
+          background: 'rgba(9, 9, 15, 0.85)',
+          backdropFilter: 'blur(8px)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 9999,
+          padding: '20px',
+          animation: 'fadeIn 0.2s ease'
+        }}>
+          <div style={{
+            background: 'var(--bg-secondary)',
+            border: '1px solid var(--border)',
+            borderRadius: 'var(--radius-lg)',
+            width: '100%',
+            maxWidth: '440px',
+            padding: '24px',
+            boxShadow: 'var(--shadow-lg)',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '16px',
+            textAlign: 'center'
+          }}>
+            <div className="spinner-sm" style={{ width: '40px', height: '40px', margin: '0 auto' }}></div>
+            <h3 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 900 }}>Pago en Proceso</h3>
+            <p style={{ margin: 0, fontSize: '0.9rem', color: 'var(--text-secondary)' }}>
+              Esperando a que el pasajero complete el pago seguro a través de Mercado Pago en su dispositivo...
+            </p>
+            <div style={{ height: '1px', background: 'var(--border)', margin: '8px 0' }}></div>
+            <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+              ¿El pasajero tuvo un problema o prefiere pagar en efectivo?
+            </p>
+            <button 
+              className="btn btn-secondary btn-block"
+              onClick={() => {
+                socket.emit('driver:change-payment-to-cash', { tripId: activeTrip?.id });
+              }}
+            >
+              Cambiar a Efectivo e Iniciar
+            </button>
+          </div>
         </div>
       )}
 

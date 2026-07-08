@@ -993,6 +993,9 @@ export default function PassengerPage() {
 
     socket.on('trip:started', (data?: { trip?: any }) => {
       console.log('[Socket] El viaje ha iniciado');
+      try {
+        import('@capacitor/browser').then(({ Browser }) => Browser.close().catch(() => {}));
+      } catch (e) {}
       if (data?.trip) {
         setCurrentTrip((prev: any) => ({ ...prev, ...data.trip }));
         if (data.trip.paymentMethod) {
@@ -1001,6 +1004,30 @@ export default function PassengerPage() {
       }
       sendLocalNotification("¡Viaje Iniciado!", "Tu viaje hacia el destino ha comenzado. ¡Buen viaje!");
       setStatus('in_progress');
+    });
+
+    socket.on('trip:checkout-pro', async (data: { initPoint: string }) => {
+      console.log('[Socket] Abriendo Checkout Pro de Mercado Pago...', data.initPoint);
+      try {
+        const { Browser } = await import('@capacitor/browser');
+        
+        Browser.addListener('browserFinished', () => {
+           console.log('[Browser] Cerrado por el usuario o finalizado');
+           socket.emit('passenger:payment-completed', { tripId: currentTrip.id });
+        });
+        
+        await Browser.open({ url: data.initPoint, presentationStyle: 'popover' });
+        
+        // En entorno web, si el Browser se cierra, no emite browserFinished. 
+        // Agregamos un pequeño timeout o validación opcional, pero WebSockets lo manejará.
+      } catch (err) {
+        console.error('Error abriendo Browser:', err);
+        window.open(data.initPoint, '_blank');
+        // Fallback for web testing: emit after 15 seconds automatically
+        setTimeout(() => {
+          socket.emit('passenger:payment-completed', { tripId: currentTrip.id });
+        }, 15000);
+      }
     });
 
     socket.on('trip:no-drivers', () => {
@@ -1062,6 +1089,7 @@ export default function PassengerPage() {
       socket.off('trip:completion-otp-verified');
       socket.off('trip:passenger-confirmed-payment');
       socket.off('trip:message');
+      socket.off('trip:checkout-pro');
     };
   }, [currentTrip?.id, checkActiveTrip]);
 
@@ -1550,13 +1578,6 @@ export default function PassengerPage() {
               <IconClock />
             </div>
             <span className="btn-label">Historial</span>
-          </button>
-
-          <button className="header-nav-btn" onClick={() => router.push('/passenger/payments')}>
-            <div className="icon-circle">
-              <IconCreditCard />
-            </div>
-            <span className="btn-label">Pagos</span>
           </button>
 
           <button className="header-nav-btn" onClick={handleLogout}>

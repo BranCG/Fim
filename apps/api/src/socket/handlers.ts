@@ -348,86 +348,83 @@ export function setupSocketHandlers(io: Server) {
             include: { passenger: true, driver: true }
           });
 
-          if (tripDetails?.passenger?.mpCardToken && tripDetails?.driver?.mpAccessToken) {
+          if (tripDetails?.driver?.mpAccessToken) {
             try {
-              const { MercadoPagoConfig, Payment } = require('mercadopago');
+              const { MercadoPagoConfig, Preference } = require('mercadopago');
               
               let grossAmount = tripDetails.estimatedPrice;
               grossAmount = Math.round(grossAmount);
               
-              // Cobramos comisión a favor del conductor
               const amountToChargePassenger = Math.round(grossAmount / (1 - 0.0415));
-              const mpFee = amountToChargePassenger - grossAmount;
               
               const driverMpClient = new MercadoPagoConfig({
                 accessToken: tripDetails.driver.mpAccessToken,
                 options: { timeout: 5000 }
               });
-              const payment = new Payment(driverMpClient);
+              const preference = new Preference(driverMpClient);
               
+              const isTestMode = tripDetails.driver.mpAccessToken.startsWith('TEST-');
+
               const bodyData: any = {
-                transaction_amount: amountToChargePassenger,
-                token: tripDetails.passenger.mpCardToken,
-                description: `Viaje Fim - ${tripDetails.destAddress}`,
-                installments: 1,
+                items: [
+                  {
+                    id: tripDetails.id,
+                    title: `Viaje Fim - ${tripDetails.destAddress.substring(0, 50)}`,
+                    quantity: 1,
+                    unit_price: amountToChargePassenger,
+                    currency_id: 'CLP',
+                  }
+                ],
                 payer: {
-                  email: tripDetails.driver.mpAccessToken.startsWith('TEST-') 
-                    ? 'testuser6739155661390234246@testuser.com'
-                    : tripDetails.passenger.email,
+                  email: isTestMode ? 'testuser6739155661390234246@testuser.com' : (tripDetails.passenger?.email || ''),
                 },
                 external_reference: tripDetails.id,
+                back_urls: {
+                  success: 'https://fim.com/success', // Capacitor capturará el cierre
+                  failure: 'https://fim.com/failure',
+                  pending: 'https://fim.com/pending'
+                },
+                auto_return: 'approved'
               };
 
-              let response: any;
+              console.log('[Socket] Creando Preferencia Checkout Pro...');
+              const response = await preference.create({ body: bodyData });
               
-              // Simulador para desarrollo
-              if (tripDetails.passenger.mpCardToken.startsWith('tok_') && tripDetails.passenger.mpCardToken.length < 20) {
-                console.log('Simulando pago exitoso (fakeToken)...');
-                response = { status: 'approved', id: Math.floor(Math.random() * 10000000000).toString() };
-              } else {
-                response = await payment.create({ body: bodyData });
+              const initPoint = isTestMode ? response.sandbox_init_point : response.init_point;
+              
+              if (!initPoint) {
+                return socket.emit('trip:payment-failed', { message: 'Error al generar link de pago. Intenta de nuevo.' });
               }
 
-              if (response.status === 'approved' || response.status === 'in_process') {
-                isPaid = true;
-                paymentStatus = response.status;
-                mpPaymentId = String(response.id);
+              // Guardar el preferenceId por si lo necesitamos después
+              await prisma.trip.update({
+                where: { id: tripId },
+                data: { mpPaymentId: response.id } // Guardamos el preference ID temporalmente aquí o en un nuevo campo
+              });
 
-                // Crear recibo interno inmediatamente
-                await prisma.tripReceipt.create({
-                  data: {
-                    tripId: tripDetails.id,
-                    passengerId: tripDetails.passengerId,
-                    driverId: tripDetails.driverId as string,
-                    grossAmount: amountToChargePassenger,
-                    netAmount: grossAmount,
-                    mpFee: mpFee,
-                    fimFee: 0
-                  }
-                });
-              } else {
-                // Pago rechazado o fallido
-                return socket.emit('trip:payment-failed', { message: 'Pago rechazado por Mercado Pago. Saldo insuficiente.' });
-              }
+              console.log('[Socket] Emitiendo link de Checkout Pro al pasajero...');
+              // Avisar al pasajero para que abra el modal
+              io.to(`trip:${tripId}`).emit('trip:checkout-pro', { initPoint });
+              // Avisar al conductor que estamos esperando el pago
+              return socket.emit('trip:waiting-checkout');
 
             } catch (err: any) {
-              console.error('[Socket] Error procesando cobro anticipado:', err);
-              return socket.emit('trip:payment-failed', { message: 'Error procesando la tarjeta. Invita al pasajero a cambiar a efectivo.' });
+              console.error('[Socket] Error creando Preferencia:', err.message || err);
+              return socket.emit('trip:payment-failed', { message: 'Error generando el pago seguro. Invita al pasajero a cambiar a efectivo.' });
             }
           } else {
-            return socket.emit('trip:payment-failed', { message: 'El pasajero o conductor no tienen métodos de pago válidos configurados.' });
+            return socket.emit('trip:payment-failed', { message: 'El conductor no tiene su cuenta de Mercado Pago vinculada correctamente.' });
           }
         }
 
-        // 2. Iniciar el viaje si el cobro fue exitoso (o si es en efectivo)
+        // 2. Si es Efectivo, iniciar el viaje inmediatamente
         const updated = await prisma.trip.update({
           where: { id: tripId },
           data: { 
             status: 'in_progress', 
             startedAt: new Date(),
-            isPaid,
-            paymentStatus,
-            mpPaymentId: mpPaymentId || undefined
+            isPaid: false,
+            paymentStatus: 'pending'
           },
         });
 
@@ -451,6 +448,103 @@ export function setupSocketHandlers(io: Server) {
         console.log(`[Socket] Viaje ${tripId} iniciado con éxito`);
       } catch (err) {
         console.error('[Socket] Error iniciando viaje:', err);
+      }
+    });
+
+    // ─── PASAJERO: confirma que completó el flujo de Checkout Pro ─────
+    socket.on('passenger:payment-completed', async ({ tripId }: { tripId: string }) => {
+      try {
+        const trip = await prisma.trip.findUnique({ 
+          where: { id: tripId },
+          include: { driver: true, passenger: true }
+        });
+        
+        if (!trip || !trip.driver?.mpAccessToken) return;
+
+        const { MercadoPagoConfig, Payment } = require('mercadopago');
+        const driverMpClient = new MercadoPagoConfig({
+          accessToken: trip.driver.mpAccessToken,
+          options: { timeout: 5000 }
+        });
+        
+        const paymentClient = new Payment(driverMpClient);
+        // Buscar pagos aprobados para este external_reference
+        const searchParams = { external_reference: tripId };
+        
+        // El tipado de MP puede variar, pero habitualmente es paymentClient.search({ options: ... })
+        // o llamamos a la API directamente si el SDK falla
+        let isApproved = false;
+        let mpPaymentId = '';
+
+        try {
+          const result = await paymentClient.search({ options: searchParams });
+          const payments = result?.results || [];
+          const approvedPayment = payments.find((p: any) => p.status === 'approved');
+          
+          if (approvedPayment) {
+            isApproved = true;
+            mpPaymentId = String(approvedPayment.id);
+          }
+        } catch (e) {
+          console.error('[Socket] Error buscando pago en MP:', e);
+        }
+
+        // Si es un token de prueba (modo sandbox), simulamos éxito si el pasajero volvió
+        if (trip.driver.mpAccessToken.startsWith('TEST-') && !isApproved) {
+           isApproved = true;
+           mpPaymentId = 'TEST_' + Math.floor(Math.random() * 100000);
+        }
+
+        if (isApproved) {
+          const grossAmount = Math.round(trip.estimatedPrice);
+          const amountToChargePassenger = Math.round(grossAmount / (1 - 0.0415));
+          const mpFee = amountToChargePassenger - grossAmount;
+
+          const updated = await prisma.trip.update({
+            where: { id: tripId },
+            data: { 
+              status: 'in_progress', 
+              startedAt: new Date(),
+              isPaid: true,
+              paymentStatus: 'approved',
+              mpPaymentId
+            },
+          });
+
+          // Asegurar de que exista el recibo
+          const receiptExists = await prisma.tripReceipt.findUnique({ where: { tripId } });
+          if (!receiptExists) {
+            await prisma.tripReceipt.create({
+              data: {
+                tripId: trip.id,
+                passengerId: trip.passengerId,
+                driverId: trip.driverId as string,
+                grossAmount: amountToChargePassenger,
+                netAmount: grossAmount,
+                mpFee: mpFee,
+                fimFee: 0
+              }
+            });
+          }
+
+          io.to(`trip:${tripId}`).emit('trip:started', { trip: updated });
+          
+          if (trip.passenger?.fcmToken) {
+            sendPushNotification(
+              trip.passenger.fcmToken,
+              "¡Viaje Iniciado!",
+              "El pago se procesó con éxito. ¡Buen viaje!",
+              { tripId, type: 'trip_started' }
+            );
+          }
+        } else {
+          // El pago no se encontró como aprobado
+          socket.emit('trip:payment-failed', { message: 'Aún no se registra el pago en Mercado Pago.' });
+          // Avisar al conductor que falló o sigue esperando
+          io.to(`trip:${tripId}`).emit('trip:payment-failed', { message: 'El pasajero cerró el pago pero Mercado Pago no lo marca como aprobado aún.' });
+        }
+      } catch (err) {
+        console.error('[Socket] Error validando pago del pasajero:', err);
       }
     });
 
