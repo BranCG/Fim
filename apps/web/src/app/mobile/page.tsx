@@ -1334,7 +1334,7 @@ export default function Home() {
                         <span style={{ fontSize: '0.8rem', color: 'var(--accent)', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.15em' }}>Paso 2</span>
                         <h3 style={{ fontSize: '1.3rem', fontWeight: 800, marginTop: '8px', marginBottom: '12px', color: 'white' }}>Vincula tu Mercado Pago</h3>
                         <p style={{ fontSize: '0.95rem', color: 'var(--text-secondary)', lineHeight: '1.6', margin: 0 }}>
-                          Pega tu enlace de cobro de Mercado Pago en la app. Los pasajeros te pagarán directamente a tu cuenta al finalizar cada viaje.
+                          Vincula tu cuenta de Mercado Pago con Fim de forma segura. El pasajero te pagará directamente a través de Checkout Pro al iniciar el viaje (con una comisión del 4,15% a cargo del pasajero).
                         </p>
                       </div>
                     )}

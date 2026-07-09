@@ -449,8 +449,8 @@ export default function Home() {
                 )}
                 {activeTimelineStep === 2 && (
                   <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-                    <h3 style={{ fontSize: '1.5rem', fontWeight: 900, marginBottom: '16px', lineHeight: 1.2 }}>Configura tu Método de Cobro</h3>
-                    <p style={{ color: 'var(--text-secondary)', lineHeight: 1.6 }}>Asocia tu cuenta bancaria o enlace de Mercado Pago. En Fim, el dinero va directo del pasajero a ti, sin intermediarios ni retenciones.</p>
+                    <h3 style={{ fontSize: '1.5rem', fontWeight: 900, marginBottom: '16px', lineHeight: 1.2 }}>Vincula tu Mercado Pago</h3>
+                    <p style={{ color: 'var(--text-secondary)', lineHeight: 1.6 }}>Vincula tu cuenta de Mercado Pago con Fim de forma segura. El pasajero te pagará directamente a través de Checkout Pro al iniciar el viaje (con una comisión del 4,15% a cargo del pasajero).</p>
                   </motion.div>
                 )}
                 {activeTimelineStep === 3 && (
