@@ -2185,9 +2185,15 @@ export default function PassengerPage() {
                 {isEstimatingPrice ? (
                   <div className="spinner" style={{ width: '24px', height: '24px', borderWidth: '3px', borderColor: 'var(--accent)', borderTopColor: 'transparent' }} />
                 ) : (
-                  estimatedPrice ? formatCLP(estimatedPrice) : '$0'
+                  estimatedPrice ? formatCLP(paymentMethod === 'card' ? Math.round(estimatedPrice / (1 - 0.0415)) : estimatedPrice) : '$0'
                 )}
               </div>
+              {paymentMethod === 'card' && estimatedPrice && estimatedPrice > 0 ? (
+                <div style={{ fontSize: '0.7rem', color: '#009ee3', fontWeight: 600, marginTop: '4px', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '2px' }}>
+                  <span>Viaje: {formatCLP(estimatedPrice)}</span>
+                  <span>Tarifa MP (4,15%): {formatCLP(Math.round(estimatedPrice / (1 - 0.0415)) - estimatedPrice)}</span>
+                </div>
+              ) : null}
             </div>
           </div>
 
