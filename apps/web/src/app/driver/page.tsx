@@ -1948,7 +1948,7 @@ export default function DriverPage() {
                   </div>
                 </div>
                 <div style={{ textAlign: 'right' }}>
-                  <div style={{ color: '#D4AF37', fontWeight: 900, fontSize: '1rem' }}>$150.000</div>
+                  <div style={{ color: '#D4AF37', fontWeight: 900, fontSize: '1rem' }}>{formatCLP(parseInt((config.membership_black_promo_price || '39990').toString().replace(/\D/g, ''), 10))}</div>
                   <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.68rem' }}>/mes</div>
                 </div>
               </div>
@@ -1999,7 +1999,7 @@ export default function DriverPage() {
                       </div>
                     </div>
                     <div style={{ textAlign: 'right' }}>
-                      <div style={{ color: '#FBBF24', fontWeight: 900, fontSize: '1rem' }}>$20.000</div>
+                      <div style={{ color: '#FBBF24', fontWeight: 900, fontSize: '1rem' }}>{formatCLP(parseInt((config.membership_comfort_promo_price || '8990').toString().replace(/\D/g, ''), 10))}</div>
                       <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.68rem' }}>/día</div>
                     </div>
                   </div>
@@ -2075,7 +2075,7 @@ export default function DriverPage() {
                   </div>
                 </div>
                 <div style={{ textAlign: 'right' }}>
-                  <div style={{ color: '#34D399', fontWeight: 900, fontSize: '1rem' }}>$60.000</div>
+                  <div style={{ color: '#34D399', fontWeight: 900, fontSize: '1rem' }}>{formatCLP(parseInt((config.membership_flex_promo_price || '14990').toString().replace(/\D/g, ''), 10))}</div>
                   <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.68rem' }}>/fin de semana</div>
                 </div>
               </div>
