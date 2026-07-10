@@ -479,16 +479,16 @@ export default function Home() {
                           <p style={{ color: 'var(--text-secondary)', lineHeight: 1.5 }}>Crea una cuenta en <strong>Mercado Pago</strong> (es gratis y personal).</p>
                         </div>
                         <div style={{ display: 'flex', gap: '16px', alignItems: 'flex-start' }}>
-                          <div style={{ background: '#BFDBFE', color: '#1E3A8A', padding: '8px', borderRadius: '8px' }}><Link2 size={24} /></div>
-                          <p style={{ color: 'var(--text-secondary)', lineHeight: 1.5 }}>En tu app de Mercado Pago, ve a <strong>Cobrar con Link</strong> y crea un link genérico o usa tu código QR.</p>
-                        </div>
-                        <div style={{ display: 'flex', gap: '16px', alignItems: 'flex-start' }}>
                           <div style={{ background: '#FED7AA', color: '#9A3412', padding: '8px', borderRadius: '8px' }}><User size={24} /></div>
-                          <p style={{ color: 'var(--text-secondary)', lineHeight: 1.5 }}>Pega ese link en tu perfil de <strong>Fim</strong> en la sección "Cobro Directo".</p>
+                          <p style={{ color: 'var(--text-secondary)', lineHeight: 1.5 }}>Ve a la sección "Cumplimiento y Pagos" en la app y haz clic en <strong>Vincular cuenta de Mercado Pago</strong>.</p>
                         </div>
                         <div style={{ display: 'flex', gap: '16px', alignItems: 'flex-start' }}>
                           <div style={{ background: '#BBF7D0', color: '#166534', padding: '8px', borderRadius: '8px' }}><CircleDollarSign size={24} /></div>
-                          <p style={{ color: 'var(--text-secondary)', lineHeight: 1.5 }}>¡Listo! Al terminar un viaje, el pasajero verá tu link y te pagará <strong>directo a tu cuenta</strong>.</p>
+                          <p style={{ color: 'var(--text-secondary)', lineHeight: 1.5 }}>Inicia sesión de forma segura y autoriza a <strong>Fim</strong>.</p>
+                        </div>
+                        <div style={{ display: 'flex', gap: '16px', alignItems: 'flex-start' }}>
+                          <div style={{ background: '#BFDBFE', color: '#1E3A8A', padding: '8px', borderRadius: '8px' }}><Link2 size={24} /></div>
+                          <p style={{ color: 'var(--text-secondary)', lineHeight: 1.5 }}>¡Listo! Al iniciar un viaje, el pasajero pagará con tarjeta y recibirás tu dinero <strong>directo a tu cuenta</strong>.</p>
                         </div>
                       </div>
                     </motion.div>
