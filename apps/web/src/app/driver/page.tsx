@@ -382,7 +382,12 @@ export default function DriverPage() {
         email: driver.email,
       });
       if (res.data.init_point) {
-        window.location.href = res.data.init_point;
+        try {
+          const { Browser } = await import('@capacitor/browser');
+          await Browser.open({ url: res.data.init_point, presentationStyle: 'popover' });
+        } catch (e) {
+          window.location.href = res.data.init_point;
+        }
       } else {
         showCustomAlert('No se pudo generar el link de pago.', 'Error', 'error');
       }
