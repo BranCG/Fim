@@ -383,9 +383,15 @@ export default function DriverPage() {
       });
       if (res.data.init_point) {
         try {
-          const { Browser } = await import('@capacitor/browser');
-          await Browser.open({ url: res.data.init_point, presentationStyle: 'popover' });
+          const { Capacitor } = await import('@capacitor/core');
+          if (Capacitor.isNativePlatform()) {
+            const { Browser } = await import('@capacitor/browser');
+            await Browser.open({ url: res.data.init_point, presentationStyle: 'popover' });
+          } else {
+            window.location.href = res.data.init_point;
+          }
         } catch (e) {
+          console.error('Error abriendo Browser:', e);
           window.location.href = res.data.init_point;
         }
       } else {
