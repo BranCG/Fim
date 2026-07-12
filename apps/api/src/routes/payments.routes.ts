@@ -56,7 +56,10 @@ router.post('/membership/create-preference', async (req, res) => {
       finalAmount = Math.round(finalAmount * 0.8); // 20% dcto
     }
 
-    const baseUrl = process.env.NEXT_PUBLIC_WEB_URL || 'http://localhost:3000';
+    // Mercado Pago requiere estrictamente URLs válidas (no localhost HTTP) para auto_return
+    const baseUrl = process.env.NEXT_PUBLIC_WEB_URL && process.env.NEXT_PUBLIC_WEB_URL.startsWith('https') 
+      ? process.env.NEXT_PUBLIC_WEB_URL 
+      : 'https://fimchile.cl';
 
     const response = await preference.create({
       body: {
