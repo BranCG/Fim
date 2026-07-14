@@ -1748,7 +1748,12 @@ export default function DriverPage() {
       {/* Botón flotante de GPS de alta prioridad fuera de main-content */}
       {activeTab !== 'finances' && (
         <button
-        onClick={() => {
+        type="button"
+        onPointerDown={(e) => e.stopPropagation()}
+        onTouchStart={(e) => e.stopPropagation()}
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
           setCenterTrigger(prev => prev + 1);
         }}
         title="Mi ubicación actual"
