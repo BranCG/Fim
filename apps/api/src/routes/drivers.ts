@@ -82,7 +82,7 @@ router.post('/location', requireAuth, requireRole('driver'), async (req: Request
 // ─── CAMBIAR ESTADO EN LÍNEA ──────────────────────────────────────────────
 router.post('/toggle-online', requireAuth, requireRole('driver'), async (req: Request, res: Response) => {
   try {
-    const { isOnline } = req.body;
+    const { isOnline, lat, lng } = req.body;
 
     const driver = await prisma.driver.findUnique({ where: { id: req.user!.id } });
     if (!driver) return res.status(404).json({ error: 'No encontrado' });
@@ -104,8 +104,11 @@ router.post('/toggle-online', requireAuth, requireRole('driver'), async (req: Re
 
       // ── Validaciones por plan ─────────────────────────────────────────────
       // Validar área de cobertura geográfica (últimas coordenadas del conductor)
-      if (driver.lastLat !== null && driver.lastLng !== null) {
-        const locationCheck = await checkCoordinateInAllowedRegion(driver.lastLat, driver.lastLng);
+      const currentLat = lat ?? driver.lastLat;
+      const currentLng = lng ?? driver.lastLng;
+      
+      if (currentLat !== null && currentLng !== null) {
+        const locationCheck = await checkCoordinateInAllowedRegion(currentLat, currentLng);
         if (!locationCheck.allowed) {
           return res.status(403).json({
             error: `No puedes ponerte en línea fuera de la zona de cobertura. Actualmente operamos en: ${locationCheck.activeZonesText}.`
@@ -196,10 +199,15 @@ router.post('/toggle-online', requireAuth, requireRole('driver'), async (req: Re
     }
 
 
+    const updateData: any = { isOnline };
+    if (isOnline && lat !== undefined && lng !== undefined) {
+      updateData.lastLat = lat;
+      updateData.lastLng = lng;
+    }
 
     const updated = await prisma.driver.update({
       where: { id: req.user!.id },
-      data: { isOnline },
+      data: updateData,
     });
 
     return res.json({ isOnline: updated.isOnline });

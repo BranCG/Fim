@@ -1102,7 +1102,11 @@ export default function DriverPage() {
     }
 
     try {
-      const res = await api.post('/drivers/toggle-online', { isOnline: newStatus });
+      const res = await api.post('/drivers/toggle-online', { 
+        isOnline: newStatus,
+        lat: posRef.current.lat,
+        lng: posRef.current.lng 
+      });
       setIsOnline(res.data.isOnline);
       const socket = connectSocket();
       if (res.data.isOnline) {
