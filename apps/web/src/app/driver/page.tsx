@@ -1751,28 +1751,29 @@ export default function DriverPage() {
         type="button"
         onPointerDown={(e) => e.stopPropagation()}
         onTouchStart={(e) => e.stopPropagation()}
-        onClick={(e) => {
+        onClick={async (e) => {
           e.preventDefault();
           e.stopPropagation();
           setCenterTrigger(prev => prev + 1);
-          const getLoc = async () => {
+          
+          if (!isOnline) {
             try {
-              const { Geolocation } = await import('@capacitor/geolocation');
-              const currentPos = await Geolocation.getCurrentPosition({ enableHighAccuracy: true });
+              const { getCurrentPosition } = await import('@/lib/geolocation');
+              const currentPos = await getCurrentPosition();
               setPos({
-                lat: currentPos.coords.latitude,
-                lng: currentPos.coords.longitude
+                lat: currentPos.lat,
+                lng: currentPos.lng
               });
+              setGpsError(null);
             } catch (err: any) {
               console.error('Error al detectar ubicación:', err);
-              if (err?.message?.includes('Permission') || err?.code === 1) {
+              if (err?.message?.includes('Permission') || err?.message?.includes('denied') || err?.code === 1) {
                 setGpsError('Permisos de GPS denegados.');
               } else {
                 setGpsError('Error al detectar ubicación. Verifica que tu GPS esté encendido.');
               }
             }
-          };
-          getLoc();
+          }
         }}
         title="Mi ubicación actual"
         className="gps-button"
@@ -1787,7 +1788,7 @@ export default function DriverPage() {
         {gpsError && (
           <div style={{
             position: 'absolute',
-            top: '16px',
+            top: '80px',
             left: '16px',
             right: '16px',
             background: 'rgba(239, 68, 68, 0.95)',
@@ -1802,7 +1803,7 @@ export default function DriverPage() {
             alignItems: 'center',
             gap: '8px',
             boxShadow: 'var(--shadow-lg)',
-            zIndex: 999,
+            zIndex: 1010,
             animation: 'fadeIn 0.3s ease'
           }}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" /><line x1="12" y1="9" x2="12" y2="13" /><line x1="12" y1="17" x2="12.01" y2="17" /></svg>
