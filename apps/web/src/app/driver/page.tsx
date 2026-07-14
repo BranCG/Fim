@@ -1552,7 +1552,56 @@ export default function DriverPage() {
             )}
           </div>
         </div>
-        <div className="header-actions" style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+        <div className="header-actions" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          {/* Botón de GPS en el header (exclusivo conductor) */}
+          {activeTab !== 'finances' && (
+            <button
+              type="button"
+              onPointerDown={(e) => e.stopPropagation()}
+              onTouchStart={(e) => e.stopPropagation()}
+              onClick={async (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setCenterTrigger(prev => prev + 1);
+                
+                if (!isOnline) {
+                  try {
+                    const { getCurrentPosition } = await import('@/lib/geolocation');
+                    const currentPos = await getCurrentPosition();
+                    setPos({
+                      lat: currentPos.lat,
+                      lng: currentPos.lng
+                    });
+                    setGpsError(null);
+                  } catch (err: any) {
+                    console.error('Error al detectar ubicación:', err);
+                    if (err?.message?.includes('Permission') || err?.message?.includes('denied') || err?.code === 1) {
+                      setGpsError('Permisos de GPS denegados.');
+                    } else {
+                      setGpsError('Error al detectar ubicación. Verifica que tu GPS esté encendido.');
+                    }
+                  }
+                }
+              }}
+              title="Mi ubicación actual"
+              style={{
+                background: 'rgba(0, 229, 160, 0.12)',
+                border: '1px solid rgba(0, 229, 160, 0.3)',
+                borderRadius: '50%',
+                width: '40px',
+                height: '40px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                cursor: 'pointer',
+                transition: 'all 0.25s ease',
+                color: 'var(--accent)'
+              }}
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><circle cx="12" cy="12" r="3" /><line x1="12" y1="1" x2="12" y2="3" /><line x1="12" y1="21" x2="12" y2="23" /><line x1="1" y1="12" x2="3" y2="12" /><line x1="21" y1="12" x2="23" y2="12" /></svg>
+            </button>
+          )}
+
           {/* Campanita de Notificaciones Amarilla */}
           <div style={{ position: 'relative' }}>
             <button
@@ -1749,42 +1798,7 @@ export default function DriverPage() {
         </button>
       )}
 
-      {/* Botón flotante de GPS de alta prioridad fuera de main-content */}
-      {activeTab !== 'finances' && (
-        <button
-        type="button"
-        onPointerDown={(e) => e.stopPropagation()}
-        onTouchStart={(e) => e.stopPropagation()}
-        onClick={async (e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          setCenterTrigger(prev => prev + 1);
-          
-          if (!isOnline) {
-            try {
-              const { getCurrentPosition } = await import('@/lib/geolocation');
-              const currentPos = await getCurrentPosition();
-              setPos({
-                lat: currentPos.lat,
-                lng: currentPos.lng
-              });
-              setGpsError(null);
-            } catch (err: any) {
-              console.error('Error al detectar ubicación:', err);
-              if (err?.message?.includes('Permission') || err?.message?.includes('denied') || err?.code === 1) {
-                setGpsError('Permisos de GPS denegados.');
-              } else {
-                setGpsError('Error al detectar ubicación. Verifica que tu GPS esté encendido.');
-              }
-            }
-          }
-        }}
-        title="Mi ubicación actual"
-        className="gps-button"
-      >
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><circle cx="12" cy="12" r="3" /><line x1="12" y1="1" x2="12" y2="3" /><line x1="12" y1="21" x2="12" y2="23" /><line x1="1" y1="12" x2="3" y2="12" /><line x1="21" y1="12" x2="23" y2="12" /></svg>
-      </button>
-      )}
+
 
       <main className="main-content">
 
