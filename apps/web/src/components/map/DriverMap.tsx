@@ -211,6 +211,16 @@ export default function DriverMap({ driverPos, passengerPos, destPos, stops = []
       if (dt < 500 || dt > 10000) dt = 2000;
       
       const startPos = marker.getLatLng();
+
+      // Teletransportación mágica si la distancia es muy grande (> 300 metros)
+      // Evita que el auto "se pasee" por el mapa si el GPS dio un salto largo
+      // o si el conductor forzó la actualización con el botón GPS.
+      const distanceToTarget = getDistanceMeters(startPos.lat, startPos.lng, targetPos.lat, targetPos.lng);
+      if (distanceToTarget > 300) {
+        marker.setLatLng([targetPos.lat, targetPos.lng]);
+        marker.setIcon(getDriverIcon(currentAngleRef.current));
+        return;
+      }
       let snappedTarget = targetPos;
       let targetAngle = currentAngleRef.current;
       let didSnap = false;
