@@ -1755,6 +1755,24 @@ export default function DriverPage() {
           e.preventDefault();
           e.stopPropagation();
           setCenterTrigger(prev => prev + 1);
+          const getLoc = async () => {
+            try {
+              const { Geolocation } = await import('@capacitor/geolocation');
+              const currentPos = await Geolocation.getCurrentPosition({ enableHighAccuracy: true });
+              setPos({
+                lat: currentPos.coords.latitude,
+                lng: currentPos.coords.longitude
+              });
+            } catch (err: any) {
+              console.error('Error al detectar ubicación:', err);
+              if (err?.message?.includes('Permission') || err?.code === 1) {
+                setGpsError('Permisos de GPS denegados.');
+              } else {
+                setGpsError('Error al detectar ubicación. Verifica que tu GPS esté encendido.');
+              }
+            }
+          };
+          getLoc();
         }}
         title="Mi ubicación actual"
         className="gps-button"
