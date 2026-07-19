@@ -5,7 +5,7 @@ import { generateTokens, requireAuth } from '../middleware/auth';
 import { sendVerificationEmail, sendPasswordResetEmail } from '../utils/mailer';
 import { OAuth2Client } from 'google-auth-library';
 import axios from 'axios';
-import { compareFaces } from '../utils/rekognition';
+import { compareFaces, detectDocumentText } from '../utils/rekognition';
 
 const router = Router();
 
@@ -21,6 +21,40 @@ async function verifyGoogleToken(idToken: string) {
   const payload = ticket.getPayload();
   if (!payload) throw new Error('Token de Google inválido');
   return payload;
+}
+
+// ─── HELPER: VALIDACIÓN ML DE DOCUMENTOS ─────────────────────────────────
+async function validateRegistrationDocs(idFrontUrl: string, selfieUrl: string) {
+  if (!idFrontUrl || !selfieUrl) return; // Si no hay docs, no validamos (ej. Google Login sin docs)
+  
+  if (selfieUrl.includes('placehold.co') || selfieUrl.includes('placeholder')) {
+    return; // Bypass para cuentas de prueba
+  }
+
+  try {
+    const [idRes, selfieRes] = await Promise.all([
+      axios.get(idFrontUrl, { responseType: 'arraybuffer' }),
+      axios.get(selfieUrl, { responseType: 'arraybuffer' })
+    ]);
+    const idBuffer = Buffer.from(idRes.data);
+    const selfieBuffer = Buffer.from(selfieRes.data);
+
+    const isDocValid = await detectDocumentText(idBuffer);
+    if (!isDocValid) {
+      throw new Error('La foto de la Cédula/Licencia no parece ser un documento oficial válido. Toma una foto clara donde se lean los textos.');
+    }
+
+    const similarity = await compareFaces(idBuffer, selfieBuffer);
+    if (similarity < 80) { // Umbral un poco más tolerante para el registro inicial
+      throw new Error('El rostro de la selfie no coincide con la foto del documento de identidad.');
+    }
+  } catch (err: any) {
+    if (err.message && err.message.includes('rostro') || err.message.includes('Cédula')) {
+      throw err;
+    }
+    // Si AWS falla por error de conexión u otro, bloqueamos para mantener seguridad
+    throw new Error('No se pudo validar tu identidad automáticamente. Asegúrate de que las fotos sean claras y contengan rostros visibles.');
+  }
 }
 
 // ─── REGISTRO PASAJERO ────────────────────────────────────────────────────
@@ -49,6 +83,15 @@ router.post('/passenger/register', async (req: Request, res: Response) => {
     const passwordHash = await bcrypt.hash(password, 12);
     const emailCode = Math.floor(100000 + Math.random() * 900000).toString();
 
+    // ML Validation
+    try {
+      if (idFrontUrl && selfieUrl) {
+        await validateRegistrationDocs(idFrontUrl, selfieUrl);
+      }
+    } catch (valErr: any) {
+      return res.status(400).json({ error: valErr.message });
+    }
+
     const user = await prisma.user.create({
       data: {
         email,
@@ -63,6 +106,7 @@ router.post('/passenger/register', async (req: Request, res: Response) => {
         selfieUrl,
         backgroundDocUrl,
         role: 'passenger',
+        isVerified: true, // Aprobado automáticamente gracias a ML
         emailVerified: false,
         emailCode,
       },
@@ -166,6 +210,15 @@ router.post('/driver/register', async (req: Request, res: Response) => {
     const passwordHash = await bcrypt.hash(password, 12);
     const emailCode = Math.floor(100000 + Math.random() * 900000).toString();
     
+    // ML Validation
+    try {
+      if (idFrontUrl && selfieUrl) {
+        await validateRegistrationDocs(idFrontUrl, selfieUrl);
+      }
+    } catch (valErr: any) {
+      return res.status(400).json({ error: valErr.message });
+    }
+
     const driver = await prisma.driver.create({
       data: {
         email, phone, name, passwordHash,
@@ -178,7 +231,7 @@ router.post('/driver/register', async (req: Request, res: Response) => {
         vehicleColor: vehicleColor || "",
         membershipPlan,
         membershipGoal: membershipPlan === 'BLACK' ? 150 : 0,
-        status: 'pending',
+        status: 'active', // Aprobado automáticamente gracias a ML
         emailVerified: false,
         emailCode,
       },

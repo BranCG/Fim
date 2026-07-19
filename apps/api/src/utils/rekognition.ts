@@ -1,4 +1,4 @@
-import { RekognitionClient, CompareFacesCommand } from "@aws-sdk/client-rekognition";
+import { RekognitionClient, CompareFacesCommand, DetectTextCommand } from "@aws-sdk/client-rekognition";
 
 const awsAccessKeyId = process.env.AWS_ACCESS_KEY_ID;
 const awsSecretAccessKey = process.env.AWS_SECRET_ACCESS_KEY;
@@ -46,6 +46,40 @@ export async function compareFaces(sourceBuffer: Buffer, targetBuffer: Buffer): 
     return 0;
   } catch (error) {
     console.error("❌ [Rekognition] Error al comparar rostros con AWS:", error);
+    throw error;
+  }
+}
+
+/**
+ * Escanea una imagen en busca de palabras clave para validar si es un documento oficial (OCR)
+ * @param documentBuffer Imagen del documento en formato Buffer
+ * @returns true si parece un documento válido, false en caso contrario
+ */
+export async function detectDocumentText(documentBuffer: Buffer): Promise<boolean> {
+  if (!rekognitionClient) {
+    console.log("ℹ️ [Rekognition] Simulando OCR de documento (MOCK exitoso - documento válido)");
+    return true;
+  }
+
+  try {
+    const command = new DetectTextCommand({
+      Image: { Bytes: documentBuffer }
+    });
+
+    const response = await rekognitionClient.send(command);
+    if (response.TextDetections && response.TextDetections.length > 0) {
+      const detectedText = response.TextDetections.map(t => t.DetectedText?.toUpperCase() || "").join(" ");
+      
+      // Palabras clave que indican que es una Cédula o Licencia de Chile
+      const validKeywords = ["CEDULA", "IDENTIDAD", "LICENCIA", "CONDUCTOR", "REPUBLICA", "CHILE", "RUT"];
+      
+      const isValid = validKeywords.some(keyword => detectedText.includes(keyword));
+      console.log(`ℹ️ [Rekognition] OCR Documento válido: ${isValid}`);
+      return isValid;
+    }
+    return false;
+  } catch (error) {
+    console.error("❌ [Rekognition] Error al detectar texto en documento con AWS:", error);
     throw error;
   }
 }
