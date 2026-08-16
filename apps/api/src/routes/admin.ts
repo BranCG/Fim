@@ -1,6 +1,8 @@
 import { Router, Request, Response } from 'express';
 import prisma from '../utils/prisma';
 import { requireAuth, requireRole } from '../middleware/auth';
+import { sendDriverValidatedEmail } from '../utils/mailer';
+import { sendPushNotification } from '../utils/firebase';
 
 const router = Router();
 
@@ -126,7 +128,7 @@ router.post('/drivers/:id/approve', async (req: Request, res: Response) => {
     if (!driver) return res.status(404).json({ error: 'Conductor no encontrado' });
 
     const trialExpiration = new Date();
-    trialExpiration.setDate(trialExpiration.getDate() + 14);
+    trialExpiration.setDate(trialExpiration.getDate() + 15);
 
     const updated = await prisma.driver.update({
       where: { id: req.params.id },
@@ -134,11 +136,24 @@ router.post('/drivers/:id/approve', async (req: Request, res: Response) => {
         status: 'active', // Activar inmediatamente
         adminNotes: null,
         isTrial: true, // Habilitar Free Pass
+        giftDaysPending: 15,
+        membershipDate: new Date(),
         membershipExpiresAt: trialExpiration,
         membershipPaid: false,
       },
     });
-    return res.json({ message: 'Conductor aprobado y activado con 14 días de Free Pass', driver: updated });
+
+    // Enviar notificaciones de manera asíncrona
+    Promise.all([
+      sendDriverValidatedEmail(driver.email, driver.name),
+      (driver as any).fcmToken ? sendPushNotification(
+        (driver as any).fcmToken,
+        '¡Documentos Aprobados! 🎉',
+        'Se te han activado 15 días de Free Pass. ¡Ya puedes ponerte en línea!'
+      ) : Promise.resolve()
+    ]).catch(console.error);
+
+    return res.json({ message: 'Conductor aprobado y activado con 15 días de Free Pass', driver: updated });
   } catch (err) {
     return res.status(500).json({ error: 'Error interno' });
   }

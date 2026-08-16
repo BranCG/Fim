@@ -255,7 +255,9 @@ router.post('/driver/register', async (req: Request, res: Response) => {
         vehicleColor: vehicleColor || "",
         membershipPlan,
         membershipGoal: membershipPlan === 'BLACK' ? 150 : 0,
-        status: 'active', // Aprobado automáticamente gracias a ML
+        status: 'pending', // Pendiente de validación manual
+        isTrial: false,
+        giftDaysPending: 0,
         emailVerified: false,
         emailCode,
       },

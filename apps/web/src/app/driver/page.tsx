@@ -1057,37 +1057,49 @@ export default function DriverPage() {
         );
         return;
       }
-      const now = new Date();
-      if (driver.membershipPlan === 'BLACK' && !driver.membershipPaid && !driver.isPromoActive) {
-        setShowPaymentModal(true);
+      if (driver.status === 'pending') {
+        showCustomAlert('Tus documentos están siendo validados por nuestro equipo. Te notificaremos cuando puedas recibir viajes.', 'Validación Pendiente', 'warning');
         setLoading(false);
         return;
       }
-      if (driver.membershipPlan === 'FLEX') {
-        const day = now.getDay();
-        const isWeekend = day === 0 || day === 5 || day === 6;
-        if (!isWeekend) {
-          showCustomAlert('La membresía FLEX solo te permite operar los días Viernes, Sábado y Domingo.', 'Membresía FLEX', 'warning');
-          setLoading(false);
-          return;
-        }
-        if (!driver.membershipPaid && !driver.isPromoActive) {
+
+      const now = new Date();
+
+      if (driver.isTrial && driver.membershipExpiresAt && new Date(driver.membershipExpiresAt) > now) {
+        showCustomAlert(`Tienes ${getRemainingFreePassDays()} días restantes de tu Free Pass`, 'Free Pass Activo', 'success');
+        // Continuar a ponerse en línea, ignorando los checks de membresía
+      } else {
+        // Validación de membresías regulares (si no tiene Free Pass o ya expiró)
+        if (driver.membershipPlan === 'BLACK' && !driver.membershipPaid && !driver.isPromoActive) {
           setShowPaymentModal(true);
           setLoading(false);
           return;
         }
-      }
-      if (driver.membershipPlan === 'COMFORT') {
-        let paidToday = false;
-        if (driver.comfortLastPaidAt) {
-          const lastPaid = new Date(driver.comfortLastPaidAt);
-          const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-          paidToday = lastPaid >= todayStart;
+        if (driver.membershipPlan === 'FLEX') {
+          const day = now.getDay();
+          const isWeekend = day === 0 || day === 5 || day === 6;
+          if (!isWeekend) {
+            showCustomAlert('La membresía FLEX solo te permite operar los días Viernes, Sábado y Domingo.', 'Membresía FLEX', 'warning');
+            setLoading(false);
+            return;
+          }
+          if (!driver.membershipPaid && !driver.isPromoActive) {
+            setShowPaymentModal(true);
+            setLoading(false);
+            return;
+          }
         }
-        if (!paidToday && !driver.isPromoActive) {
-          setShowPaymentModal(true);
-          setLoading(false);
-          return;
+        if (driver.membershipPlan === 'COMFORT') {
+          let paidToday = false;
+          if (driver.comfortLastPaidAt) {
+            const lastPaid = new Date(driver.comfortLastPaidAt);
+            paidToday = (now.getTime() - lastPaid.getTime()) <= 24 * 60 * 60 * 1000;
+          }
+          if (!paidToday && !driver.isPromoActive) {
+            setShowPaymentModal(true);
+            setLoading(false);
+            return;
+          }
         }
       }
     }
@@ -1360,57 +1372,7 @@ export default function DriverPage() {
     </div>
   );
 
-  if (driver.status === 'pending') return (
-    <div style={{ padding: '24px 16px', minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-start', overflowY: 'auto', background: '#09090f', gap: '20px' }}>
-      <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: '16px', padding: '24px 16px', width: '100%', maxWidth: '440px', boxShadow: 'var(--shadow-lg)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px', margin: 'auto 0' }}>
-        <div style={{ color: 'var(--warning)' }}>
-          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg>
-        </div>
-        <h2 style={{ fontSize: '1.25rem', fontWeight: 800, margin: 0, textAlign: 'center' }}>Tu cuenta está en revisión</h2>
-        <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', margin: 0, textAlign: 'center', lineHeight: '1.5' }}>
-          Una vez que se validen los documentos personales y los del vehículo, se activarán tus días <strong>FREE PASS</strong>. Que espere atento a su correo electrónico.
-        </p>
 
-        <p style={{ fontSize: '0.85rem', color: 'var(--accent)', margin: 0, textAlign: 'center', lineHeight: '1.5', fontWeight: 700 }}>
-          Mientras hacemos esto podrías configurar tu link de pago.
-        </p>
-
-        {/* Mercado Pago Vinculación Link */}
-        <div style={{ marginTop: '20px' }}>
-          <button
-            className="btn btn-outline"
-            style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
-            onClick={() => router.push('/driver/compliance')}
-          >
-            <IconLinkColor />
-            Ir a Cumplimiento y Pagos
-          </button>
-        </div>
-      </div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', width: '100%', maxWidth: '440px' }}>
-        <button className="btn btn-secondary btn-block" onClick={handleLogout}>Salir</button>
-        <button
-          onClick={handleDeleteAccount}
-          className="btn"
-          style={{
-            width: '100%',
-            padding: '12px',
-            fontWeight: 700,
-            borderRadius: '10px',
-            background: 'rgba(255, 69, 96, 0.1)',
-            color: 'var(--danger)',
-            border: '1px solid rgba(255, 69, 96, 0.2)',
-            cursor: 'pointer',
-            transition: 'var(--transition)'
-          }}
-          onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255, 69, 96, 0.15)'; e.currentTarget.style.borderColor = 'var(--danger)'; }}
-          onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255, 69, 96, 0.1)'; e.currentTarget.style.borderColor = 'rgba(255, 69, 96, 0.2)'; }}
-        >
-          ✕ Borrar mi cuenta
-        </button>
-      </div>
-    </div>
-  );
 
   return (
     <div className={`app-container${isMenuOpen ? ' menu-open' : ''}`}>
@@ -2753,6 +2715,7 @@ export default function DriverPage() {
             <button
               className="btn btn-secondary btn-block"
               onClick={() => {
+                const socket = connectSocket();
                 socket.emit('driver:change-payment-to-cash', { tripId: activeTrip?.id });
               }}
             >

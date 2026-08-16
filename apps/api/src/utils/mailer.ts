@@ -173,3 +173,60 @@ export async function sendAdminPaymentNotification(driverName: string, driverId:
     console.error(`[Mailer] Error al enviar notificación de pago al administrador:`, error);
   }
 }
+
+export async function sendDriverValidatedEmail(email: string, name: string): Promise<void> {
+  const transporter = getTransporter();
+
+  const html = `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #333; border-radius: 8px; overflow: hidden; background-color: #1a1a1a; color: #ffffff;">
+      <div style="background-color: #00e5a0; padding: 20px; text-align: center;">
+        <h1 style="color: #000000; margin: 0;">¡Felicidades, ${name}! 🎉</h1>
+      </div>
+      <div style="padding: 30px; text-align: center;">
+        <h2 style="color: #00e5a0;">Tus documentos han sido aprobados</h2>
+        <p style="font-size: 16px; line-height: 1.5; color: #cccccc;">
+          Nuestro equipo ha revisado y validado exitosamente tus documentos (Hoja de Vida y Permiso de Circulación).
+        </p>
+        <div style="background-color: #2a2a2a; padding: 20px; border-radius: 8px; margin: 25px 0;">
+          <h3 style="color: #00e5a0; margin-top: 0;">🎁 15 Días Gratis Activados</h3>
+          <p style="margin-bottom: 0; color: #cccccc;">
+            Como bienvenida, te hemos activado <strong>15 días de Free Pass</strong>. Durante este tiempo podrás recibir viajes y generar ganancias sin pagar ninguna membresía.
+          </p>
+        </div>
+        <p style="font-size: 16px; color: #cccccc;">
+          Abre la aplicación, conéctate y comienza a ganar dinero hoy mismo con Fim.
+        </p>
+        <a href="fimapp://" style="display: inline-block; background-color: #00e5a0; color: #000000; text-decoration: none; padding: 12px 30px; border-radius: 50px; font-weight: bold; font-size: 16px; margin-top: 15px;">
+          ABRIR LA APP
+        </a>
+      </div>
+      <div style="background-color: #111111; padding: 15px; text-align: center; font-size: 12px; color: #888888;">
+        <p>© 2024 Fim Chile. Todos los derechos reservados.</p>
+      </div>
+    </div>
+  `;
+
+  if (!transporter) {
+    console.log(`
+┌──────────────────────────────────────────────────────────┐
+│  [CORREO DE CONDUCTOR VALIDADO]                          │
+├──────────────────────────────────────────────────────────┤
+│  Para: ${email.padEnd(48)} │
+│  ¡Felicidades ${name}! Tus documentos han sido aprobados.│
+│  Tienes 15 días gratis de Free Pass.                     │
+└──────────────────────────────────────────────────────────┘`);
+    return;
+  }
+
+  try {
+    await transporter.sendMail({
+      from: smtpFrom,
+      to: email,
+      subject: '¡Tus documentos han sido aprobados! 🎉 15 días gratis activados - Fim',
+      html,
+    });
+    console.log(`✅ Correo de conductor validado enviado a ${email}`);
+  } catch (error) {
+    console.error('❌ Error al enviar correo de conductor validado:', error);
+  }
+}

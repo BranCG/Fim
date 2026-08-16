@@ -785,12 +785,12 @@ export default function PassengerMap({
     const currentPoiIds = new Set(pois.map(p => p.id));
 
     // Eliminar los que ya no están en vista o en el límite
-    for (const [id, marker] of poiMarkersRef.current.entries()) {
+    poiMarkersRef.current.forEach((marker, id) => {
       if (!currentPoiIds.has(id)) {
         marker.remove();
         poiMarkersRef.current.delete(id);
       }
-    }
+    });
 
     // Dibujar nuevos
     pois.forEach(poi => {

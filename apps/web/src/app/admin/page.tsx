@@ -1176,14 +1176,9 @@ export default function AdminDashboardPage() {
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                 {(selectedDriver.status === 'pending' || selectedDriver.status === 'suspended') && (
                   <>
-                    <button className="btn btn-success" onClick={() => doDriverAction(selectedDriver.id, 'approve')} disabled={loading} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
-                      <Icon name="check" size={15} color="currentColor" /> {selectedDriver.status === 'suspended' ? 'Reactivar Conductor' : 'Aprobar Conductor'}
+                    <button className="btn btn-success" onClick={() => doDriverAction(selectedDriver.id, 'approve')} disabled={loading} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', fontWeight: 800 }}>
+                      <Icon name="check" size={15} color="currentColor" /> {selectedDriver.status === 'suspended' ? 'Reactivar Conductor' : 'Validar conductor y sus documentos'}
                     </button>
-                    {selectedDriver.status === 'pending' && (
-                      <button className="btn btn-warning" onClick={() => doDriverAction(selectedDriver.id, 'membership')} disabled={loading} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
-                        <Icon name="creditcard" size={15} color="currentColor" /> Aprobar + Activar Membresía
-                      </button>
-                    )}
                   </>
                 )}
 

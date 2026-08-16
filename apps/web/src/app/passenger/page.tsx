@@ -35,6 +35,7 @@ interface Trip {
   dropoffOtpCode?: string;
   acceptedAt?: string;
   estimatedPrice?: number;
+  paymentMethod?: string;
 }
 
 interface Location { lat: number; lng: number; address: string; }

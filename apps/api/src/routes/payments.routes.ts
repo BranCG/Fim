@@ -127,7 +127,7 @@ router.post('/membership-webhook', async (req, res) => {
                 : now;
               let expiresAt = new Date(baseDate);
               if (plan === 'BLACK') {
-                expiresAt.setMonth(expiresAt.getMonth() + 1);
+                expiresAt.setDate(expiresAt.getDate() + 30);
               } else if (plan === 'FLEX') {
                 // Expira el próximo lunes (fin del fin de semana)
                 const daysUntilMonday = (8 - baseDate.getDay()) % 7 || 7;
@@ -187,7 +187,7 @@ router.post('/membership/simulate', async (req, res) => {
       ? new Date(driver.membershipExpiresAt)
       : now;
     let expiresAt = new Date(baseDate);
-    if (plan === 'BLACK') expiresAt.setMonth(expiresAt.getMonth() + 1);
+    if (plan === 'BLACK') expiresAt.setDate(expiresAt.getDate() + 30);
     else if (plan === 'FLEX') expiresAt.setDate(expiresAt.getDate() + 7);
 
     await prisma.driver.update({
