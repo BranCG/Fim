@@ -751,11 +751,8 @@ export default function DashboardPage() {
 
                     {/* Acciones */}
                     <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-                      <button className="btn btn-success" disabled={loading} onClick={() => doAction(driver.id, 'approve')}>
-                        ✓ Aprobar conductor
-                      </button>
-                      <button className="btn btn-warning" disabled={loading} onClick={() => doAction(driver.id, 'membership')}>
-                         Aprobar Pago Manual
+                      <button className="btn btn-success" disabled={loading} onClick={() => doAction(driver.id, 'approve')} style={{ fontWeight: 800 }}>
+                        ✓ Validar conductor y sus documentos
                       </button>
                       <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                         <input placeholder="Motivo de rechazo..." value={rejectReason} onChange={e => setRejectReason(e.target.value)} style={{ width: '200px', padding: '8px 12px' }} />
