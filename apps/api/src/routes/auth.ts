@@ -493,6 +493,9 @@ router.post('/biometric-verify', requireAuth, async (req: Request, res: Response
     }
   } catch (err: any) {
     console.error('❌ [Biometría] Error en el flujo de verificación biométrica:', err);
+    if (err.name === 'InvalidParameterException' && err.message && err.message.includes('faces')) {
+      return res.status(400).json({ error: 'No se detectó ningún rostro en la foto capturada. Por favor, asegúrate de enfocar bien tu rostro.' });
+    }
     return res.status(500).json({ error: 'Error interno en el servidor al realizar la verificación biométrica.' });
   }
 });

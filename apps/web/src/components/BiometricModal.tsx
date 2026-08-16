@@ -56,22 +56,26 @@ export default function BiometricModal({ isOpen, onClose, onSuccess, selfieUrl }
         audio: false
       });
       setStream(mediaStream);
-      if (videoRef.current) {
-        const video = videoRef.current;
-        video.srcObject = mediaStream;
-        video.muted = true;
-        video.defaultMuted = true;
-        video.playsInline = true;
-        
-        // Forzar reproducción en WebViews
-        const playPromise = video.play();
-        if (playPromise !== undefined) {
-          playPromise.catch(e => {
-            console.error('Error auto-playing video:', e);
-            // Algunos WebViews requieren interacción manual si esto falla.
-          });
+      
+      // Asegurar asignación aunque React demore un ciclo
+      setTimeout(() => {
+        if (videoRef.current) {
+          const video = videoRef.current;
+          video.srcObject = mediaStream;
+          video.muted = true;
+          video.defaultMuted = true;
+          video.playsInline = true;
+          
+          // Forzar reproducción en WebViews
+          const playPromise = video.play();
+          if (playPromise !== undefined) {
+            playPromise.catch(e => {
+              console.error('Error auto-playing video:', e);
+            });
+          }
         }
-      }
+      }, 50);
+
       setStatus('camera_active');
     } catch (err: any) {
       console.error('Error al acceder a la cámara:', err);
@@ -210,20 +214,19 @@ export default function BiometricModal({ isOpen, onClose, onSuccess, selfieUrl }
             <div className="spinner" style={{ width: '40px', height: '40px' }} />
           )}
 
-          {status === 'camera_active' || status === 'verifying' ? (
-            <video
-              ref={videoRef}
-              autoPlay
-              playsInline
-              muted
-              style={{
-                width: '100%',
-                height: '100%',
-                objectFit: 'cover',
-                transform: 'scaleX(-1)' // Espejo para selfie natural
-              }}
-            />
-          ) : null}
+          <video
+            ref={videoRef}
+            autoPlay
+            playsInline
+            muted
+            style={{
+              width: '100%',
+              height: '100%',
+              objectFit: 'cover',
+              transform: 'scaleX(-1)', // Espejo para selfie natural
+              display: (status === 'camera_active' || status === 'verifying') ? 'block' : 'none'
+            }}
+          />
 
           {status === 'verifying' && (
             <div style={{
