@@ -1212,8 +1212,9 @@ export default function PassengerPage() {
   }, [origin, dest, paymentMethod, passengerCount, session, checkActiveTrip]);
 
   const handleRequestTrip = useCallback(async () => {
-    await executeRequestTrip();
-  }, [executeRequestTrip]);
+    // Interceptamos la solicitud para SIEMPRE requerir biometría antes de buscar conductor
+    setShowBiometricModal(true);
+  }, []);
 
   const executeCancel = useCallback(async (reason: string) => {
     if (currentTrip) {

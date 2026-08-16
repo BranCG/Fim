@@ -18,11 +18,11 @@ router.post('/request', requireAuth, requireRole('passenger'), async (req: Reque
       return res.status(403).json({ error: 'Tu cuenta aún no ha sido verificada por el administrador. Debes esperar la validación de tus documentos para pedir viajes.' });
     }
 
-    // Verificación biométrica obligatoria (válida por 30 minutos), omitida para cuentas sin foto de perfil (devs)
+    // Verificación biométrica obligatoria (válida por 5 minutos), omitida para cuentas sin foto de perfil (devs)
     const isPlaceholder = !user.selfieUrl || user.selfieUrl.trim() === '' || user.selfieUrl.includes('placehold');
     if (!isPlaceholder) {
-      const thirtyMinutesAgo = new Date(Date.now() - 30 * 60 * 1000);
-      if (!user.lastBiometricAuth || user.lastBiometricAuth < thirtyMinutesAgo) {
+      const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
+      if (!user.lastBiometricAuth || user.lastBiometricAuth < fiveMinutesAgo) {
         return res.status(403).json({ error: 'Biometric Required' });
       }
     }
