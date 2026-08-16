@@ -1,7 +1,7 @@
 import { Router, Request, Response } from 'express';
 import prisma from '../utils/prisma';
 import { requireAuth, requireRole } from '../middleware/auth';
-import { sendDriverValidatedEmail } from '../utils/mailer';
+import { sendDriverValidatedEmail, sendPassengerValidatedEmail } from '../utils/mailer';
 import { sendPushNotification } from '../utils/firebase';
 
 const router = Router();
@@ -384,11 +384,26 @@ router.get('/passengers/:id', async (req: Request, res: Response) => {
 // ─── APROBAR PASAJERO ─────────────────────────────────────────────────────
 router.post('/passengers/:id/approve', async (req: Request, res: Response) => {
   try {
-    const passenger = await prisma.user.update({
+    const passenger = await prisma.user.findUnique({ where: { id: req.params.id } });
+    if (!passenger) return res.status(404).json({ error: 'Pasajero no encontrado' });
+
+    const updated = await prisma.user.update({
       where: { id: req.params.id },
       data: { isVerified: true },
     });
-    return res.json({ message: 'Pasajero aprobado con éxito', passenger });
+
+    // Enviar notificaciones de manera asíncrona
+    Promise.all([
+      sendPassengerValidatedEmail(passenger.email, passenger.name),
+      (passenger as any).fcmToken ? sendPushNotification(
+        (passenger as any).fcmToken,
+        '¡Tu cuenta ha sido validada! 🎉',
+        'Ya puedes solicitar tu primer viaje con Fim.',
+        { type: 'account_approved' }
+      ) : Promise.resolve(),
+    ]).catch(console.error);
+
+    return res.json({ message: 'Pasajero aprobado con éxito', passenger: updated });
   } catch (err) {
     return res.status(500).json({ error: 'Error interno' });
   }
