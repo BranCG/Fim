@@ -12,7 +12,7 @@ export function getFavoriteLocations(): { home: SavedLocation | null; work: Save
   const raw = localStorage.getItem(FAVORITES_KEY);
   if (!raw) return { home: null, work: null, mall: null };
   try {
-    const parsed = JSON.parse(raw);
+    const parsed = JSON.parse(raw); 
     return {
       home: parsed.home || null,
       work: parsed.work || null,

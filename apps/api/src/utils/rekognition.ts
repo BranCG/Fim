@@ -83,3 +83,36 @@ export async function detectDocumentText(documentBuffer: Buffer): Promise<boolea
     throw error;
   }
 }
+
+/**
+ * Escanea una imagen en busca de palabras clave específicas para validar un tipo de documento
+ * @param documentBuffer Imagen del documento en formato Buffer
+ * @param validKeywords Lista de palabras clave que deben existir (al menos una o varias según lógica)
+ * @returns true si se encuentran las palabras clave
+ */
+export async function detectSpecificDocumentText(documentBuffer: Buffer, validKeywords: string[]): Promise<boolean> {
+  if (!rekognitionClient) {
+    console.log(`ℹ️ [Rekognition] Simulando OCR específico para [${validKeywords.join(",")}] (MOCK exitoso)`);
+    return true;
+  }
+
+  try {
+    const command = new DetectTextCommand({
+      Image: { Bytes: documentBuffer }
+    });
+
+    const response = await rekognitionClient.send(command);
+    if (response.TextDetections && response.TextDetections.length > 0) {
+      const detectedText = response.TextDetections.map(t => t.DetectedText?.toUpperCase() || "").join(" ");
+      
+      // Verificamos si al menos UNA de las palabras clave existe
+      const isValid = validKeywords.some(keyword => detectedText.includes(keyword.toUpperCase()));
+      console.log(`ℹ️ [Rekognition] OCR Específico válido: ${isValid} para palabras: [${validKeywords.join(",")}]`);
+      return isValid;
+    }
+    return false;
+  } catch (error) {
+    console.error("❌ [Rekognition] Error al detectar texto específico con AWS:", error);
+    throw error;
+  }
+}

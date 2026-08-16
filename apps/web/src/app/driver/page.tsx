@@ -199,7 +199,7 @@ export default function DriverPage() {
     const updateLogs = () => {
       try {
         setSocketLogs(JSON.parse(localStorage.getItem('socket_logs') || '[]'));
-      } catch(e){}
+      } catch (e) { }
     };
     updateLogs();
     window.addEventListener('socket_logs_updated', updateLogs);
@@ -624,7 +624,7 @@ export default function DriverPage() {
       const pendingDays = driver.giftDaysPending;
       setGiftDaysAmount(pendingDays);
       setShowGiftModal(true);
-      
+
       // Play sound
       try {
         const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2019/2019-84.wav');
@@ -646,10 +646,10 @@ export default function DriverPage() {
         localStorage.setItem(`fim_driver_notifications_${driver.id}`, JSON.stringify(updated));
         return updated;
       });
-      
+
       // Update local state immediately to avoid double calls
       setDriver(prev => prev ? { ...prev, giftDaysPending: 0 } : null);
-      
+
       // Call endpoint to clear it in DB
       api.post('/drivers/me/clear-gift-pending')
         .catch(err => {
@@ -895,7 +895,7 @@ export default function DriverPage() {
     setSafetySending(true);
     try {
       const socket = connectSocket();
-      
+
       let lat = pos?.lat || null;
       let lng = pos?.lng || null;
       try {
@@ -1044,10 +1044,17 @@ export default function DriverPage() {
     setLoading(true);
 
     if (newStatus && driver) {
-      // 1. Validar vinculación MP
       if (!driver.mpAccessToken) {
-        showCustomAlert('Debes vincular tu cuenta de Mercado Pago en la sección de Cumplimiento para recibir pagos.', 'Atención', 'warning');
-        setLoading(false);
+        showCustomConfirm(
+          'Para empezar a recibir viajes, primero debes vincular tu cuenta de Mercado Pago donde recibirás tus ganancias.',
+          'Vincular Cuenta',
+          () => {
+            router.push('/driver/compliance');
+            setLoading(false);
+          },
+          () => setLoading(false),
+          'warning'
+        );
         return;
       }
       const now = new Date();
@@ -1102,10 +1109,10 @@ export default function DriverPage() {
     }
 
     try {
-      const res = await api.post('/drivers/toggle-online', { 
+      const res = await api.post('/drivers/toggle-online', {
         isOnline: newStatus,
         lat: posRef.current.lat,
-        lng: posRef.current.lng 
+        lng: posRef.current.lng
       });
       setIsOnline(res.data.isOnline);
       const socket = connectSocket();
@@ -1370,7 +1377,7 @@ export default function DriverPage() {
 
         {/* Mercado Pago Vinculación Link */}
         <div style={{ marginTop: '20px' }}>
-          <button 
+          <button
             className="btn btn-outline"
             style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
             onClick={() => router.push('/driver/compliance')}
@@ -1563,7 +1570,7 @@ export default function DriverPage() {
                 e.preventDefault();
                 e.stopPropagation();
                 setCenterTrigger(prev => prev + 1);
-                
+
                 if (!isOnline) {
                   try {
                     const { getCurrentPosition } = await import('@/lib/geolocation');
@@ -1767,7 +1774,7 @@ export default function DriverPage() {
 
       {/* Botón flotante de SOS en viaje activo */}
       {activeTrip && (
-        <button 
+        <button
           onClick={() => {
             setShowSafetyModal(true);
             setSafetyCountdown(8);
@@ -1846,11 +1853,11 @@ export default function DriverPage() {
         {activeTab === 'finances' && (
           <div style={{ position: 'absolute', inset: 0, zIndex: 100, background: 'var(--bg-primary)', overflowY: 'auto', paddingTop: '80px' }}>
             <div style={{ padding: '0 20px', marginBottom: '-10px' }}>
-              <button 
+              <button
                 onClick={() => setActiveTab('map')}
                 style={{ background: 'transparent', border: 'none', color: 'var(--accent)', fontWeight: 700, fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', padding: 0 }}
               >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M19 12H5M12 19l-7-7 7-7" /></svg>
                 Volver al mapa
               </button>
             </div>
@@ -2564,7 +2571,7 @@ export default function DriverPage() {
                 <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '6px' }}>Paradas</div>
                 {activeTrip.stops.map((stop: any, idx: number) => (
                   <div key={idx} style={{ fontSize: '0.85rem', fontWeight: 600, color: '#FFA500', display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}>
-                     <span style={{ fontSize: '10px' }}>🟠</span> {stop.address || `Parada ${idx + 1}`}
+                    <span style={{ fontSize: '10px' }}>🟠</span> {stop.address || `Parada ${idx + 1}`}
                   </div>
                 ))}
               </div>
@@ -2626,7 +2633,7 @@ export default function DriverPage() {
                   {!completionOtpVerified ? (
                     <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border)', padding: '16px', borderRadius: 'var(--radius)', marginBottom: '16px' }}>
                       <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '12px', textAlign: 'center', fontWeight: 600 }}>
-                        {activeTrip?.isPaid 
+                        {activeTrip?.isPaid
                           ? "Pide el código de término al pasajero para finalizar el viaje:"
                           : "Pide el código de término al pasajero para habilitar el pago:"}
                       </p>
@@ -2743,7 +2750,7 @@ export default function DriverPage() {
             <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--text-muted)' }}>
               ¿El pasajero tuvo un problema o prefiere pagar en efectivo?
             </p>
-            <button 
+            <button
               className="btn btn-secondary btn-block"
               onClick={() => {
                 socket.emit('driver:change-payment-to-cash', { tripId: activeTrip?.id });
@@ -2782,7 +2789,7 @@ export default function DriverPage() {
             gap: '16px'
           }}>
             <h3 style={{ margin: 0, fontWeight: 900, fontSize: '1.25rem' }}>¿Por qué cancelas tu viaje?</h3>
-            
+
             <div style={{ marginBottom: '20px' }}>
               <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, color: 'var(--text-secondary)', marginBottom: '8px' }}>
                 Motivo de cancelación:
@@ -2898,9 +2905,9 @@ export default function DriverPage() {
             gap: '20px',
             textAlign: 'center'
           }}>
-            <div style={{ 
-              width: '60px', height: '60px', borderRadius: '50%', background: 'rgba(255, 59, 48, 0.1)', 
-              display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto', color: 'var(--danger)' 
+            <div style={{
+              width: '60px', height: '60px', borderRadius: '50%', background: 'rgba(255, 59, 48, 0.1)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto', color: 'var(--danger)'
             }}>
               <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <circle cx="12" cy="12" r="10"></circle>
@@ -2908,7 +2915,7 @@ export default function DriverPage() {
                 <line x1="12" y1="16" x2="12.01" y2="16"></line>
               </svg>
             </div>
-            
+
             <div>
               <h3 style={{ margin: '0 0 8px 0', fontWeight: 900, fontSize: '1.25rem', color: 'white' }}>Pago Rechazado</h3>
               <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', lineHeight: 1.5, margin: 0 }}>
@@ -3341,7 +3348,7 @@ export default function DriverPage() {
               const blackNormalPrice = parseInt((config.membership_black_normal_price || '199990').toString().replace(/\D/g, ''), 10);
               const blackPromoPrice = parseInt((config.membership_black_promo_price || '39990').toString().replace(/\D/g, ''), 10);
               const blackFinalPrice = hasBlackDiscount ? blackPromoPrice * 0.8 : blackPromoPrice;
-              
+
               const comfortNormalPrice = parseInt((config.membership_comfort_normal_price || '15990').toString().replace(/\D/g, ''), 10);
               const comfortPromoPrice = parseInt((config.membership_comfort_promo_price || '8990').toString().replace(/\D/g, ''), 10);
 
@@ -4150,7 +4157,7 @@ export default function DriverPage() {
               pointerEvents: 'none',
               zIndex: 0
             }} />
-            
+
             <div style={{ position: 'relative', zIndex: 1 }}>
               <div style={{
                 width: '80px',
@@ -4216,7 +4223,7 @@ export default function DriverPage() {
                 </span>
               </p>
 
-              <button 
+              <button
                 onClick={() => setShowGiftModal(false)}
                 className="btn btn-accent btn-lg btn-block"
                 style={{
@@ -4280,7 +4287,7 @@ export default function DriverPage() {
                 </svg>
                 Notificaciones
               </h3>
-              <button 
+              <button
                 onClick={() => setShowNotificationsModal(false)}
                 style={{
                   background: 'none',
@@ -4305,7 +4312,7 @@ export default function DriverPage() {
             ) : (
               <div>
                 <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '12px' }}>
-                  <button 
+                  <button
                     onClick={markAllNotificationsAsRead}
                     style={{
                       background: 'none',
@@ -4321,7 +4328,7 @@ export default function DriverPage() {
                   </button>
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                   {notifications.map((n: any) => (
+                  {notifications.map((n: any) => (
                     <div key={n.id} style={{
                       padding: '12px 16px',
                       background: n.read ? 'rgba(255,255,255,0.02)' : 'rgba(255, 215, 0, 0.04)',
@@ -4369,8 +4376,8 @@ export default function DriverPage() {
                 </div>
               </div>
             )}
-            
-            <button 
+
+            <button
               onClick={() => setShowNotificationsModal(false)}
               className="btn btn-secondary btn-block"
               style={{ marginTop: '20px' }}
@@ -4393,7 +4400,7 @@ export default function DriverPage() {
         }}
         selfieUrl={driver?.selfieUrl}
       />
-      
+
 
     </div>
   );

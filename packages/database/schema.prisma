@@ -64,6 +64,8 @@ model Driver {
   vehiclePlate        String    @unique @map("patente_vehiculo")
   vehicleColor        String    @default("") @map("color_vehiculo")
   vehiclePhotoUrl     String    @map("url_foto_vehiculo")
+  drivingRecordUrl    String?   @map("url_hoja_vida_conductor")
+  circulationPermitUrl String?  @map("url_permiso_circulacion")
   tagNumber           String    @map("numero_tag")
   status              String    @default("pending") @map("estado")
   membershipPaid      Boolean   @default(false) @map("membresia_pagada")

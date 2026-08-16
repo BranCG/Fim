@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { g } from 'framer-motion/client';
 
 const getApiUrl = () => {
   // 1. Usar variable de entorno si existe (Next.js lo inyecta al compilar)

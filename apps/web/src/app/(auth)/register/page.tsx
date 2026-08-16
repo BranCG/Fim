@@ -150,7 +150,8 @@ function RegisterForm() {
   const [idBack, setIdBack] = useState<FileUpload>(emptyUpload());
   const [selfie, setSelfie] = useState<FileUpload>(emptyUpload());
   const [backgroundDoc, setBackgroundDoc] = useState<FileUpload>(emptyUpload());
-
+  const [drivingRecord, setDrivingRecord] = useState<FileUpload>(emptyUpload());
+  const [circulationPermit, setCirculationPermit] = useState<FileUpload>(emptyUpload());
   // Step 3 - Driver vehicle (solo conductores)
   const [licenseNumber, setLicenseNumber] = useState('');
   const [licenseFront, setLicenseFront] = useState<FileUpload>(emptyUpload());
@@ -433,7 +434,7 @@ function RegisterForm() {
     capture?: 'user' | 'environment' | boolean
   ) {
     const isPdf = upload.file?.type === 'application/pdf' || upload.file?.name.toLowerCase().endsWith('.pdf');
-    const isBackgroundDoc = id === 'background-doc';
+    const isDocument = id === 'background-doc' || id === 'driving-record';
     const captureVal = capture === false ? undefined : (capture || 'environment');
 
     return (
@@ -473,7 +474,7 @@ function RegisterForm() {
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
               <div style={{ marginBottom: '8px', color: 'var(--text-muted)' }}>
-                {isBackgroundDoc ? (
+                {isDocument ? (
                   <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
                   </svg>
@@ -485,7 +486,7 @@ function RegisterForm() {
                 )}
               </div>
               <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>
-                {isBackgroundDoc ? 'Selecciona el archivo' : 'Toca para capturar'}
+                {isDocument ? 'Selecciona el archivo' : 'Toca para capturar'}
               </p>
               {hint && <p style={{ color: 'var(--text-muted)', fontSize: '0.78rem', marginTop: '4px' }}>{hint}</p>}
             </div>
@@ -619,6 +620,8 @@ function RegisterForm() {
             idBackUrl: idBack.url,
             selfieUrl: selfie.url,
             backgroundDocUrl: backgroundDoc.url,
+            drivingRecordUrl: drivingRecord.url,
+            circulationPermitUrl: circulationPermit.url,
             licenseNumber,
             licenseUrl: licenseFront.url,
             licenseBackUrl: licenseBack.url,
@@ -634,7 +637,7 @@ function RegisterForm() {
           saveSession(res.data.accessToken, { ...res.data.driver, role: 'driver' });
           router.push('/driver');
         } else {
-          const res = await api.post('/auth/driver/register', { name, email, phone, password, rut, birthDate, address, idFrontUrl: idFront.url, idBackUrl: idBack.url, selfieUrl: selfie.url, backgroundDocUrl: backgroundDoc.url, licenseNumber, licenseUrl: licenseFront.url, licenseBackUrl: licenseBack.url, vehicleBrand, vehicleModel, vehicleYear, vehiclePlate, tagNumber, vehiclePhotoUrl: vehiclePhoto.url, membershipPlan, vehicleColor });
+          const res = await api.post('/auth/driver/register', { name, email, phone, password, rut, birthDate, address, idFrontUrl: idFront.url, idBackUrl: idBack.url, selfieUrl: selfie.url, backgroundDocUrl: backgroundDoc.url, drivingRecordUrl: drivingRecord.url, circulationPermitUrl: circulationPermit.url, licenseNumber, licenseUrl: licenseFront.url, licenseBackUrl: licenseBack.url, vehicleBrand, vehicleModel, vehicleYear, vehiclePlate, tagNumber, vehiclePhotoUrl: vehiclePhoto.url, membershipPlan, vehicleColor });
           if (res.data.status === 'verification_pending') {
             setVerificationEmail(email);
             setVerificationPending(true);
@@ -763,14 +766,17 @@ function RegisterForm() {
       }
     }
     if (step === 2) {
-      if (selfie.loading || idFront.loading || idBack.loading || backgroundDoc.loading) { setError('Espera a que terminen de subirse todos los documentos.'); return; }
+      if (selfie.loading || idFront.loading || idBack.loading || backgroundDoc.loading || drivingRecord.loading) { setError('Espera a que terminen de subirse todos los documentos.'); return; }
       if (!selfie.url) { setError(selfie.preview ? 'La foto Selfie con Cédula no pudo subirse. Inténtalo de nuevo.' : 'Por favor, sube la foto de tu Selfie con la Cédula.'); return; }
       if (!idFront.url) { setError(idFront.preview ? 'La foto frontal de tu Cédula no pudo subirse. Inténtalo de nuevo.' : 'Por favor, sube la foto frontal de tu Cédula.'); return; }
       if (!idBack.url) { setError(idBack.preview ? 'La foto posterior de tu Cédula no pudo subirse. Inténtalo de nuevo.' : 'Por favor, sube la foto posterior de tu Cédula.'); return; }
-      if (!backgroundDoc.url && role === 'driver') { setError(backgroundDoc.preview ? 'El Certificado de Antecedentes no pudo subirse. Inténtalo de nuevo.' : 'Por favor, sube tu Certificado de Antecedentes.'); return; }
+      if (role === 'driver') {
+        if (!backgroundDoc.url) { setError(backgroundDoc.preview ? 'El Certificado de Antecedentes no pudo subirse. Inténtalo de nuevo.' : 'Por favor, sube tu Certificado de Antecedentes.'); return; }
+        if (!drivingRecord.url) { setError(drivingRecord.preview ? 'La Hoja de Vida no pudo subirse.' : 'Por favor, sube tu Hoja de Vida del Conductor.'); return; }
+      }
     }
     if (step === 3 && role === 'driver') {
-      if (licenseFront.loading || licenseBack.loading || vehiclePhoto.loading) { setError('Espera a que terminen de subirse todas las fotos.'); return; }
+      if (licenseFront.loading || licenseBack.loading || vehiclePhoto.loading || circulationPermit.loading) { setError('Espera a que terminen de subirse todas las fotos.'); return; }
       if (!vehiclePlate) { setError('Por favor, ingresa la patente de tu vehículo.'); return; }
       if (!vehicleBrand) { setError('Por favor, ingresa la marca de tu vehículo.'); return; }
       if (!vehicleModel) { setError('Por favor, ingresa el modelo de tu vehículo.'); return; }
@@ -781,6 +787,7 @@ function RegisterForm() {
       if (!licenseFront.url) { setError(licenseFront.preview ? 'La foto frontal de la licencia no pudo subirse. Inténtalo de nuevo.' : 'Por favor, sube la foto frontal de tu licencia de conducir.'); return; }
       if (!licenseBack.url) { setError(licenseBack.preview ? 'La foto posterior de la licencia no pudo subirse. Inténtalo de nuevo.' : 'Por favor, sube la foto posterior de tu licencia de conducir.'); return; }
       if (!vehiclePhoto.url) { setError(vehiclePhoto.preview ? 'La foto del vehículo no pudo subirse. Inténtalo de nuevo.' : 'Por favor, sube la foto de tu vehículo.'); return; }
+      if (!circulationPermit.url) { setError(circulationPermit.preview ? 'El Permiso de Circulación no pudo subirse.' : 'Por favor, sube tu Permiso de Circulación (al día).'); return; }
     }
     setStep(prev => (prev + 1) as Step);
   }
@@ -1097,6 +1104,7 @@ function RegisterForm() {
               {role === 'driver' && (
                 <>
                   {renderUploadArea('Certificado de Antecedentes', backgroundDoc, setBackgroundDoc, 'background-doc', undefined, 'image/*,application/pdf', false)}
+                  {renderUploadArea('Hoja de Vida del Conductor (PDF o Imagen)', drivingRecord, setDrivingRecord, 'driving-record', undefined, 'image/*,application/pdf', false)}
               <div style={{
                 background: 'rgba(255, 255, 255, 0.03)',
                 border: '1px solid var(--border)',
@@ -1275,6 +1283,7 @@ function RegisterForm() {
               {renderUploadArea('Licencia de Conducir (Frontal)', licenseFront, setLicenseFront, 'license-front')}
               {renderUploadArea('Licencia de Conducir (Posterior)', licenseBack, setLicenseBack, 'license-back')}
               {renderUploadArea('Foto del Vehículo', vehiclePhoto, setVehiclePhoto, 'vehicle-photo')}
+              {renderUploadArea('Permiso de Circulación (Al día)', circulationPermit, setCirculationPermit, 'circulation-permit')}
             </div>
           )}
 

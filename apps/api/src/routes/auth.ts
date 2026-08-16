@@ -5,7 +5,7 @@ import { generateTokens, requireAuth } from '../middleware/auth';
 import { sendVerificationEmail, sendPasswordResetEmail } from '../utils/mailer';
 import { OAuth2Client } from 'google-auth-library';
 import axios from 'axios';
-import { compareFaces, detectDocumentText } from '../utils/rekognition';
+import { compareFaces, detectDocumentText, detectSpecificDocumentText } from '../utils/rekognition';
 
 const router = Router();
 
@@ -24,7 +24,7 @@ async function verifyGoogleToken(idToken: string) {
 }
 
 // ─── HELPER: VALIDACIÓN ML DE DOCUMENTOS ─────────────────────────────────
-async function validateRegistrationDocs(idFrontUrl: string, selfieUrl: string) {
+async function validateRegistrationDocs(idFrontUrl: string, selfieUrl: string, drivingRecordUrl?: string, circulationPermitUrl?: string) {
   if (!idFrontUrl || !selfieUrl) return; // Si no hay docs, no validamos (ej. Google Login sin docs)
   
   if (selfieUrl.includes('placehold.co') || selfieUrl.includes('placeholder')) {
@@ -32,12 +32,17 @@ async function validateRegistrationDocs(idFrontUrl: string, selfieUrl: string) {
   }
 
   try {
-    const [idRes, selfieRes] = await Promise.all([
+    const downloads: Promise<any>[] = [
       axios.get(idFrontUrl, { responseType: 'arraybuffer' }),
       axios.get(selfieUrl, { responseType: 'arraybuffer' })
-    ]);
-    const idBuffer = Buffer.from(idRes.data);
-    const selfieBuffer = Buffer.from(selfieRes.data);
+    ];
+    if (drivingRecordUrl) downloads.push(axios.get(drivingRecordUrl, { responseType: 'arraybuffer' }));
+    if (circulationPermitUrl) downloads.push(axios.get(circulationPermitUrl, { responseType: 'arraybuffer' }));
+
+    const responses = await Promise.all(downloads);
+    
+    const idBuffer = Buffer.from(responses[0].data);
+    const selfieBuffer = Buffer.from(responses[1].data);
 
     const isDocValid = await detectDocumentText(idBuffer);
     if (!isDocValid) {
@@ -48,8 +53,26 @@ async function validateRegistrationDocs(idFrontUrl: string, selfieUrl: string) {
     if (similarity < 80) { // Umbral un poco más tolerante para el registro inicial
       throw new Error('El rostro de la selfie no coincide con la foto del documento de identidad.');
     }
+
+    let drIndex = drivingRecordUrl ? 2 : -1;
+    let cpIndex = circulationPermitUrl ? (drivingRecordUrl ? 3 : 2) : -1;
+
+    if (drIndex !== -1 && responses[drIndex]) {
+      const drBuffer = Buffer.from(responses[drIndex].data);
+      const isDrValid = await detectSpecificDocumentText(drBuffer, ["HOJA", "VIDA", "CONDUCTOR"]);
+      if (!isDrValid) throw new Error('El documento subido como Hoja de Vida no parece ser válido. Asegúrate de que se lea "HOJA DE VIDA".');
+    }
+
+    if (cpIndex !== -1 && responses[cpIndex]) {
+      const cpBuffer = Buffer.from(responses[cpIndex].data);
+      const currentYear = new Date().getFullYear().toString();
+      const nextYear = (new Date().getFullYear() + 1).toString();
+      const isCpValid = await detectSpecificDocumentText(cpBuffer, ["PERMISO", "CIRCULACION", currentYear, nextYear]);
+      if (!isCpValid) throw new Error(`El Permiso de Circulación no es válido o está vencido. Asegúrate de que se lea "PERMISO DE CIRCULACIÓN" y el año ${currentYear} o ${nextYear}.`);
+    }
+
   } catch (err: any) {
-    if (err.message && err.message.includes('rostro') || err.message.includes('Cédula')) {
+    if (err.message && (err.message.includes('rostro') || err.message.includes('Cédula') || err.message.includes('Hoja de Vida') || err.message.includes('Permiso'))) {
       throw err;
     }
     // Si AWS falla por error de conexión u otro, bloqueamos para mantener seguridad
@@ -179,13 +202,13 @@ router.post('/driver/register', async (req: Request, res: Response) => {
       licenseNumber, vehicleBrand, vehicleModel, vehicleYear, vehiclePlate, tagNumber, vehicleColor,
       idFrontUrl, idBackUrl, selfieUrl, licenseUrl, licenseBackUrl, vehiclePhotoUrl,
       membershipPlan,
-      backgroundDocUrl,
+      backgroundDocUrl, drivingRecordUrl, circulationPermitUrl
     } = req.body;
 
     const required = [email, phone, name, password, rut, birthDate, address,
       licenseNumber, vehicleBrand, vehicleModel, vehicleYear, vehiclePlate,
       idFrontUrl, idBackUrl, selfieUrl, licenseUrl, licenseBackUrl, vehiclePhotoUrl, membershipPlan,
-      backgroundDocUrl];
+      backgroundDocUrl, drivingRecordUrl, circulationPermitUrl];
 
     if (required.some(v => !v)) {
       return res.status(400).json({ error: 'Todos los campos son obligatorios' });
@@ -213,7 +236,7 @@ router.post('/driver/register', async (req: Request, res: Response) => {
     // ML Validation
     try {
       if (idFrontUrl && selfieUrl) {
-        await validateRegistrationDocs(idFrontUrl, selfieUrl);
+        await validateRegistrationDocs(idFrontUrl, selfieUrl, drivingRecordUrl, circulationPermitUrl);
       }
     } catch (valErr: any) {
       return res.status(400).json({ error: valErr.message });
@@ -224,6 +247,7 @@ router.post('/driver/register', async (req: Request, res: Response) => {
         email, phone, name, passwordHash,
         rut, birthDate: new Date(birthDate), address,
         idFrontUrl, idBackUrl, selfieUrl, backgroundDocUrl,
+        drivingRecordUrl, circulationPermitUrl,
         licenseNumber, licenseUrl, licenseBackUrl,
         vehicleBrand, vehicleModel,
         vehicleYear: Number(vehicleYear),
@@ -767,7 +791,7 @@ router.post('/google/register', async (req: Request, res: Response) => {
       // Conductor specific
       licenseNumber, licenseUrl, licenseBackUrl,
       vehicleBrand, vehicleModel, vehicleYear, vehiclePlate, tagNumber, vehiclePhotoUrl, vehicleColor,
-      membershipPlan
+      membershipPlan, drivingRecordUrl, circulationPermitUrl
     } = req.body;
 
     if (!credential || !phone || !name || !role) {
@@ -783,7 +807,7 @@ router.post('/google/register', async (req: Request, res: Response) => {
     const dummyPasswordHash = await bcrypt.hash('GOOGLE_OAUTH_DUMMY_PASSWORD_' + Math.random(), 12);
 
     if (role === 'driver') {
-      const required = [rut, birthDate, address, licenseNumber, vehicleBrand, vehicleModel, vehicleYear, vehiclePlate, idFrontUrl, idBackUrl, selfieUrl, backgroundDocUrl, licenseUrl, licenseBackUrl, vehiclePhotoUrl, membershipPlan];
+      const required = [rut, birthDate, address, licenseNumber, vehicleBrand, vehicleModel, vehicleYear, vehiclePlate, idFrontUrl, idBackUrl, selfieUrl, backgroundDocUrl, licenseUrl, licenseBackUrl, vehiclePhotoUrl, membershipPlan, drivingRecordUrl, circulationPermitUrl];
       if (required.some(v => !v)) {
         return res.status(400).json({ error: 'Faltan campos obligatorios para el conductor' });
       }
@@ -800,6 +824,7 @@ router.post('/google/register', async (req: Request, res: Response) => {
           email, phone, name, passwordHash: dummyPasswordHash,
           rut, birthDate: new Date(birthDate), address,
           idFrontUrl, idBackUrl, selfieUrl, backgroundDocUrl,
+          drivingRecordUrl, circulationPermitUrl,
           licenseNumber, licenseUrl, licenseBackUrl,
           vehicleBrand, vehicleModel, vehicleYear: Number(vehicleYear),
           vehiclePlate, vehiclePhotoUrl, tagNumber: tagNumber || "",
