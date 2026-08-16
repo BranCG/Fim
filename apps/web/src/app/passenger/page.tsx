@@ -1212,9 +1212,14 @@ export default function PassengerPage() {
   }, [origin, dest, paymentMethod, passengerCount, session, checkActiveTrip]);
 
   const handleRequestTrip = useCallback(async () => {
+    if (session?.user && !session.user.isVerified) {
+      setError("Tu cuenta aún no ha sido validada por Fim. Estamos revisando tus documentos de seguridad. Por favor, intenta de nuevo más tarde para realizar tu primer viaje.");
+      setStatus('confirm');
+      return;
+    }
     // Interceptamos la solicitud para SIEMPRE requerir biometría antes de buscar conductor
     setShowBiometricModal(true);
-  }, []);
+  }, [session]);
 
   const executeCancel = useCallback(async (reason: string) => {
     if (currentTrip) {

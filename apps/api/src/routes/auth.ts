@@ -129,7 +129,7 @@ router.post('/passenger/register', async (req: Request, res: Response) => {
         selfieUrl,
         backgroundDocUrl,
         role: 'passenger',
-        isVerified: true, // Aprobado automáticamente gracias a ML
+        isVerified: false, // Ahora el administrador debe validarlo manualmente
         emailVerified: false,
         emailCode,
       },
