@@ -106,7 +106,7 @@ router.post('/toggle-online', requireAuth, requireRole('driver'), async (req: Re
       // Validar área de cobertura geográfica (últimas coordenadas del conductor)
       const currentLat = lat ?? driver.lastLat;
       const currentLng = lng ?? driver.lastLng;
-      
+
       if (currentLat !== null && currentLng !== null) {
         const locationCheck = await checkCoordinateInAllowedRegion(currentLat, currentLng);
         if (!locationCheck.allowed) {
@@ -117,7 +117,7 @@ router.post('/toggle-online', requireAuth, requireRole('driver'), async (req: Re
       }
       const now = new Date();
       const plan = driver.membershipPlan;
-      
+
       // Lógica de promoción de lanzamiento (Free Pass Dinámico)
       let isPromoActive = false;
       const configRows = await prisma.systemConfig.findMany({
@@ -133,7 +133,7 @@ router.post('/toggle-online', requireAuth, requireRole('driver'), async (req: Re
         const freeDays = parseInt((config.free_pass_days || '0').toString().replace(/\D/g, ''), 10);
 
         const driverCreatedAt = new Date(driver.createdAt);
-        
+
         if (driverCreatedAt >= startDate && driverCreatedAt <= endDate) {
           const driverAgeDays = (now.getTime() - driverCreatedAt.getTime()) / (1000 * 60 * 60 * 24);
           if (driverAgeDays <= freeDays) {
@@ -149,7 +149,7 @@ router.post('/toggle-online', requireAuth, requireRole('driver'), async (req: Re
         // Requiere membresía pagada y vigente, a menos que esté en promoción o prueba
         if (!isEligibleToGoOnline) {
           if (!driver.membershipPaid) {
-            return res.status(403).json({ error: 'Debes pagar tu membresía BLACK ($150.000) para activarte.' });
+            return res.status(403).json({ error: 'Debes pagar tu membresía BLACK ($39.990) para activarte.' });
           }
           if (driver.membershipExpiresAt && driver.membershipExpiresAt < now) {
             await prisma.driver.update({ where: { id: driver.id }, data: { membershipPaid: false } });
@@ -162,18 +162,18 @@ router.post('/toggle-online', requireAuth, requireRole('driver'), async (req: Re
         // Solo puede operar Viernes(5), Sábado(6), Domingo(0)
         const dayOfWeek = now.getDay(); // 0=Dom, 5=Vie, 6=Sáb
         if (dayOfWeek !== 0 && dayOfWeek !== 5 && dayOfWeek !== 6) {
-          return res.status(403).json({ 
+          return res.status(403).json({
             error: 'La membresía FLEX solo está activa Viernes, Sábado y Domingo. Hoy no puedes operar.'
           });
         }
         if (!isEligibleToGoOnline) {
           if (!driver.membershipPaid) {
-            return res.status(403).json({ error: 'Debes pagar tu membresía FLEX ($60.000) para activarte este fin de semana.' });
+            return res.status(403).json({ error: 'Debes pagar tu membresía FLEX ($14.990) para activarte este fin de semana.' });
           }
           // Verificar si la membresía FLEX sigue vigente (fin de semana actual)
           if (driver.membershipExpiresAt && driver.membershipExpiresAt < now) {
             await prisma.driver.update({ where: { id: driver.id }, data: { membershipPaid: false } });
-            return res.status(403).json({ error: 'Tu membresía FLEX venció. Debes pagar el nuevo fin de semana ($60.000).' });
+            return res.status(403).json({ error: 'Tu membresía FLEX venció. Debes pagar el nuevo fin de semana ($14.990).' });
           }
         }
       }
@@ -185,12 +185,12 @@ router.post('/toggle-online', requireAuth, requireRole('driver'), async (req: Re
             const lastPaid = new Date(driver.comfortLastPaidAt);
             const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
             if (lastPaid < todayStart) {
-              return res.status(403).json({ 
+              return res.status(403).json({
                 error: `Debes pagar tu cuota diaria COMFORT de $20.000 para trabajar hoy. Deuda acumulada: $${driver.comfortDebt.toLocaleString('es-CL')}`
               });
             }
           } else {
-            return res.status(403).json({ 
+            return res.status(403).json({
               error: 'Debes subir el comprobante de tu primer pago diario COMFORT de $20.000 para activarte.'
             });
           }
@@ -273,10 +273,10 @@ router.post('/pay-comfort-daily', requireAuth, requireRole('driver'), async (req
       data: updateData,
     });
 
-    console.log(`✅ COMFORT: Conductor ${driver.id} pagó cuota diaria $20.000. Deuda restante: $${newDebt.toLocaleString('es-CL')}`);
-    
+    console.log(`✅ COMFORT: Conductor ${driver.id} pagó cuota diaria $8.990. Deuda restante: $${newDebt.toLocaleString('es-CL')}`);
+
     // Notificar al admin
-    sendAdminPaymentNotification(driver.name, driver.id, 'COMFORT (Cuota Diaria)', '$20.000').catch(e => console.error(e));
+    sendAdminPaymentNotification(driver.name, driver.id, 'COMFORT (Cuota Diaria)', '$8.990').catch(e => console.error(e));
 
     return res.json({ ok: true, message: 'Pago diario registrado. Ahora puedes activarte.', comfortDebt: newDebt });
   } catch (err) {
@@ -296,8 +296,8 @@ router.post('/comfort-accrue-debt', async (req: Request, res: Response) => {
     // Encontrar todos los conductores COMFORT activos que no estén en su periodo de prueba
     const now = new Date();
     const comfortDrivers = await prisma.driver.findMany({
-      where: { 
-        membershipPlan: 'COMFORT', 
+      where: {
+        membershipPlan: 'COMFORT',
         status: 'active',
         OR: [
           { isTrial: false },
@@ -316,8 +316,8 @@ router.post('/comfort-accrue-debt', async (req: Request, res: Response) => {
       if (!paidToday) {
         await prisma.driver.update({
           where: { id: driver.id },
-          data: { 
-            comfortDebt: { increment: 20000 },
+          data: {
+            comfortDebt: { increment: 8990 },
             isOnline: false // Forzar desconexión
           }
         });
