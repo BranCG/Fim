@@ -939,5 +939,5 @@ html.accessible-font-xl { font-size: 20px !important; }
 
 /* ─── Mapa Dark Mode sin API Key ─────────────────────────────────────────── */
 .dark-map-tiles {
-  filter: grayscale(100%) invert(100%) brightness(50%) contrast(150%);
+  filter: invert(100%) hue-rotate(180deg) brightness(95%) contrast(90%);
 }
