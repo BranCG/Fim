@@ -56,19 +56,11 @@ export default function DriverMap({ driverPos, passengerPos, destPos, stops = []
         attributionControl: true,
       });
 
-      L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png', {
-        attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors © <a href="https://carto.com/attributions">CARTO</a>',
-        maxZoom: 20,
-        subdomains: 'abcd',
-        keepBuffer: 4,
-        updateWhenZooming: false,
-        updateWhenIdle: true
-      }).addTo(map);
-
-      L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_only_labels/{z}/{x}/{y}{r}.png', {
-        maxZoom: 20,
-        subdomains: 'abcd',
-        className: 'map-labels-layer',
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+        maxZoom: 19,
+        subdomains: 'abc',
+        className: 'dark-map-tiles',
         keepBuffer: 4,
         updateWhenZooming: false,
         updateWhenIdle: true
